@@ -342,17 +342,41 @@ window.addEventListener("beforeunload", function(){
     );
 
 });
-const topButton = document.getElementById("topButton");
+const topButton =
+    document.getElementById("topButton");
 
-window.addEventListener("scroll", function(){
+const research =
+    document.getElementById("research");
 
-    const research = document.getElementById("research");
+function updateArrow(){
 
-    if(window.scrollY < research.offsetTop + 50){
-        topButton.style.display = "none";
-    } else {
+    const researchTop = research.offsetTop;
+    const scrollPos = window.scrollY;
+
+    if(scrollPos < researchTop - 50){
+
+        topButton.innerHTML = "▼";
+        topButton.href = "#research";
         topButton.style.display = "flex";
+
     }
+    else if(scrollPos < researchTop + 50){
+
+        topButton.style.display = "none";
+
+    }
+    else{
+
+        topButton.innerHTML = "▲";
+        topButton.href = "#research";
+        topButton.style.display = "flex";
+
+    }
+
+}
+
+window.addEventListener("scroll", updateArrow);
+window.addEventListener("load", updateArrow);
 
 });
 </script>
