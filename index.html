@@ -204,6 +204,7 @@ footer{
     color:white;
     text-decoration:none;
     border-radius:50%;
+        display:none;
     display:flex;
     align-items:center;
     justify-content:center;
@@ -341,10 +342,23 @@ window.addEventListener("beforeunload", function(){
     );
 
 });
+const topButton = document.getElementById("topButton");
 
+window.addEventListener("scroll", function(){
+
+    const research = document.getElementById("research");
+
+    if(window.scrollY < research.offsetTop + 50){
+        topButton.style.display = "none";
+    } else {
+        topButton.style.display = "flex";
+    }
+
+});
 </script>
 
-<a href="#research" class="top-button">↑</a>
+<a href="#research" class="top-button"
+    id="topButton">↑</a>
 
 </body>
 </html>
