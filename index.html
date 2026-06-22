@@ -295,5 +295,26 @@ function acceptWarning(){
     document.getElementById("warningBox").style.display = "none";
 }
 
+// Restore previous position
+window.addEventListener("load", function(){
+
+    const savedPosition = sessionStorage.getItem("scrollPosition");
+
+    if(savedPosition){
+        window.scrollTo(0, parseInt(savedPosition));
+    }
+
+});
+
+// Save current position
+window.addEventListener("beforeunload", function(){
+
+    sessionStorage.setItem(
+        "scrollPosition",
+        window.scrollY
+    );
+
+});
+
 </script></body>
 </html>
