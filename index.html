@@ -1,12 +1,8 @@
-<!DOCTYPE html>
-
-<html>
+<!DOCTYPE html><html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lanthano Research</title>
-
-<style>
+<title>Lanthano Research</title><style>
 
 body{
     margin:0;
@@ -123,109 +119,64 @@ footer{
     border-top:1px solid #222;
 }
 
-</style>
-
-</head>
-
-<body>
-
-<div id="warningBox">
-
-<div class="warningContent">
-
-<h2>CONTENT WARNING</h2>
-
-<p>
+</style></head><body><div id="warningBox"><div class="warningContent"><h2>CONTENT WARNING</h2><p>
 This website contains graphic material that may include depictions of injury, death, violence, accidents, crime scenes, medical imagery, historical atrocities, and other disturbing content.
-</p>
-
-<p>
+</p><p>
 This material is provided for research, educational, historical, journalistic, and documentary purposes. The content is not intended to shock, glorify violence, or encourage harmful behavior.
-</p>
-
-<p>
+</p><p>
 By entering this website, you confirm that you are viewing the content voluntarily and understand that some materials may be disturbing or emotionally impactful.
-</p>
-
-<p>
+</p><p>
 If you do not wish to view such content, please leave this website now.
-</p>
-
-<button onclick="closeWarning()">
+</p><button onclick="acceptWarning()">
 I Understand, Proceed
-</button>
-
-</div>
-
-</div>
-
-<picture>
+</button></div></div><picture>
 <source media="(max-width:768px)" srcset="file_00000000814c722f9f8c7ec5313b238a.png">
 <img class="banner" src="file_00000000ecb4722f9273c2a87dca3a4c.png" alt="Lanthano Research">
-</picture>
-
-<section>
-
-<a href="allresearch.html">
+</picture><section><a href="allresearch.html">
 <div class="card">
 <h2>All Research</h2>
 </div>
-</a>
-
-<a href="biblical.html">
+</a><a href="biblical.html">
 <div class="card">
 <h2>Biblical</h2>
 </div>
-</a>
-
-<a href="historical.html">
+</a><a href="historical.html">
 <div class="card">
 <h2>Historical</h2>
 </div>
-</a>
-
-<a href="medical.html">
+</a><a href="medical.html">
 <div class="card">
 <h2>Medical</h2>
 </div>
-</a>
-
-<a href="scientific.html">
+</a><a href="scientific.html">
 <div class="card">
 <h2>Scientific</h2>
 </div>
-</a>
-
-<a href="space.html">
+</a><a href="space.html">
 <div class="card">
 <h2>Space & Astronomy</h2>
 </div>
-</a>
-
-<a href="conspiracies.html">
+</a><a href="conspiracies.html">
 <div class="card">
 <h2>Modern Conspiracies</h2>
 </div>
-</a>
-
-<a href="music.html">
+</a><a href="music.html">
 <img
 class="music-banner"
 src="file_0000000053d0722fa786ebce8df37449.png"
 alt="Lanthano Music">
-</a>
-
-</section>
-
-<footer>
+</a></section><footer>
 © Lanthano Research 2026
-</footer>
+</footer><script>
 
-<script>
-function closeWarning(){
+if(localStorage.getItem("warningAccepted") === "yes"){
     document.getElementById("warningBox").style.display = "none";
 }
-</script>
 
-</body>
+function acceptWarning(){
+    localStorage.setItem("warningAccepted","yes");
+    document.getElementById("warningBox").style.display = "none";
+}
+
+</script></body>
 </html>
