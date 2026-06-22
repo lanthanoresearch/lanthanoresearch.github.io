@@ -53,7 +53,7 @@ html{
 }
 html{
     scroll-behavior:smooth;
-    scroll-snap-type:y proximity;
+    scroll-snap-type:y mandatory;
 }
 
 .hero{
@@ -256,7 +256,9 @@ Every idea should be judged by its evidence, not by its popularity.
 class="music-banner"
 src="file_0000000053d0722fa786ebce8df37449.png"
 alt="Lanthano Music">
-</a></section><div class="footer-links">
+</a>
+
+<div class="footer-links">
 
 <a href="about.html">About</a>
 
@@ -268,7 +270,9 @@ alt="Lanthano Music">
 
 <footer>
 © Lanthano Research 2026
-</footer><script>
+</footer>
+
+</section><script>
 
 if(localStorage.getItem("warningAccepted") === "yes"){
     document.getElementById("warningBox").style.display = "none";
