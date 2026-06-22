@@ -51,7 +51,21 @@ html{
     margin:10px 0;
     font-size:0.95em;
 }
+html{
+    scroll-behavior:smooth;
+    scroll-snap-type:y mandatory;
+}
 
+.hero{
+    scroll-snap-align:start;
+    min-height:100svh;
+    position:relative;
+}
+
+.research-section{
+    scroll-snap-align:start;
+    min-height:100svh;
+}
 .warningContent button{
     display:block;
     width:100%;
@@ -142,14 +156,13 @@ footer{
     color:#fff;
 }
 .hero-arrow{
-    display:block;
-    text-align:center;
+    position:absolute;
+    bottom:20px;
+    left:50%;
+    transform:translateX(-50%);
     font-size:2em;
     color:white;
     text-decoration:none;
-    margin-top:-80px;
-    margin-bottom:40px;
-    position:relative;
     z-index:10;
 }
 .intro{
@@ -179,14 +192,20 @@ By entering this website, you confirm that you are viewing the content voluntari
 If you do not wish to view such content, please leave this website now.
 </p><button onclick="acceptWarning()">
 I Understand, Proceed
-</button></div></div><picture>
-<source media="(max-width:768px)" srcset="file_00000000814c722f9f8c7ec5313b238a.png">
-<img class="banner" src="file_00000000ecb4722f9273c2a87dca3a4c.png" alt="Lanthano Research">
+</button></div></div>
+
+<div class="hero">
+
+<picture>
+    <source media="(max-width:768px)" srcset="file_00000000814c722f9f8c7ec5313b238a.png">
+    <img class="banner" src="file_00000000ecb4722f9273c2a87dca3a4c.png" alt="Lanthano Research">
 </picture>
 
 <a href="#research" class="hero-arrow">▼</a>
 
-<section id="research">
+</div>
+
+<section id="research" class="research-section">
 
 <div class="intro">
 
