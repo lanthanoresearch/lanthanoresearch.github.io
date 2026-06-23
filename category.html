@@ -24,6 +24,31 @@ h1{
     margin-bottom:40px;
 }
 
+    .sort-container{
+    text-align:center;
+    margin-bottom:25px;
+}
+
+#sortSelect{
+    background:#1d1d1d;
+    color:#eee;
+    border:1px solid #444;
+    border-radius:10px;
+    padding:12px 16px;
+    font-size:1em;
+    cursor:pointer;
+    min-width:220px;
+}
+
+#sortSelect:hover{
+    background:#262626;
+}
+
+#sortSelect:focus{
+    outline:none;
+    border-color:#666;
+}
+    
 .back{
     color:white;
     text-decoration:none;
@@ -110,8 +135,31 @@ summary:hover{
 <p id="paperCount"
    style="text-align:center;color:#777;margin-top:-20px;margin-bottom:40px;">
 </p>
+<div class="sort-container">
 
-<div style="text-align:center;margin-bottom:25px;">
+<p style="
+    color:#888;
+    margin-bottom:10px;
+    font-size:.9em;
+">
+Sort Papers
+</p>
+
+<select id="sortSelect">
+
+<option value="az">Alphabetical (A-Z)</option>
+<option value="za">Alphabetical (Z-A)</option>
+
+<option value="newest">Newest Updated</option>
+<option value="oldest">Oldest Updated</option>
+
+<option value="mostimages">Most Images</option>
+<option value="leastimages">Least Images</option>
+
+</select>
+
+</div>
+<div <div class="sort-container">
 
 <select id="sortSelect">
 
