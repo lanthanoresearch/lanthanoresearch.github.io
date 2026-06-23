@@ -438,7 +438,10 @@ window.addEventListener("load", updateArrow);
             container.innerHTML += `
                 <a href="category.html?category=${encodeURIComponent(category)}">
                     <div class="card">
-                        <h2>${category}</h2>
+                        <h2>${
+    category.charAt(0).toUpperCase() +
+    category.slice(1)
+}</h2>
                     </div>
                 </a>
             `;
