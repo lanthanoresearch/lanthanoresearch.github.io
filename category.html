@@ -120,8 +120,10 @@ const currentCategory =
     params.get("category");
 
 document.querySelector("h1").textContent =
-    currentCategory.charAt(0).toUpperCase() +
-    currentCategory.slice(1);
+    currentCategory === "all"
+        ? "All Research"
+        : currentCategory.charAt(0).toUpperCase() +
+          currentCategory.slice(1);
 fetch("descriptions.json")
 .then(response => response.json())
 .then(data => {
@@ -138,8 +140,11 @@ fetch("descriptions.json")
 
     papers.forEach(([key,paper]) => {
 if(
-    !paper.category ||
-    !paper.category.includes(currentCategory)
+    currentCategory !== "all" &&
+    (
+        !paper.category ||
+        !paper.category.includes(currentCategory)
+    )
 ){
     return;
 }
