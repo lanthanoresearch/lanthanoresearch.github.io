@@ -111,6 +111,23 @@ summary:hover{
    style="text-align:center;color:#777;margin-top:-20px;margin-bottom:40px;">
 </p>
 
+<div style="text-align:center;margin-bottom:25px;">
+
+<select id="sortSelect">
+
+<option value="az">Alphabetical (A-Z)</option>
+<option value="za">Alphabetical (Z-A)</option>
+
+<option value="newest">Newest Updated</option>
+<option value="oldest">Oldest Updated</option>
+
+<option value="mostimages">Most Images</option>
+<option value="leastimages">Least Images</option>
+
+</select>
+
+</div>
+
 <div id="research-container"></div>
 
 </section>
@@ -134,13 +151,17 @@ fetch("descriptions.json")
     const container =
         document.getElementById("research-container");
 
-    const papers =
-        Object.entries(data);
+    let papers =
+    Object.entries(data);
 
     papers.sort((a,b)=>
         a[1].title.localeCompare(b[1].title)
     );
-const filteredPapers = papers.filter(([key,paper]) =>
+function renderPapers(){
+
+container.innerHTML = "";
+
+let filteredPapers = papers.filter(([key,paper]) =>
 
     currentCategory === "all" ||
 
@@ -151,10 +172,59 @@ const filteredPapers = papers.filter(([key,paper]) =>
 
 );
 
+const sortType =
+    document.getElementById("sortSelect").value;
+
+if(sortType === "az"){
+
+    filteredPapers.sort((a,b)=>
+        a[1].title.localeCompare(b[1].title)
+    );
+
+}
+else if(sortType === "za"){
+
+    filteredPapers.sort((a,b)=>
+        b[1].title.localeCompare(a[1].title)
+    );
+
+}
+else if(sortType === "newest"){
+
+    filteredPapers.sort((a,b)=>
+        b[1].updated.localeCompare(a[1].updated)
+    );
+
+}
+else if(sortType === "oldest"){
+
+    filteredPapers.sort((a,b)=>
+        a[1].updated.localeCompare(b[1].updated)
+    );
+
+}
+else if(sortType === "mostimages"){
+
+    filteredPapers.sort((a,b)=>
+        (b[1].images?.length || 0) -
+        (a[1].images?.length || 0)
+    );
+
+}
+else if(sortType === "leastimages"){
+
+    filteredPapers.sort((a,b)=>
+        (a[1].images?.length || 0) -
+        (b[1].images?.length || 0)
+    );
+
+}
+
 document.getElementById("paperCount").textContent =
     filteredPapers.length +
     (filteredPapers.length === 1 ? " Paper" : " Papers");
-    filteredPapers.forEach(([key,paper]) => {
+
+filteredPapers.forEach(([key,paper]) => {
 if(
     currentCategory !== "all" &&
     (
@@ -274,7 +344,15 @@ if(
 
         container.innerHTML += cardHtml;
 
-    });
+});
+
+}
+
+renderPapers();
+
+document
+.getElementById("sortSelect")
+.addEventListener("change", renderPapers);
 
 });
 
