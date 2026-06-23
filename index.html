@@ -403,7 +403,13 @@ function updateArrow(){
 window.addEventListener("scroll", updateArrow);
 window.addEventListener("load", updateArrow);
 
+if ("serviceWorker" in navigator) {
 
+    navigator.serviceWorker
+        .register("sw.js")
+        .then(() => console.log("Service Worker Registered"));
+
+}
 </script>
 
 
