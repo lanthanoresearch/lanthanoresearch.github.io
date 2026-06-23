@@ -23,8 +23,18 @@ h1{
     text-align:center;
     margin-bottom:40px;
 }
+.info-bar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:-20px;
+    margin-bottom:35px;
+}
 
-.sort-container{
+#paperCount{
+    margin:0;
+    color:#777;
+}
 .sort-container{
     text-align:center;
     margin-bottom:30px;
@@ -133,14 +143,25 @@ summary:hover{
 <a class="back" href="index.html">◀ Home</a>
 
     <h1 id="pageTitle">Loading...</h1>
-<p id="paperCount"
-   style="text-align:center;color:#777;margin-top:-20px;margin-bottom:40px;">
-</p>
-<div class="sort-container">
 
+<div class="info-bar">
 
+<p id="paperCount"></p>
 
 <select id="sortSelect">
+
+<option value="az">A-Z</option>
+<option value="za">Z-A</option>
+
+<option value="newest">Newest</option>
+<option value="oldest">Oldest</option>
+
+<option value="mostimages">Most Images</option>
+<option value="leastimages">Least Images</option>
+
+</select>
+
+</div>
 
 <option value="az">Alphabetical (A-Z)</option>
 <option value="za">Alphabetical (Z-A)</option>
