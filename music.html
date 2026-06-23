@@ -284,25 +284,33 @@ const playButton = document.getElementById("playButton");
 
 function loadSong(index){
 
-    cover.style.opacity = 0;
+    const nextImage = new Image();
 
-    setTimeout(() => {
+    nextImage.onload = function(){
 
-        cover.src = songs[index].cover;
-        title.textContent = songs[index].title;
-        player.src = songs[index].audio;
+        cover.style.opacity = 0;
 
-        document.querySelectorAll(".song-dot")
-            .forEach(dot => dot.classList.remove("active"));
+        setTimeout(() => {
 
-        document
-            .getElementById("dot" + index)
-            .classList
-            .add("active");
+            cover.src = songs[index].cover;
+            title.textContent = songs[index].title;
+            player.src = songs[index].audio;
 
-        cover.style.opacity = 1;
+            document.querySelectorAll(".song-dot")
+                .forEach(dot => dot.classList.remove("active"));
 
-    }, 200);
+            document
+                .getElementById("dot" + index)
+                .classList
+                .add("active");
+
+            cover.style.opacity = 1;
+
+        }, 200);
+
+    };
+
+    nextImage.src = songs[index].cover;
 }
 
 function toggleAudio(){
@@ -321,7 +329,7 @@ function toggleAudio(){
 
 function nextSong(){
 
-    player.pause();
+    const wasPlaying = !player.paused;
 
     currentSong++;
 
@@ -329,14 +337,19 @@ function nextSong(){
         currentSong = 0;
     }
 
-    playButton.innerHTML = "▶";
-
     loadSong(currentSong);
+
+    if(wasPlaying){
+        setTimeout(() => {
+            player.play();
+            playButton.innerHTML = "❚❚";
+        }, 250);
+    }
 }
 
 function prevSong(){
 
-    player.pause();
+    const wasPlaying = !player.paused;
 
     currentSong--;
 
@@ -344,9 +357,14 @@ function prevSong(){
         currentSong = songs.length - 1;
     }
 
-    playButton.innerHTML = "▶";
-
     loadSong(currentSong);
+
+    if(wasPlaying){
+        setTimeout(() => {
+            player.play();
+            playButton.innerHTML = "❚❚";
+        }, 250);
+    }
 }
 
 player.addEventListener("ended", () => {
