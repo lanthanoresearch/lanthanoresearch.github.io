@@ -154,8 +154,7 @@ fetch("descriptions.json")
 
         let cardHtml = "";
 
-        if(key === "godless_israel"){
-
+        if(paper.warning){
             cardHtml = `
             <div class="card">
 
@@ -172,7 +171,7 @@ fetch("descriptions.json")
                 <div id="israelWarning">
 
                     <p>
-                    CONTENT WARNING: This paper and its supporting images contain graphic content, including depictions of severe injuries, death, and war casualties.
+                    CONTENT WARNING: This paper and/or its supporting images contain graphic content, including depictions of severe injuries, death, or war casualties.
                     </p>
 
                     <a class="button"
