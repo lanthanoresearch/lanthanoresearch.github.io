@@ -306,7 +306,13 @@ if(
                 </p>
 
                 <p class="card-date">
-                    Created: ${paper.updated}
+                    Created: ${[
+    "January","February","March","April",
+    "May","June","July","August",
+    "September","October","November","December"
+][parseInt(paper.updated.split("-")[1]) - 1]},
+${paper.updated.split("-")[2]}-${
+paper.updated.split("-")[0]}
                 </p>
 
                 <div id="israelWarning">
@@ -357,7 +363,13 @@ if(
                 </p>
 
                 <p class="card-date">
-                    Created: ${paper.updated}
+                    Created: ${[
+    "January","February","March","April",
+    "May","June","July","August",
+    "September","October","November","December"
+][parseInt(paper.updated.split("-")[1]) - 1]},
+${paper.updated.split("-")[2]}-${
+paper.updated.split("-")[0]}
                 </p>
 
                 <a class="button"
