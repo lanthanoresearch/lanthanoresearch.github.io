@@ -106,7 +106,10 @@ summary:hover{
 
 <a class="back" href="index.html">◀ Home</a>
 
-<h1>Loading...</h1>
+    <h1 id="pageTitle">Loading...</h1>
+<p id="paperCount"
+   style="text-align:center;color:#777;margin-top:-20px;margin-bottom:40px;">
+</p>
 
 <div id="research-container"></div>
 
@@ -137,8 +140,21 @@ fetch("descriptions.json")
     papers.sort((a,b)=>
         a[1].title.localeCompare(b[1].title)
     );
+const filteredPapers = papers.filter(([key,paper]) =>
 
-    papers.forEach(([key,paper]) => {
+    currentCategory === "all" ||
+
+    (
+        paper.category &&
+        paper.category.includes(currentCategory)
+    )
+
+);
+
+document.getElementById("paperCount").textContent =
+    filteredPapers.length +
+    (filteredPapers.length === 1 ? " Paper" : " Papers");
+    filteredPapers.forEach(([key,paper]) => {
 if(
     currentCategory !== "all" &&
     (
@@ -154,7 +170,7 @@ if(
 
             galleryHtml = `
                 <details>
-                    <summary>Supporting Images</summary>
+                    <summary>Supporting Images (${paper.images.length})</summary>
 
                     <div class="gallery">
 
