@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>All Research</title>
+
+<style>
+body{
+    margin:0;
+    background:#111;
+    color:#eee;
+    font-family:Arial,sans-serif;
+}
+
+section{
+    max-width:1000px;
+    margin:auto;
+    padding:40px 20px;
+}
+
+h1{
+    text-align:center;
+    margin-bottom:40px;
+}
+
+.back{
+    color:white;
+    text-decoration:none;
+    display:inline-block;
+    margin-bottom:20px;
+}
+
+.card{
+    background:#1d1d1d;
+    padding:20px;
+    margin:15px 0;
+    border-radius:10px;
+}
+
+.card-description{
+    color:#aaa;
+    font-size:0.9em;
+    margin-top:10px;
+    line-height:1.4;
+}
+
+.card-date{
+    color:#777;
+    font-size:0.8em;
+    margin-top:10px;
+}
+
+.button{
+    display:inline-block;
+    background:#333;
+    color:white;
+    text-decoration:none;
+    padding:10px 15px;
+    border-radius:6px;
+    margin-right:10px;
+    margin-top:10px;
+}
+
+.button:hover{
+    background:#444;
+}
+
+.gallery{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+    margin-top:15px;
+}
+
+.gallery img{
+    width:100%;
+    aspect-ratio:1/1;
+    object-fit:cover;
+    border-radius:8px;
+    cursor:pointer;
+}
+
+details{
+    margin-top:20px;
+}
+
+summary{
+    cursor:pointer;
+    font-size:1.1em;
+    font-weight:bold;
+    padding:12px;
+    background:#222;
+    border-radius:8px;
+}
+
+summary:hover{
+    background:#2a2a2a;
+}
+</style>
+</head>
+
+<body>
+
+<section>
+
+<a class="back" href="index.html">◀ Home</a>
+
+<h1>Loading...</h1>
+
+<div id="research-container"></div>
+
+</section>
+
+<script>
+const params =
+    new URLSearchParams(window.location.search);
+
+const currentCategory =
+    params.get("category");
+
+document.querySelector("h1").textContent =
+    currentCategory === "all"
+        ? "All Research"
+        : currentCategory.charAt(0).toUpperCase() +
+          currentCategory.slice(1);
+fetch("descriptions.json")
+.then(response => response.json())
+.then(data => {
+
+    const container =
+        document.getElementById("research-container");
+
+    const papers =
+        Object.entries(data);
+
+    papers.sort((a,b)=>
+        a[1].title.localeCompare(b[1].title)
+    );
+
+    papers.forEach(([key,paper]) => {
+if(
+    currentCategory !== "all" &&
+    (
+        !paper.category ||
+        !paper.category.includes(currentCategory)
+    )
+){
+    return;
+}
+        let galleryHtml = "";
+
+        if(paper.images && paper.images.length){
+
+            galleryHtml = `
+                <details>
+                    <summary>Supporting Images</summary>
+
+                    <div class="gallery">
+
+                        ${paper.images.map(image => `
+                            <a href="${image}" target="_blank">
+                                <img src="${image}" loading="lazy">
+                            </a>
+                        `).join("")}
+
+                    </div>
+                </details>
+            `;
+
+        }
+
+        let cardHtml = "";
+
+        if(paper.warning){
+            cardHtml = `
+            <div class="card">
+
+                <h2>${paper.title}</h2>
+
+                <p class="card-description">
+                    ${paper.description}
+                </p>
+
+                <p class="card-date">
+                    Updated: ${paper.updated}
+                </p>
+
+                <div id="israelWarning">
+
+                    <p>
+                    CONTENT WARNING: This paper and/or its supporting images contain graphic content, including depictions of severe injuries, death, or war casualties.
+                    </p>
+
+                    <a class="button"
+                       href="#"
+                       onclick="showIsraelContent(); return false;">
+                       I Understand, Show Content
+                    </a>
+
+                </div>
+
+                <div id="israelContent"
+                     style="display:none;">
+
+                    <a class="button"
+                       href="${paper.url}"
+                       target="_blank">
+                       Read PDF
+                    </a>
+
+                    <a class="button"
+                       href="${paper.url}"
+                       download>
+                       Download PDF
+                    </a>
+
+                    ${galleryHtml}
+
+                </div>
+
+            </div>
+            `;
+
+        }else{
+
+            cardHtml = `
+            <div class="card">
+
+                <h2>${paper.title}</h2>
+
+                <p class="card-description">
+                    ${paper.description}
+                </p>
+
+                <p class="card-date">
+                    Updated: ${paper.updated}
+                </p>
+
+                <a class="button"
+                   href="${paper.url}"
+                   target="_blank">
+                   Read PDF
+                </a>
+
+                <a class="button"
+                   href="${paper.url}"
+                   download>
+                   Download PDF
+                </a>
+
+                ${galleryHtml}
+
+            </div>
+            `;
+
+        }
+
+        container.innerHTML += cardHtml;
+
+    });
+
+});
+
+function showIsraelContent(){
+
+    document.getElementById("israelWarning").style.display = "none";
+    document.getElementById("israelContent").style.display = "block";
+
+}
+
+</script>
+
+</body>
+</html>
