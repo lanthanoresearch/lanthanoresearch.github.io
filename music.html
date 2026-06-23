@@ -39,8 +39,12 @@ body {
     color:white;
     font-size:24px;
     cursor:pointer;
+    
 }
-
+.arrow-icon{
+    position: relative;
+    top: -2px;
+}
 .arrow-btn:hover{
     background:#2a2a2a;
 }
@@ -193,7 +197,9 @@ h1 {
 
 <div class="profile-player">
 
-    <button class="arrow-btn" onclick="prevSong()">❮</button>
+    <button class="arrow-btn" onclick="prevSong()">
+    <span class="arrow-icon">❮</span>
+    </button>
 
     <div class="profile-wrapper">
 
@@ -212,7 +218,9 @@ h1 {
 
     </div>
 
-    <button class="arrow-btn" onclick="nextSong()">❯</button>
+    <button class="arrow-btn" onclick="nextSong()">
+    <span class="arrow-icon">❯</span>
+    </button>
 
 </div>
 
