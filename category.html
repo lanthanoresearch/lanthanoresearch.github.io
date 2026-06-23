@@ -120,7 +120,8 @@ const currentCategory =
     params.get("category");
 
 document.querySelector("h1").textContent =
-    currentCategory;
+    currentCategory.charAt(0).toUpperCase() +
+    currentCategory.slice(1);
 fetch("descriptions.json")
 .then(response => response.json())
 .then(data => {
