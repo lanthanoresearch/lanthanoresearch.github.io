@@ -313,33 +313,9 @@ Browse Research by Category
     </p>
     
 
-    
-    <a href="biblical.html">
+   <div id="categoryButtons"></div> 
 
-<div class="card">
-<h2>Biblical</h2>
-</div>
-</a><a href="historical.html">
-<div class="card">
-<h2>Historical</h2>
-</div>
-</a><a href="medical.html">
-<div class="card">
-<h2>Medical</h2>
-</div>
-</a><a href="scientific.html">
-<div class="card">
-<h2>Scientific</h2>
-</div>
-</a><a href="space.html">
-<div class="card">
-<h2>Astronomy</h2>
-</div>
-</a><a href="conspiracies.html">
-<div class="card">
-<h2>Modern Conspiracies</h2>
-</div>
-</a><a href="music.html">
+<a href="music.html">
 <img
 class="music-banner"
 src="file_0000000053d0722fa786ebce8df37449.png"
@@ -434,6 +410,42 @@ function updateArrow(){
 window.addEventListener("scroll", updateArrow);
 window.addEventListener("load", updateArrow);
 
+    fetch("description.json")
+.then(response => response.json())
+.then(data => {
+
+    const categories = new Set();
+
+    Object.values(data).forEach(paper => {
+
+        if(paper.categories){
+
+            paper.categories.forEach(category => {
+                categories.add(category);
+            });
+
+        }
+
+    });
+
+    const container =
+        document.getElementById("categoryButtons");
+
+    [...categories]
+        .sort()
+        .forEach(category => {
+
+            container.innerHTML += `
+                <a href="category.html?category=${encodeURIComponent(category)}">
+                    <div class="card">
+                        <h2>${category}</h2>
+                    </div>
+                </a>
+            `;
+
+        });
+
+});
 if ("serviceWorker" in navigator) {
 
     navigator.serviceWorker
