@@ -63,11 +63,38 @@ Every claim should be tested. Every assumption should be questioned. Every idea 
 Lanthano exists to explore what others overlook.
 </p></div>
     
-    <div class="update-note">
-Documents and images last updated June 23, 2026.
-</div>
+    <div class="update-note" id="lastUpdate">
+Loading update date...
+    </div>
 
 
     
-</section></body>
+</section>
+<script>
+
+fetch("descriptions.json")
+.then(response => response.json())
+.then(data => {
+
+    let newestDate = "";
+
+    Object.values(data).forEach(paper => {
+
+        if(
+            paper.updated &&
+            paper.updated > newestDate
+        ){
+            newestDate = paper.updated;
+        }
+
+    });
+
+    document.getElementById("lastUpdate").textContent =
+        "Documents and images last updated " +
+        newestDate + ".";
+
+});
+
+</script>
+</body>
 </html>
