@@ -131,7 +131,22 @@ a:active{
     text-decoration:none;
     color:inherit;
 }
+.share-button{
+    display:block;
+    margin:30px auto;
+    padding:12px 24px;
+    background:#1d1d1d;
+    color:#aaa;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+    font-size:1em;
+}
 
+.share-button:hover{
+    background:#262626;
+    color:#fff;
+}
 .card{
     background:#1d1d1d;
     padding:20px;
@@ -324,7 +339,9 @@ alt="Lanthano Music">
 <a href="contact.html">Contact</a>
 
 <a href="music.html">Music</a>
-
+<button class="share-button" onclick="shareSite()">
+Share Site
+</button>
 </div>
 
 <footer>
@@ -410,6 +427,26 @@ if ("serviceWorker" in navigator) {
         .then(() => console.log("Service Worker Registered"));
 
 }
+    function shareSite(){
+
+    if(navigator.share){
+
+        navigator.share({
+            title: "Lanthano Research",
+            text: "Explore Lanthano Research",
+            url: "https://lanthanoresearch.com"
+        });
+
+    } else {
+
+        navigator.clipboard.writeText(
+            "https://lanthanoresearch.com"
+        );
+
+        alert("Website link copied.");
+    }
+
+    }
 </script>
 
 
