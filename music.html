@@ -12,16 +12,28 @@ body{
     text-align:center;
 }
 
-    body {
+   body {
     margin: 0;
     min-height: 100vh;
+    position: relative;
+    z-index: 0;
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    top: -5%;
+    left: -5%;
+    width: 110%;
+    height: 110%;
 
     background-image: url("e2e40d3c01326478de9ad5dd16e8f9af.jpg");
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
 
-    background-attachment: fixed;
+    filter: blur(8px);
+    z-index: -1;
 }
 .back{
     color:white;
