@@ -24,20 +24,21 @@ h1{
     margin-bottom:40px;
 }
 
-    .sort-container{
-    text-align:center;
+.sort-container{
+    display:flex;
+    justify-content:flex-end;
     margin-bottom:25px;
 }
 
 #sortSelect{
     background:#1d1d1d;
-    color:#eee;
-    border:1px solid #444;
-    border-radius:10px;
-    padding:12px 16px;
-    font-size:1em;
+    color:#ccc;
+    border:1px solid #333;
+    border-radius:8px;
+    padding:8px 12px;
+    font-size:.9em;
     cursor:pointer;
-    min-width:220px;
+    width:180px;
 }
 
 #sortSelect:hover{
@@ -48,6 +49,7 @@ h1{
     outline:none;
     border-color:#666;
 }
+
     
 .back{
     color:white;
@@ -137,13 +139,7 @@ summary:hover{
 </p>
 <div class="sort-container">
 
-<p style="
-    color:#888;
-    margin-bottom:10px;
-    font-size:.9em;
-">
-Sort Papers
-</p>
+
 
 <select id="sortSelect">
 
