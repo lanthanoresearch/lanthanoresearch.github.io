@@ -385,12 +385,28 @@ if(
 
 }
 
+const sortSelect =
+    document.getElementById("sortSelect");
+
+const savedSort =
+    localStorage.getItem("paperSort");
+
+if(savedSort){
+    sortSelect.value = savedSort;
+}
+
 renderPapers();
 
-document
-.getElementById("sortSelect")
-.addEventListener("change", renderPapers);
+sortSelect.addEventListener("change", () => {
 
+    localStorage.setItem(
+        "paperSort",
+        sortSelect.value
+    );
+
+    renderPapers();
+
+});
 });
 
 function showIsraelContent(){
