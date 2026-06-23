@@ -176,25 +176,100 @@ h1 {
 </style>
 
 </head>
+
+<body>
+
+<div class="container">
+
+<a class="back" href="index.html">◀ Home</a>
+
+<div class="profile-player">
+
+    <button class="arrow-btn" onclick="prevSong()">❮</button>
+
+    <div class="profile-wrapper">
+
+        <img
+            id="albumCover"
+            class="profile"
+            src="cover1.png"
+            alt="Album Cover">
+
+        <button
+            id="playButton"
+            class="play-btn"
+            onclick="toggleAudio()">
+            ▶
+        </button>
+
+    </div>
+
+    <button class="arrow-btn" onclick="nextSong()">❯</button>
+
+</div>
+
+<div id="songTitle" class="song-title">
+    Conspiracy Overload
+</div>
+
+<div class="song-dots">
+    <span id="dot0" class="song-dot active"></span>
+    <span id="dot1" class="song-dot"></span>
+    <span id="dot2" class="song-dot"></span>
+</div>
+
+<audio id="player"></audio>
+
+<h1>Lanthano Music</h1>
+
+<p class="subtitle">
+Mythic • Conspiratorial • Atmospheric
+</p>
+
+<a class="button" href="https://music.youtube.com/channel/UC-LsR_7xdkNvIy4a3DtVzdA?si=icZZzfK-n-OUJ2ke">
+YouTube Music
+</a>
+
+<a class="button" href="https://m.youtube.com/channel/UC-LsR_7xdkNvIy4a3DtVzdA">
+YouTube
+</a>
+
+<a class="button" href="https://open.spotify.com/artist/24VwcCehwH5BOeVQRfVYM4?si=jQarGxsOS6GgdQkjxdYy1w">
+Spotify
+</a>
+
+<a class="button" href="https://pandora.app.link/67TRkFnga4b">
+Pandora
+</a>
+
+<a class="button" href="https://music.apple.com/us/artist/lanthano/1863610418">
+Apple Music
+</a>
+
+<a class="button" href="https://music.amazon.com/artists/B0GC2GP267/lanthano?marketplaceId=ATVPDKIKX0DER&musicTerritory=US&ref=dm_sh_IPHi9gn4t67j3vjXGO4UQFTJy">
+Amazon Music
+</a>
+
+</div>
 <script>
 
 const songs = [
 
 {
     title:"Conspiracy Overload",
-    cover:"cover1.jpg",
+    cover:"cover1.png",
     audio:"song1.mp3"
 },
 
 {
     title:"God Be Blessed",
-    cover:"cover2.jpg",
+    cover:"cover2.png",
     audio:"song2.mp3"
 },
 
 {
     title:"A World Gone Mad",
-    cover:"cover3.jpg",
+    cover:"cover3.png",
     audio:"song3.mp3"
 }
 
@@ -281,80 +356,5 @@ player.addEventListener("ended", () => {
 loadSong(0);
 
 </script>
-<body>
-
-<div class="container">
-
-<a class="back" href="index.html">◀ Home</a>
-
-<div class="profile-player">
-
-    <button class="arrow-btn" onclick="prevSong()">❮</button>
-
-    <div class="profile-wrapper">
-
-        <img
-            id="albumCover"
-            class="profile"
-            src="cover1.jpg"
-            alt="Album Cover">
-
-        <button
-            id="playButton"
-            class="play-btn"
-            onclick="toggleAudio()">
-            ▶
-        </button>
-
-    </div>
-
-    <button class="arrow-btn" onclick="nextSong()">❯</button>
-
-</div>
-
-<div id="songTitle" class="song-title">
-    Conspiracy Overload
-</div>
-
-<div class="song-dots">
-    <span id="dot0" class="song-dot active"></span>
-    <span id="dot1" class="song-dot"></span>
-    <span id="dot2" class="song-dot"></span>
-</div>
-
-<audio id="player"></audio>
-
-<h1>Lanthano Music</h1>
-
-<p class="subtitle">
-Mythic • Conspiratorial • Atmospheric
-</p>
-
-<a class="button" href="https://music.youtube.com/channel/UC-LsR_7xdkNvIy4a3DtVzdA?si=icZZzfK-n-OUJ2ke">
-YouTube Music
-</a>
-
-<a class="button" href="https://m.youtube.com/channel/UC-LsR_7xdkNvIy4a3DtVzdA">
-YouTube
-</a>
-
-<a class="button" href="https://open.spotify.com/artist/24VwcCehwH5BOeVQRfVYM4?si=jQarGxsOS6GgdQkjxdYy1w">
-Spotify
-</a>
-
-<a class="button" href="https://pandora.app.link/67TRkFnga4b">
-Pandora
-</a>
-
-<a class="button" href="https://music.apple.com/us/artist/lanthano/1863610418">
-Apple Music
-</a>
-
-<a class="button" href="https://music.amazon.com/artists/B0GC2GP267/lanthano?marketplaceId=ATVPDKIKX0DER&musicTerritory=US&ref=dm_sh_IPHi9gn4t67j3vjXGO4UQFTJy">
-Amazon Music
-</a>
-
-</div>
-
 </body>
 </html>
