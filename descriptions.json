@@ -1,158 +1,349 @@
 {
-"911": {
-"title": "9/11",
-"description": "An investigation into September 11, examining the official narrative and alternative theories.",
-"url": "9-11.pdf",
-"updated": "2026-06-23"
-},
-"artemis": {
-"title": "Artemis",
-"description": "A study of NASA's Artemis program and the evidence used to question its authenticity.",
-"url": "Artemis.pdf",
-"updated": "2026-06-23"
-},
-"biblical_cosmology": {
-"title": "Biblical Cosmology",
-"description": "Scriptural cosmology, ancient worldviews, and challenges to modern cosmological models.",
-"url": "Biblical Cosmology.pdf",
-"updated": "2026-06-23"
-},
-"biblical_marriage": {
-"title": "Biblical Marriage",
-"description": "A biblical examination of marriage, family structure, and covenant relationships.",
-"url": "Biblical Marriage.pdf",
-"updated": "2026-06-23"
-},
-"breakfast": {
-"title": "Breakfast",
-"description": "An evidence-based look at whether breakfast is truly the most important meal of the day.",
-"url": "Breakfast.pdf",
-"updated": "2026-06-23"
-},
-"carbon_dating": {
-"title": "Carbon Dating",
-"description": "An examination of radiocarbon dating, its assumptions, strengths, and limitations.",
-"url": "Carbon Dating.pdf",
-"updated": "2026-06-23"
-},
-"duplicate_caesars": {
-"title": "Duplicate Caesars",
-"description": "A study of historical repetitions and the possibility of duplicated Roman timelines.",
-"url": "Duplicate Caesars.pdf",
-"updated": "2026-06-23"
-},
-"egypt": {
-"title": "Egypt",
-"description": "Ancient Egypt, its monuments, mysteries, and unexplained achievements.",
-"url": "Egypt.pdf",
-"updated": "2026-06-23"
-},
-"genetic_degradation": {
-"title": "Genetic Degradation",
-"description": "Research into mutation accumulation and the long-term decline of genetic information.",
-"url": "Genetic Degradation.pdf",
-"updated": "2026-06-23"
-},
-"godless_israel": {
-"title": "Godless Israel",
-"description": "An examination of modern Israel through biblical, historical, and theological perspectives.",
-"url": "Israel.pdf",
-"updated": "2026-06-23"
-},
-"hebrews_6": {
-"title": "Hebrews 6 Deep Dive",
-"description": "A verse-by-verse analysis of Hebrews 6:4–6 in Greek, English, and context.",
-"url": "Hebrews 6 Deep Dive.pdf",
-"updated": "2026-06-23"
-},
-"once_saved_always_saved": {
-"title": "Once Saved, Always Saved",
-"description": "Biblical arguments for and against the doctrine of eternal security.",
-"url": "Once Saved, Always Saved.pdf",
-"updated": "2026-06-23"
-},
-"privacy": {
-"title": "Privacy",
-"description": "A look at modern surveillance, data collection, and the erosion of personal privacy.",
-"url": "Privacy.pdf",
-"updated": "2026-06-23"
-},
-"satans_little_season": {
-"title": "Satan's Little Season",
-"description": "An investigation into whether the present age matches biblical descriptions of Satan's Little Season.",
-"url": "Satan's Little Season.pdf",
-"updated": "2026-06-23"
-},
-"symbolism": {
-"title": "Symbolism",
-"description": "A study of recurring symbols, hidden meanings, and their influence throughout history.",
-"url": "Symbolism.pdf",
-"updated": "2026-06-23"
-},
-"corrupt_versions": {
-"title": "The Corrupt Versions",
-"description": "An examination of modern Bible translations and the arguments surrounding their reliability.",
-"url": "The KJV Bible.pdf",
-"updated": "2026-06-23"
-},
-"mars_hoax": {
-"title": "The Mars Hoax",
-"description": "An exploration of anomalies and evidence cited by critics of NASA's Mars missions.",
-"url": "The Mars Hoax.pdf",
-"updated": "2026-06-23"
-},
-"moon_hoax": {
-"title": "The Moon Hoax",
-"description": "A detailed investigation into the Apollo moon landings and the debate surrounding them.",
-"url": "The Moon Hoax.pdf",
-"updated": "2026-06-23"
-},
-"titanic": {
-"title": "The Mystery of the Titanic",
-"description": "An investigation into the Titanic disaster and the mysteries that continue to surround it.",
-"url": "The Mystery of the Titanic.pdf",
-"updated": "2026-06-23"
-},
-"nuclear_scare": {
-"title": "The Nuclear Scare",
-"description": "A review of evidence, inconsistencies, and questions surrounding nuclear technology.",
-"url": "The Nuclear Scare.pdf",
-"updated": "2026-06-23"
-},
-"number_of_the_beast": {
-"title": "The Number of the Beast",
-"description": "A study of biblical prophecy and the identity of the mysterious number 666.",
-"url": "The Number of the Beast.pdf",
-"updated": "2026-06-23"
-},
-"rapture": {
-"title": "The Rapture",
-"description": "A biblical study examining the origins, development, and validity of the rapture doctrine.",
-"url": "The Rapture.pdf",
-"updated": "2026-06-23"
-},
-"real_nazis": {
-"title": "The Real Nazis",
-"description": "A historical examination of disputed claims, overlooked facts, and common misconceptions.",
-"url": "The Real Nazis.pdf",
-"updated": "2026-06-23"
-},
-"vaccines": {
-"title": "The Sad Truth About Vaccines",
-"description": "Medical studies, historical records, and concerns surrounding vaccine safety and effectiveness.",
-"url": "The Sad Truth About Vaccines.pdf",
-"updated": "2026-06-23"
-},
-"seraphim": {
-"title": "The Seraphim",
-"description": "An exploration of the Seraphim, their biblical role, appearance, and significance.",
-"url": "The Seraphim.pdf",
-"updated": "2026-06-23"
-},
-"what_is_everything": {
-"title": "What is Everything",
-"description": "A philosophical and theological exploration of reality, existence, and the nature of everything.",
-"url": "What is Everything.pdf",
-"updated": "2026-06-23"
-}
+  "911": {
+    "title": "9/11",
+    "description": "An investigation into September 11, examining the official narrative and alternative theories.",
+    "url": "9-11.pdf",
+    "updated": "2026-06-23 12:46 PM",
+    "images": [
+      "Empire State Tower.png",
+      "Pentagon Aerial Photo.png",
+      "Pentagon Internal Damage.png",
+      "Pentagon Security Key Frame.png",
+      "Pentagon.png"
+    ]
+  },
+  "artemis": {
+    "title": "Artemis",
+    "description": "A study of NASA's Artemis program and the evidence used to question its authenticity.",
+    "url": "Artemis.pdf",
+    "updated": "2026-06-23 12:46 PM",
+    "images": [
+      "Earth side by side (zoomed).jpg",
+      "Going Back.png",
+      "Whole earth (day).jpg",
+      "Whole earth (night).jpg"
+    ]
+  },
+  "biblical_cosmology": {
+    "title": "Biblical Cosmology",
+    "description": "Scriptural cosmology, ancient worldviews, and challenges to modern cosmological models.",
+    "url": "Biblical Cosmology.pdf",
+    "updated": "2026-06-23 12:46 PM",
+    "images": [
+      "Hebrew Cosmology.png",
+      "Light Speed Measuring.jpg",
+      "Measurements in Space.png",
+      "Nikon p900.png",
+      "Seasons.png"
+    ]
+  },
+  "biblical_marriage": {
+    "title": "Biblical Marriage",
+    "description": "A biblical examination of marriage, family structure, and covenant relationships.",
+    "url": "Biblical Marriage.pdf",
+    "updated": "2026-06-23 12:46 PM",
+    "images": []
+  },
+  "breakfast": {
+    "title": "Breakfast",
+    "description": "An evidence-based look at whether breakfast is truly the most important meal of the day.",
+    "url": "Breakfast.pdf",
+    "updated": "2026-06-23 12:46 PM",
+    "images": []
+  },
+  "carbon_dating": {
+    "title": "Carbon Dating",
+    "description": "An examination of radiocarbon dating, its assumptions, strengths, and limitations.",
+    "url": "Carbon Dating.pdf",
+    "updated": "2026-06-23 12:46 PM",
+    "images": []
+  },
+  "duplicate_caesars": {
+    "title": "Duplicate Caesars",
+    "description": "A study of historical repetitions and the possibility of duplicated Roman timelines.",
+    "url": "Duplicate Caesars.pdf",
+    "updated": "2026-06-23 12:46 PM",
+    "images": []
+  },
+  "egypt": {
+    "title": "Egypt",
+    "description": "Ancient Egypt, its monuments, mysteries, and unexplained achievements.",
+    "url": "Egypt.pdf",
+    "updated": "2026-06-23 12:46 PM",
+    "images": [
+      "Air Zones.png",
+      "Electromagnetic Focusing.png",
+      "Scans.avif",
+      "Zones.png",
+      "Zones 2.png"
+    ]
+  },
+  "genetic_degradation": {
+    "title": "Genetic Degradation",
+    "description": "Research into mutation accumulation and the long-term decline of genetic information.",
+    "url": "Genetic Degradation.pdf",
+    "updated": "2026-06-23 12:46 PM",
+    "images": []
+  },
+  "godless_israel": {
+    "title": "Godless Israel",
+    "description": "An examination of modern Israel through biblical, historical, and theological perspectives.",
+    "url": "Israel.pdf",
+    "updated": "2026-06-23 12:46 PM",
+    "images": [
+      "Boy shot in head 1.jpg",
+      "Boy shot in head 2.jpg",
+      "Girl shot in head 1.jpg",
+      "Girl shot in head 2.jpg",
+      "Girl shot in head 3.jpg",
+      "IDF Destroy Statue of Christ.png",
+      "Pro Palestinian Jew killed.jpg"
+    ]
+  },
+  "hebrews_6": {
+    "title": "Hebrews 6 Deep Dive",
+    "description": "A verse-by-verse analysis of Hebrews 6:4–6 in Greek, English, and context.",
+    "url": "Hebrews 6 Deep Dive.pdf",
+    "updated": "2026-06-23 12:46 PM",
+    "images": []
+  },
+  "once_saved_always_saved": {
+    "title": "Once Saved, Always Saved",
+    "description": "Biblical arguments for and against the doctrine of eternal security.",
+    "url": "Once Saved, Always Saved.pdf",
+    "updated": "2026-06-23 12:46 PM",
+    "images": []
+  },
+  "privacy": {
+    "title": "Privacy",
+    "description": "A look at modern surveillance, data collection, and the erosion of personal privacy.",
+    "url": "Privacy.pdf",
+    "updated": "2026-06-23 12:46 PM",
+    "images": []
+  },
+  "satans_little_season": {
+    "title": "Satan's Little Season",
+    "description": "An investigation into whether the present age matches biblical descriptions of Satan's Little Season.",
+    "url": "Satan's Little Season.pdf",
+    "updated": "2026-06-23 12:46 PM",
+    "images": [
+      "Desert.png",
+      "Big Signs.png",
+      "Modern Signs.png",
+      "Rupes Nigra.png",
+      "Signs of the Times.png",
+      "Timeline.png"
+    ]
+  },
+  "symbolism": {
+    "title": "Symbolism",
+    "description": "A study of recurring symbols, hidden meanings, and their influence throughout history.",
+    "url": "Symbolism.pdf",
+    "updated": "2026-06-23 12:46 PM",
+    "images": [
+      "Demonic Symbolism.png",
+      "Dollar Bill.png",
+      "Google Playstore.png",
+      "Star of David.png",
+      "Trinity.png"
+    ]
+  },
+  "corrupt_versions": {
+    "title": "The Corrupt Versions",
+    "description": "An examination of modern Bible translations and the arguments surrounding their reliability.",
+    "url": "The KJV Bible.pdf",
+    "updated": "2026-06-23 12:46 PM",
+    "images": [
+      "Bible Check.png",
+      "Bible tree.png",
+      "Bible true tree.png",
+      "Cap-drops.png",
+      "KJV History.png",
+      "Pie Chart.jpg",
+      "Sinaiticus Color.png",
+      "Vaticanus Umlauts.png",
+      "Verses Missing From Vaticanus and Sanaiticus.png"
+    ]
+  },
+  "mars_hoax": {
+    "title": "The Mars Hoax",
+    "description": "An exploration of anomalies and evidence cited by critics of NASA's Mars missions.",
+    "url": "The Mars Hoax.pdf",
+    "updated": "2026-06-23 12:46 PM",
+    "images": [
+      "A Bone of Mars.png",
+      "A Rat on Mars.png",
+      "Devon Island Rovers.png",
+      "Devon Island.png",
+      "NASA Logo on first rover.png",
+      "The Walrus' Bone.png"
+    ]
+  },
+  "moon_hoax": {
+    "title": "The Moon Hoax",
+    "description": "A detailed investigation into the Apollo moon landings and the debate surrounding them.",
+    "url": "The Moon Hoax.pdf",
+    "updated": "2026-06-23 12:46 PM",
+    "images": [
+      "AGC stackup.png",
+      "Aker's List.png",
+      "Artemis stunning photos.png",
+      "Blue Marble.png",
+      "Cable.png",
+      "ChatGPT and the wrong horizon.png",
+      "Clear Cut Background.png",
+      "Distance & Shadows (Illustrated 2).png",
+      "Distance & Shadows (Illustrated 3).png",
+      "Distance & Shadows (Illustrated).png",
+      "Distance & Shadows.png",
+      "Earth overlay.png",
+      "Fake Moon Rock.png",
+      "Fuzzy Shadow 1.jpg",
+      "Fuzzy Shadow 2.jpg",
+      "Fuzzy Shadow.png",
+      "Going Back.png",
+      "Guilt.png",
+      "Head Height Camera (2).png",
+      "Head Height Camera Explainer.png",
+      "Head Height Camera.png",
+      "Laser Target.png",
+      "Light Diffusion.png",
+      "Light Hot-spot.png",
+      "NASA Impenetrable Barrier.png",
+      "NASA lies.png",
+      "NASA's Proof.png",
+      "No Blast Crater.png",
+      "No Stars.png",
+      "No track moonbuggy.png",
+      "Perspective Shadows.png",
+      "Radiation Dose.png",
+      "Same Backgrounds.png",
+      "Same Rocks (Highlighted).png",
+      "Same Rocks Origin.png",
+      "Same Rocks Whole Photo.png",
+      "Same Rocks.png",
+      "Saturn V.png",
+      "Shadows Point.png",
+      "Shadows Should be Parallel.png",
+      "Sharp and Blurry Shadow.png",
+      "Sharp to Fuzzy 1.jpg",
+      "Sharp to Fuzzy 2.jpg",
+      "Strange Shadows.png",
+      "Take-off Path.png",
+      "TETR Satellite.png"
+    ]
+  },
+  "titanic": {
+    "title": "The Mystery of the Titanic",
+    "description": "An investigation into the Titanic disaster and the mysteries that continue to surround it.",
+    "url": "The Mystery of the Titanic.pdf",
+    "updated": "2026-06-23 12:46 PM",
+    "images": []
+  },
+  "nuclear_scare": {
+    "title": "The Nuclear Scare",
+    "description": "A review of evidence, inconsistencies, and questions surrounding nuclear technology.",
+    "url": "The Nuclear Scare.pdf",
+    "updated": "2026-06-23 12:46 PM",
+    "images": [
+      "100 Gallon Gas.PNG",
+      "1000 tons of TNT.png",
+      "Bad Frames.png",
+      "Bad Frames 2.png",
+      "Bad Frames 3.png",
+      "Baker Event.png",
+      "Fake Nuke Footage.png",
+      "Japan Firebombings.png",
+      "Nagaski or Tokyo.png",
+      "Navada 1955 mixed with Sailor Hat.png",
+      "Nevada, 1955.png",
+      "Sunrise.png",
+      "TNT vs Nuke.png",
+      "TNT vs Trinity.png",
+      "Underwater Nuke or TNT.png",
+      "Which one IS a real Nuke.png",
+      "Which one isn't a real Nuke.png"
+    ]
+  },
+  "number_of_the_beast": {
+    "title": "The Number of the Beast",
+    "description": "A study of biblical prophecy and the identity of the mysterious number 666.",
+    "url": "The Number of the Beast.pdf",
+    "updated": "2026-06-23 12:46 PM",
+    "images": [
+      "Bismillah and the Beast's number.webp"
+    ]
+  },
+  "rapture": {
+    "title": "The Rapture",
+    "description": "A biblical study examining the origins, development, and validity of the rapture doctrine.",
+    "url": "The Rapture.pdf",
+    "updated": "2026-06-23 12:46 PM",
+    "images": [
+      "1 Thessalonians Original Text.png",
+      "Harpazo in the Bible.png",
+      "Rapture Differences.png",
+      "Verse Comparison.png"
+    ]
+  },
+  "real_nazis": {
+    "title": "The Real Nazis",
+    "description": "A historical examination of disputed claims, overlooked facts, and common misconceptions.",
+    "url": "The Real Nazis.pdf",
+    "updated": "2026-06-23 12:46 PM",
+    "images": [
+      "Auschwitz Number Issues.png",
+      "Auschwitz Plaques.png",
+      "Auschwitz Red Cross report.png",
+      "Auschwitz Red Cross report 2.png",
+      "Degenerate Book Burning.png",
+      "What we have been told.png"
+    ]
+  },
+  "vaccines": {
+    "title": "The Sad Truth About Vaccines",
+    "description": "Medical studies, historical records, and concerns surrounding vaccine safety and effectiveness.",
+    "url": "The Sad Truth About Vaccines.pdf",
+    "updated": "2026-06-23 12:46 PM",
+    "images": [
+      "2022 COVID punishment pole.PNG",
+      "All Diseases Were Already Declining.png",
+      "All Diseases Were Already Declining 2.0.png",
+      "All Downward Charts.png",
+      "Asthma, Development Delays, and Autism.png",
+      "CDC Misinformation (Multiple).png",
+      "CDC Misinformation (Polio).png",
+      "Chronic Diseases in Vaccinated and Unvaccinated Children.png",
+      "Hep A.png",
+      "Measles 1900-1980.png",
+      "Measles 1950-2000.png",
+      "Pertussis 1900-1966.png",
+      "Rabies (CDC).png",
+      "Rabies 1800-2000.png",
+      "Rabies 1800-2025.png",
+      "Tetanus data (CDC).gif",
+      "Tetanus data.jpeg",
+      "Vaccinated vs Unvaccinated.png",
+      "Vaccine Ingredients.png",
+      "Vaccine schedule.PNG",
+      "Yellow Fever (1800-2000).png"
+    ]
+  },
+  "seraphim": {
+    "title": "The Seraphim",
+    "description": "An exploration of the Seraphim, their biblical role, appearance, and significance.",
+    "url": "The Seraphim.pdf",
+    "updated": "2026-06-23 12:46 PM",
+    "images": [
+      "Dragon.png",
+      "Seref.png"
+    ]
+  },
+  "what_is_everything": {
+    "title": "What is Everything",
+    "description": "A philosophical and theological exploration of reality, existence, and the nature of everything.",
+    "url": "What is Everything.pdf",
+    "updated": "2026-06-23 12:46 PM",
+    "images": []
+  }
 }
