@@ -113,7 +113,11 @@ body::before {
 
     z-index: 0;
 }
-
+.play-icon{
+    position:relative;
+    top:-3px;
+    left:2px;
+}
 .container {
     position: relative;
     z-index: 1;
@@ -200,10 +204,10 @@ h1 {
             alt="Album Cover">
 
         <button
-            id="playButton"
-            class="play-btn"
-            onclick="toggleAudio()">
-            ▶
+    id="playButton"
+    class="play-btn"
+    onclick="toggleAudio()">
+    <span class="play-icon">▶</span>
         </button>
 
     </div>
@@ -327,7 +331,7 @@ function toggleAudio(){
     }else{
 
         player.pause();
-        playButton.innerHTML = '<span style="position:relative; top:-3px; left:2px;">▶</span>';
+        playButton.innerHTML = '<span class="play-icon">▶</span>';
     }
 }
 
@@ -372,7 +376,7 @@ function prevSong(){
 }
 
 player.addEventListener("ended", () => {
-    playButton.innerHTML = '<span style="position:relative; top:-3px; left:2px;">▶</span>';
+    playButton.innerHTML = '<span class="play-icon">▶</span>';
 });
 
 loadSong(0);
