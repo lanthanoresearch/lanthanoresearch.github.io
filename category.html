@@ -138,8 +138,8 @@ fetch("descriptions.json")
 
     papers.forEach(([key,paper]) => {
 if(
-    !paper.categories ||
-    !paper.categories.includes(currentCategory)
+    !paper.category ||
+    !paper.category.includes(currentCategory)
 ){
     return;
 }
