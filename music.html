@@ -29,6 +29,10 @@ body {
 .arrow-btn{
     width:45px;
     height:45px;
+    
+     position:relative;
+    top:8px;
+    
     border:none;
     border-radius:50%;
     background:#1d1d1d;
@@ -58,8 +62,8 @@ body {
 
 .play-btn{
     position:absolute;
-    left:50%;
-    top:50%;
+    left:52%;
+    top:53%;
     transform:translate(-50%,-50%);
 
     width:60px;
@@ -323,7 +327,7 @@ function toggleAudio(){
     }else{
 
         player.pause();
-        playButton.innerHTML = "▶";
+        playButton.innerHTML = '<span style="position:relative; top:-3px; left:2px;">▶</span>';
     }
 }
 
@@ -368,7 +372,7 @@ function prevSong(){
 }
 
 player.addEventListener("ended", () => {
-    playButton.innerHTML = "▶";
+    playButton.innerHTML = '<span style="position:relative; top:-3px; left:2px;">▶</span>';
 });
 
 loadSong(0);
