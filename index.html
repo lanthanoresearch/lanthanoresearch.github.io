@@ -210,6 +210,11 @@ footer{
     color:#fff;
 }
 
+    .search-empty{
+    padding:20px;
+    color:#888;
+    text-align:center;
+}
     
     
 .intro{
@@ -223,7 +228,12 @@ footer{
     font-size:2em;
     margin-bottom:15px;
 }
-
+mark{
+    background:#555;
+    color:white;
+    padding:0 2px;
+    border-radius:2px;
+}
 .intro p{
     color:#ccc;
     font-size:1.05em;
@@ -247,7 +257,17 @@ footer{
     z-index:1000;
     opacity:0.6;
 }
-
+    .search-result.selected{
+    background:#333;
+}
+.search-section-title{
+    padding:10px 15px;
+    background:#181818;
+    color:#aaa;
+    font-size:.9em;
+    font-weight:bold;
+    border-bottom:1px solid #333;
+}
 .top-button:hover{
     opacity:.6;
     background:#2a2a2a;
@@ -395,7 +415,8 @@ Every idea should be judged by its evidence, not by its popularity.
 <input
     type="text"
     id="searchBox"
-    placeholder="Search all research..."
+    placeholder="Loading search index..."
+    disabled
 >
 
 <div id="searchResults"></div>
@@ -587,6 +608,7 @@ if ("serviceWorker" in navigator) {
     }
     let pdfFuse;
 let imageFuse;
+let searchReady = false;
 
 Promise.all([
     fetch("search-index.json").then(r => r.json()),
@@ -597,6 +619,7 @@ Promise.all([
     console.log("Description records:", Object.keys(descriptions).length);
     pdfFuse = new Fuse(searchIndex,{
     includeScore:true,
+    includeMatches:true,
     threshold:0.4,
     ignoreLocation:true,
     minMatchCharLength:2,
@@ -655,7 +678,8 @@ imageType:image
 
     });
 
-    imageFuse = new Fuse(imageRecords,{
+   imageFuse = new Fuse(imageRecords,{
+    includeMatches:true,
     threshold:0.35,
     keys:[
         {
@@ -672,9 +696,25 @@ imageType:image
         }
     ]
 });
+    
+searchReady = true;
 
+searchBox.disabled = false;
+searchBox.placeholder = "Search all research...";
 });
+function highlightMatch(text, query){
 
+    if(!query) return text;
+
+    const escaped =
+        query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+    return text.replace(
+        new RegExp(`(${escaped})`, "ig"),
+        "<mark>$1</mark>"
+    );
+
+}
 const searchBox =
     document.getElementById("searchBox");
 
@@ -698,14 +738,34 @@ searchBox.addEventListener("input", () => {
     return;
 }
 
-    let html = "";
+   let html = "";
 
-    if(pdfFuse){
+const pdfResults =
+    pdfFuse
+        ? pdfFuse.search(query).slice(0,5)
+        : [];
 
-        pdfFuse
-            .search(query)
-            .slice(0,5)
-            .forEach(result => {
+const imageResults =
+    imageFuse
+        ? imageFuse.search(query).slice(0,10)
+        : [];
+
+html += `
+<div class="search-count">
+    ${pdfResults.length} Documents •
+    ${imageResults.length} Images
+</div>
+`;
+
+  if(pdfResults.length){
+
+    html += `
+    <div class="search-section-title">
+        Documents
+    </div>
+    `;
+
+    pdfResults.forEach(result => {
 
                html += `
 <a
@@ -730,7 +790,7 @@ searchBox.addEventListener("input", () => {
     <div>
 
         <div class="search-title">
-            ${result.item.title}
+           ${highlightMatch(result.item.title, query)}
         </div>
 
         <div class="search-source">
@@ -746,12 +806,15 @@ searchBox.addEventListener("input", () => {
 
     }
 
-    if(imageFuse){
+   if(imageResults.length){
 
-        imageFuse
-            .search(query)
-            .slice(0,10)
-            .forEach(result => {
+    html += `
+    <div class="search-section-title">
+        Images
+    </div>
+    `;
+
+    imageResults.forEach(result => {
 
                 html += `
                 <a
@@ -792,7 +855,7 @@ searchBox.addEventListener("input", () => {
                     <div>
 
                         <div class="search-title">
-                             ${result.item.imageTitle}
+                             ${highlightMatch(result.item.imageTitle, query)}
                         </div>
 
                        <div class="search-source">
@@ -808,7 +871,19 @@ searchBox.addEventListener("input", () => {
 
     }
 
+    if(!html){
+
+    searchResults.innerHTML = `
+        <div class="search-empty">
+            No results found.
+        </div>
+    `;
+
+}else{
+
     searchResults.innerHTML = html;
+
+}
 
     searchResults.style.display =
         html ? "block" : "none";
