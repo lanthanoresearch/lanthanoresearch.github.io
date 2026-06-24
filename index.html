@@ -1045,12 +1045,13 @@ document.addEventListener("click", e => {
             .contains(e.target)
     ){
 
-        searchResults.style.display =
+        desktopResults.style.display =
             "none";
 
     }
 
 });
+   
    window.addEventListener("load", () => {
 
     const lastSearch =
@@ -1060,29 +1061,13 @@ document.addEventListener("click", e => {
 
     if(lastSearch){
 
-        searchBox.value = lastSearch;
-        overlaySearchBox.value = lastSearch;
-
-    }
-
-});
-    const lastSearch =
-        sessionStorage.getItem(
-            "lastSearch"
-        );
-
-    if(lastSearch){
+        searchBox.value =
+            lastSearch;
 
         overlaySearchBox.value =
             lastSearch;
 
-        overlaySearchBox.dispatchEvent(
-            new Event("input")
-        );
-
-    }
-
-});
+       
 
     }
 
