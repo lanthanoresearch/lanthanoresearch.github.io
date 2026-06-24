@@ -257,6 +257,10 @@ footer{
     z-index:1000;
     opacity:0.6;
 }
+    
+    body.search-open{
+    overflow:hidden;
+}
 
 .top-button:hover{
     opacity:.6;
@@ -827,6 +831,8 @@ searchBox.addEventListener("focus", () => {
         rect.width + "px";
 
     overlay.classList.add("active");
+    document.body.classList.add("search-open");
+    
 history.pushState(
     {searchOpen:true},
     ""
@@ -839,7 +845,7 @@ history.pushState(
         topBar.style.top = "10px";
         topBar.style.left = "10px";
         topBar.style.width =
-            (window.innerWidth - 20) + "px";
+    (window.innerWidth - 80) + "px";
 
     });
 
@@ -872,7 +878,7 @@ searchResults.style.display = "none";
 
 
     setTimeout(() => {
-
+document.body.classList.remove("search-open");
         overlay.classList.remove("active");
 
     },250);
@@ -887,7 +893,10 @@ searchResults.style.display = "none";
     }
 
 });
-const searchResults =
+const desktopResults =
+    document.getElementById("searchResults");
+
+const mobileResults =
     document.getElementById("overlaySearchResults");
 
 
@@ -898,6 +907,11 @@ overlaySearchBox.addEventListener("input", () => {
     const query =
     overlaySearchBox.value.trim();
 
+    sessionStorage.setItem(
+    "lastSearch",
+    query
+);
+    
     if(!query){
 
         searchResults.style.display = "none";
@@ -998,10 +1012,15 @@ if(imageFuse){
 
 }
 
-    searchResults.innerHTML = html;
+    const resultsBox =
+    window.innerWidth <= 768
+        ? mobileResults
+        : desktopResults;
 
-    searchResults.style.display =
-        html ? "block" : "none";
+resultsBox.innerHTML = html;
+
+resultsBox.style.display =
+    html ? "block" : "none";
 
 });
 
@@ -1015,6 +1034,25 @@ document.addEventListener("click", e => {
 
         searchResults.style.display =
             "none";
+
+    }
+
+});
+    window.addEventListener("load", () => {
+
+    const lastSearch =
+        sessionStorage.getItem(
+            "lastSearch"
+        );
+
+    if(lastSearch){
+
+        overlaySearchBox.value =
+            lastSearch;
+
+        overlaySearchBox.dispatchEvent(
+            new Event("input")
+        );
 
     }
 
