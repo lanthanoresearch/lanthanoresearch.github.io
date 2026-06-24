@@ -841,7 +841,7 @@ searchBox.addEventListener("focus", () => {
 document.body.classList.add("search-open");
 document.documentElement.classList.add("search-open");
     
-history.pushState(
+history.replaceState(
     {searchOpen:true},
     ""
 );
