@@ -422,7 +422,22 @@ footer{
 }
 
 
+#overlaySearchResults{
 
+    position:absolute;
+
+    top:80px;
+    left:10px;
+    right:10px;
+
+    max-height:calc(100vh - 100px);
+
+    overflow-y:auto;
+
+    border-radius:10px;
+
+    z-index:999999;
+}
 
     
 </style></head><body><div id="warningBox"><div class="warningContent"><h2>CONTENT WARNING</h2><p>
@@ -535,19 +550,21 @@ Share Site
     id="topButton">▼</a>
 <div id="searchOverlay">
 
-    <div id="searchTopBar">
+   <div id="searchTopBar">
 
-        <input
-            type="text"
-            id="overlaySearchBox"
-            placeholder="Search all research..."
-        >
+    <input
+        type="text"
+        id="overlaySearchBox"
+        placeholder="Search all research..."
+    >
 
-        <button id="closeSearch">
-            ✕
-        </button>
+    <button id="closeSearch">
+        ✕
+    </button>
 
-    </div>
+</div>
+
+<div id="overlaySearchResults"></div>
 
 </div>
     <script type="module">
@@ -832,7 +849,10 @@ overlay.addEventListener("click", (e) => {
 
     topBar.style.width =
         rect.width + "px";
+searchResults.innerHTML = "";
+searchResults.style.display = "none";
 
+overlaySearchBox.value = "";
     setTimeout(() => {
 
         overlay.classList.remove("active");
@@ -841,7 +861,7 @@ overlay.addEventListener("click", (e) => {
 
 });
 const searchResults =
-    document.getElementById("searchResults");
+    document.getElementById("overlaySearchResults");
 
 
 
