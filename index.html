@@ -927,11 +927,9 @@ html += `
         ${
             result.item.warning
                 ? `viewSensitiveImage('${result.item.imageFile}')`
-                : `window.open(
+                : `window.location.href =
     'image.html?image=' +
-    encodeURIComponent('${result.item.imageFile}'),
-    '_blank'
-)`
+    encodeURIComponent(result.item.imageFile);`
         };
         return false;
     "
@@ -1022,11 +1020,9 @@ function viewSensitiveImage(image){
 
     if(alreadyAccepted){
 
-        window.open(
+        window.location.href =
     "image.html?image=" +
-    encodeURIComponent(image),
-    "_blank"
-);
+    encodeURIComponent(image);
 
         return;
 
@@ -1085,11 +1081,9 @@ function continueImageWarning(){
 
     closeImageWarning();
 
-    window.open(
+    window.location.href =
     "image.html?image=" +
-    encodeURIComponent(image),
-    "_blank"
-);
+    encodeURIComponent(image);
 
 }
 </script>
