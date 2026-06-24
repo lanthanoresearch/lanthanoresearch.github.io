@@ -378,6 +378,10 @@ footer{
 
     position:absolute;
 
+    display:flex;
+
+    align-items:center;
+
     padding:10px;
 
     transition:
@@ -394,9 +398,9 @@ footer{
 
 #overlaySearchBox{
 
-    width:calc(100% - 60px);
+    flex:1;
 
-    padding:16px;
+    padding:16px 50px 16px 16px;
 
     background:#1d1d1d;
     color:white;
@@ -405,20 +409,25 @@ footer{
 
     border-radius:10px;
 }
-
 #closeSearch{
 
-    margin-left:10px;
+    position:absolute;
 
-    padding:16px;
+    right:20px;
 
-    background:#222;
+    top:50%;
 
-    color:white;
+    transform:translateY(-50%);
+
+    background:none;
 
     border:none;
 
-    border-radius:10px;
+    color:#aaa;
+
+    font-size:20px;
+
+    cursor:pointer;
 }
 
 
@@ -436,7 +445,7 @@ footer{
 
     border-radius:10px;
 
-    z-index:999999;
+    z-index:1;
 }
 
     
@@ -784,6 +793,20 @@ const overlaySearchBox =
 const closeSearch =
     document.getElementById("closeSearch");
 
+
+    window.addEventListener("popstate", () => {
+
+    if(
+        overlay.classList.contains("active")
+    ){
+
+        closeSearch.click();
+
+    }
+
+});
+
+    
 searchBox.addEventListener("focus", () => {
 
     if(window.innerWidth > 768) return;
@@ -804,7 +827,10 @@ searchBox.addEventListener("focus", () => {
         rect.width + "px";
 
     overlay.classList.add("active");
-
+history.pushState(
+    {searchOpen:true},
+    ""
+);
     overlaySearchBox.value =
         searchBox.value;
 
@@ -826,15 +852,7 @@ searchBox.addEventListener("focus", () => {
 });
 
 closeSearch.addEventListener("click", () => {
-overlay.addEventListener("click", (e) => {
 
-    if(e.target === overlay){
-
-        closeSearch.click();
-
-    }
-
-});
     const rect =
         searchBox.getBoundingClientRect();
 
@@ -849,15 +867,24 @@ overlay.addEventListener("click", (e) => {
 
     topBar.style.width =
         rect.width + "px";
-searchResults.innerHTML = "";
+
 searchResults.style.display = "none";
 
-overlaySearchBox.value = "";
+
     setTimeout(() => {
 
         overlay.classList.remove("active");
 
     },250);
+
+});
+    overlay.addEventListener("click", (e) => {
+
+    if(e.target === overlay){
+
+        closeSearch.click();
+
+    }
 
 });
 const searchResults =
