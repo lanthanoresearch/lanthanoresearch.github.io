@@ -669,18 +669,43 @@ const searchBox =
 const searchResults =
     document.getElementById("searchResults");
 
-   searchBox.addEventListener("focus", () => {
+
+
+
+
+
+    
+
+    searchBox.addEventListener("focus", () => {
 
     if(window.innerWidth <= 768){
 
-        window.scrollBy({
-            top: -80,
-            behavior: "smooth"
+        requestAnimationFrame(() => {
+
+            requestAnimationFrame(() => {
+
+                const y =
+                    searchBox.getBoundingClientRect().top +
+                    window.scrollY;
+
+                window.scrollTo(0, y);
+
+            });
+
         });
 
     }
 
 });
+
+
+
+
+
+
+
+
+
     
 searchBox.addEventListener("input", () => {
 
