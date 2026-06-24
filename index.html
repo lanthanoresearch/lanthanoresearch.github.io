@@ -913,6 +913,8 @@ const mobileResults =
 
 
 
+
+
     
 function runSearch(query){
 
@@ -925,40 +927,6 @@ function runSearch(query){
 
         desktopResults.style.display = "none";
         mobileResults.style.display = "none";
-        return;
-    }
-
-    // existing search code here
-}
-
-searchBox.addEventListener("input", () => {
-
-    runSearch(
-        searchBox.value.trim()
-    );
-
-});
-
-overlaySearchBox.addEventListener("input", () => {
-
-    runSearch(
-        overlaySearchBox.value.trim()
-    );
-
-});
-
-    const query =
-    overlaySearchBox.value.trim();
-
-    sessionStorage.setItem(
-    "lastSearch",
-    query
-);
-    
-    if(!query){
-
-        desktopResults.style.display = "none";
-mobileResults.style.display = "none";
         return;
 
     }
@@ -978,15 +946,11 @@ mobileResults.style.display = "none";
                     target="_blank"
                     class="search-result"
                 >
-
                     <div>
-
                         <div class="search-title">
                             📄 ${result.item.title}
                         </div>
-
                     </div>
-
                 </a>
                 `;
 
@@ -994,78 +958,96 @@ mobileResults.style.display = "none";
 
     }
 
-if(imageFuse){
+    if(imageFuse){
 
-    imageFuse
-        .search(query)
-        .slice(0,10)
-        .forEach(result => {
+        imageFuse
+            .search(query)
+            .slice(0,10)
+            .forEach(result => {
 
-            if(result.item.warning){
+                if(result.item.warning){
 
-                html += `
-                <div
-                    class="search-result"
-                    onclick="viewSensitiveImage('${result.item.imageFile}')"
-                >
+                    html += `
+                    <div
+                        class="search-result"
+                        onclick="viewSensitiveImage('${result.item.imageFile}')"
+                    >
+                        <div class="search-thumb warning-thumb">
+                            ⚠
+                        </div>
 
-                    <div class="search-thumb warning-thumb">
-                        ⚠
-                    </div>
-
-                    <div>
-
-                        <div class="search-title">
-                            🖼 ${result.item.imageTitle}
+                        <div>
+                            <div class="search-title">
+                                🖼 ${result.item.imageTitle}
+                            </div>
                         </div>
 
                     </div>
+                    `;
 
-                </div>
-                `;
+                }
+                else{
 
-            }
-            else{
-
-                html += `
-                <a
-                    href="${result.item.imageFile}"
-                    target="_blank"
-                    class="search-result"
-                >
-
-                    <img
-                        src="${result.item.imageFile}"
-                        class="search-thumb"
+                    html += `
+                    <a
+                        href="${result.item.imageFile}"
+                        target="_blank"
+                        class="search-result"
                     >
 
-                    <div>
+                        <img
+                            src="${result.item.imageFile}"
+                            class="search-thumb"
+                        >
 
-                        <div class="search-title">
-                            🖼 ${result.item.imageTitle}
+                        <div>
+                            <div class="search-title">
+                                🖼 ${result.item.imageTitle}
+                            </div>
                         </div>
 
-                    </div>
+                    </a>
+                    `;
 
-                </a>
-                `;
+                }
 
-            }
+            });
 
-        });
+    }
+
+    const resultsBox =
+        window.innerWidth <= 768
+            ? mobileResults
+            : desktopResults;
+
+    resultsBox.innerHTML = html;
+
+    resultsBox.style.display =
+        html ? "block" : "none";
 
 }
 
-    const resultsBox =
-    window.innerWidth <= 768
-        ? mobileResults
-        : desktopResults;
+searchBox.addEventListener("input", () => {
 
-resultsBox.innerHTML = html;
+    runSearch(
+        searchBox.value.trim()
+    );
 
-resultsBox.style.display =
-    html ? "block" : "none";
+});
 
+overlaySearchBox.addEventListener("input", () => {
+
+    runSearch(
+        overlaySearchBox.value.trim()
+    );
+
+});
+
+
+
+
+    
+   
 });
 
 document.addEventListener("click", e => {
