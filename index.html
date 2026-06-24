@@ -171,22 +171,7 @@ a:active{
 .card:hover{
     background:#262626;
 }
-.warning-thumb{
 
-    width:70px;
-    height:70px;
-
-    background:#333;
-
-    display:flex;
-    align-items:center;
-    justify-content:center;
-
-    font-size:30px;
-
-    border-radius:8px;
-
-}
 .music-banner{
     display:block;
     width:100%;
@@ -257,24 +242,11 @@ footer{
     z-index:1000;
     opacity:0.6;
 }
-    
-html.search-open,
-body.search-open{
-
-    overflow:hidden;
-
-    height:100vh;
-
-    touch-action:none;
-}
 
 .top-button:hover{
     opacity:.6;
     background:#2a2a2a;
 }
-    
-    
-    
     .search-wrapper{
     position:relative;
     max-width:800px;
@@ -360,104 +332,6 @@ body.search-open{
     color:#888;
     font-size:.85em;
 }
-
-   
-
-    #searchOverlay{
-
-    position:fixed;
-    inset:0;
-
-    background:rgba(0,0,0,.85);
-
-    z-index:999999;
-
-    opacity:0;
-    pointer-events:none;
-
-    transition:opacity .25s ease;
-}
-
-#searchOverlay.active{
-
-    opacity:1;
-    pointer-events:auto;
-}
-
-#searchTopBar{
-
-    position:absolute;
-
-    display:flex;
-
-    align-items:center;
-
-    padding:10px;
-
-    transition:
-        top .25s ease,
-        left .25s ease,
-        width .25s ease;
-}
-    
-
-#searchOverlay.active #searchTopBar{
-
-    transform:translateY(0);
-}
-
-#overlaySearchBox{
-
-    flex:1;
-
-    padding:16px 50px 16px 16px;
-
-    background:#1d1d1d;
-    color:white;
-
-    border:1px solid #444;
-
-    border-radius:10px;
-}
-#closeSearch{
-
-    position:absolute;
-
-    right:20px;
-
-    top:50%;
-
-    transform:translateY(-50%);
-
-    background:none;
-
-    border:none;
-
-    color:#aaa;
-
-    font-size:20px;
-
-    cursor:pointer;
-}
-
-
-#overlaySearchResults{
-
-    position:absolute;
-
-    top:80px;
-    left:10px;
-    right:10px;
-
-    max-height:calc(100vh - 100px);
-
-    overflow-y:auto;
-
-    border-radius:10px;
-
-    z-index:1;
-}
-
     
 </style></head><body><div id="warningBox"><div class="warningContent"><h2>CONTENT WARNING</h2><p>
 This website contains graphic material that may include depictions of injury, death, violence, accidents, crime scenes, medical imagery, historical atrocities, and other disturbing content.
@@ -516,8 +390,7 @@ Every idea should be judged by its evidence, not by its popularity.
 <input
     type="text"
     id="searchBox"
-    placeholder="Loading search..."
-    disabled
+    placeholder="Search all research..."
 >
 
 <div id="searchResults"></div>
@@ -567,26 +440,8 @@ Share Site
 
 <a href="#research" class="top-button"
     id="topButton">▼</a>
-<div id="searchOverlay">
 
-   <div id="searchTopBar">
-
-    <input
-        type="text"
-        id="overlaySearchBox"
-        placeholder="Search all research..."
-    >
-
-    <button id="closeSearch">
-        ✕
-    </button>
-
-</div>
-
-<div id="overlaySearchResults"></div>
-
-</div>
-    <script type="module">
+     <script type="module">
 import Fuse from './fuse.basic.min.mjs';
 window.Fuse = Fuse;
 console.log("Fuse loaded:", typeof Fuse);
@@ -727,446 +582,151 @@ if ("serviceWorker" in navigator) {
     }
     let pdfFuse;
 let imageFuse;
-let searchIndex;
 
-async function initializeSearch(){
+Promise.all([
+    fetch("search-index.json").then(r => r.json()),
+    fetch("descriptions.json").then(r => r.json())
+])
+.then(([searchIndex, descriptions]) => {
+ console.log("PDF records:", searchIndex.length);
+    console.log("Description records:", Object.keys(descriptions).length);
+    pdfFuse = new Fuse(searchIndex,{
+        threshold:0.35,
+        keys:[
+            "title",
+            "searchText"
+        ]
+    });
 
-    while(typeof window.Fuse === "undefined"){
+    const imageRecords = [];
 
-        await new Promise(
-            resolve => setTimeout(resolve, 50)
-        );
+    Object.values(descriptions).forEach(paper => {
 
-    }
+        if(!paper.images) return;
 
-    const [
-    loadedSearchIndex,
-    descriptions
-] = await Promise.all([
+        paper.images.forEach(image => {
 
-    fetch("search-index.json")
-        .then(r => r.json()),
+            imageRecords.push({
 
-    fetch("descriptions.json")
-        .then(r => r.json())
+                imageFile:image,
 
-]);
+                imageTitle:image
+                    .replace(/\.[^/.]+$/,"")
+                    .replace(/[_-]/g," "),
 
-searchIndex = loadedSearchIndex;
+                paperTitle:paper.title,
 
-    console.log(
-        "window.Fuse:",
-        typeof window.Fuse
-    );
+                paperUrl:paper.url
 
-    pdfFuse = new Fuse(loadedSearchIndex,{
-    includeScore:true,
-    threshold:0.35,
-    ignoreLocation:true,
-    minMatchCharLength:2,
-    keys:[
-        {
-            name:"title",
-            weight:10
-        },
-        {
-            name:"keywords",
-            weight:5
-        },
-        {
-            name:"searchText",
-            weight:1
-        }
-    ]
-});
-
-    const imageIndex = [];
-
-Object.values(descriptions).forEach(paper => {
-
-    if(!paper.images) return;
-
-    paper.images.forEach(image => {
-
-        imageIndex.push({
-
-            imageTitle: image.replace(/\.[^/.]+$/, ""),
-
-            imageFile: image,
-
-            warning: paper.warning,
-
-            searchText: [
-                paper.title,
-                paper.description,
-                ...(paper.category || []),
-                image
-            ].join(" ")
+            });
 
         });
 
     });
 
-});
-
-imageFuse = new window.Fuse(
-    imageIndex,
-    {
-        includeScore:true,
+    imageFuse = new Fuse(imageRecords,{
         threshold:0.35,
-        ignoreLocation:true,
-        minMatchCharLength:1,
         keys:[
-            {
-                name:"imageTitle",
-                weight:10
-            },
-            {
-                name:"searchText",
-                weight:1
-            }
+            "imageTitle",
+            "paperTitle"
         ]
-    }
-);
+    });
 
-console.log(
-    "Images indexed:",
-    imageIndex.length
-);
-    // leave the rest of your code unchanged
-
-    document.getElementById(
-        "searchBox"
-    ).disabled = false;
-
-    document.getElementById(
-        "searchBox"
-    ).placeholder =
-        "Search all research...";
-
-}
-
-initializeSearch();
-
+});
 
 const searchBox =
     document.getElementById("searchBox");
-const overlay =
-    document.getElementById("searchOverlay");
 
-const overlaySearchBox =
-    document.getElementById("overlaySearchBox");
-
-const closeSearch =
-    document.getElementById("closeSearch");
-
-
-    window.addEventListener("popstate", () => {
-
-    if(
-        overlay.classList.contains("active")
-    ){
-
-        overlay.classList.remove("active");
-
-        document.body.classList.remove("search-open");
-        document.documentElement.classList.remove("search-open");
-
-        desktopResults.style.display = "none";
-        mobileResults.style.display = "none";
-
-    }
-
-});
-
-    
-searchBox.addEventListener("focus", () => {
-
-    if(window.innerWidth > 768) return;
-
-    const rect =
-        searchBox.getBoundingClientRect();
-
-    const topBar =
-        document.getElementById("searchTopBar");
-
-    topBar.style.top =
-        rect.top + "px";
-
-    topBar.style.left =
-        rect.left + "px";
-
-    topBar.style.width =
-        rect.width + "px";
-
-    overlay.classList.add("active");
-
-document.body.classList.add("search-open");
-document.documentElement.classList.add("search-open");
-    
-history.pushState(
-    {searchOpen:true},
-    ""
-);
-    
-    overlaySearchBox.value =
-        searchBox.value;
-
-    requestAnimationFrame(() => {
-
-        topBar.style.top = "10px";
-        topBar.style.left = "10px";
-        topBar.style.width =
-    (window.innerWidth - 40) + "px";
-
-    });
-
-    setTimeout(() => {
-
-        overlaySearchBox.focus();
-overlaySearchBox.dispatchEvent(
-    new Event("input")
-);
-    },250);
-
-});
-
-closeSearch.addEventListener("click", () => {
-
-    const rect =
-        searchBox.getBoundingClientRect();
-
-    const topBar =
-        document.getElementById("searchTopBar");
-
-    topBar.style.top =
-        rect.top + "px";
-
-    topBar.style.left =
-        rect.left + "px";
-
-    topBar.style.width =
-        rect.width + "px";
-
-desktopResults.style.display = "none";
-mobileResults.style.display = "none";
-
-
-   setTimeout(() => {
-
-    document.body.classList.remove("search-open");
-    document.documentElement.classList.remove("search-open");
-
-    overlay.classList.remove("active");
-
-    window.scrollTo(
-        0,
-        document.getElementById("research").offsetTop
-    );
-
-},250);
-
-});
-    overlay.addEventListener("click", (e) => {
-
-    if(e.target === overlay){
-
-        closeSearch.click();
-
-    }
-
-});
-const desktopResults =
+const searchResults =
     document.getElementById("searchResults");
 
-const mobileResults =
-    document.getElementById("overlaySearchResults");
+searchBox.addEventListener("input", () => {
 
-
-
-
-
-    
-function runSearch(query){
-
-    sessionStorage.setItem(
-        "lastSearch",
-        query
-    );
+    const query =
+        searchBox.value.trim();
 
     if(!query){
 
-        desktopResults.style.display = "none";
-        mobileResults.style.display = "none";
+        searchResults.style.display = "none";
         return;
 
     }
 
-   let html = "";
-const shownTitles = new Set();
-const shownImages = new Set();
-if(!searchIndex) return;
-const exactMatches = searchIndex.filter(pdf =>
-    pdf.title
-        .toLowerCase()
-        .includes(query.toLowerCase())
-);
+    let html = "";
 
+    if(pdfFuse){
 
-exactMatches.forEach(pdf => {
+        pdfFuse
+            .search(query)
+            .slice(0,5)
+            .forEach(result => {
 
-    shownTitles.add(pdf.title);
+                html += `
+                <a
+                    href="${result.item.url}"
+                    target="_blank"
+                    class="search-result"
+                >
 
-    html += `
-    <a
-        href="${pdf.url}"
-        target="_blank"
-        class="search-result"
-    >
-        <div>
-            <div class="search-title">
-                📄 ${pdf.title}
-            </div>
-        </div>
-    </a>
-    `;
+                    <div>
 
-});
-const exactImages = imageFuse
-    ? imageFuse.search(query)
-        .filter(r =>
-            r.item.imageTitle
-                .toLowerCase()
-                .includes(query.toLowerCase())
-        )
-    : [];
+                        <div class="search-title">
+                            📄 ${result.item.title}
+                        </div>
 
-exactImages.forEach(result => {
-
-    shownImages.add(
-        result.item.imageFile
-    );
-
-    html += `
-    <a
-        href="${result.item.imageFile}"
-        target="_blank"
-        class="search-result"
-    >
-        <div>
-            <div class="search-title">
-                🖼 ${result.item.imageTitle}
-            </div>
-        </div>
-    </a>
-    `;
-
-});
-
-if(pdfFuse){
-
-    pdfFuse
-        .search(query)
-        .filter(result => result.score < 0.35)
-        .slice(0,10)
-        .forEach(result => {
-
-            if(
-                shownTitles.has(
-                    result.item.title
-                )
-            ) return;
-
-            shownTitles.add(
-                result.item.title
-            );
-
-            html += `
-            <a
-                href="${result.item.url}"
-                target="_blank"
-                class="search-result"
-            >
-                <div>
-                    <div class="search-title">
-                        📄 ${result.item.title}
                     </div>
-                </div>
-            </a>
-            `;
 
-        });
+                </a>
+                `;
 
-}if(imageFuse){
+            });
 
-    imageFuse
-        .search(query)
-        .filter(result => result.score < 0.35)
-        .slice(0,10)
-        .forEach(result => {
+    }
 
-            if(
-                shownImages.has(
-                    result.item.imageFile
-                )
-            ) return;
+    if(imageFuse){
 
-            shownImages.add(
-                result.item.imageFile
-            );
+        imageFuse
+            .search(query)
+            .slice(0,10)
+            .forEach(result => {
 
-            html += `
-            <a
-                href="${result.item.imageFile}"
-                target="_blank"
-                class="search-result"
-            >
-                <div>
-                    <div class="search-title">
-                        🖼 ${result.item.imageTitle}
+                html += `
+                <a
+                    href="${result.item.paperUrl}"
+                    target="_blank"
+                    class="search-result"
+                >
+
+                    <img
+                        src="${result.item.imageFile}"
+                        class="search-thumb"
+                    >
+
+                    <div>
+
+                        <div class="search-title">
+                            🖼 ${result.item.imageTitle}
+                        </div>
+
+                        <div class="search-source">
+                            From: ${result.item.paperTitle}
+                        </div>
+
                     </div>
-                </div>
-            </a>
-            `;
 
-        });
+                </a>
+                `;
 
-}
-    
+            });
 
-    const resultsBox =
-        window.innerWidth <= 768
-            ? mobileResults
-            : desktopResults;
+    }
 
-    resultsBox.innerHTML = html;
+    searchResults.innerHTML = html;
 
-    resultsBox.style.display =
+    searchResults.style.display =
         html ? "block" : "none";
 
-}
-
-searchBox.addEventListener("input", () => {
-
-    runSearch(
-        searchBox.value.trim()
-    );
-
 });
-
-overlaySearchBox.addEventListener("input", () => {
-
-    runSearch(
-        overlaySearchBox.value.trim()
-    );
-
-});
-
-
-
-
-    
-
 
 document.addEventListener("click", e => {
 
@@ -1176,70 +736,13 @@ document.addEventListener("click", e => {
             .contains(e.target)
     ){
 
-        desktopResults.style.display =
+        searchResults.style.display =
             "none";
 
     }
 
 });
    
-   window.addEventListener("load", () => {
-
-    const lastSearch =
-        sessionStorage.getItem(
-            "lastSearch"
-        );
-
-    if(lastSearch){
-
-        searchBox.value =
-            lastSearch;
-
-        overlaySearchBox.value =
-            lastSearch;
-
-       
-
-    }
-
-});
-   function viewSensitiveImage(image){
-
-    const alreadyAccepted =
-        sessionStorage.getItem(
-            "imageWarningAccepted"
-        ) === "yes";
-
-    if(alreadyAccepted){
-
-        window.open(
-            image,
-            "_blank"
-        );
-
-        return;
-
-    }
-
-    const proceed = confirm(
-        "This image may contain graphic content.\n\nView image?"
-    );
-
-    if(proceed){
-
-        sessionStorage.setItem(
-            "imageWarningAccepted",
-            "yes"
-        );
-
-        window.open(
-            image,
-            "_blank"
-        );
-
-    }
-
-}
 </script>
 
 
