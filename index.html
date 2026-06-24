@@ -405,7 +405,8 @@ Every idea should be judged by its evidence, not by its popularity.
 <input
     type="text"
     id="searchBox"
-    placeholder="Search all research..."
+    placeholder="Loading search..."
+    disabled
 >
 
 <div id="searchResults"></div>
@@ -602,6 +603,7 @@ Promise.all([
     fetch("search-index.json").then(r => r.json()),
     fetch("descriptions.json").then(r => r.json())
 ])
+    
 .then(([searchIndex, descriptions]) => {
  console.log("PDF records:", searchIndex.length);
     console.log("Description records:", Object.keys(descriptions).length);
@@ -611,8 +613,11 @@ Promise.all([
             "title",
             "searchText"
         ]
+        
     });
 
+
+    
     const imageRecords = [];
 
     Object.values(descriptions).forEach(paper => {
@@ -647,7 +652,14 @@ Promise.all([
             "paperTitle"
         ]
     });
+document.getElementById(
+    "searchBox"
+).disabled = false;
 
+document.getElementById(
+    "searchBox"
+).placeholder =
+    "Search all research...";
 });
 
 const searchBox =
