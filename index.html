@@ -699,36 +699,24 @@ searchBox.addEventListener("input", () => {
 
     }
 
-    if(imageFuse){
+if(imageFuse){
 
-        imageFuse
-            .search(query)
-            .slice(0,10)
-            .forEach(result => {
+    imageFuse
+        .search(query)
+        .slice(0,10)
+        .forEach(result => {
+
+            if(result.item.warning){
 
                 html += `
-                <a
-                    href="${result.item.paperUrl}"
-                    target="_blank"
+                <div
                     class="search-result"
+                    onclick="viewSensitiveImage('${result.item.imageFile}')"
                 >
 
-                    ${
-    result.item.warning
-
-    ?
-
-    `<div class="search-thumb warning-thumb">
-        ⚠
-     </div>`
-
-    :
-
-    `<img
-        src="${result.item.imageFile}"
-        class="search-thumb"
-    >`
-}
+                    <div class="search-thumb warning-thumb">
+                        ⚠
+                    </div>
 
                     <div>
 
@@ -736,8 +724,30 @@ searchBox.addEventListener("input", () => {
                             🖼 ${result.item.imageTitle}
                         </div>
 
-                        <div class="search-source">
-                            From: ${result.item.paperTitle}
+                    </div>
+
+                </div>
+                `;
+
+            }
+            else{
+
+                html += `
+                <a
+                    href="${result.item.imageFile}"
+                    target="_blank"
+                    class="search-result"
+                >
+
+                    <img
+                        src="${result.item.imageFile}"
+                        class="search-thumb"
+                    >
+
+                    <div>
+
+                        <div class="search-title">
+                            🖼 ${result.item.imageTitle}
                         </div>
 
                     </div>
@@ -745,9 +755,11 @@ searchBox.addEventListener("input", () => {
                 </a>
                 `;
 
-            });
+            }
 
-    }
+        });
+
+}
 
     searchResults.innerHTML = html;
 
@@ -770,7 +782,22 @@ document.addEventListener("click", e => {
     }
 
 });
-   
+   function viewSensitiveImage(image){
+
+    const proceed = confirm(
+        "This image may contain graphic content.\n\nView image?"
+    );
+
+    if(proceed){
+
+        window.open(
+            image,
+            "_blank"
+        );
+
+    }
+
+}
 </script>
 
 
