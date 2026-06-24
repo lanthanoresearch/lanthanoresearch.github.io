@@ -533,7 +533,23 @@ Share Site
 
 <a href="#research" class="top-button"
     id="topButton">▼</a>
+<div id="searchOverlay">
 
+    <div id="searchTopBar">
+
+        <input
+            type="text"
+            id="overlaySearchBox"
+            placeholder="Search all research..."
+        >
+
+        <button id="closeSearch">
+            ✕
+        </button>
+
+    </div>
+
+</div>
     <script type="module">
 import Fuse from './fuse.basic.min.mjs';
 window.Fuse = Fuse;
@@ -987,22 +1003,6 @@ document.addEventListener("click", e => {
 }
 </script>
 
-<div id="searchOverlay">
 
-    <div id="searchTopBar">
-
-        <input
-            type="text"
-            id="overlaySearchBox"
-            placeholder="Search all research..."
-        >
-
-        <button id="closeSearch">
-            ✕
-        </button>
-
-    </div>
-
-</div>
 </body>
 </html>
