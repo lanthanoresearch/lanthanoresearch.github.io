@@ -263,17 +263,7 @@ footer{
     background:#2a2a2a;
 }
     
-    @media (max-width:768px){
-
-    .search-wrapper{
-        position:sticky;
-        top:0;
-        z-index:5000;
-        background:#111;
-        padding:10px 0;
-    }
-
-}
+    
     
     .search-wrapper{
     position:relative;
@@ -359,6 +349,23 @@ footer{
 .search-source{
     color:#888;
     font-size:.85em;
+}
+
+    .search-wrapper{
+    transition:all .25s ease;
+}
+
+body.search-mode .search-wrapper{
+
+    position:fixed;
+
+    top:10px;
+    left:10px;
+    right:10px;
+
+    max-width:none;
+
+    z-index:99999;
 }
     
 </style></head><body><div id="warningBox"><div class="warningContent"><h2>CONTENT WARNING</h2><p>
@@ -682,7 +689,21 @@ const searchBox =
 const searchResults =
     document.getElementById("searchResults");
 
+searchBox.addEventListener("focus", () => {
+    document.body.classList.add("search-mode");
+});
 
+searchBox.addEventListener("blur", () => {
+
+    if(!searchBox.value.trim()){
+
+        document.body.classList.remove(
+            "search-mode"
+        );
+
+    }
+
+});
 
     
 searchBox.addEventListener("input", () => {
