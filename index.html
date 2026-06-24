@@ -669,6 +669,28 @@ const searchBox =
 const searchResults =
     document.getElementById("searchResults");
 
+    searchBox.addEventListener("focus", () => {
+
+    if(window.innerWidth <= 768){
+
+        setTimeout(() => {
+
+            const y =
+                searchBox.getBoundingClientRect().top +
+                window.pageYOffset -
+                20;
+
+            window.scrollTo({
+                top: y,
+                behavior: "smooth"
+            });
+
+        }, 300);
+
+    }
+
+});
+    
 searchBox.addEventListener("input", () => {
 
     const query =
