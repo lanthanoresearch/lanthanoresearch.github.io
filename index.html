@@ -686,12 +686,17 @@ searchBox.addEventListener("input", () => {
     const query =
         searchBox.value.trim();
 
-    if(!query){
+    if(query.length < 2){
 
-        searchResults.style.display = "none";
-        return;
+    searchResults.innerHTML = `
+        <div class="search-empty">
+            Type at least 2 characters...
+        </div>
+    `;
 
-    }
+    searchResults.style.display = "block";
+    return;
+}
 
     let html = "";
 
