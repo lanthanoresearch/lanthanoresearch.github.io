@@ -1062,7 +1062,42 @@ exactImages.forEach(result => {
     `;
 
 });
-if(imageFuse){
+
+if(pdfFuse){
+
+    pdfFuse
+        .search(query)
+        .filter(result => result.score < 0.35)
+        .slice(0,10)
+        .forEach(result => {
+
+            if(
+                shownTitles.has(
+                    result.item.title
+                )
+            ) return;
+
+            shownTitles.add(
+                result.item.title
+            );
+
+            html += `
+            <a
+                href="${result.item.url}"
+                target="_blank"
+                class="search-result"
+            >
+                <div>
+                    <div class="search-title">
+                        📄 ${result.item.title}
+                    </div>
+                </div>
+            </a>
+            `;
+
+        });
+
+}if(imageFuse){
 
     imageFuse
         .search(query)
@@ -1075,6 +1110,10 @@ if(imageFuse){
                     result.item.imageFile
                 )
             ) return;
+
+            shownImages.add(
+                result.item.imageFile
+            );
 
             html += `
             <a
@@ -1093,30 +1132,7 @@ if(imageFuse){
         });
 
 }
-    if(imageFuse && exactImages.length === 0){
-
-    imageFuse
-        .search(query)
-        .slice(0,10)
-        .forEach(result => {
-
-            html += `
-            <a
-                href="${result.item.imageFile}"
-                target="_blank"
-                class="search-result"
-            >
-                <div>
-                    <div class="search-title">
-                        🖼 ${result.item.imageTitle}
-                    </div>
-                </div>
-            </a>
-            `;
-
-        });
-
-    }
+    
 
     const resultsBox =
         window.innerWidth <= 768
