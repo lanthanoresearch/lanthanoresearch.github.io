@@ -758,9 +758,9 @@ async function initializeSearch(){
 
     pdfFuse = new Fuse(searchIndex,{
     includeScore:true,
-    threshold:0.2,
+    threshold:0.35,
     ignoreLocation:true,
-    minMatchCharLength:3,
+    minMatchCharLength:2,
     keys:[
         {
             name:"title",
@@ -1039,61 +1039,32 @@ if(pdfFuse){
 
 }
 
-if(imageFuse){
-        imageFuse
+if(pdfFuse){
+
+    const pdfResults =
+        pdfFuse
             .search(query)
-            .slice(0,10)
-            .forEach(result => {
+            .slice(0,10);
 
-                if(result.item.warning){
+    pdfResults.forEach(result => {
 
-                    html += `
-                    <div
-                        class="search-result"
-                        onclick="viewSensitiveImage('${result.item.imageFile}')"
-                    >
-                        <div class="search-thumb warning-thumb">
-                            ⚠
-                        </div>
+        html += `
+        <a
+            href="${result.item.url}"
+            target="_blank"
+            class="search-result"
+        >
+            <div>
+                <div class="search-title">
+                    📄 ${result.item.title}
+                </div>
+            </div>
+        </a>
+        `;
 
-                        <div>
-                            <div class="search-title">
-                                🖼 ${result.item.imageTitle}
-                            </div>
-                        </div>
+    });
 
-                    </div>
-                    `;
-
-                }
-                else{
-
-                    html += `
-                    <a
-                        href="${result.item.imageFile}"
-                        target="_blank"
-                        class="search-result"
-                    >
-
-                        <img
-                            src="${result.item.imageFile}"
-                            class="search-thumb"
-                        >
-
-                        <div>
-                            <div class="search-title">
-                                🖼 ${result.item.imageTitle}
-                            </div>
-                        </div>
-
-                    </a>
-                    `;
-
-                }
-
-            });
-
-    }
+}
 
     const resultsBox =
         window.innerWidth <= 768
