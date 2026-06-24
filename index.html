@@ -776,6 +776,59 @@ async function initializeSearch(){
         }
     );
 
+    const imageIndex = [];
+
+Object.values(descriptions).forEach(paper => {
+
+    if(!paper.images) return;
+
+    paper.images.forEach(image => {
+
+        imageIndex.push({
+
+            imageTitle: image.replace(/\.[^/.]+$/, ""),
+
+            imageFile: image,
+
+            warning: paper.warning,
+
+            searchText: [
+                paper.title,
+                paper.description,
+                ...(paper.category || []),
+                image
+            ].join(" ")
+
+        });
+
+    });
+
+});
+
+imageFuse = new window.Fuse(
+    imageIndex,
+    {
+        includeScore:true,
+        threshold:0.5,
+        ignoreLocation:true,
+        minMatchCharLength:2,
+        keys:[
+            {
+                name:"imageTitle",
+                weight:2
+            },
+            {
+                name:"searchText",
+                weight:1
+            }
+        ]
+    }
+);
+
+console.log(
+    "Images indexed:",
+    imageIndex.length
+);
     // leave the rest of your code unchanged
 
     document.getElementById(
