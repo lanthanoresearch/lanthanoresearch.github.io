@@ -321,15 +321,36 @@ paper.updated.split("-")[0]}
 
                 <div id="warning-${key}">
 
-                    <p>
-                    CONTENT WARNING: This paper and/or its supporting images contain graphic content, including depictions of severe injuries, death, or war casualties.
-                    </p>
+                   <div style="
+    text-align:center;
+    padding:15px 10px;
+">
 
-                    <a class="button"
-                       href="#"
-                       onclick="showWarningContent('${key}'); return false;">
-                       I Understand, Show Content
-                    </a>
+    <div style="
+        font-size:4.5rem;
+        line-height:1;
+        margin-bottom:15px;
+        filter:drop-shadow(0 0 8px rgba(255,200,0,.35));
+    ">
+        ⚠️
+    </div>
+
+    <p style="
+        margin:0 0 20px 0;
+        line-height:1.5;
+        color:#ddd;
+    ">
+        This paper and/or its supporting images contain graphic material,
+        including depictions of severe injuries, death, or war casualties.
+    </p>
+
+    <a class="button"
+       href="#"
+       onclick="showWarningContent('${key}'); return false;">
+       I Understand, Show Content
+    </a>
+
+</div>
 
                 </div>
 
