@@ -743,14 +743,16 @@ async function initializeSearch(){
     loadedSearchIndex,
     descriptions
 ] = await Promise.all([
+
+    fetch("search-index.json")
+        .then(r => r.json()),
+
+    fetch("descriptions.json")
+        .then(r => r.json())
+
+]);
+
 searchIndex = loadedSearchIndex;
-        fetch("search-index.json")
-            .then(r => r.json()),
-
-        fetch("descriptions.json")
-            .then(r => r.json())
-
-    ]);
 
     console.log(
         "window.Fuse:",
@@ -1002,7 +1004,7 @@ function runSearch(query){
 
    let html = "";
 
-
+if(!searchIndex) return;
 const exactMatches = searchIndex.filter(pdf =>
     pdf.title
         .toLowerCase()
