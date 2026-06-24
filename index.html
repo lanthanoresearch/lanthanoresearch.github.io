@@ -1032,7 +1032,32 @@ exactMatches.forEach(pdf => {
     `;
 
 });
+const exactImages = imageFuse
+    ? imageFuse.search(query)
+        .filter(r =>
+            r.item.imageTitle
+                .toLowerCase()
+                .includes(query.toLowerCase())
+        )
+    : [];
 
+exactImages.forEach(result => {
+
+    html += `
+    <a
+        href="${result.item.imageFile}"
+        target="_blank"
+        class="search-result"
+    >
+        <div>
+            <div class="search-title">
+                🖼 ${result.item.imageTitle}
+            </div>
+        </div>
+    </a>
+    `;
+
+});
 if(pdfFuse){
 
     pdfFuse
@@ -1063,7 +1088,7 @@ if(pdfFuse){
         });
 
 }
-    if(imageFuse){
+    if(imageFuse && exactImages.length === 0){
 
     imageFuse
         .search(query)
