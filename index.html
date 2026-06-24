@@ -810,7 +810,13 @@ const closeSearch =
         overlay.classList.contains("active")
     ){
 
-        closeSearch.click();
+        overlay.classList.remove("active");
+
+        document.body.classList.remove("search-open");
+        document.documentElement.classList.remove("search-open");
+
+        desktopResults.style.display = "none";
+        mobileResults.style.display = "none";
 
     }
 
@@ -841,10 +847,11 @@ searchBox.addEventListener("focus", () => {
 document.body.classList.add("search-open");
 document.documentElement.classList.add("search-open");
     
-history.replaceState(
+history.pushState(
     {searchOpen:true},
     ""
 );
+    
     overlaySearchBox.value =
         searchBox.value;
 
