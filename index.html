@@ -699,13 +699,38 @@ searchBox.addEventListener("input", () => {
                     class="search-result"
                 >
 
-                    <div>
+                    <a
+    href="${result.item.url}"
+    target="_blank"
+    class="search-result"
+>
 
-                        <div class="search-title">
-                            📄 ${result.item.title}
-                        </div>
+    <div
+        class="search-thumb"
+        style="
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:40px;
+            background:#333;
+        "
+    >
+        📄
+    </div>
 
-                    </div>
+    <div>
+
+        <div class="search-title">
+            ${result.item.title}
+        </div>
+
+        <div class="search-source">
+            PDF Document
+        </div>
+
+    </div>
+
+</a>
 
                 </a>
                 `;
@@ -760,7 +785,7 @@ searchBox.addEventListener("input", () => {
                     <div>
 
                         <div class="search-title">
-                            🖼 ${result.item.imageTitle}
+                             ${result.item.imageTitle}
                         </div>
 
                         <div class="search-source">
