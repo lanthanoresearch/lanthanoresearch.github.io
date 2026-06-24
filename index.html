@@ -727,6 +727,7 @@ if ("serviceWorker" in navigator) {
     }
     let pdfFuse;
 let imageFuse;
+let searchIndex;
 
 async function initializeSearch(){
 
@@ -739,10 +740,10 @@ async function initializeSearch(){
     }
 
     const [
-        searchIndex,
-        descriptions
-    ] = await Promise.all([
-
+    loadedSearchIndex,
+    descriptions
+] = await Promise.all([
+searchIndex = loadedSearchIndex;
         fetch("search-index.json")
             .then(r => r.json()),
 
@@ -756,7 +757,7 @@ async function initializeSearch(){
         typeof window.Fuse
     );
 
-    pdfFuse = new Fuse(searchIndex,{
+    pdfFuse = new Fuse(loadedSearchIndex,{
     includeScore:true,
     threshold:0.35,
     ignoreLocation:true,
@@ -1002,33 +1003,88 @@ function runSearch(query){
    let html = "";
 
 
+const exactMatches = searchIndex.filter(pdf =>
+    pdf.title
+        .toLowerCase()
+        .includes(query.toLowerCase())
+);
+
+const shownTitles = new Set();
+
+exactMatches.forEach(pdf => {
+
+    shownTitles.add(pdf.title);
+
+    html += `
+    <a
+        href="${pdf.url}"
+        target="_blank"
+        class="search-result"
+    >
+        <div>
+            <div class="search-title">
+                📄 ${pdf.title}
+            </div>
+        </div>
+    </a>
+    `;
+
+});
 
 if(pdfFuse){
 
-    const pdfResults =
-        pdfFuse
-            .search(query)
-            .slice(0,10);
+    pdfFuse
+        .search(query)
+        .slice(0,10)
+        .forEach(result => {
 
-    pdfResults.forEach(result => {
+            if(
+                shownTitles.has(
+                    result.item.title
+                )
+            ) return;
 
-        html += `
-        <a
-            href="${result.item.url}"
-            target="_blank"
-            class="search-result"
-        >
-            <div>
-                <div class="search-title">
-                    📄 ${result.item.title}
+            html += `
+            <a
+                href="${result.item.url}"
+                target="_blank"
+                class="search-result"
+            >
+                <div>
+                    <div class="search-title">
+                        📄 ${result.item.title}
+                    </div>
                 </div>
-            </div>
-        </a>
-        `;
+            </a>
+            `;
 
-    });
+        });
 
 }
+    if(imageFuse){
+
+    imageFuse
+        .search(query)
+        .slice(0,10)
+        .forEach(result => {
+
+            html += `
+            <a
+                href="${result.item.imageFile}"
+                target="_blank"
+                class="search-result"
+            >
+                <div>
+                    <div class="search-title">
+                        🖼 ${result.item.imageTitle}
+                    </div>
+                </div>
+            </a>
+            `;
+
+        });
+
+    }
 
     const resultsBox =
         window.innerWidth <= 768
