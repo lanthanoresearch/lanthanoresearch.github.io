@@ -1026,7 +1026,31 @@ function closeImageWarning(){
     ).style.display = "none";
 
 }
+document
+.getElementById("imageWarningOverlay")
+.addEventListener("click", e => {
 
+    if(e.target.id === "imageWarningOverlay"){
+
+        closeImageWarning();
+
+    }
+
+});
+    document.addEventListener("keydown", e => {
+
+    if(
+        e.key === "Escape" &&
+        document.getElementById(
+            "imageWarningOverlay"
+        ).style.display === "flex"
+    ){
+
+        closeImageWarning();
+
+    }
+
+});
 function continueImageWarning(){
 
     closeImageWarning();
