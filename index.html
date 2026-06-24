@@ -927,7 +927,11 @@ html += `
         ${
             result.item.warning
                 ? `viewSensitiveImage('${result.item.imageFile}')`
-                : `window.open('${result.item.imageFile}','_blank')`
+                : `window.open(
+    'image.html?image=' +
+    encodeURIComponent('${result.item.imageFile}'),
+    '_blank'
+)`
         };
         return false;
     "
@@ -1019,9 +1023,10 @@ function viewSensitiveImage(image){
     if(alreadyAccepted){
 
         window.open(
-            image,
-            "_blank"
-        );
+    "image.html?image=" +
+    encodeURIComponent(image),
+    "_blank"
+);
 
         return;
 
@@ -1081,9 +1086,10 @@ function continueImageWarning(){
     closeImageWarning();
 
     window.open(
-        image,
-        "_blank"
-    );
+    "image.html?image=" +
+    encodeURIComponent(image),
+    "_blank"
+);
 
 }
 </script>
