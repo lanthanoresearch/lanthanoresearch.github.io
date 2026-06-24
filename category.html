@@ -13,18 +13,6 @@ body{
     font-family:Arial,sans-serif;
 }
 
-    #searchBox{
-    width:100%;
-    box-sizing:border-box;
-    padding:14px;
-    margin-bottom:20px;
-    background:#222;
-    color:#fff;
-    border:none;
-    border-radius:8px;
-    font-size:16px;
-}
-    
 section{
     max-width:1000px;
     margin:auto;
@@ -35,43 +23,7 @@ h1{
     text-align:center;
     margin-bottom:40px;
 }
-.info-bar{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-top:-20px;
-    margin-bottom:35px;
-}
 
-#paperCount{
-    margin:0;
-    color:#777;
-}
-.sort-container{
-    text-align:center;
-    margin-bottom:30px;
-}
-
-#sortSelect{
-    background:#222;
-    color:#eee;
-    border:none;
-    border-radius:8px;
-    padding:10px 18px;
-    font-size:.95em;
-    cursor:pointer;
-}
-
-#sortSelect:hover{
-    background:#262626;
-}
-
-#sortSelect:focus{
-    outline:none;
-    border-color:#555;
-}
-
-    
 .back{
     color:white;
     text-decoration:none;
@@ -155,42 +107,18 @@ summary:hover{
 <a class="back" href="index.html">◀ Home</a>
 
     <h1 id="pageTitle">Loading...</h1>
-<input
-    type="text"
-    id="searchBox"
-    placeholder="Search all research..."
->
-<div class="info-bar">
-
-<p id="paperCount"></p>
-
-<select id="sortSelect">
-
-<option value="az">A-Z</option>
-<option value="za">Z-A</option>
-
-<option value="newest">Newest</option>
-<option value="oldest">Oldest</option>
-
-<option value="mostimages">Most Images</option>
-<option value="leastimages">Least Images</option>
-
-</select>
-
-</div>
-
-
+<p id="paperCount"
+   style="text-align:center;color:#777;margin-top:-20px;margin-bottom:40px;">
+</p>
 
 <div id="research-container"></div>
 
 </section>
 
 <script>
-
 const params =
     new URLSearchParams(window.location.search);
-let fuse = null;
-let searchIndex = [];
+
 const currentCategory =
     params.get("category");
 
@@ -199,28 +127,6 @@ document.querySelector("h1").textContent =
         ? "All Research"
         : currentCategory.charAt(0).toUpperCase() +
           currentCategory.slice(1);
-
-    fetch("search-index.json")
-.then(response => response.json())
-.then(data => {
-
-    searchIndex = data;
-
-    fuse = new Fuse(data, {
-        includeScore: true,
-        threshold: 0.35,
-        ignoreLocation: true,
-        minMatchCharLength: 2,
-        keys: [
-            "title",
-            "searchText"
-        ]
-    });
-
-    console.log("Search index loaded");
-
-});
-    
 fetch("descriptions.json")
 .then(response => response.json())
 .then(data => {
@@ -228,109 +134,27 @@ fetch("descriptions.json")
     const container =
         document.getElementById("research-container");
 
-    let papers =
-    Object.entries(data);
+    const papers =
+        Object.entries(data);
 
     papers.sort((a,b)=>
         a[1].title.localeCompare(b[1].title)
     );
-function renderPapers(){
+const filteredPapers = papers.filter(([key,paper]) =>
 
-container.innerHTML = "";
+    currentCategory === "all" ||
 
-let filteredPapers = papers;
+    (
+        paper.category &&
+        paper.category.includes(currentCategory)
+    )
 
-const query =
-    document
-        .getElementById("searchBox")
-        .value
-        .trim();
-
-if(query && fuse){
-
-    const searchResults =
-        fuse.search(query);
-
-    const allowedTitles =
-        new Set(
-            searchResults.map(
-                result => result.item.title
-            )
-        );
-
-    filteredPapers =
-        filteredPapers.filter(
-            ([key,paper]) =>
-                allowedTitles.has(
-                    paper.title
-                )
-        );
-
-}
-
-filteredPapers =
-    filteredPapers.filter(
-        ([key,paper]) =>
-            currentCategory === "all" ||
-            (
-                paper.category &&
-                paper.category.includes(currentCategory)
-            )
-    );
-
-const sortType =
-    document.getElementById("sortSelect").value;
-
-if(sortType === "az"){
-
-    filteredPapers.sort((a,b)=>
-        a[1].title.localeCompare(b[1].title)
-    );
-
-}
-else if(sortType === "za"){
-
-    filteredPapers.sort((a,b)=>
-        b[1].title.localeCompare(a[1].title)
-    );
-
-}
-else if(sortType === "newest"){
-
-    filteredPapers.sort((a,b)=>
-        b[1].updated.localeCompare(a[1].updated)
-    );
-
-}
-else if(sortType === "oldest"){
-
-    filteredPapers.sort((a,b)=>
-        a[1].updated.localeCompare(b[1].updated)
-    );
-
-}
-else if(sortType === "mostimages"){
-
-    filteredPapers.sort((a,b)=>
-        (b[1].images?.length || 0) -
-        (a[1].images?.length || 0)
-    );
-
-}
-else if(sortType === "leastimages"){
-
-    filteredPapers.sort((a,b)=>
-        (a[1].images?.length || 0) -
-        (b[1].images?.length || 0)
-    );
-
-}
+);
 
 document.getElementById("paperCount").textContent =
     filteredPapers.length +
     (filteredPapers.length === 1 ? " Paper" : " Papers");
-
-filteredPapers.forEach(([key,paper]) => {
+    filteredPapers.forEach(([key,paper]) => {
 if(
     currentCategory !== "all" &&
     (
@@ -375,12 +199,10 @@ if(
                 </p>
 
                 <p class="card-date">
-                    Created: ${parseInt(paper.updated.split("-")[1])}-${
-parseInt(paper.updated.split("-")[2])}-${
-paper.updated.split("-")[0]}
+                    Updated: ${paper.updated}
                 </p>
 
-                <div id="warning-${key}">
+                <div id="israelWarning">
 
                     <p>
                     CONTENT WARNING: This paper and/or its supporting images contain graphic content, including depictions of severe injuries, death, or war casualties.
@@ -388,14 +210,14 @@ paper.updated.split("-")[0]}
 
                     <a class="button"
                        href="#"
-                       onclick="showWarningContent('${key}'); return false;"
+                       onclick="showIsraelContent(); return false;">
                        I Understand, Show Content
                     </a>
 
                 </div>
 
-                <div id="content-${key}"
-     style="display:none;">
+                <div id="israelContent"
+                     style="display:none;">
 
                     <a class="button"
                        href="${paper.url}"
@@ -428,9 +250,7 @@ paper.updated.split("-")[0]}
                 </p>
 
                 <p class="card-date">
-                    Created: ${parseInt(paper.updated.split("-")[1])}-${
-parseInt(paper.updated.split("-")[2])}-${
-paper.updated.split("-")[0]}
+                    Updated: ${paper.updated}
                 </p>
 
                 <a class="button"
@@ -454,58 +274,18 @@ paper.updated.split("-")[0]}
 
         container.innerHTML += cardHtml;
 
-});
-
-}
-
-const sortSelect =
-    document.getElementById("sortSelect");
-
-const savedSort =
-    localStorage.getItem("paperSort");
-
-if(savedSort){
-    sortSelect.value = savedSort;
-}
-
-renderPapers();
-
-sortSelect.addEventListener("change", () => {
-
-    localStorage.setItem(
-        "paperSort",
-        sortSelect.value
-    );
-
-    renderPapers();
+    });
 
 });
-    document
-.getElementById("searchBox")
-.addEventListener(
-    "input",
-    renderPapers
-);
-});
 
-    
+function showIsraelContent(){
 
-    
-function showWarningContent(key){
-
-    document.getElementById(
-        "warning-" + key
-    ).style.display = "none";
-
-    document.getElementById(
-        "content-" + key
-    ).style.display = "block";
+    document.getElementById("israelWarning").style.display = "none";
+    document.getElementById("israelContent").style.display = "block";
 
 }
 
 </script>
-
-<script src="https://cdn.jsdelivr.net/npm/fuse.js@7.4.2/dist/fuse.min.js"></script>
 
 </body>
 </html>
