@@ -760,7 +760,7 @@ async function initializeSearch(){
         searchIndex,
         {
             includeScore:true,
-            threshold:0.5,
+            threshold:0.2,
             ignoreLocation:true,
             minMatchCharLength:2,
             keys:[
@@ -997,7 +997,8 @@ function runSearch(query){
 
         pdfFuse
             .search(query)
-            .slice(0,5)
+            .filter(result => result.score < 0.2)
+.slice(0,5)
             .forEach(result => {
 
                 html += `
