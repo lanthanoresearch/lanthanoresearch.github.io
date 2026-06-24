@@ -357,6 +357,77 @@ mark{
     color:#888;
     font-size:.85em;
 }
+    #imageWarningOverlay{
+
+    position:fixed;
+
+    inset:0;
+
+    background:rgba(0,0,0,.9);
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    z-index:999999;
+
+}
+
+#imageWarningBox{
+
+    background:#1d1d1d;
+
+    width:90%;
+
+    max-width:450px;
+
+    padding:25px;
+
+    border-radius:12px;
+
+    text-align:center;
+
+}
+
+.warningIcon{
+
+    font-size:70px;
+
+    margin-bottom:15px;
+
+}
+
+.warningButtons{
+
+    display:flex;
+
+    gap:15px;
+
+    justify-content:center;
+
+    margin-top:25px;
+
+}
+
+.warningButtons button{
+
+    flex:1;
+
+    padding:12px;
+
+    background:#333;
+
+    color:white;
+
+    border:none;
+
+    border-radius:8px;
+
+    cursor:pointer;
+
+}
     
 </style></head><body><div id="warningBox"><div class="warningContent"><h2>CONTENT WARNING</h2><p>
 This website contains graphic material that may include depictions of injury, death, violence, accidents, crime scenes, medical imagery, historical atrocities, and other disturbing content.
@@ -936,45 +1007,68 @@ document.addEventListener("click", e => {
     }
 
 });
-   function viewSensitiveImage(image){
+  let pendingImage = "";
 
-    const alreadyAccepted =
-        sessionStorage.getItem(
-            "imageWarningAccepted"
-        ) === "yes";
+function viewSensitiveImage(image){
 
-    if(alreadyAccepted){
+    pendingImage = image;
 
-        window.open(
-            image,
-            "_blank"
-        );
+    document.getElementById(
+        "imageWarningOverlay"
+    ).style.display = "flex";
 
-        return;
+}
 
-    }
+function closeImageWarning(){
 
-    const proceed = confirm(
-        "WARNING\n\nThis image may contain graphic or disturbing content.\n\nContinue?"
+    document.getElementById(
+        "imageWarningOverlay"
+    ).style.display = "none";
+
+}
+
+document
+.getElementById("continueImageButton")
+.onclick = () => {
+
+    closeImageWarning();
+
+    window.open(
+        pendingImage,
+        "_blank"
     );
 
-    if(proceed){
-
-        sessionStorage.setItem(
-            "imageWarningAccepted",
-            "yes"
-        );
-
-        window.open(
-            image,
-            "_blank"
-        );
-
-    }
-
-   }
+};
 </script>
 
+<div id="imageWarningOverlay" style="display:none;">
 
+    <div id="imageWarningBox">
+
+        <div class="warningIcon">
+            ⚠️
+        </div>
+
+        <h2>Graphic Image</h2>
+
+        <p>
+            This image may contain graphic or disturbing content.
+        </p>
+
+        <div class="warningButtons">
+
+            <button onclick="closeImageWarning()">
+                Cancel
+            </button>
+
+            <button id="continueImageButton">
+                View Image
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
 </body>
 </html>
