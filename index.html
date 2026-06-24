@@ -171,7 +171,22 @@ a:active{
 .card:hover{
     background:#262626;
 }
+.warning-thumb{
 
+    width:70px;
+    height:70px;
+
+    background:#333;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    font-size:30px;
+
+    border-radius:8px;
+
+}
 .music-banner{
     display:block;
     width:100%;
@@ -606,20 +621,21 @@ Promise.all([
 
         paper.images.forEach(image => {
 
-            imageRecords.push({
+           imageRecords.push({
 
-                imageFile:image,
+    imageFile:image,
 
-                imageTitle:image
-                    .replace(/\.[^/.]+$/,"")
-                    .replace(/[_-]/g," "),
+    imageTitle:image
+        .replace(/\.[^/.]+$/,"")
+        .replace(/[_-]/g," "),
 
-                paperTitle:paper.title,
+    paperTitle:paper.title,
 
-                paperUrl:paper.url
+    paperUrl:paper.url,
 
-            });
+    warning: paper.warning
 
+});
         });
 
     });
@@ -697,10 +713,22 @@ searchBox.addEventListener("input", () => {
                     class="search-result"
                 >
 
-                    <img
-                        src="${result.item.imageFile}"
-                        class="search-thumb"
-                    >
+                    ${
+    result.item.warning
+
+    ?
+
+    `<div class="search-thumb warning-thumb">
+        ⚠
+     </div>`
+
+    :
+
+    `<img
+        src="${result.item.imageFile}"
+        class="search-thumb"
+    >`
+}
 
                     <div>
 
