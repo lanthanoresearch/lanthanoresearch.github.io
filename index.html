@@ -618,7 +618,18 @@ Promise.all([
 
     paperUrl:paper.url,
 
-    warning: paper.warning
+    warning: paper.warning,
+
+    searchText:
+        (
+            paper.title + " " +
+            (paper.description || "") + " " +
+            (
+                searchIndex.find(
+                    p => p.title === paper.title
+                )?.searchText || ""
+            )
+        )
 
 });
         });
@@ -626,12 +637,22 @@ Promise.all([
     });
 
     imageFuse = new Fuse(imageRecords,{
-        threshold:0.35,
-        keys:[
-            "imageTitle",
-            "paperTitle"
-        ]
-    });
+    threshold:0.35,
+    keys:[
+        {
+            name:"imageTitle",
+            weight:5
+        },
+        {
+            name:"paperTitle",
+            weight:10
+        },
+        {
+            name:"searchText",
+            weight:3
+        }
+    ]
+});
 
 });
 
