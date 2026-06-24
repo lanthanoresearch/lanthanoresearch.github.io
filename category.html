@@ -295,7 +295,12 @@ if(
 
         let cardHtml = "";
 
-        if(paper.warning){
+        if(
+    paper.warning &&
+    sessionStorage.getItem(
+        "warning-" + key
+    ) !== "accepted"
+){
             cardHtml = `
             <div class="card">
 
@@ -414,6 +419,11 @@ sortSelect.addEventListener("change", () => {
 });
 
 function showWarningContent(key){
+
+    sessionStorage.setItem(
+        "warning-" + key,
+        "accepted"
+    );
 
     document.getElementById(
         "warning-" + key
