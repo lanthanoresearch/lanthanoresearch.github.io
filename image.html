@@ -1,1 +1,98 @@
+<!DOCTYPE html>
+<html>
 
+<head>
+
+<meta charset="UTF-8">
+
+<title>Image Viewer</title>
+
+<style>
+
+body{
+
+    margin:0;
+
+    background:#111;
+
+    color:white;
+
+    font-family:Arial,sans-serif;
+
+    text-align:center;
+
+}
+
+img{
+
+    max-width:95%;
+
+    max-height:80vh;
+
+    margin-top:30px;
+
+}
+
+.info{
+
+    margin:25px;
+
+    color:#aaa;
+
+}
+
+.back{
+
+    position:fixed;
+
+    top:20px;
+
+    left:20px;
+
+    color:white;
+
+    text-decoration:none;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<a
+    href="javascript:history.back()"
+    class="back">
+
+← Back
+
+</a>
+
+<img id="viewer">
+
+<div class="info" id="info"></div>
+
+<script>
+
+const params =
+    new URLSearchParams(
+        location.search
+    );
+
+const image =
+    params.get("image");
+
+document
+.getElementById("viewer")
+.src = image;
+
+document
+.getElementById("info")
+.textContent = image;
+
+</script>
+
+</body>
+
+</html>
