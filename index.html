@@ -681,6 +681,10 @@ if ("serviceWorker" in navigator) {
 let imageFuse;
 let searchReady = false;
 
+let pendingImage = "";
+let currentPaperTitle = "";
+let returnPage = "";
+    
 Promise.all([
     fetch("search-index.json").then(r => r.json()),
     fetch("descriptions.json").then(r => r.json())
@@ -821,6 +825,21 @@ function highlightMatch(text, query){
 const searchBox =
     document.getElementById("searchBox");
 
+
+    const savedSearch =
+
+    sessionStorage.getItem(
+        "lastSearch"
+    );
+
+if(savedSearch){
+
+    searchBox.value = savedSearch;
+
+}
+
+
+    
 const searchResults =
     document.getElementById("searchResults");
 
@@ -829,6 +848,12 @@ searchBox.addEventListener("input", () => {
     const query =
         searchBox.value.trim();
 
+    sessionStorage.setItem(
+    "lastSearch",
+    query
+);
+
+    
     if(query.length < 2){
 
     searchResults.innerHTML = `
@@ -926,10 +951,25 @@ html += `
     onclick="
         ${
             result.item.warning
-                ? `viewSensitiveImage('${result.item.imageFile}')`
+                ? `viewSensitiveImage(
+
+    '${result.item.imageFile}',
+
+    '${result.item.paperTitle}'
+
+)`
                 : `window.location.href =
-    'image.html?image=' +
-    encodeURIComponent(result.item.imageFile);`
+
+    "image.html?" +
+
+    "image=" +
+    encodeURIComponent(result.item.imageFile) +
+
+    "&paper=" +
+    encodeURIComponent(result.item.paperTitle) +
+
+    "&return=" +
+    encodeURIComponent(window.location.href);`
         };
         return false;
     "
@@ -1009,26 +1049,41 @@ document.addEventListener("click", e => {
     }
 
 });
-  let pendingImage = "";
+  
 
-function viewSensitiveImage(image){
+function viewSensitiveImage(
+    image,
+    paperTitle
+){
 
     const alreadyAccepted =
         sessionStorage.getItem(
             "imageWarningAccepted"
         ) === "yes";
 
+    returnPage = window.location.href;
+
     if(alreadyAccepted){
 
         window.location.href =
-    "image.html?image=" +
-    encodeURIComponent(image);
+            "image.html?" +
+
+            "image=" +
+            encodeURIComponent(image) +
+
+            "&paper=" +
+            encodeURIComponent(paperTitle) +
+
+            "&return=" +
+            encodeURIComponent(returnPage);
 
         return;
 
     }
 
     pendingImage = image;
+
+    currentPaperTitle = paperTitle;
 
     document.getElementById(
         "imageWarningOverlay"
@@ -1043,6 +1098,8 @@ function closeImageWarning(){
     ).style.display = "none";
 
     pendingImage = "";
+
+    currentPaperTitle = "";
 
 }
 document
@@ -1079,11 +1136,26 @@ function continueImageWarning(){
 
     const image = pendingImage;
 
+    const paper =
+        currentPaperTitle;
+
+    const back =
+        returnPage;
+
     closeImageWarning();
 
     window.location.href =
-    "image.html?image=" +
-    encodeURIComponent(image);
+
+        "image.html?" +
+
+        "image=" +
+        encodeURIComponent(image) +
+
+        "&paper=" +
+        encodeURIComponent(paper) +
+
+        "&return=" +
+        encodeURIComponent(back);
 
 }
 </script>
