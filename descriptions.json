@@ -132,7 +132,8 @@
     "title": "Godless Israel",
     "warning": true,
     "category": [
-      "biblical"
+      "biblical",
+       "political"
     ],
     "description": "An examination of modern Israel through biblical, historical, and theological perspectives.",
     "url": "Israel.pdf",
