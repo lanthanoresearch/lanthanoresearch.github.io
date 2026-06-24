@@ -588,7 +588,8 @@ Promise.all([
     fetch("descriptions.json").then(r => r.json())
 ])
 .then(([searchIndex, descriptions]) => {
-
+ console.log("PDF records:", searchIndex.length);
+    console.log("Description records:", Object.keys(descriptions).length);
     pdfFuse = new Fuse(searchIndex,{
         threshold:0.35,
         keys:[
