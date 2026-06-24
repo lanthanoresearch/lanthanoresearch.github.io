@@ -13,6 +13,18 @@ body{
     font-family:Arial,sans-serif;
 }
 
+    #searchBox{
+    width:100%;
+    box-sizing:border-box;
+    padding:14px;
+    margin-bottom:20px;
+    background:#222;
+    color:#fff;
+    border:none;
+    border-radius:8px;
+    font-size:16px;
+}
+    
 section{
     max-width:1000px;
     margin:auto;
@@ -143,7 +155,11 @@ summary:hover{
 <a class="back" href="index.html">◀ Home</a>
 
     <h1 id="pageTitle">Loading...</h1>
-
+<input
+    type="text"
+    id="searchBox"
+    placeholder="Search all research..."
+>
 <div class="info-bar">
 
 <p id="paperCount"></p>
@@ -170,9 +186,12 @@ summary:hover{
 </section>
 
 <script>
+    let fuse = null;
+let searchIndex = null;
 const params =
     new URLSearchParams(window.location.search);
-
+let fuse = null;
+let searchIndex = [];
 const currentCategory =
     params.get("category");
 
@@ -181,6 +200,28 @@ document.querySelector("h1").textContent =
         ? "All Research"
         : currentCategory.charAt(0).toUpperCase() +
           currentCategory.slice(1);
+
+    fetch("search-index.json")
+.then(response => response.json())
+.then(data => {
+
+    searchIndex = data;
+
+    fuse = new Fuse(data, {
+        includeScore: true,
+        threshold: 0.35,
+        ignoreLocation: true,
+        minMatchCharLength: 2,
+        keys: [
+            "title",
+            "searchText"
+        ]
+    });
+
+    console.log("Search index loaded");
+
+});
+    
 fetch("descriptions.json")
 .then(response => response.json())
 .then(data => {
@@ -198,8 +239,38 @@ function renderPapers(){
 
 container.innerHTML = "";
 
-let filteredPapers = papers.filter(([key,paper]) =>
+let filteredPapers = papers;([key,paper]) =>
+    const query =
+    document
+        .getElementById("searchBox")
+        .value
+        .trim();
 
+
+    if(query && fuse){
+
+    const searchResults =
+        fuse.search(query);
+
+    const allowedTitles =
+        new Set(
+            searchResults.map(
+                result => result.item.title
+            )
+        );
+
+    filteredPapers =
+        filteredPapers.filter(
+            ([key,paper]) =>
+                allowedTitles.has(
+                    paper.title
+                )
+        );
+
+}
+
+
+    
     currentCategory === "all" ||
 
     (
@@ -413,6 +484,15 @@ sortSelect.addEventListener("change", () => {
 });
 });
 
+    
+document
+.getElementById("searchBox")
+.addEventListener(
+    "input",
+    renderPapers
+);
+
+    
 function showWarningContent(key){
 
     document.getElementById(
@@ -426,6 +506,11 @@ function showWarningContent(key){
 }
 
 </script>
+</script>
 
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@7.4.2/dist/fuse.min.js"></script>
+
+</body>
+</html>
 </body>
 </html>
