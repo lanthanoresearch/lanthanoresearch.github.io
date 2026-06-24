@@ -294,12 +294,18 @@ if(
         }
 
         let cardHtml = "";
-
-        if(
-    paper.warning &&
+const warningAccepted =
     sessionStorage.getItem(
         "warning-" + key
-    ) !== "accepted"
+    ) === "accepted";
+       const warningAccepted =
+    sessionStorage.getItem(
+        "warning-" + key
+    ) === "accepted";
+
+if(
+    paper.warning &&
+    !warningAccepted
 ){
             cardHtml = `
             <div class="card">
