@@ -756,25 +756,26 @@ async function initializeSearch(){
         typeof window.Fuse
     );
 
-    pdfFuse = new window.Fuse(
-        searchIndex,
+    pdfFuse = new Fuse(searchIndex,{
+    includeScore:true,
+    threshold:0.2,
+    ignoreLocation:true,
+    minMatchCharLength:3,
+    keys:[
         {
-            includeScore:true,
-            threshold:0.2,
-            ignoreLocation:true,
-            minMatchCharLength:2,
-            keys:[
-                {
-                    name:"title",
-                    weight:2
-                },
-                {
-                    name:"searchText",
-                    weight:1
-                }
-            ]
+            name:"title",
+            weight:10
+        },
+        {
+            name:"keywords",
+            weight:5
+        },
+        {
+            name:"searchText",
+            weight:1
         }
-    );
+    ]
+});
 
     const imageIndex = [];
 
@@ -809,13 +810,13 @@ imageFuse = new window.Fuse(
     imageIndex,
     {
         includeScore:true,
-        threshold:0.5,
+        threshold:0.2,
         ignoreLocation:true,
         minMatchCharLength:2,
         keys:[
             {
                 name:"imageTitle",
-                weight:2
+                weight:10
             },
             {
                 name:"searchText",
