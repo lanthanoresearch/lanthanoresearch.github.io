@@ -784,11 +784,32 @@ document.addEventListener("click", e => {
 });
    function viewSensitiveImage(image){
 
+    const alreadyAccepted =
+        sessionStorage.getItem(
+            "imageWarningAccepted"
+        ) === "yes";
+
+    if(alreadyAccepted){
+
+        window.open(
+            image,
+            "_blank"
+        );
+
+        return;
+
+    }
+
     const proceed = confirm(
         "This image may contain graphic content.\n\nView image?"
     );
 
     if(proceed){
+
+        sessionStorage.setItem(
+            "imageWarningAccepted",
+            "yes"
+        );
 
         window.open(
             image,
