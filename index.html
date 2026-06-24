@@ -615,9 +615,31 @@ Promise.all([
     fetch("descriptions.json").then(r => r.json())
 ])
 .then(([searchIndex, descriptions]) => {
+    const papersByUrl = {};
+
+Object.values(descriptions).forEach(paper => {
+
+    papersByUrl[paper.url] = paper;
+
+});
  console.log("PDF records:", searchIndex.length);
     console.log("Description records:", Object.keys(descriptions).length);
-    pdfFuse = new Fuse(searchIndex,{
+    
+
+    const pdfRecords = searchIndex.map(record => ({
+
+    ...record,
+
+    displayTitle:
+        papersByUrl[record.url]?.title ||
+        record.title
+
+}));
+
+pdfFuse = new Fuse(pdfRecords,{
+
+
+    
     includeScore:true,
     includeMatches:true,
     threshold:0.4,
@@ -701,6 +723,16 @@ searchReady = true;
 
 searchBox.disabled = false;
 searchBox.placeholder = "Search all research...";
+})
+.catch(error => {
+
+    console.error(error);
+
+    searchBox.disabled = false;
+
+    searchBox.placeholder =
+        "Search unavailable";
+
 });
 function highlightMatch(text, query){
 
@@ -790,7 +822,7 @@ html += `
     <div>
 
         <div class="search-title">
-           ${highlightMatch(result.item.title, query)}
+           ${highlightMatch(result.item.displayTitle, query)}
         </div>
 
         <div class="search-source">
