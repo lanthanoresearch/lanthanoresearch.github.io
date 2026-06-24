@@ -186,8 +186,7 @@ summary:hover{
 </section>
 
 <script>
-    let fuse = null;
-let searchIndex = null;
+
 const params =
     new URLSearchParams(window.location.search);
 let fuse = null;
@@ -239,15 +238,15 @@ function renderPapers(){
 
 container.innerHTML = "";
 
-let filteredPapers = papers;([key,paper]) =>
-    const query =
+let filteredPapers = papers;
+
+const query =
     document
         .getElementById("searchBox")
         .value
         .trim();
 
-
-    if(query && fuse){
+if(query && fuse){
 
     const searchResults =
         fuse.search(query);
@@ -269,16 +268,15 @@ let filteredPapers = papers;([key,paper]) =>
 
 }
 
-
-    
-    currentCategory === "all" ||
-
-    (
-        paper.category &&
-        paper.category.includes(currentCategory)
-    )
-
-);
+filteredPapers =
+    filteredPapers.filter(
+        ([key,paper]) =>
+            currentCategory === "all" ||
+            (
+                paper.category &&
+                paper.category.includes(currentCategory)
+            )
+    );
 
 const sortType =
     document.getElementById("sortSelect").value;
@@ -482,15 +480,15 @@ sortSelect.addEventListener("change", () => {
     renderPapers();
 
 });
-});
-
-    
-document
+    document
 .getElementById("searchBox")
 .addEventListener(
     "input",
     renderPapers
 );
+});
+
+    
 
     
 function showWarningContent(key){
@@ -506,11 +504,8 @@ function showWarningContent(key){
 }
 
 </script>
-</script>
 
 <script src="https://cdn.jsdelivr.net/npm/fuse.js@7.4.2/dist/fuse.min.js"></script>
 
-</body>
-</html>
 </body>
 </html>
