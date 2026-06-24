@@ -914,7 +914,38 @@ const mobileResults =
 
 
     
+function runSearch(query){
+
+    sessionStorage.setItem(
+        "lastSearch",
+        query
+    );
+
+    if(!query){
+
+        desktopResults.style.display = "none";
+        mobileResults.style.display = "none";
+        return;
+    }
+
+    // existing search code here
+}
+
+searchBox.addEventListener("input", () => {
+
+    runSearch(
+        searchBox.value.trim()
+    );
+
+});
+
 overlaySearchBox.addEventListener("input", () => {
+
+    runSearch(
+        overlaySearchBox.value.trim()
+    );
+
+});
 
     const query =
     overlaySearchBox.value.trim();
