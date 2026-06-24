@@ -247,6 +247,92 @@ footer{
     opacity:.6;
     background:#2a2a2a;
 }
+    .search-wrapper{
+    position:relative;
+    max-width:800px;
+    margin:30px auto 0 auto;
+}
+
+#searchBox{
+    width:100%;
+    box-sizing:border-box;
+    padding:16px;
+    background:#1d1d1d;
+    color:#fff;
+    border:1px solid #333;
+    border-radius:10px;
+    font-size:18px;
+}
+
+#searchBox:focus{
+    outline:none;
+    border-color:#666;
+}
+
+#searchResults{
+
+    display:none;
+
+    position:absolute;
+
+    top:100%;
+    left:0;
+    right:0;
+
+    margin-top:8px;
+
+    background:#1d1d1d;
+
+    border:1px solid #333;
+
+    border-radius:10px;
+
+    max-height:600px;
+
+    overflow-y:auto;
+
+    z-index:99999;
+
+    box-shadow:
+        0 10px 40px rgba(0,0,0,.6);
+}
+
+.search-result{
+
+    display:flex;
+
+    gap:15px;
+
+    padding:15px;
+
+    border-bottom:1px solid #333;
+
+    color:white;
+
+    text-decoration:none;
+}
+
+.search-result:hover{
+    background:#262626;
+}
+
+.search-thumb{
+    width:70px;
+    height:70px;
+    object-fit:cover;
+    border-radius:8px;
+}
+
+.search-title{
+    font-weight:bold;
+    margin-bottom:4px;
+}
+
+.search-source{
+    color:#888;
+    font-size:.85em;
+}
+    
 </style></head><body><div id="warningBox"><div class="warningContent"><h2>CONTENT WARNING</h2><p>
 This website contains graphic material that may include depictions of injury, death, violence, accidents, crime scenes, medical imagery, historical atrocities, and other disturbing content.
 </p><p>
@@ -299,8 +385,20 @@ Lanthano is an independent research project exploring controversial subjects, al
 Every idea should be judged by its evidence, not by its popularity.
 </p>
 
+<div class="search-wrapper">
+
+<input
+    type="text"
+    id="searchBox"
+    placeholder="Search all research..."
+>
+
+<div id="searchResults"></div>
+
 </div>
 
+</div>
+    
 <a href="category.html?category=all">
 
 
@@ -343,6 +441,8 @@ Share Site
 <a href="#research" class="top-button"
     id="topButton">▼</a>
 
+    <script src="https://cdn.jsdelivr.net/npm/fuse.js@7.4.2/dist/fuse.min.js"></script>
+    
 <script>
 
 if(localStorage.getItem("warningAccepted") === "yes"){
@@ -476,6 +576,167 @@ if ("serviceWorker" in navigator) {
     }
 
     }
+    let pdfFuse;
+let imageFuse;
+
+Promise.all([
+    fetch("search-index.json").then(r => r.json()),
+    fetch("descriptions.json").then(r => r.json())
+])
+.then(([searchIndex, descriptions]) => {
+
+    pdfFuse = new Fuse(searchIndex,{
+        threshold:0.35,
+        keys:[
+            "title",
+            "searchText"
+        ]
+    });
+
+    const imageRecords = [];
+
+    Object.values(descriptions).forEach(paper => {
+
+        if(!paper.images) return;
+
+        paper.images.forEach(image => {
+
+            imageRecords.push({
+
+                imageFile:image,
+
+                imageTitle:image
+                    .replace(/\.[^/.]+$/,"")
+                    .replace(/[_-]/g," "),
+
+                paperTitle:paper.title,
+
+                paperUrl:paper.url
+
+            });
+
+        });
+
+    });
+
+    imageFuse = new Fuse(imageRecords,{
+        threshold:0.35,
+        keys:[
+            "imageTitle",
+            "paperTitle"
+        ]
+    });
+
+});
+
+const searchBox =
+    document.getElementById("searchBox");
+
+const searchResults =
+    document.getElementById("searchResults");
+
+searchBox.addEventListener("input", () => {
+
+    const query =
+        searchBox.value.trim();
+
+    if(!query){
+
+        searchResults.style.display = "none";
+        return;
+
+    }
+
+    let html = "";
+
+    if(pdfFuse){
+
+        pdfFuse
+            .search(query)
+            .slice(0,5)
+            .forEach(result => {
+
+                html += `
+                <a
+                    href="${result.item.url}"
+                    target="_blank"
+                    class="search-result"
+                >
+
+                    <div>
+
+                        <div class="search-title">
+                            📄 ${result.item.title}
+                        </div>
+
+                    </div>
+
+                </a>
+                `;
+
+            });
+
+    }
+
+    if(imageFuse){
+
+        imageFuse
+            .search(query)
+            .slice(0,10)
+            .forEach(result => {
+
+                html += `
+                <a
+                    href="${result.item.paperUrl}"
+                    target="_blank"
+                    class="search-result"
+                >
+
+                    <img
+                        src="${result.item.imageFile}"
+                        class="search-thumb"
+                    >
+
+                    <div>
+
+                        <div class="search-title">
+                            🖼 ${result.item.imageTitle}
+                        </div>
+
+                        <div class="search-source">
+                            From: ${result.item.paperTitle}
+                        </div>
+
+                    </div>
+
+                </a>
+                `;
+
+            });
+
+    }
+
+    searchResults.innerHTML = html;
+
+    searchResults.style.display =
+        html ? "block" : "none";
+
+});
+
+document.addEventListener("click", e => {
+
+    if(
+        !document
+            .querySelector(".search-wrapper")
+            .contains(e.target)
+    ){
+
+        searchResults.style.display =
+            "none";
+
+    }
+
+});
 </script>
 
 
