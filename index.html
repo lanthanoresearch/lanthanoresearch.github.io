@@ -357,15 +357,15 @@ mark{
     color:#888;
     font-size:.85em;
 }
-    #imageWarningOverlay{
+   #imageWarningOverlay{
+
+    display:none;
 
     position:fixed;
 
     inset:0;
 
     background:rgba(0,0,0,.9);
-
-    display:flex;
 
     justify-content:center;
 
@@ -1027,9 +1027,7 @@ function closeImageWarning(){
 
 }
 
-document
-.getElementById("continueImageButton")
-.onclick = () => {
+function continueImageWarning(){
 
     closeImageWarning();
 
@@ -1038,7 +1036,7 @@ document
         "_blank"
     );
 
-};
+}
 </script>
 
 <div id="imageWarningOverlay" style="display:none;">
@@ -1061,9 +1059,11 @@ document
                 Cancel
             </button>
 
-            <button id="continueImageButton">
-                View Image
-            </button>
+           <button
+    id="continueImageButton"
+    onclick="continueImageWarning()">
+    View Image
+</button>
 
         </div>
 
