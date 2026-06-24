@@ -311,7 +311,7 @@ parseInt(paper.updated.split("-")[2])}-${
 paper.updated.split("-")[0]}
                 </p>
 
-                <div id="israelWarning">
+                <div id="warning-${key}">
 
                     <p>
                     CONTENT WARNING: This paper and/or its supporting images contain graphic content, including depictions of severe injuries, death, or war casualties.
@@ -319,14 +319,14 @@ paper.updated.split("-")[0]}
 
                     <a class="button"
                        href="#"
-                       onclick="showIsraelContent(); return false;">
+                       onclick="showWarningContent('${key}'); return false;"
                        I Understand, Show Content
                     </a>
 
                 </div>
 
-                <div id="israelContent"
-                     style="display:none;">
+                <div id="content-${key}"
+     style="display:none;">
 
                     <a class="button"
                        href="${paper.url}"
@@ -413,10 +413,15 @@ sortSelect.addEventListener("change", () => {
 });
 });
 
-function showIsraelContent(){
+function showWarningContent(key){
 
-    document.getElementById("israelWarning").style.display = "none";
-    document.getElementById("israelContent").style.display = "block";
+    document.getElementById(
+        "warning-" + key
+    ).style.display = "none";
+
+    document.getElementById(
+        "content-" + key
+    ).style.display = "block";
 
 }
 
