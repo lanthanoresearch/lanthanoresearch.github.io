@@ -809,7 +809,15 @@ searchBox.addEventListener("focus", () => {
 });
 
 closeSearch.addEventListener("click", () => {
+overlay.addEventListener("click", (e) => {
 
+    if(e.target === overlay){
+
+        closeSearch.click();
+
+    }
+
+});
     const rect =
         searchBox.getBoundingClientRect();
 
@@ -838,10 +846,10 @@ const searchResults =
 
 
     
-searchBox.addEventListener("input", () => {
+overlaySearchBox.addEventListener("input", () => {
 
     const query =
-        searchBox.value.trim();
+    overlaySearchBox.value.trim();
 
     if(!query){
 
