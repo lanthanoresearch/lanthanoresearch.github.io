@@ -351,22 +351,79 @@ footer{
     font-size:.85em;
 }
 
-    .search-wrapper{
-    transition:all .25s ease;
-}
+   
 
-body.search-mode .search-wrapper{
+    #searchOverlay{
 
     position:fixed;
+    inset:0;
 
-    top:10px;
-    left:10px;
-    right:10px;
+    background:rgba(0,0,0,.85);
 
-    max-width:none;
+    z-index:999999;
 
-    z-index:99999;
+    opacity:0;
+    pointer-events:none;
+
+    transition:opacity .25s ease;
 }
+
+#searchOverlay.active{
+
+    opacity:1;
+    pointer-events:auto;
+}
+
+#searchTopBar{
+
+    position:absolute;
+
+    padding:10px;
+
+    transition:
+        top .25s ease,
+        left .25s ease,
+        width .25s ease;
+}
+    
+
+#searchOverlay.active #searchTopBar{
+
+    transform:translateY(0);
+}
+
+#overlaySearchBox{
+
+    width:calc(100% - 60px);
+
+    padding:16px;
+
+    background:#1d1d1d;
+    color:white;
+
+    border:1px solid #444;
+
+    border-radius:10px;
+}
+
+#closeSearch{
+
+    margin-left:10px;
+
+    padding:16px;
+
+    background:#222;
+
+    color:white;
+
+    border:none;
+
+    border-radius:10px;
+}
+
+
+
+
     
 </style></head><body><div id="warningBox"><div class="warningContent"><h2>CONTENT WARNING</h2><p>
 This website contains graphic material that may include depictions of injury, death, violence, accidents, crime scenes, medical imagery, historical atrocities, and other disturbing content.
@@ -685,25 +742,84 @@ initializeSearch();
 
 const searchBox =
     document.getElementById("searchBox");
+const overlay =
+    document.getElementById("searchOverlay");
 
+const overlaySearchBox =
+    document.getElementById("overlaySearchBox");
+
+const closeSearch =
+    document.getElementById("closeSearch");
+
+searchBox.addEventListener("focus", () => {
+
+    if(window.innerWidth > 768) return;
+
+    const rect =
+        searchBox.getBoundingClientRect();
+
+    const topBar =
+        document.getElementById("searchTopBar");
+
+    topBar.style.top =
+        rect.top + "px";
+
+    topBar.style.left =
+        rect.left + "px";
+
+    topBar.style.width =
+        rect.width + "px";
+
+    overlay.classList.add("active");
+
+    overlaySearchBox.value =
+        searchBox.value;
+
+    requestAnimationFrame(() => {
+
+        topBar.style.top = "10px";
+        topBar.style.left = "10px";
+        topBar.style.width =
+            (window.innerWidth - 20) + "px";
+
+    });
+
+    setTimeout(() => {
+
+        overlaySearchBox.focus();
+
+    },250);
+
+});
+
+closeSearch.addEventListener("click", () => {
+
+    const rect =
+        searchBox.getBoundingClientRect();
+
+    const topBar =
+        document.getElementById("searchTopBar");
+
+    topBar.style.top =
+        rect.top + "px";
+
+    topBar.style.left =
+        rect.left + "px";
+
+    topBar.style.width =
+        rect.width + "px";
+
+    setTimeout(() => {
+
+        overlay.classList.remove("active");
+
+    },250);
+
+});
 const searchResults =
     document.getElementById("searchResults");
 
-searchBox.addEventListener("focus", () => {
-    document.body.classList.add("search-mode");
-});
 
-searchBox.addEventListener("blur", () => {
-
-    if(!searchBox.value.trim()){
-
-        document.body.classList.remove(
-            "search-mode"
-        );
-
-    }
-
-});
 
     
 searchBox.addEventListener("input", () => {
@@ -871,6 +987,22 @@ document.addEventListener("click", e => {
 }
 </script>
 
+<div id="searchOverlay">
 
+    <div id="searchTopBar">
+
+        <input
+            type="text"
+            id="overlaySearchBox"
+            placeholder="Search all research..."
+        >
+
+        <button id="closeSearch">
+            ✕
+        </button>
+
+    </div>
+
+</div>
 </body>
 </html>
