@@ -605,9 +605,16 @@ Promise.all([
 ])
     
 .then(([searchIndex, descriptions]) => {
- console.log("PDF records:", searchIndex.length);
+
+    console.log("PDF records:", searchIndex.length);
     console.log("Description records:", Object.keys(descriptions).length);
-    pdfFuse = new Fuse(searchIndex,{
+
+    console.log(
+        "window.Fuse:",
+        typeof window.Fuse
+    );
+
+    pdfFuse = new window.Fuse(searchIndex,{
         threshold:0.35,
         keys:[
             "title",
@@ -645,7 +652,7 @@ Promise.all([
 
     });
 
-    imageFuse = new Fuse(imageRecords,{
+    imageFuse = new window.Fuse(imageRecords,{
         threshold:0.35,
         keys:[
             "imageTitle",
