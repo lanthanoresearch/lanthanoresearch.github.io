@@ -761,7 +761,7 @@ searchIndex = loadedSearchIndex;
 
     pdfFuse = new Fuse(loadedSearchIndex,{
     includeScore:true,
-    threshold:0.6,
+    threshold:0.35,
     ignoreLocation:true,
     minMatchCharLength:2,
     keys:[
@@ -813,7 +813,7 @@ imageFuse = new window.Fuse(
     imageIndex,
     {
         includeScore:true,
-        threshold:0.5,
+        threshold:0.35,
         ignoreLocation:true,
         minMatchCharLength:1,
         keys:[
@@ -1003,7 +1003,8 @@ function runSearch(query){
     }
 
    let html = "";
-
+const shownTitles = new Set();
+const shownImages = new Set();
 if(!searchIndex) return;
 const exactMatches = searchIndex.filter(pdf =>
     pdf.title
@@ -1011,7 +1012,6 @@ const exactMatches = searchIndex.filter(pdf =>
         .includes(query.toLowerCase())
 );
 
-const shownTitles = new Set();
 
 exactMatches.forEach(pdf => {
 
@@ -1043,6 +1043,10 @@ const exactImages = imageFuse
 
 exactImages.forEach(result => {
 
+    shownImages.add(
+        result.item.imageFile
+    );
+
     html += `
     <a
         href="${result.item.imageFile}"
@@ -1058,28 +1062,29 @@ exactImages.forEach(result => {
     `;
 
 });
-if(pdfFuse){
+if(imageFuse){
 
-    pdfFuse
+    imageFuse
         .search(query)
+        .filter(result => result.score < 0.35)
         .slice(0,10)
         .forEach(result => {
 
             if(
-                shownTitles.has(
-                    result.item.title
+                shownImages.has(
+                    result.item.imageFile
                 )
             ) return;
 
             html += `
             <a
-                href="${result.item.url}"
+                href="${result.item.imageFile}"
                 target="_blank"
                 class="search-result"
             >
                 <div>
                     <div class="search-title">
-                        📄 ${result.item.title}
+                        🖼 ${result.item.imageTitle}
                     </div>
                 </div>
             </a>
