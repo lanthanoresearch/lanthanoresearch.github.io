@@ -1,98 +1,202 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-
 <meta charset="UTF-8">
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Image Viewer</title>
 
 <style>
-
 body{
-
     margin:0;
-
     background:#111;
-
-    color:white;
-
+    color:#eee;
     font-family:Arial,sans-serif;
-
-    text-align:center;
-
 }
-
-img{
-
-    max-width:95%;
-
-    max-height:80vh;
-
-    margin-top:30px;
-
+section{
+    max-width:1000px;
+    margin:auto;
+    padding:40px 20px;
 }
-
-.info{
-
-    margin:25px;
-
-    color:#aaa;
-
-}
-
 .back{
-
-    position:fixed;
-
-    top:20px;
-
-    left:20px;
-
     color:white;
-
     text-decoration:none;
-
+    display:inline-block;
+    margin-bottom:20px;
 }
-
+.card{
+    background:#1d1d1d;
+    padding:20px;
+    margin:15px 0;
+    border-radius:10px;
+}
+.image-box{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    min-height:500px;
+    background:#181818;
+    border-radius:10px;
+    margin:20px 0;
+}
+.image-box img{
+    max-width:100%;
+    max-height:80vh;
+    object-fit:contain;
+}
+.title{
+    font-size:2em;
+    text-align:center;
+    margin-bottom:8px;
+}
+.subtitle{
+    text-align:center;
+    color:#999;
+    margin-bottom:20px;
+}
+.button{
+    display:inline-block;
+    background:#333;
+    color:white;
+    text-decoration:none;
+    padding:10px 15px;
+    border-radius:6px;
+    margin:5px;
+}
+.button:hover{background:#444;}
+.nav{
+    display:flex;
+    justify-content:space-between;
+    margin-top:20px;
+}
 </style>
-
 </head>
 
 <body>
 
-<a
-    href="javascript:history.back()"
-    class="back">
+<section>
 
-← Back
+<a id="homeButton" class="back" href="index.html">◀ Home</a>
 
-</a>
+<div class="card">
 
-<img id="viewer">
+<div class="title" id="imageTitle">Loading...</div>
 
-<div class="info" id="info"></div>
+<div class="subtitle" id="imageSubtitle"></div>
+
+<div class="image-box">
+    <img id="viewerImage" alt="">
+</div>
+
+<div style="text-align:center;">
+    <a id="pdfButton" class="button" target="_blank">Open Research PDF</a>
+    <a id="downloadButton" class="button" download>Download Image</a>
+</div>
+
+<div class="nav">
+    <button id="prevButton" class="button">◀ Previous</button>
+    <button id="nextButton" class="button">Next ▶</button>
+</div>
+
+</div>
+
+</section>
 
 <script>
+const params=new URLSearchParams(location.search);
 
-const params =
-    new URLSearchParams(
-        location.search
-    );
+const image=params.get("image");
+const paper=params.get("paper");
+const returnPage=params.get("return");
 
-const image =
-    params.get("image");
+if(returnPage){
+    document.getElementById("homeButton").href=decodeURIComponent(returnPage);
+}
 
-document
-.getElementById("viewer")
-.src = image;
+const viewer=document.getElementById("viewerImage");
+viewer.src=decodeURIComponent(image);
 
-document
-.getElementById("info")
-.textContent = image;
+document.getElementById("downloadButton").href=decodeURIComponent(image);
 
+fetch("descriptions.json")
+.then(r=>r.json())
+.then(data=>{
+
+    let foundPaper=null;
+    let index=-1;
+
+    Object.values(data).forEach(p=>{
+
+        if(!p.images) return;
+
+        const i=p.images.indexOf(decodeURIComponent(image));
+
+        if(i!==-1){
+            foundPaper=p;
+            index=i;
+        }
+
+    });
+
+    if(!foundPaper) return;
+
+    const file=decodeURIComponent(image).split("/").pop();
+
+    const title=file.replace(/\.[^/.]+$/,"").replace(/[_-]/g," ");
+
+    const ext=file.split(".").pop().toUpperCase();
+
+    document.getElementById("imageTitle").textContent=title;
+
+    document.getElementById("imageSubtitle").textContent=
+        ext+" Image • From: "+foundPaper.title;
+
+    document.getElementById("pdfButton").href=foundPaper.url;
+
+    document.getElementById("prevButton").onclick=()=>{
+
+        if(index<=0) return;
+
+        location.href=
+            "image.html?image="+
+            encodeURIComponent(foundPaper.images[index-1])+
+            "&paper="+encodeURIComponent(foundPaper.title)+
+            "&return="+encodeURIComponent(returnPage||"index.html");
+
+    };
+
+    document.getElementById("nextButton").onclick=()=>{
+
+        if(index>=foundPaper.images.length-1) return;
+
+        location.href=
+            "image.html?image="+
+            encodeURIComponent(foundPaper.images[index+1])+
+            "&paper="+encodeURIComponent(foundPaper.title)+
+            "&return="+encodeURIComponent(returnPage||"index.html");
+
+    };
+
+    document.getElementById("prevButton").disabled=(index<=0);
+    document.getElementById("nextButton").disabled=(index>=foundPaper.images.length-1);
+
+});
+
+document.addEventListener("keydown",e=>{
+
+    if(e.key==="Escape"){
+        document.getElementById("homeButton").click();
+    }
+
+    if(e.key==="ArrowLeft"){
+        document.getElementById("prevButton").click();
+    }
+
+    if(e.key==="ArrowRight"){
+        document.getElementById("nextButton").click();
+    }
+
+});
 </script>
 
 </body>
-
 </html>
