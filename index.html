@@ -1001,43 +1001,7 @@ function runSearch(query){
 
    let html = "";
 
-if(pdfFuse){
 
-    let pdfResults =
-        pdfFuse
-            .search(query)
-            .filter(result => result.score < 0.2);
-
-    if(pdfResults.length === 0){
-
-        pdfResults =
-            pdfFuse
-                .search(query)
-                .filter(result => result.score < 0.5);
-
-    }
-
-    pdfResults
-        .slice(0,5)
-        .forEach(result => {
-
-            html += `
-            <a
-                href="${result.item.url}"
-                target="_blank"
-                class="search-result"
-            >
-                <div>
-                    <div class="search-title">
-                        📄 ${result.item.title}
-                    </div>
-                </div>
-            </a>
-            `;
-
-        });
-
-}
 
 if(pdfFuse){
 
