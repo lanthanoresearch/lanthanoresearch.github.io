@@ -1011,6 +1011,22 @@ document.addEventListener("click", e => {
 
 function viewSensitiveImage(image){
 
+    const alreadyAccepted =
+        sessionStorage.getItem(
+            "imageWarningAccepted"
+        ) === "yes";
+
+    if(alreadyAccepted){
+
+        window.open(
+            image,
+            "_blank"
+        );
+
+        return;
+
+    }
+
     pendingImage = image;
 
     document.getElementById(
@@ -1024,6 +1040,8 @@ function closeImageWarning(){
     document.getElementById(
         "imageWarningOverlay"
     ).style.display = "none";
+
+    pendingImage = "";
 
 }
 document
@@ -1053,10 +1071,17 @@ document
 });
 function continueImageWarning(){
 
+    sessionStorage.setItem(
+        "imageWarningAccepted",
+        "yes"
+    );
+
+    const image = pendingImage;
+
     closeImageWarning();
 
     window.open(
-        pendingImage,
+        image,
         "_blank"
     );
 
