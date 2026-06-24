@@ -1003,9 +1003,24 @@ function runSearch(query){
     if(pdfFuse){
 
         pdfFuse
+            
+            let pdfResults =
+    pdfFuse
+        .search(query)
+        .filter(result => result.score < 0.2);
+
+if(pdfResults.length === 0){
+
+    pdfResults =
+        pdfFuse
             .search(query)
-            .filter(result => result.score < 0.2)
-.slice(0,5)
+            .filter(result => result.score < 0.5);
+
+}
+
+pdfResults
+    .slice(0,5)
+            
             .forEach(result => {
 
                 html += `
