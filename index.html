@@ -948,12 +948,19 @@ desktopResults.style.display = "none";
 mobileResults.style.display = "none";
 
 
-    setTimeout(() => {
-document.body.classList.remove("search-open");
-document.documentElement.classList.remove("search-open");
-        overlay.classList.remove("active");
+   setTimeout(() => {
 
-    },250);
+    document.body.classList.remove("search-open");
+    document.documentElement.classList.remove("search-open");
+
+    overlay.classList.remove("active");
+
+    window.scrollTo(
+        0,
+        document.getElementById("research").offsetTop
+    );
+
+},250);
 
 });
     overlay.addEventListener("click", (e) => {
