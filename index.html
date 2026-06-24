@@ -92,7 +92,12 @@ html{
 .warningContent button:hover{
     background:#444;
 }
-
+.search-result > div:last-child{
+    text-align:left;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+}
 .banner{
     display:block;
     width:100%;
@@ -619,10 +624,15 @@ Promise.all([
 
     imageFile:image,
 
-    imageTitle:image
-        .replace(/\.[^/.]+$/,"")
-        .replace(/[_-]/g," "),
+   imageTitle:image
+    .replace(/\.[^/.]+$/,"")
+    .replace(/[_-]/g," "),
 
+imageType:image
+    .split(".")
+    .pop()
+    .toUpperCase(),
+                
     paperTitle:paper.title,
 
     paperUrl:paper.url,
@@ -692,14 +702,8 @@ searchBox.addEventListener("input", () => {
             .slice(0,5)
             .forEach(result => {
 
-                html += `
-                <a
-                    href="${result.item.url}"
-                    target="_blank"
-                    class="search-result"
-                >
-
-                    <a
+               html += `
+<a
     href="${result.item.url}"
     target="_blank"
     class="search-result"
@@ -731,9 +735,7 @@ searchBox.addEventListener("input", () => {
     </div>
 
 </a>
-
-                </a>
-                `;
+`;
 
             });
 
