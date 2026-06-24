@@ -262,6 +262,19 @@ footer{
     opacity:.6;
     background:#2a2a2a;
 }
+    
+    @media (max-width:768px){
+
+    .search-wrapper{
+        position:sticky;
+        top:0;
+        z-index:5000;
+        background:#111;
+        padding:10px 0;
+    }
+
+}
+    
     .search-wrapper{
     position:relative;
     max-width:800px;
@@ -668,41 +681,6 @@ const searchBox =
 
 const searchResults =
     document.getElementById("searchResults");
-
-
-
-
-
-
-    
-
-    searchBox.addEventListener("focus", () => {
-
-    if(window.innerWidth <= 768){
-
-        requestAnimationFrame(() => {
-
-            requestAnimationFrame(() => {
-
-                const y =
-                    searchBox.getBoundingClientRect().top +
-                    window.scrollY;
-
-                window.scrollTo(0, y);
-
-            });
-
-        });
-
-    }
-
-});
-
-
-
-
-
-
 
 
 
