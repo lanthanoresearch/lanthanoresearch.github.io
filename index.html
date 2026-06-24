@@ -599,12 +599,68 @@ if ("serviceWorker" in navigator) {
     let pdfFuse;
 let imageFuse;
 
-Promise.all([
-    fetch("search-index.json").then(r => r.json()),
-    fetch("descriptions.json").then(r => r.json())
-])
-    
-.then(([searchIndex, descriptions]) => {
+async function initializeSearch(){
+
+    while(typeof window.Fuse === "undefined"){
+
+        await new Promise(
+            resolve => setTimeout(resolve, 50)
+        );
+
+    }
+
+    const [
+        searchIndex,
+        descriptions
+    ] = await Promise.all([
+
+        fetch("search-index.json")
+            .then(r => r.json()),
+
+        fetch("descriptions.json")
+            .then(r => r.json())
+
+    ]);
+
+    console.log(
+        "window.Fuse:",
+        typeof window.Fuse
+    );
+
+    pdfFuse = new window.Fuse(
+        searchIndex,
+        {
+            includeScore:true,
+            threshold:0.5,
+            ignoreLocation:true,
+            minMatchCharLength:2,
+            keys:[
+                {
+                    name:"title",
+                    weight:2
+                },
+                {
+                    name:"searchText",
+                    weight:1
+                }
+            ]
+        }
+    );
+
+    // leave the rest of your code unchanged
+
+    document.getElementById(
+        "searchBox"
+    ).disabled = false;
+
+    document.getElementById(
+        "searchBox"
+    ).placeholder =
+        "Search all research...";
+
+}
+
+initializeSearch();
 
     console.log("PDF records:", searchIndex.length);
     console.log("Description records:", Object.keys(descriptions).length);
