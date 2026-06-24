@@ -608,18 +608,19 @@ Promise.all([
 
             imageRecords.push({
 
-                imageFile:image,
+    imageFile:image,
 
-                imageTitle:image
-                    .replace(/\.[^/.]+$/,"")
-                    .replace(/[_-]/g," "),
+    imageTitle:image
+        .replace(/\.[^/.]+$/,"")
+        .replace(/[_-]/g," "),
 
-                paperTitle:paper.title,
+    paperTitle:paper.title,
 
-                paperUrl:paper.url
+    paperUrl:paper.url,
 
-            });
+    warning: paper.warning
 
+});
         });
 
     });
@@ -692,15 +693,39 @@ searchBox.addEventListener("input", () => {
 
                 html += `
                 <a
-                    href="${result.item.paperUrl}"
-                    target="_blank"
-                    class="search-result"
-                >
+    href="#"
+    class="search-result"
+    onclick="
+        ${
+            result.item.warning
+                ? `viewSensitiveImage('${result.item.imageFile}')`
+                : `window.open('${result.item.imageFile}','_blank')`
+        };
+        return false;
+    "
+>
 
-                    <img
-                        src="${result.item.imageFile}"
-                        class="search-thumb"
-                    >
+                    ${
+    result.item.warning
+        ? `
+        <div class="search-thumb"
+            style="
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                font-size:40px;
+                background:#333;
+            ">
+            ⚠️
+        </div>
+        `
+        : `
+        <img
+            src="${result.item.imageFile}"
+            class="search-thumb"
+        >
+        `
+                    }
 
                     <div>
 
@@ -742,7 +767,43 @@ document.addEventListener("click", e => {
     }
 
 });
-   
+   function viewSensitiveImage(image){
+
+    const alreadyAccepted =
+        sessionStorage.getItem(
+            "imageWarningAccepted"
+        ) === "yes";
+
+    if(alreadyAccepted){
+
+        window.open(
+            image,
+            "_blank"
+        );
+
+        return;
+
+    }
+
+    const proceed = confirm(
+        "WARNING\n\nThis image may contain graphic or disturbing content.\n\nContinue?"
+    );
+
+    if(proceed){
+
+        sessionStorage.setItem(
+            "imageWarningAccepted",
+            "yes"
+        );
+
+        window.open(
+            image,
+            "_blank"
+        );
+
+    }
+
+   }
 </script>
 
 
