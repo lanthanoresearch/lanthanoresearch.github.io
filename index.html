@@ -614,14 +614,22 @@ Promise.all([
         typeof window.Fuse
     );
 
-    pdfFuse = new window.Fuse(searchIndex,{
-        threshold:0.35,
-        keys:[
-            "title",
-            "searchText"
-        ]
-        
-    });
+   pdfFuse = new window.Fuse(searchIndex,{
+    includeScore:true,
+    threshold:0.5,
+    ignoreLocation:true,
+    minMatchCharLength:2,
+    keys:[
+        {
+            name:"title",
+            weight:2
+        },
+        {
+            name:"searchText",
+            weight:1
+        }
+    ]
+});
 
 
     
