@@ -184,12 +184,17 @@ const zoomLabel =
 
 const pointers = new Map();
 
-let pinchDistance = 0;
-let pinchZoom = 1;
+let pinchStartDistance = 0;
+let pinchStartZoom = 1;
 
-let pinchCenter = {
-    x: 0,
-    y: 0
+let pinchStartCenter = {
+    x:0,
+    y:0
+};
+
+let pinchStartOffset = {
+    x:0,
+    y:0
 };
 
 function clampZoom(){
@@ -315,64 +320,54 @@ lockButton.onclick=()=>{
    if(pointers.size === 2){
 
     const pts =
-        [...pointers.values()];
+    [...pointers.values()];
 
-    pinchDistance =
-        Math.hypot(
+const rect =
+    viewer.getBoundingClientRect();
 
-            pts[0].x - pts[1].x,
+const center = {
 
-            pts[0].y - pts[1].y
+    x:
+        (pts[0].x + pts[1].x)/2 -
+        rect.left -
+        rect.width/2,
 
-        );
-
-    pinchZoom = zoom;
-
-    pinchCenter = {
-
-        x:
-            (pts[0].x + pts[1].x) / 2,
-
-        y:
-            (pts[0].y + pts[1].y) / 2
-
-    };
-
-}
+    y:
+        (pts[0].y + pts[1].y)/2 -
+        rect.top -
+        rect.height/2
 
 };
-    //MOVINF SCROLLING ETC.^^^^^
-viewer.onpointermove = e => {
 
-    if(!pointers.has(e.pointerId))
-        return;
+const distance =
+    Math.hypot(
 
-    const previous =
-    pointers.get(e.pointerId);
+        pts[0].x - pts[1].x,
 
-const dx =
-    e.clientX - previous.x;
+        pts[0].y - pts[1].y
 
-const dy =
-    e.clientY - previous.y;
+    );
 
-previous.x = e.clientX;
-previous.y = e.clientY;
+zoom =
+    pinchStartZoom *
+    (distance / pinchStartDistance);
 
-    if(pointers.size === 1){
+clampZoom();
 
-       
+const scale =
+    zoom / pinchStartZoom;
 
-        if(!verticalLock){
+offsetX =
+    pinchStartOffset.x +
+    (center.x - pinchStartCenter.x) -
+    pinchStartCenter.x * (scale - 1);
 
-            offsetX += dx;
+offsetY =
+    pinchStartOffset.y +
+    (center.y - pinchStartCenter.y) -
+    pinchStartCenter.y * (scale - 1);
 
-        }
-
-        offsetY += dy;
-
-        draw();
-
+draw();
         return;
 
     }
@@ -450,13 +445,11 @@ viewer.onpointerup = e => {
 
     pointers.delete(e.pointerId);
 
-    if(pointers.size < 2){
+   if(pointers.size < 2){
 
-        pinchDistance = 0;
+    pinchStartDistance = 0;
 
-        pinchZoom = zoom;
-
-    }
+}
 
     if(pointers.size === 1){
 
@@ -481,7 +474,7 @@ viewer.onpointercancel = e => {
 
     if(pointers.size < 2){
 
-        pinchDistance = 0;
+       pinchStartDistance = 0;
 
     }
 
