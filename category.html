@@ -178,6 +178,19 @@ const currentCategory =
 
     const scrollKey =
     "categoryScroll-" + currentCategory;
+    const returningFromImage =
+    sessionStorage.getItem(
+        "returnFromImage"
+    ) === "yes";
+if(!returningFromImage){
+
+    sessionStorage.removeItem(scrollKey);
+
+    sessionStorage.removeItem(
+        "openDetails-" + currentCategory
+    );
+
+}
     
 document.querySelector("h1").textContent =
     currentCategory === "all"
@@ -425,27 +438,33 @@ paper.updated.split("-")[0]}
     
 
 });
+   if(returningFromImage){
+
     const openDetails =
-    JSON.parse(
-        sessionStorage.getItem(
-            "openDetails-" + currentCategory
-        ) || "[]"
-    );
+        JSON.parse(
+            sessionStorage.getItem(
+                "openDetails-" + currentCategory
+            ) || "[]"
+        );
 
-document
-    .querySelectorAll(".image-details")
-    .forEach(details=>{
+    document
+        .querySelectorAll(".image-details")
+        .forEach(details=>{
 
-        if(openDetails.includes(details.dataset.paper)){
+            if(openDetails.includes(details.dataset.paper)){
 
-            details.open = true;
+                details.open = true;
 
-        }
+            }
 
-    });
+        });
+
+}
+    
+    
     document.querySelectorAll(".gallery-image").forEach(link=>{
 
-   link.addEventListener("click",()=>{
+  link.addEventListener("click",()=>{
 
     saveOpenDetails();
 
@@ -454,8 +473,12 @@ document
         window.scrollY
     );
 
-});
+    sessionStorage.setItem(
+        "returnFromImage",
+        "yes"
+    );
 
+});
 });
 
 }
@@ -486,26 +509,39 @@ sortSelect.addEventListener("change", () => {
 });
     
 
-const savedScroll =
-    sessionStorage.getItem(scrollKey);
 
-if(savedScroll){
 
-    requestAnimationFrame(()=>{
+if(returningFromImage){
+
+    
+
+    const savedScroll =
+        sessionStorage.getItem(scrollKey);
+
+    if(savedScroll){
 
         requestAnimationFrame(()=>{
 
-            window.scrollTo(
-                0,
-                parseInt(savedScroll)
-            );
+            requestAnimationFrame(()=>{
+
+                window.scrollTo(
+                    0,
+                    parseInt(savedScroll)
+                );
+                sessionStorage.removeItem(
+    "returnFromImage"
+);
+
+            });
 
         });
 
-    });
+    }
 
 }
-});
+
+
+       
 function saveOpenDetails(){
 
     const open = [];
@@ -542,19 +578,7 @@ function showWarningContent(key){
     ).style.display = "block";
 
 }
-    window.addEventListener(
-    "beforeunload",
-    () => {
-
-        saveOpenDetails();
-
-        sessionStorage.setItem(
-            scrollKey,
-            window.scrollY
-        );
-
-    }
-);
+    
 
 </script>
 
