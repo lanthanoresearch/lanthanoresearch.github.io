@@ -549,6 +549,7 @@ if(localStorage.getItem("warningAccepted") === "yes"){
 }
 
 function acceptWarning(){
+    window.acceptWarning = acceptWarning;
     localStorage.setItem("warningAccepted","yes");
     document.getElementById("warningBox").style.display = "none";
 }
@@ -1092,7 +1093,22 @@ document.addEventListener("click", e => {
     }
 
 });
-  
+  document.querySelectorAll(
+    'a:not(.image-link)'
+).forEach(link => {
+
+    link.addEventListener("click", () => {
+
+        if(link.getAttribute("href")?.startsWith("#")){
+            return;
+        }
+
+        sessionStorage.removeItem("restoreSearch");
+        sessionStorage.removeItem("lastSearch");
+
+    });
+
+});
 
 function viewSensitiveImage(
     image,
