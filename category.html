@@ -422,6 +422,18 @@ paper.updated.split("-")[0]}
         }
 
         container.innerHTML += cardHtml;
+    document.querySelectorAll(".gallery-image").forEach(link=>{
+
+    link.addEventListener("click",()=>{
+
+        sessionStorage.setItem(
+            scrollKey,
+            window.scrollY
+        );
+
+    });
+
+});
 
 });
 
@@ -454,14 +466,14 @@ sortSelect.addEventListener("change", () => {
 
 if(savedScroll){
 
-    requestAnimationFrame(() => {
+    setTimeout(()=>{
 
-        window.scrollTo(
-            0,
-            parseInt(savedScroll)
-        );
+    window.scrollTo(
+        0,
+        parseInt(savedScroll)
+    );
 
-    });
+},100);
 
 }
 });
