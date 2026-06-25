@@ -157,7 +157,7 @@ let verticalLock=false;
 const z=document.getElementById("zoom");
 function draw(){
  img.style.transform=`translate(calc(-50% + ${x}px),calc(-50% + ${y}px)) scale(${base*zoom})`;
- z.textContent=Math.round(base*zoom*100)+"%";
+ z.textContent = Math.round(zoom * 100) + "%";
 }
 function fit(){
  if(!img.naturalWidth)return;
@@ -231,7 +231,14 @@ y += dy;
     draw();
 
 };
-viewer.onpointerup=()=>drag=false;
+viewer.onpointerup = e => {
+
+    drag = false;
+
+    sx = e.clientX;
+    sy = e.clientY;
+
+};
 viewer.onwheel=e=>{e.preventDefault();zoom *= e.deltaY < 0 ? 1.08 : .92;
 
 zoom = Math.max(
@@ -240,7 +247,8 @@ zoom = Math.max(
         15 / base,
         zoom
     )
-);draw();}
+);
+                   draw();}
 let startDist = null;
 let pinching = false;
 viewer.addEventListener("touchmove",e=>{
