@@ -399,12 +399,34 @@ const center = {
 
 };
 
+const oldScale =
+    base * zoom;
+
 const scale =
     distance / pinchDistance;
 
 zoom =
     pinchZoom * scale;
 
+clampZoom();
+
+const newScale =
+    base * zoom;
+
+const ratio =
+    newScale / oldScale;
+
+// Move the image so the point between the fingers
+// stays under the fingers while zooming.
+offsetX =
+    center.x -
+    (center.x - offsetX) * ratio;
+
+offsetY =
+    center.y -
+    (center.y - offsetY) * ratio;
+
+// Allow two-finger panning at the same time.
 offsetX +=
     center.x - pinchCenter.x;
 
@@ -413,7 +435,6 @@ offsetY +=
 
 pinchDistance = distance;
 pinchZoom = zoom;
-
 pinchCenter = center;
 
 draw();
