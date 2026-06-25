@@ -147,112 +147,19 @@ homeButton.href = returnPage;
 img.src=src;
 title.textContent=src.split("/").pop();
 //MOVING SCROLLING ETC.
-let base = 1;
-let zoom = 1;
 
-let x = 0;
-let y = 0;
-
-let verticalLock = false;
-
-const zoomLabel =
-    document.getElementById("zoom");
-
-function clampZoom(){
-
-    zoom = Math.max(
-        0.05,
-        Math.min(15, zoom)
-    );
-
-}
-
-function draw(){
-
-    clampZoom();
-
-    img.style.transform =
-        `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) scale(${base * zoom})`;
-
-    zoomLabel.textContent =
-        Math.round(zoom * 100) + "%";
-
-}
-
-function fit(){
-
-    if(!img.naturalWidth) return;
-
-    base = Math.min(
-
-        viewer.clientWidth /
-            img.naturalWidth,
-
-        viewer.clientHeight /
-            img.naturalHeight
-
-    );
-
-    zoom = 1;
-
-    x = 0;
-    y = 0;
-
-    img.style.transition =
-        "transform .25s";
-
-    draw();
-
-    setTimeout(()=>{
-
-        img.style.transition="";
-
-    },250);
-
-}
-
-img.onload = fit;
-
-window.addEventListener(
-    "resize",
-    fit
-);
-
-minusButton.onclick = ()=>{
-
-    zoom /= 1.1;
-
-    draw();
-
-};
-
-plusButton.onclick = ()=>{
-
-    zoom *= 1.1;
-
-    draw();
-
-};
-
-fitButton.onclick = fit;
-
-lockButton.onclick = ()=>{
-
-    verticalLock =
-        !verticalLock;
-
-    lockButton.textContent =
-
-        verticalLock
-
-        ? "↕ Vertical"
-
-        : "↕ Free";
-
-};
-
+    
+    
+    
+    
     // FIRST HALF... ^^^^^
 
+
+    // ------------------------
+    // One finger = Drag
+    // ------------------------
+
+    
 // ===============================
 // POINTER EVENT INTERACTION ENGINE
 // ===============================
@@ -415,9 +322,94 @@ lockButton.onclick=()=>{
 
 };
     //MOVINF SCROLLING ETC.^^^^^
+viewer.onpointermove = e => {
 
+    if(!pointers.has(e.pointerId))
+        return;
+
+    const previous =
+        pointers.get(e.pointerId);
+
+    pointers.set(
+        e.pointerId,
+        {
+            x:e.clientX,
+            y:e.clientY
+        }
+    );
+
+    if(pointers.size === 1){
+
+        const dx =
+            e.clientX - previous.x;
+
+        const dy =
+            e.clientY - previous.y;
+
+        if(!verticalLock){
+
+            offsetX += dx;
+
+        }
+
+        offsetY += dy;
+
+        draw();
+
+        return;
+
+    }
+
+    const pts =
+        [...pointers.values()];
+
+    const distance =
+        Math.hypot(
+
+            pts[0].x - pts[1].x,
+
+            pts[0].y - pts[1].y
+
+        );
+
+    zoom =
+        pinchZoom *
+        (distance / pinchDistance);
+
+    draw();
+
+};
+
+viewer.onpointerup = e => {
+
+    pointers.delete(
+        e.pointerId
+    );
+
+    if(pointers.size < 2){
+
+        pinchDistance = 0;
+
+    }
+
+};
+
+viewer.onpointercancel = e => {
+
+    pointers.delete(
+        e.pointerId
+    );
+
+    if(pointers.size < 2){
+
+        pinchDistance = 0;
+
+    }
+
+};
     
-
+draw();
+fit();
 fullBtn.onclick=()=>document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();
 
 // TODO: reconnect previous/next using your existing code from the old image.html.
