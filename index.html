@@ -807,17 +807,19 @@ const savedScroll =
     sessionStorage.getItem(
         "indexScroll"
     );
-    const returningToIndex =
-        if(!returningToIndex){
+
+const returningToIndex =
+    sessionStorage.getItem(
+        "returnToIndex"
+    ) === "yes";
+
+if(!returningToIndex){
 
     sessionStorage.removeItem(
         "indexScroll"
     );
 
 }
-    sessionStorage.getItem(
-        "returnToIndex"
-    ) === "yes";
 const restoreSearch =
     sessionStorage.getItem("restoreSearch");
 
