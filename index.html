@@ -840,7 +840,13 @@ if(savedSearch){
     searchBox.value = savedSearch;
 
 }
+if(savedSearch && savedSearch.length >= 2){
 
+    searchBox.dispatchEvent(
+        new Event("input")
+    );
+
+}
 
     
 const searchResults =
