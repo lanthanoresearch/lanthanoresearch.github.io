@@ -808,6 +808,30 @@ searchReady = true;
 searchBox.disabled = false;
 searchBox.placeholder = "Search all research...";
 
+const savedSearch =
+    sessionStorage.getItem("lastSearch");
+
+if(savedSearch){
+
+    searchBox.value = savedSearch;
+
+    // Wait one frame so the browser finishes rendering.
+    requestAnimationFrame(() => {
+
+        searchBox.dispatchEvent(
+            new Event("input")
+        );
+
+        searchResults.style.display = "block";
+
+        document
+            .getElementById("research")
+            .scrollIntoView();
+
+    });
+
+}
+
 })
 .catch(error => {
 
@@ -1171,31 +1195,7 @@ function continueImageWarning(){
         encodeURIComponent(back);
 
 }
-    window.addEventListener("load", () => {
-
-    const savedSearch =
-        sessionStorage.getItem("lastSearch");
-
-    if(!savedSearch) return;
-
-    searchBox.value = savedSearch;
-
-    setTimeout(() => {
-
-        searchBox.dispatchEvent(
-            new Event("input")
-        );
-
-        document
-            .getElementById("research")
-            .scrollIntoView({
-                behavior: "instant",
-                block: "start"
-            });
-
-    }, 100);
-
-});
+    
 </script>
 
 <div id="imageWarningOverlay" style="display:none;">
