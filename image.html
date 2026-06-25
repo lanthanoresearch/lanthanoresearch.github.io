@@ -392,15 +392,20 @@ const center = {
 
 };
 
+const scale =
+    distance / pinchDistance;
+
 zoom =
-    pinchZoom *
-    (distance / pinchDistance);
+    pinchZoom * scale;
 
 offsetX +=
     center.x - pinchCenter.x;
 
 offsetY +=
     center.y - pinchCenter.y;
+
+pinchDistance = distance;
+pinchZoom = zoom;
 
 pinchCenter = center;
 
