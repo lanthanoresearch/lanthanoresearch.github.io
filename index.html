@@ -947,8 +947,7 @@ html += `
 
     imageResults.forEach(result => {
 
-                html += `
-                html += `
+    html += `
 <a
     href="#"
     class="search-result image-link"
@@ -956,19 +955,20 @@ html += `
     data-paper="${encodeURIComponent(result.item.paperTitle)}"
     data-warning="${result.item.warning}"
 >
-`;
 
-                    ${
-    result.item.warning
+    ${
+        result.item.warning
         ? `
-        <div class="search-thumb"
+        <div
+            class="search-thumb"
             style="
                 display:flex;
                 align-items:center;
                 justify-content:center;
                 font-size:40px;
                 background:#333;
-            ">
+            "
+        >
             ⚠️
         </div>
         `
@@ -978,25 +978,24 @@ html += `
             class="search-thumb"
         >
         `
-                    }
+    }
 
-                    <div>
+    <div>
 
-                        <div class="search-title">
-                             ${highlightMatch(result.item.imageTitle, query)}
-                        </div>
+        <div class="search-title">
+            ${highlightMatch(result.item.imageTitle, query)}
+        </div>
 
-                       <div class="search-source">
-    ${result.item.imageType} Image • From: ${result.item.paperTitle}
-</div>
+        <div class="search-source">
+            ${result.item.imageType} Image • From: ${result.item.paperTitle}
+        </div>
 
-                    </div>
+    </div>
 
-                </a>
-                `;
+</a>
+`;
 
-            });
-
+});
     }
 
     if(!html){
@@ -1010,7 +1009,7 @@ html += `
 }else{
 
     searchResults.innerHTML = html;
-document.querySelectorAll(".image-link").forEach(link=>{
+        document.querySelectorAll(".image-link").forEach(link=>{
 
     link.addEventListener("click",function(e){
 
@@ -1022,7 +1021,7 @@ document.querySelectorAll(".image-link").forEach(link=>{
         const paper =
             decodeURIComponent(this.dataset.paper);
 
-        if(this.dataset.warning==="true"){
+        if(this.dataset.warning === "true"){
 
             viewSensitiveImage(
                 image,
@@ -1032,11 +1031,12 @@ document.querySelectorAll(".image-link").forEach(link=>{
         }else{
 
             window.location.href =
-                "image.html?image="+
-                encodeURIComponent(image)+
-                "&paper="+
-                encodeURIComponent(paper)+
-                "&return="+
+                "image.html?" +
+                "image=" +
+                encodeURIComponent(image) +
+                "&paper=" +
+                encodeURIComponent(paper) +
+                "&return=" +
                 encodeURIComponent(window.location.href);
 
         }
