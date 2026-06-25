@@ -95,12 +95,16 @@ const homeButton =
     document.getElementById("homeButton");
 
 homeButton.href = returnPage;
- homeButton.addEventListener("click", () => {
+ homeButton.addEventListener("click", (e) => {
+
+    e.preventDefault();
 
     sessionStorage.setItem(
         "restoreSearch",
         "yes"
     );
+
+    location.href = returnPage;
 
 });
  fetch("descriptions.json")
