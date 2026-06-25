@@ -675,6 +675,7 @@ if ("serviceWorker" in navigator) {
     }
 
     }
+    window.shareSite = shareSite;
     let pdfFuse;
 let imageFuse;
 let searchReady = false;
@@ -1162,6 +1163,7 @@ function closeImageWarning(){
     currentPaperTitle = "";
 
 }
+    window.closeImageWarning = closeImageWarning;
 document
 
     document.addEventListener("keydown", e => {
@@ -1209,6 +1211,8 @@ function continueImageWarning(){
     encodeURIComponent(back);
 
 }
+    window.continueImageWarning =
+    continueImageWarning;
     
 </script>
 
