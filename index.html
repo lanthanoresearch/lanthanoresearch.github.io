@@ -808,14 +808,18 @@ searchReady = true;
 searchBox.disabled = false;
 searchBox.placeholder = "Search all research...";
 
+const restoreSearch =
+    sessionStorage.getItem("restoreSearch");
+
 const savedSearch =
     sessionStorage.getItem("lastSearch");
 
-if(savedSearch){
+if(restoreSearch === "yes" && savedSearch){
+
+    sessionStorage.removeItem("restoreSearch");
 
     searchBox.value = savedSearch;
 
-    // Wait one frame so the browser finishes rendering.
     requestAnimationFrame(() => {
 
         searchBox.dispatchEvent(
