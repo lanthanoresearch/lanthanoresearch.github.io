@@ -422,6 +422,27 @@ paper.updated.split("-")[0]}
         }
 
         container.innerHTML += cardHtml;
+    
+
+});
+    const openDetails =
+    JSON.parse(
+        sessionStorage.getItem(
+            "openDetails-" + currentCategory
+        ) || "[]"
+    );
+
+document
+    .querySelectorAll(".image-details")
+    .forEach(details=>{
+
+        if(openDetails.includes(details.dataset.paper)){
+
+            details.open = true;
+
+        }
+
+    });
     document.querySelectorAll(".gallery-image").forEach(link=>{
 
    link.addEventListener("click",()=>{
@@ -432,8 +453,6 @@ paper.updated.split("-")[0]}
         scrollKey,
         window.scrollY
     );
-
-});
 
 });
 
@@ -453,24 +472,7 @@ if(savedSort){
 
 renderPapers();
 
-const openDetails =
-    JSON.parse(
-        sessionStorage.getItem(
-            "openDetails-" + currentCategory
-        ) || "[]"
-    );
 
-document
-    .querySelectorAll(".image-details")
-    .forEach(details=>{
-
-        if(openDetails.includes(details.dataset.paper)){
-
-            details.open = true;
-
-        }
-
-    });
 
 sortSelect.addEventListener("change", () => {
 
@@ -482,8 +484,7 @@ sortSelect.addEventListener("change", () => {
     renderPapers();
 
 });
-    const savedScroll =
-    sessionStorage.getItem(scrollKey);
+    
 
 const savedScroll =
     sessionStorage.getItem(scrollKey);
