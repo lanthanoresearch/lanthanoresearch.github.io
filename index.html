@@ -549,11 +549,10 @@ if(localStorage.getItem("warningAccepted") === "yes"){
 }
 
 function acceptWarning(){
-    window.acceptWarning = acceptWarning;
-    localStorage.setItem("warningAccepted","yes");
+        localStorage.setItem("warningAccepted","yes");
     document.getElementById("warningBox").style.display = "none";
 }
-
+window.acceptWarning = acceptWarning;
 // Restore previous position
 window.addEventListener("load", function(){
 
