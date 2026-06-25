@@ -562,7 +562,7 @@ function saveOpenDetails(){
     );
 
 }
-function showWarningContent(key){
+window.showWarningContent = function(key){
 
     sessionStorage.setItem(
         "warning-" + key,
@@ -577,7 +577,7 @@ function showWarningContent(key){
         "content-" + key
     ).style.display = "block";
 
-}
+};
     });
     
 
