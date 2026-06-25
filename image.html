@@ -389,16 +389,22 @@ const distance =
 
     );
 
+const rect =
+    viewer.getBoundingClientRect();
+
 const center = {
 
     x:
-        (pts[0].x + pts[1].x) / 2,
+        (
+            (pts[0].x + pts[1].x) / 2
+        ) - rect.left - rect.width / 2,
 
     y:
-        (pts[0].y + pts[1].y) / 2
+        (
+            (pts[0].y + pts[1].y) / 2
+        ) - rect.top - rect.height / 2
 
 };
-
 const oldScale =
     base * zoom;
 
