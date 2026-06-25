@@ -822,17 +822,23 @@ if(restoreSearch === "yes" && savedSearch){
 
     requestAnimationFrame(() => {
 
-        searchBox.dispatchEvent(
-            new Event("input")
-        );
+    searchBox.dispatchEvent(
+        new Event("input")
+    );
+
+    setTimeout(() => {
 
         searchResults.style.display = "block";
 
         document
             .getElementById("research")
-            .scrollIntoView();
+            .scrollIntoView({
+                block: "start"
+            });
 
-    });
+    }, 50);
+
+});
 
 }
 
@@ -1107,16 +1113,16 @@ paperTitle = decodeURIComponent(paperTitle);
     if(alreadyAccepted){
 
         window.location.href =
-            "image.html?" +
+    "image.html?" +
 
-            "image=" +
-            encodeURIComponent(image) +
+    "image=" +
+    encodeURIComponent(image) +
 
-            "&paper=" +
-            encodeURIComponent(paperTitle) +
+    "&paper=" +
+    encodeURIComponent(paper) +
 
-            "&return=" +
-            encodeURIComponent(returnPage);
+    "&return=" +
+    encodeURIComponent(window.location.href);
 
         return;
 
@@ -1187,16 +1193,16 @@ function continueImageWarning(){
 
     window.location.href =
 
-        "image.html?" +
+    "image.html?" +
 
-        "image=" +
-        encodeURIComponent(image) +
+    "image=" +
+    encodeURIComponent(image) +
 
-        "&paper=" +
-        encodeURIComponent(paper) +
+    "&paper=" +
+    encodeURIComponent(paper) +
 
-        "&return=" +
-        encodeURIComponent(back);
+    "&return=" +
+    encodeURIComponent(back);
 
 }
     
