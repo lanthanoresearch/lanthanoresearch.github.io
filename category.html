@@ -279,7 +279,7 @@ if(
         if(paper.images && paper.images.length){
 
             galleryHtml = `
-                <details>
+                <details class="image-details" data-paper="${key}">
                     <summary>Supporting Images (${paper.images.length})</summary>
 
                     <div class="gallery">
@@ -424,14 +424,16 @@ paper.updated.split("-")[0]}
         container.innerHTML += cardHtml;
     document.querySelectorAll(".gallery-image").forEach(link=>{
 
-    link.addEventListener("click",()=>{
+   link.addEventListener("click",()=>{
 
-        sessionStorage.setItem(
-            scrollKey,
-            window.scrollY
-        );
+    saveOpenDetails();
 
-    });
+    sessionStorage.setItem(
+        scrollKey,
+        window.scrollY
+    );
+
+});
 
 });
 
@@ -451,6 +453,25 @@ if(savedSort){
 
 renderPapers();
 
+const openDetails =
+    JSON.parse(
+        sessionStorage.getItem(
+            "openDetails-" + currentCategory
+        ) || "[]"
+    );
+
+document
+    .querySelectorAll(".image-details")
+    .forEach(details=>{
+
+        if(openDetails.includes(details.dataset.paper)){
+
+            details.open = true;
+
+        }
+
+    });
+
 sortSelect.addEventListener("change", () => {
 
     localStorage.setItem(
@@ -464,20 +485,46 @@ sortSelect.addEventListener("change", () => {
     const savedScroll =
     sessionStorage.getItem(scrollKey);
 
+const savedScroll =
+    sessionStorage.getItem(scrollKey);
+
 if(savedScroll){
 
-    setTimeout(()=>{
+    requestAnimationFrame(()=>{
 
-    window.scrollTo(
-        0,
-        parseInt(savedScroll)
-    );
+        requestAnimationFrame(()=>{
 
-},100);
+            window.scrollTo(
+                0,
+                parseInt(savedScroll)
+            );
+
+        });
+
+    });
 
 }
 });
+function saveOpenDetails(){
 
+    const open = [];
+
+    document.querySelectorAll(".image-details").forEach(details=>{
+
+        if(details.open){
+
+            open.push(details.dataset.paper);
+
+        }
+
+    });
+
+    sessionStorage.setItem(
+        "openDetails-" + currentCategory,
+        JSON.stringify(open)
+    );
+
+}
 function showWarningContent(key){
 
     sessionStorage.setItem(
@@ -497,6 +544,8 @@ function showWarningContent(key){
     window.addEventListener(
     "beforeunload",
     () => {
+
+        saveOpenDetails();
 
         sessionStorage.setItem(
             scrollKey,
