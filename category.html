@@ -281,11 +281,11 @@ if(
 
                     <div class="gallery">
 
-                        ${paper.images.map(image => `
-                            <a href="${image}" target="_blank">
-                                <img src="${image}" loading="lazy">
-                            </a>
-                        `).join("")}
+                      ${paper.images.map(image => `
+    <a href="image.html?image=${encodeURIComponent(image)}&paper=${encodeURIComponent(paper.title)}&return=${encodeURIComponent(window.location.href)}">
+        <img src="${image}" loading="lazy">
+    </a>
+`).join("")}
 
                     </div>
                 </details>
