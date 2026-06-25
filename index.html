@@ -800,7 +800,6 @@ searchBox.disabled = false;
 searchBox.placeholder = "Search all research...";
 })
 .catch(error => {
-.catch(error => {
 
     console.error(
         "SEARCH ERROR:",
@@ -812,7 +811,6 @@ searchBox.placeholder = "Search all research...";
     searchBox.placeholder =
         "Search unavailable";
 
-});
 });
 function highlightMatch(text, query){
 
@@ -957,12 +955,7 @@ html += `
         ${
             result.item.warning
                 ? `viewSensitiveImage('${result.item.imageFile}','${result.item.paperTitle}')`
-                : `window.location.href='image.html?image='+
-encodeURIComponent(result.item.imageFile)+
-'&paper='+
-encodeURIComponent(result.item.paperTitle)+
-'&return='+
-encodeURIComponent(window.location.href)`
+                : `window.location.href='image.html?image=${encodeURIComponent(result.item.imageFile)}&paper=${encodeURIComponent(result.item.paperTitle)}&return=${encodeURIComponent(window.location.href)}'`
         };
         return false;
     "
@@ -1048,7 +1041,9 @@ function viewSensitiveImage(
     image,
     paperTitle
 ){
+image = decodeURIComponent(image);
 
+paperTitle = decodeURIComponent(paperTitle);
     const alreadyAccepted =
         sessionStorage.getItem(
             "imageWarningAccepted"
