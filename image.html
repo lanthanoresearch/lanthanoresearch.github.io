@@ -141,15 +141,37 @@ function draw(){
 function fit(){
  if(!img.naturalWidth)return;
  base=Math.min(viewer.clientWidth/img.naturalWidth,viewer.clientHeight/img.naturalHeight);
- zoom=1;x=0;y=0;draw();
+ zoom=1;
+
+x=0;
+y=0;
+
+img.style.transition="transform .25s";
+
+draw();
+
+setTimeout(()=>{
+    img.style.transition="";
+},250);
+ draw();
 }
+ document.getElementById("fit").onclick = fit; 
 img.onload=fit;
 window.onresize=fit;
 
 minus.onclick=()=>{zoom/=1.1;draw()}
 plus.onclick=()=>{zoom*=1.1;draw()}
 fit.onclick=fit;
-lock.onclick=()=>{
+document.getElementById("lock").onclick=()=>{
+
+    lock=!lock;
+
+    document.getElementById("lock").textContent =
+        lock
+            ? "↕ Locked"
+            : "↕ Free";
+
+};
  lock=!lock;
  document.getElementById("lock").textContent=lock?"↕ Vertical":"↕ Free";
 };
@@ -157,11 +179,30 @@ lock.onclick=()=>{
 let drag=false,sx=0,sy=0;
 viewer.onpointerdown=e=>{drag=true;sx=e.clientX;sy=e.clientY;viewer.setPointerCapture(e.pointerId);}
 viewer.onpointermove=e=>{
- if(!drag)return;
- let dx=e.clientX-sx,dy=e.clientY-sy;
- if(lock)dx=0;
- x+=dx;y+=dy;sx=e.clientX;sy=e.clientY;draw();
-}
+
+    if(!drag)return;
+
+    let dx=e.clientX-sx;
+    let dy=e.clientY-sy;
+
+    if(lock){
+
+        x=x;
+
+    }else{
+
+        x+=dx;
+
+    }
+
+    y+=dy;
+
+    sx=e.clientX;
+    sy=e.clientY;
+
+    draw();
+
+};
 viewer.onpointerup=()=>drag=false;
 viewer.onwheel=e=>{e.preventDefault();zoom*=e.deltaY<0?1.08:.92;draw();}
 let startDist=null;
