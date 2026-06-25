@@ -341,23 +341,20 @@ viewer.onpointermove = e => {
         return;
 
     const previous =
-        pointers.get(e.pointerId);
+    pointers.get(e.pointerId);
 
-    pointers.set(
-        e.pointerId,
-        {
-            x:e.clientX,
-            y:e.clientY
-        }
-    );
+const dx =
+    e.clientX - previous.x;
+
+const dy =
+    e.clientY - previous.y;
+
+previous.x = e.clientX;
+previous.y = e.clientY;
 
     if(pointers.size === 1){
 
-        const dx =
-            e.clientX - previous.x;
-
-        const dy =
-            e.clientY - previous.y;
+       
 
         if(!verticalLock){
 
@@ -412,13 +409,26 @@ draw();
 
 viewer.onpointerup = e => {
 
-    pointers.delete(
-        e.pointerId
-    );
+    pointers.delete(e.pointerId);
 
     if(pointers.size < 2){
 
         pinchDistance = 0;
+
+        pinchZoom = zoom;
+
+    }
+
+    if(pointers.size === 1){
+
+        const remaining =
+            [...pointers.entries()][0];
+
+        remaining[1].x =
+            remaining[1].x;
+
+        remaining[1].y =
+            remaining[1].y;
 
     }
 
