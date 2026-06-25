@@ -538,13 +538,11 @@ Share Site
 <a href="#research" class="top-button"
     id="topButton">▼</a>
 
-     <script type="module">
-import Fuse from './fuse.basic.min.mjs';
-window.Fuse = Fuse;
-console.log("Fuse loaded:", typeof Fuse);
-</script>
+   
     
-<script>
+<script type="module">
+
+import Fuse from "./fuse.basic.min.mjs";
 
 if(localStorage.getItem("warningAccepted") === "yes"){
     document.getElementById("warningBox").style.display = "none";
