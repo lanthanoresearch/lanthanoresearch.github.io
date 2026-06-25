@@ -554,15 +554,7 @@ function acceptWarning(){
 }
 window.acceptWarning = acceptWarning;
 // Restore previous position
-window.addEventListener("load", function(){
 
-    const savedPosition = sessionStorage.getItem("scrollPosition");
-
-    if(savedPosition){
-        window.scrollTo(0, parseInt(savedPosition));
-    }
-
-});
 
 // Save current position
 window.addEventListener("beforeunload", function(){
@@ -806,7 +798,12 @@ searchReady = true;
 
 searchBox.disabled = false;
 searchBox.placeholder = "Search all research...";
-
+    
+const savedScroll =
+    sessionStorage.getItem(
+        "scrollPosition"
+    );
+    
 const restoreSearch =
     sessionStorage.getItem("restoreSearch");
 
@@ -828,12 +825,36 @@ if(restoreSearch === "yes" && savedSearch){
     setTimeout(() => {
 
         searchResults.style.display = "block";
+if(savedScroll){
 
-        document
-            .getElementById("research")
-            .scrollIntoView({
-                block: "start"
+    requestAnimationFrame(()=>{
+
+        requestAnimationFrame(()=>{
+
+            window.scrollTo({
+
+                top:parseInt(savedScroll),
+                behavior:"instant"
+
             });
+
+        });
+
+    });
+
+}
+        if(
+    restoreSearch === "yes" &&
+    !savedScroll
+){
+
+    document
+        .getElementById("research")
+        .scrollIntoView({
+            block:"start"
+        });
+
+}
 
     }, 50);
 
