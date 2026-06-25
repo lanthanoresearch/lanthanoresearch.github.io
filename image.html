@@ -257,263 +257,163 @@ lockButton.onclick = ()=>{
 // POINTER EVENT INTERACTION ENGINE
 // ===============================
 
+let base = 1;
+let zoom = 1;
+
+let offsetX = 0;
+let offsetY = 0;
+
+let verticalLock = false;
+
+const zoomLabel =
+    document.getElementById("zoom");
+
 const pointers = new Map();
 
-let lastTap = 0;
+let pinchDistance = 0;
+let pinchZoom = 1;
 
-let startX = 0;
-let startY = 0;
+function clampZoom(){
 
-let pinchStartDistance = 0;
-let pinchStartZoom = 1;
+    if(zoom < 0.05){
 
-function getDistance(a,b){
+        zoom = 0.05;
 
-    return Math.hypot(
-        a.x-b.x,
-        a.y-b.y
-    );
+    }
+
+    if(zoom > 15){
+
+        zoom = 15;
+
+    }
 
 }
 
-function getCenter(a,b){
+function draw(){
 
-    return{
+    clampZoom();
 
-        x:(a.x+b.x)/2,
-        y:(a.y+b.y)/2
+    img.style.transform =
+        `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))
+         scale(${base * zoom})`;
 
-    };
+    zoomLabel.textContent =
+        Math.round(zoom * 100) + "%";
 
 }
 
-viewer.onpointerdown=e=>{
+function fit(){
 
-    viewer.setPointerCapture(e.pointerId);
-
-    pointers.set(
-        e.pointerId,
-        {
-            x:e.clientX,
-            y:e.clientY
-        }
-    );
-
-    if(pointers.size===1){
-
-        startX=e.clientX;
-        startY=e.clientY;
-
-    }
-
-    if(pointers.size===2){
-
-        const pts=[...pointers.values()];
-
-        pinchStartDistance=
-            getDistance(
-                pts[0],
-                pts[1]
-            );
-
-        pinchStartZoom=
-            zoom;
-
-    }
-
-};
-
-viewer.onpointermove=e=>{
-
-    if(!pointers.has(e.pointerId))
+    if(!img.naturalWidth)
         return;
 
-    const old=
-        pointers.get(e.pointerId);
+    base = Math.min(
 
-    pointers.set(
-        e.pointerId,
-        {
-            x:e.clientX,
-            y:e.clientY
-        }
+        viewer.clientWidth /
+        img.naturalWidth,
+
+        viewer.clientHeight /
+        img.naturalHeight
+
     );
 
-    if(pointers.size===1){
+    zoom = 1;
 
-        let dx=
-            e.clientX-old.x;
+    offsetX = 0;
+    offsetY = 0;
 
-        let dy=
-            e.clientY-old.y;
+    img.style.transition =
+        "transform .22s";
 
-        if(!verticalLock){
+    draw();
 
-            x+=dx;
+    setTimeout(()=>{
 
-        }
+        img.style.transition="";
 
-        y+=dy;
+    },220);
 
-        draw();
+}
 
-        return;
+img.onload = fit;
 
-    }
+window.addEventListener(
+    "resize",
+    fit
+);
 
-    if(pointers.size===2){
+minusButton.onclick=()=>{
 
-        const pts=[...pointers.values()];
-
-        const dist=
-            getDistance(
-                pts[0],
-                pts[1]
-            );
-
-        zoom=
-            pinchStartZoom*
-            dist/
-            pinchStartDistance;
-
-        draw();
-
-    }
-
-};
-
-viewer.onpointerup=e=>{
-
-    pointers.delete(
-        e.pointerId
-    );
-
-};
-
-viewer.onpointercancel=e=>{
-
-    pointers.delete(
-        e.pointerId
-    );
-
-};
-
-viewer.onwheel=e=>{
-
-    e.preventDefault();
-
-    const factor=
-        e.deltaY<0
-        ?1.08
-        :.92;
-
-    zoom*=factor;
+    zoom/=1.1;
 
     draw();
 
 };
 
-viewer.addEventListener(
-    "dblclick",
-    e=>{
+plusButton.onclick=()=>{
 
-        if(zoom<2){
+    zoom*=1.1;
 
-            zoom=2;
+    draw();
 
-        }else{
+};
 
-            fit();
+fitButton.onclick=fit;
 
-            return;
+lockButton.onclick=()=>{
 
-        }
+    verticalLock=!verticalLock;
 
-        draw();
+    lockButton.textContent=
 
-    }
-);
+        verticalLock
 
-viewer.addEventListener(
-    "touchend",
-    e=>{
+        ? "↕ Vertical"
 
-        const now=
-            Date.now();
+        : "↕ Free";
 
-        if(
-            now-lastTap<
-            300
-        ){
+};
 
-            if(zoom<2){
+    viewer.onpointerdown=e=>{
 
-                zoom=2;
+    viewer.setPointerCapture(
+        e.pointerId
+    );
 
-            }else{
+    pointers.set(
 
-                fit();
+        e.pointerId,
 
-                return;
+        {
 
-            }
-
-            draw();
+            x:e.clientX,
+            y:e.clientY
 
         }
 
-        lastTap=now;
+    );
+
+    if(pointers.size===2){
+
+        const pts=
+            [...pointers.values()];
+
+        pinchDistance=
+
+            Math.hypot(
+
+                pts[0].x-pts[1].x,
+
+                pts[0].y-pts[1].y
+
+            );
+
+        pinchZoom=
+            zoom;
 
     }
-);
 
-document.addEventListener(
-    "keydown",
-    e=>{
-
-        switch(e.key){
-
-            case "+":
-            case "=":
-
-                zoom*=1.1;
-                draw();
-                break;
-
-            case "-":
-
-                zoom/=1.1;
-                draw();
-                break;
-
-            case "0":
-
-                fit();
-                break;
-
-            case "ArrowLeft":
-
-                prevButton.click();
-                break;
-
-            case "ArrowRight":
-
-                nextButton.click();
-                break;
-
-            case "f":
-            case "F":
-
-                fullBtn.click();
-                break;
-
-        }
-
-    }
-);
-
-fit();
-
+};
     //MOVINF SCROLLING ETC.^^^^^
 
     
