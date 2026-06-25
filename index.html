@@ -948,18 +948,15 @@ html += `
     imageResults.forEach(result => {
 
                 html += `
-                <a
+                html += `
+<a
     href="#"
-    class="search-result"
-    onclick="
-        ${
-            result.item.warning
-                ? `viewSensitiveImage('${result.item.imageFile}','${result.item.paperTitle}')`
-                : `window.location.href='image.html?image=${encodeURIComponent(encodeURIComponent(result.item.imageFile))}&paper=${encodeURIComponent(result.item.paperTitle)}&return=${encodeURIComponent(window.location.href)}'`
-        };
-        return false;
-    "
+    class="search-result image-link"
+    data-image="${encodeURIComponent(result.item.imageFile)}"
+    data-paper="${encodeURIComponent(result.item.paperTitle)}"
+    data-warning="${result.item.warning}"
 >
+`;
 
                     ${
     result.item.warning
@@ -1013,7 +1010,40 @@ html += `
 }else{
 
     searchResults.innerHTML = html;
+document.querySelectorAll(".image-link").forEach(link=>{
 
+    link.addEventListener("click",function(e){
+
+        e.preventDefault();
+
+        const image =
+            decodeURIComponent(this.dataset.image);
+
+        const paper =
+            decodeURIComponent(this.dataset.paper);
+
+        if(this.dataset.warning==="true"){
+
+            viewSensitiveImage(
+                image,
+                paper
+            );
+
+        }else{
+
+            window.location.href =
+                "image.html?image="+
+                encodeURIComponent(image)+
+                "&paper="+
+                encodeURIComponent(paper)+
+                "&return="+
+                encodeURIComponent(window.location.href);
+
+        }
+
+    });
+
+});
 }
 
     searchResults.style.display =
