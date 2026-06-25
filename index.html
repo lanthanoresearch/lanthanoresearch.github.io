@@ -814,9 +814,12 @@ if(savedSearch){
 
     searchBox.value = savedSearch;
 
-    searchBox.dispatchEvent(
-        new Event("input")
-    );
+   setTimeout(() => {
+
+    document.getElementById("research")
+        .scrollIntoView();
+
+}, 50);
 
 }
 });
