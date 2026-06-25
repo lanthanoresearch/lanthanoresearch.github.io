@@ -10,10 +10,20 @@ html,body{margin:0;height:100%;background:#111;color:#eee;font-family:Arial,sans
 body{display:flex;flex-direction:column}
 header{background:#1b1b1b;border-bottom:1px solid #333;padding:8px}
 .top{display:flex;justify-content:space-between;align-items:center;gap:8px}
-.title{margin-top:6px;text-align:center;font-weight:bold;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.title{
+    margin-top:8px;
+    margin-bottom:2px;
+    text-align:center;
+    font-weight:bold;
+    font-size:1.2rem;
+    line-height:1.3;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
 .controls{display:flex;gap:6px;flex-wrap:wrap}
 .btn{background:#333;color:#fff;border:none;border-radius:7px;padding:9px 12px;text-decoration:none;cursor:pointer}
-#nav{display:flex;justify-content:space-between;padding:8px;background:#181818}
+
 #viewer{flex:1;position:relative;overflow:hidden;touch-action:none}
 #img{position:absolute;left:50%;top:50%;transform-origin:center center;user-select:none;-webkit-user-drag:none;max-width:none}
 #zoomBar{display:flex;justify-content:center;gap:8px;padding:8px;background:#181818}
@@ -70,10 +80,7 @@ header{background:#1b1b1b;border-bottom:1px solid #333;padding:8px}
 <div class="title" id="title">Loading...</div>
 </header>
 
-<div id="nav">
-<button class="btn" id="prevButton">◀ Previous</button>
-<button class="btn" id="nextButton">Next ▶</button>
-</div>
+
 
 <div id="viewer"><img id="img"></div>
 
@@ -458,8 +465,7 @@ fit();
 fullBtn.onclick=()=>document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();
 
 // TODO: reconnect previous/next using your existing code from the old image.html.
-prevButton.onclick=()=>alert("Reconnect previous image logic from your existing image.html");
-nextButton.onclick=()=>alert("Reconnect next image logic from your existing image.html");
+
 </script>
 </body>
 </html>
