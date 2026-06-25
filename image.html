@@ -180,6 +180,11 @@ const pointers = new Map();
 let pinchDistance = 0;
 let pinchZoom = 1;
 
+let pinchCenter = {
+    x: 0,
+    y: 0
+};
+
 function clampZoom(){
 
     if(zoom < 0.05){
@@ -300,25 +305,33 @@ lockButton.onclick=()=>{
 
     );
 
-    if(pointers.size===2){
+   if(pointers.size === 2){
 
-        const pts=
-            [...pointers.values()];
+    const pts =
+        [...pointers.values()];
 
-        pinchDistance=
+    pinchDistance =
+        Math.hypot(
 
-            Math.hypot(
+            pts[0].x - pts[1].x,
 
-                pts[0].x-pts[1].x,
+            pts[0].y - pts[1].y
 
-                pts[0].y-pts[1].y
+        );
 
-            );
+    pinchZoom = zoom;
 
-        pinchZoom=
-            zoom;
+    pinchCenter = {
 
-    }
+        x:
+            (pts[0].x + pts[1].x) / 2,
+
+        y:
+            (pts[0].y + pts[1].y) / 2
+
+    };
+
+}
 
 };
     //MOVINF SCROLLING ETC.^^^^^
@@ -361,23 +374,40 @@ viewer.onpointermove = e => {
     }
 
     const pts =
-        [...pointers.values()];
+    [...pointers.values()];
 
-    const distance =
-        Math.hypot(
+const distance =
+    Math.hypot(
 
-            pts[0].x - pts[1].x,
+        pts[0].x - pts[1].x,
 
-            pts[0].y - pts[1].y
+        pts[0].y - pts[1].y
 
-        );
+    );
 
-    zoom =
-        pinchZoom *
-        (distance / pinchDistance);
+const center = {
 
-    draw();
+    x:
+        (pts[0].x + pts[1].x) / 2,
 
+    y:
+        (pts[0].y + pts[1].y) / 2
+
+};
+
+zoom =
+    pinchZoom *
+    (distance / pinchDistance);
+
+offsetX +=
+    center.x - pinchCenter.x;
+
+offsetY +=
+    center.y - pinchCenter.y;
+
+pinchCenter = center;
+
+draw();
 };
 
 viewer.onpointerup = e => {
