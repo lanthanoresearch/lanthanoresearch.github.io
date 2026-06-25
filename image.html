@@ -464,6 +464,51 @@ draw();
 fit();
 fullBtn.onclick=()=>document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();
 
+    viewer.addEventListener("wheel", e => {
+
+    e.preventDefault();
+
+    const rect = viewer.getBoundingClientRect();
+
+    const mouseX =
+        e.clientX - rect.left - rect.width / 2;
+
+    const mouseY =
+        e.clientY - rect.top - rect.height / 2;
+
+    const oldScale =
+        base * zoom;
+
+    if(e.deltaY < 0){
+
+        zoom *= 1.12;
+
+    }else{
+
+        zoom /= 1.12;
+
+    }
+
+    clampZoom();
+
+    const newScale =
+        base * zoom;
+
+    const ratio =
+        newScale / oldScale;
+
+    offsetX =
+        mouseX -
+        (mouseX - offsetX) * ratio;
+
+    offsetY =
+        mouseY -
+        (mouseY - offsetY) * ratio;
+
+    draw();
+
+}, { passive:false });
+    
 // TODO: reconnect previous/next using your existing code from the old image.html.
 
 </script>
