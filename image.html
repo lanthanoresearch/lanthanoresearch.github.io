@@ -29,9 +29,30 @@ header{background:#1b1b1b;border-bottom:1px solid #333;padding:8px}
 <div class="top">
 <a class="btn" id="homeButton" href="index.html">◀ Home</a>
 <div class="controls">
-<a class="btn" id="pdfButton">PDF</a>
-<a class="btn" id="downloadButton" download>Download</a>
-<button class="btn" id="fullBtn">⛶</button>
+
+<a
+    class="btn"
+    id="pdfButton"
+    target="_blank"
+>
+    PDF
+</a>
+
+<a
+    class="btn"
+    id="downloadButton"
+    download
+>
+    Download
+</a>
+
+<button
+    class="btn"
+    id="fullBtn"
+>
+    ⛶
+</button>
+
 </div>
 </div>
 <div class="title" id="title">Loading...</div>
@@ -59,9 +80,58 @@ const img=document.getElementById("img");
 const viewer=document.getElementById("viewer");
 const title=document.getElementById("title");
 const src=decodeURIComponent(p.get("image")||"");
+ fetch("descriptions.json")
+.then(r=>r.json())
+.then(data=>{
+
+    let paper=null;
+
+    Object.values(data).forEach(p=>{
+
+        if(!p.images) return;
+
+        if(p.images.includes(src)){
+            paper=p;
+        }
+
+    });
+
+    if(!paper) return;
+
+    document.getElementById("pdfButton").href =
+        paper.url;
+
+    document.getElementById("downloadButton").href =
+        src;
+
+});
 img.src=src;
 title.textContent=src.split("/").pop();
+fetch("descriptions.json")
+.then(r=>r.json())
+.then(data=>{
 
+    let foundPaper=null;
+
+    Object.values(data).forEach(paper=>{
+
+        if(!paper.images) return;
+
+        if(paper.images.includes(src)){
+            foundPaper=paper;
+        }
+
+    });
+
+    if(!foundPaper) return;
+
+    document.getElementById("pdfButton").href=
+        foundPaper.url;
+
+    document.getElementById("downloadButton").href=
+        src;
+
+});
 let base=1,zoom=1,x=0,y=0,lock=false;
 const z=document.getElementById("zoom");
 function draw(){
