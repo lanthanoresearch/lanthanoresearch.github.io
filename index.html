@@ -807,6 +807,17 @@ const savedScroll =
     sessionStorage.getItem(
         "indexScroll"
     );
+    const returningToIndex =
+        if(!returningToIndex){
+
+    sessionStorage.removeItem(
+        "indexScroll"
+    );
+
+}
+    sessionStorage.getItem(
+        "returnToIndex"
+    ) === "yes";
 const restoreSearch =
     sessionStorage.getItem("restoreSearch");
 
@@ -864,7 +875,10 @@ if(savedScroll){
 });
 
 }
-    else if(savedIndexScroll){
+    else if(
+    returningToIndex &&
+    savedIndexScroll
+){
 
     requestAnimationFrame(()=>{
 
@@ -874,7 +888,10 @@ if(savedScroll){
                 0,
                 parseInt(savedIndexScroll)
             );
-
+            
+sessionStorage.removeItem(
+    "returnToIndex"
+);
         });
 
     });
@@ -1146,6 +1163,10 @@ document.addEventListener("click", e => {
 sessionStorage.setItem(
     "indexScroll",
     window.scrollY
+);
+        sessionStorage.setItem(
+    "returnToIndex",
+    "yes"
 );
         sessionStorage.removeItem("restoreSearch");
         sessionStorage.removeItem("lastSearch");
