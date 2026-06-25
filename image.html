@@ -75,11 +75,18 @@ header{background:#1b1b1b;border-bottom:1px solid #333;padding:8px}
 
 <script>
 // NOTE: Replace this navigation section with your existing descriptions.json logic.
-const p=new URLSearchParams(location.search);
-const img=document.getElementById("img");
-const viewer=document.getElementById("viewer");
-const title=document.getElementById("title");
-const src=decodeURIComponent(p.get("image")||"");
+const p = new URLSearchParams(location.search);
+
+const img = document.getElementById("img");
+const viewer = document.getElementById("viewer");
+const title = document.getElementById("title");
+
+const fitButton = document.getElementById("fit");
+const lockButton = document.getElementById("lock");
+const minusButton = document.getElementById("minus");
+const plusButton = document.getElementById("plus");
+
+const src = decodeURIComponent(p.get("image") || "");
  fetch("descriptions.json")
 .then(r=>r.json())
 .then(data=>{
@@ -107,21 +114,7 @@ const src=decodeURIComponent(p.get("image")||"");
 });
 img.src=src;
 title.textContent=src.split("/").pop();
-fetch("descriptions.json")
-.then(r=>r.json())
-.then(data=>{
 
-    let foundPaper=null;
-
-    Object.values(data).forEach(paper=>{
-
-        if(!paper.images) return;
-
-        if(paper.images.includes(src)){
-            foundPaper=paper;
-        }
-
-    });
 
     if(!foundPaper) return;
 
@@ -132,7 +125,11 @@ fetch("descriptions.json")
         src;
 
 });
-let base=1,zoom=1,x=0,y=0,lock=false;
+let base=1;
+let zoom=1;
+let x=0;
+let y=0;
+let verticalLock=false;
 const z=document.getElementById("zoom");
 function draw(){
  img.style.transform=`translate(calc(-50% + ${x}px),calc(-50% + ${y}px)) scale(${base*zoom})`;
@@ -155,25 +152,35 @@ setTimeout(()=>{
 },250);
  draw();
 }
- document.getElementById("fit").onclick = fit; 
+
 img.onload=fit;
 window.onresize=fit;
 
-minus.onclick=()=>{zoom/=1.1;draw()}
-plus.onclick=()=>{zoom*=1.1;draw()}
-fit.onclick=fit;
-document.getElementById("lock").onclick=()=>{
+minusButton.onclick = () => {
 
-    lock=!lock;
+    zoom /= 1.1;
 
-    document.getElementById("lock").textContent =
-        lock
-            ? "↕ Locked"
-            : "↕ Free";
+    draw();
 
 };
- lock=!lock;
- document.getElementById("lock").textContent=lock?"↕ Vertical":"↕ Free";
+
+plusButton.onclick = () => {
+
+    zoom *= 1.1;
+
+    draw();
+
+};
+fitButton.onclick = fit;
+lockButton.onclick = () => {
+
+    verticalLock = !verticalLock;
+
+    lockButton.textContent =
+        verticalLock
+            ? "↕ Vertical"
+            : "↕ Free";
+
 };
 
 let drag=false,sx=0,sy=0;
@@ -185,17 +192,13 @@ viewer.onpointermove=e=>{
     let dx=e.clientX-sx;
     let dy=e.clientY-sy;
 
-    if(lock){
+    if(!verticalLock){
 
-        x=x;
+    x += dx;
 
-    }else{
+}
 
-        x+=dx;
-
-    }
-
-    y+=dy;
+y += dy;
 
     sx=e.clientX;
     sy=e.clientY;
