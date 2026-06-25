@@ -411,19 +411,27 @@ const center = {
 
 };
 
+const oldScale =
+    base * zoom;
+
 zoom =
     pinchZoom *
     (distance / pinchDistance);
 
-offsetX +=
-    center.x - pinchCenter.x;
+clampZoom();
 
-offsetY +=
-    center.y - pinchCenter.y;
+const newScale =
+    base * zoom;
+
+const ratio =
+    newScale / oldScale;
+
+// Keep the current view centered while zooming.
+offsetX *= ratio;
+offsetY *= ratio;
 
 pinchDistance = distance;
 pinchZoom = zoom;
-pinchCenter = center;
 
 draw();
 };
