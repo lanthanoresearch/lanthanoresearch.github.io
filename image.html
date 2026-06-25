@@ -17,7 +17,19 @@ header{background:#1b1b1b;border-bottom:1px solid #333;padding:8px}
 #viewer{flex:1;position:relative;overflow:hidden;touch-action:none}
 #img{position:absolute;left:50%;top:50%;transform-origin:center center;user-select:none;-webkit-user-drag:none;max-width:none}
 #zoomBar{display:flex;justify-content:center;gap:8px;padding:8px;background:#181818}
-@media(max-width:700px){
+#zoom{
+
+    display:flex;
+    align-items:center;
+
+    position:relative;
+    top:3px;
+
+    min-width:60px;
+    justify-content:center;
+
+}
+ @media(max-width:700px){
  .top{align-items:flex-start}
  .controls .btn{padding:8px 10px;font-size:.9rem}
  .title{font-size:.95rem}
@@ -170,7 +182,7 @@ window.onresize=fit;
 
 minusButton.onclick = () => {
 
-    zoom /= 1.1;
+    zoom = Math.max(0.05 / base, zoom / 1.1);
 
     draw();
 
@@ -178,7 +190,7 @@ minusButton.onclick = () => {
 
 plusButton.onclick = () => {
 
-    zoom *= 1.1;
+   zoom = Math.min(15 / base, zoom * 1.1);
 
     draw();
 
@@ -220,7 +232,15 @@ y += dy;
 
 };
 viewer.onpointerup=()=>drag=false;
-viewer.onwheel=e=>{e.preventDefault();zoom*=e.deltaY<0?1.08:.92;draw();}
+viewer.onwheel=e=>{e.preventDefault();zoom *= e.deltaY < 0 ? 1.08 : .92;
+
+zoom = Math.max(
+    0.05 / base,
+    Math.min(
+        15 / base,
+        zoom
+    )
+);draw();}
 let startDist = null;
 let pinching = false;
 viewer.addEventListener("touchmove",e=>{
@@ -233,12 +253,21 @@ viewer.addEventListener("touchmove",e=>{
 }
 
 pinching = true;
+ drag = false;
  e.preventDefault();
  const dx=e.touches[0].clientX-e.touches[1].clientX;
  const dy=e.touches[0].clientY-e.touches[1].clientY;
  const d=Math.hypot(dx,dy);
  if(startDist===null){startDist=d;return;}
- zoom*=d/startDist;
+ zoom *= d / startDist;
+
+zoom = Math.max(
+    0.05 / base,
+    Math.min(
+        15 / base,
+        zoom
+    )
+);
  startDist=d;
  draw();
 },{passive:false});
