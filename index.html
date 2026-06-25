@@ -640,26 +640,59 @@ if ("serviceWorker" in navigator) {
         .then(() => console.log("Service Worker Registered"));
 
 }
+    
     function shareSite(){
+
+    const url =
+        "https://lanthanoresearch.com";
 
     if(navigator.share){
 
         navigator.share({
-            title: "Lanthano Research",
-            text: "Explore Lanthano Research",
-            url: "https://lanthanoresearch.com"
+
+            title:"Lanthano Research",
+
+            text:"Explore Lanthano Research",
+
+            url:url
+
         });
 
-    } else {
+        return;
 
-        navigator.clipboard.writeText(
-            "https://lanthanoresearch.com"
+    }
+
+    if(navigator.clipboard){
+
+        navigator.clipboard
+            .writeText(url)
+            .then(()=>{
+
+                alert(
+                    "Website link copied to clipboard."
+                );
+
+            })
+            .catch(()=>{
+
+                prompt(
+                    "Copy this link:",
+                    url
+                );
+
+            });
+
+    }
+    else{
+
+        prompt(
+            "Copy this link:",
+            url
         );
 
-        alert("Website link copied.");
     }
 
-    }
+}
     window.shareSite = shareSite;
     let pdfFuse;
 let imageFuse;
