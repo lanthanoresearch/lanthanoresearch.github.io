@@ -176,6 +176,9 @@ const params =
 const currentCategory =
     params.get("category");
 
+    const scrollKey =
+    "categoryScroll-" + currentCategory;
+    
 document.querySelector("h1").textContent =
     currentCategory === "all"
         ? "All Research"
@@ -281,9 +284,15 @@ if(
 
                     <div class="gallery">
 
-                      ${paper.images.map(image => `
-    <a href="image.html?image=${encodeURIComponent(image)}&paper=${encodeURIComponent(paper.title)}&return=${encodeURIComponent(window.location.href)}">
-        <img src="${image}" loading="lazy">
+                     ${paper.images.map(image => `
+    <a
+        href="image.html?image=${encodeURIComponent(image)}&paper=${encodeURIComponent(paper.title)}&return=${encodeURIComponent(window.location.href)}"
+        class="gallery-image"
+        data-scroll-key="${scrollKey}"
+    >
+        <img
+            src="${image}"
+            loading="lazy">
     </a>
 `).join("")}
 
@@ -440,6 +449,21 @@ sortSelect.addEventListener("change", () => {
     renderPapers();
 
 });
+    const savedScroll =
+    sessionStorage.getItem(scrollKey);
+
+if(savedScroll){
+
+    requestAnimationFrame(() => {
+
+        window.scrollTo(
+            0,
+            parseInt(savedScroll)
+        );
+
+    });
+
+}
 });
 
 function showWarningContent(key){
@@ -458,6 +482,17 @@ function showWarningContent(key){
     ).style.display = "block";
 
 }
+    window.addEventListener(
+    "beforeunload",
+    () => {
+
+        sessionStorage.setItem(
+            scrollKey,
+            window.scrollY
+        );
+
+    }
+);
 
 </script>
 
