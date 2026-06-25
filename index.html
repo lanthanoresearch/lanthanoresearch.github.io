@@ -803,7 +803,10 @@ const savedScroll =
     sessionStorage.getItem(
         "scrollPosition"
     );
-    
+    const savedIndexScroll =
+    sessionStorage.getItem(
+        "indexScroll"
+    );
 const restoreSearch =
     sessionStorage.getItem("restoreSearch");
 
@@ -859,6 +862,22 @@ if(savedScroll){
     }, 50);
 
 });
+
+}
+    else if(savedIndexScroll){
+
+    requestAnimationFrame(()=>{
+
+        requestAnimationFrame(()=>{
+
+            window.scrollTo(
+                0,
+                parseInt(savedIndexScroll)
+            );
+
+        });
+
+    });
 
 }
 
@@ -1123,7 +1142,11 @@ document.addEventListener("click", e => {
         if(link.getAttribute("href")?.startsWith("#")){
             return;
         }
-
+        
+sessionStorage.setItem(
+    "indexScroll",
+    window.scrollY
+);
         sessionStorage.removeItem("restoreSearch");
         sessionStorage.removeItem("lastSearch");
 
