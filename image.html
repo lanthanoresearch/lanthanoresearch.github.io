@@ -337,15 +337,15 @@ lockButton.onclick=()=>{
 
     pinchZoom = zoom;
 
-    pinchCenter = {
+   pinchCenter = {
 
-        x:
-            (pts[0].x + pts[1].x) / 2,
+    x:
+        viewer.clientWidth / 2,
 
-        y:
-            (pts[0].y + pts[1].y) / 2
+    y:
+        viewer.clientHeight / 2
 
-    };
+};
 
 }
 
@@ -404,10 +404,10 @@ const distance =
 const center = {
 
     x:
-        (pts[0].x + pts[1].x) / 2,
+        viewer.clientWidth / 2,
 
     y:
-        (pts[0].y + pts[1].y) / 2
+        viewer.clientHeight / 2
 
 };
 
