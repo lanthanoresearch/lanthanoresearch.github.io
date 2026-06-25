@@ -1152,31 +1152,36 @@ document.addEventListener("click", e => {
     }
 
 });
-  document.querySelectorAll(
-    'a:not(.image-link)'
-).forEach(link => {
+  document.addEventListener("click", e => {
 
-    link.addEventListener("click", () => {
+    const link = e.target.closest("a");
 
-        if(link.getAttribute("href")?.startsWith("#")){
-            return;
-        }
-        
-sessionStorage.setItem(
-    "indexScroll",
-    window.scrollY
-);
-        sessionStorage.setItem(
-    "returnToIndex",
-    "yes"
-);
-        sessionStorage.removeItem("restoreSearch");
-        sessionStorage.removeItem("lastSearch");
+    if(!link){
+        return;
+    }
 
-    });
+    if(link.classList.contains("image-link")){
+        return;
+    }
+
+    if(link.getAttribute("href")?.startsWith("#")){
+        return;
+    }
+
+    sessionStorage.setItem(
+        "indexScroll",
+        window.scrollY
+    );
+
+    sessionStorage.setItem(
+        "returnToIndex",
+        "yes"
+    );
+
+    sessionStorage.removeItem("restoreSearch");
+    sessionStorage.removeItem("lastSearch");
 
 });
-
 function viewSensitiveImage(
     image,
     paperTitle
