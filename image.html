@@ -402,12 +402,19 @@ const center = {
 };
 const oldScale =
     base * zoom;
+if(pinchStartDistance < 10){
 
+    pinchStartDistance = distance;
+    pinchStartZoom = zoom;
+
+    return;
+
+}
 const scale =
-    distance / pinchDistance;
+    distance / pinchStartDistance;
 
 zoom =
-    pinchZoom * scale;
+    pinchStartZoom * scale;
 
 clampZoom();
 
@@ -428,15 +435,24 @@ offsetY =
     (center.y - offsetY) * ratio;
 
 // Allow two-finger panning at the same time.
-offsetX +=
-    center.x - pinchCenter.x;
+offsetX =
+    pinchStartOffset.x +
+    (center.x - pinchStartCenter.x);
 
-offsetY +=
-    center.y - pinchCenter.y;
+offsetY =
+    pinchStartOffset.y +
+    (center.y - pinchStartCenter.y);
 
-pinchDistance = distance;
-pinchZoom = zoom;
-pinchCenter = center;
+const zoomRatio =
+    zoom / pinchStartZoom;
+
+offsetX -=
+    pinchStartCenter.x *
+    (zoomRatio - 1);
+
+offsetY -=
+    pinchStartCenter.y *
+    (zoomRatio - 1);
 
 draw();
 };
