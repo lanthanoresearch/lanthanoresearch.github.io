@@ -557,14 +557,7 @@ window.acceptWarning = acceptWarning;
 
 
 // Save current position
-window.addEventListener("beforeunload", function(){
 
-    sessionStorage.setItem(
-        "scrollPosition",
-        window.scrollY
-    );
-
-});
 const topButton =
     document.getElementById("topButton");
 
@@ -1114,7 +1107,15 @@ html += `
             );
 
         }else{
+sessionStorage.setItem(
+    "scrollPosition",
+    window.scrollY
+);
 
+sessionStorage.setItem(
+    "restoreSearch",
+    "yes"
+);
             window.location.href =
                 "image.html?" +
                 "image=" +
@@ -1197,7 +1198,15 @@ paperTitle = decodeURIComponent(paperTitle);
     returnPage = window.location.href;
 
     if(alreadyAccepted){
+sessionStorage.setItem(
+    "scrollPosition",
+    window.scrollY
+);
 
+sessionStorage.setItem(
+    "restoreSearch",
+    "yes"
+);
         window.location.href =
     "image.html?" +
 
