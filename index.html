@@ -684,7 +684,16 @@ let searchReady = false;
 let pendingImage = "";
 let currentPaperTitle = "";
 let returnPage = "";
+
+    const searchBox =
+    document.getElementById("searchBox");
+
+
     
+
+    
+const searchResults =
+    document.getElementById("searchResults");
 Promise.all([
     fetch("search-index.json").then(r => r.json()),
     fetch("descriptions.json").then(r => r.json())
@@ -798,7 +807,20 @@ searchReady = true;
 
 searchBox.disabled = false;
 searchBox.placeholder = "Search all research...";
-})
+const savedSearch =
+    sessionStorage.getItem("lastSearch");
+
+if(savedSearch){
+
+    searchBox.value = savedSearch;
+
+    searchBox.dispatchEvent(
+        new Event("input")
+    );
+
+}
+});
+    
 .catch(error => {
 
     console.error(
@@ -825,32 +847,7 @@ function highlightMatch(text, query){
     );
 
 }
-const searchBox =
-    document.getElementById("searchBox");
 
-
-    const savedSearch =
-
-    sessionStorage.getItem(
-        "lastSearch"
-    );
-
-if(savedSearch){
-
-    searchBox.value = savedSearch;
-
-}
-if(savedSearch && savedSearch.length >= 2){
-
-    searchBox.dispatchEvent(
-        new Event("input")
-    );
-
-}
-
-    
-const searchResults =
-    document.getElementById("searchResults");
 
 searchBox.addEventListener("input", () => {
 
