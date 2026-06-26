@@ -258,9 +258,24 @@ catch(err){
     menu.style.display = "none";
 
 });
-  document.getElementById("downloadBtn").onclick = () => {
-    window.location.href = file;
-};
+ document.getElementById("downloadBtn").addEventListener("click", () => {
+
+    const a = document.createElement("a");
+
+    a.href = file;
+
+    // Force a download using the PDF's filename
+    a.download = file.split("/").pop();
+
+    document.body.appendChild(a);
+
+    a.click();
+
+    a.remove();
+
+    menu.style.display = "none";
+
+});
 
 document.getElementById("newTabBtn").onclick = () => {
     window.open(file, "_blank");
@@ -269,6 +284,26 @@ document.getElementById("newTabBtn").onclick = () => {
 document.getElementById("fullscreenBtn").onclick = () => {
     document.documentElement.requestFullscreen();
 };
+
+  document.getElementById("copyLinkBtn").addEventListener("click", async () => {
+
+    try {
+
+        await navigator.clipboard.writeText(window.location.href);
+
+        menu.style.display = "none";
+
+        alert("Link copied to clipboard!");
+
+    } catch (err) {
+
+        console.error(err);
+
+        alert("Failed to copy link.");
+
+    }
+
+});
 </script>
 
 
