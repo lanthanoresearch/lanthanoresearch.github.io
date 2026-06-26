@@ -228,6 +228,8 @@ const viewer = document.getElementById("viewer");
     5
 ];
 const pageViews = [];
+  let searchResults = [];
+let currentSearch = -1;
 let pdfDoc = null;
 const menu = document.getElementById("menu");
 const menuButton = document.getElementById("menuBtn");
@@ -300,7 +302,8 @@ await page.render({
     viewport
 }).promise;
  const textContent = await page.getTextContent();
-
+pageViews[pageViews.length - 1].textContent = textContent;
+  
 const textLayer = new TextLayer({
 
     textContentSource: textContent,
@@ -362,6 +365,48 @@ catch(err){
     Math.round(currentScale * 100) + "%";
 
 }
+
+async function searchPDF(query) {
+
+    searchResults = [];
+    currentSearch = -1;
+
+    query = query.trim().toLowerCase();
+
+    if (query === "") return;
+
+    for (let i = 0; i < pageViews.length; i++) {
+
+        const pageText = pageViews[i].textContent.items
+            .map(item => item.str)
+            .join(" ")
+            .toLowerCase();
+
+        if (pageText.includes(query)) {
+
+            searchResults.push(i);
+
+        }
+
+    }
+
+    if (searchResults.length === 0) {
+
+        alert("No results found.");
+        return;
+
+    }
+
+    currentSearch = 0;
+
+    pageViews[searchResults[0]].pageDiv.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
+
+}
+
+  
   document.getElementById("backBtn").addEventListener("click", () => {
 
     if (returnUrl) {
@@ -581,7 +626,17 @@ zoomBox.addEventListener("keydown", async e => {
     document.getElementById("pageNumber").value = current;
 
 });
-  
+  const searchBox = document.getElementById("searchBox");
+
+searchBox.addEventListener("keydown", e => {
+
+    if (e.key === "Enter") {
+
+        searchPDF(searchBox.value);
+
+    }
+
+});
 </script>
 
 
