@@ -289,21 +289,29 @@ console.log("File:", file);
 const viewer = document.getElementById("viewer");
   
   let currentScale = 1.5;
-  function getInitialScale(page) {
+  function getFitWidthScale(page) {
 
     const viewport = page.getViewport({
         scale: 1
     });
 
-    // Phone / tablet
-    if (window.innerWidth <= 768) {
+    return viewer.clientWidth / viewport.width;
 
-        return (viewer.clientWidth - 60) / viewport.width;
+}
 
-    }
+function getFitPageScale(page) {
 
-    // Desktop
-    return 1;
+    const viewport = page.getViewport({
+        scale: 1
+    });
+
+    const widthScale =
+        viewer.clientWidth / viewport.width;
+
+    const heightScale =
+        viewer.clientHeight / viewport.height;
+
+    return Math.min(widthScale, heightScale);
 
 }
   const zoomLevels = [
@@ -373,7 +381,7 @@ try {
 const pdf = pdfDoc;
   const firstPage = await pdf.getPage(1);
 
-currentScale = getInitialScale(firstPage);
+currentScale = getFitWidthScale(firstPage);
 
 document.getElementById("zoomPercent").value =
     Math.round(currentScale * 100) + "%";
@@ -494,18 +502,22 @@ view.textLayerDiv.style.height =
     viewport.height + "px";
 
       
-        view.canvas.width = viewport.width;
-        view.canvas.height = viewport.height;
+        const outputScale = window.devicePixelRatio || 1;
 
-        view.canvas.style.width = viewport.width + "px";
-        view.canvas.style.height = viewport.height + "px";
+view.canvas.width = Math.floor(viewport.width * outputScale);
+view.canvas.height = Math.floor(viewport.height * outputScale);
 
-        const ctx = view.canvas.getContext("2d");
+view.canvas.style.width = viewport.width + "px";
+view.canvas.style.height = viewport.height + "px";
 
-        await view.page.render({
-            canvasContext: ctx,
-            viewport
-        }).promise;
+const ctx = view.canvas.getContext("2d");
+
+ctx.setTransform(outputScale, 0, 0, outputScale, 0, 0);
+
+await view.page.render({
+    canvasContext: ctx,
+    viewport
+}).promise;
       
     }
   document.getElementById("zoomPercent").value =
@@ -676,29 +688,18 @@ document.getElementById("fullscreenBtn").onclick = () => {
     await renderAllPages();
 
 };
-  document.getElementById("fitWidth").onclick = async () => {
+ document.getElementById("fitWidth").onclick = async () => {
 
     currentScale =
-        getInitialScale(pageViews[0].page);
+        getFitWidthScale(pageViews[0].page);
 
     await renderAllPages();
 
 };
-  document.getElementById("fitPage").onclick = async () => {
+ document.getElementById("fitPage").onclick = async () => {
 
-    const firstPage = pageViews[0].page;
-
-    const viewport = firstPage.getViewport({
-        scale: 1
-    });
-
-    const widthScale =
-        (viewer.clientWidth - 60) / viewport.width;
-
-    const heightScale =
-        (viewer.clientHeight - 60) / viewport.height;
-
-    currentScale = Math.min(widthScale, heightScale);
+    currentScale =
+        getFitPageScale(pageViews[0].page);
 
     await renderAllPages();
 
@@ -884,8 +885,8 @@ window.addEventListener("resize", () => {
         // Only auto-fit phones/tablets.
         if (window.innerWidth <= 768 && pageViews.length) {
 
-            currentScale =
-                getInitialScale(pageViews[0].page);
+           currentScale =
+    getFitWidthScale(pageViews[0].page);
 
             await renderAllPages();
 
