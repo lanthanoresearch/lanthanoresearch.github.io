@@ -151,13 +151,15 @@ button:hover{background:#3a3a3a;cursor:pointer}
 
 <script type="module">
 
-import * as pdfjsLib from "./pdfjs/pdf.mjs";
+import * as pdfjsLib from "./pdfjs/build/pdf.mjs";
 
-pdfjsLib.GlobalWorkerOptions.workerSrc="./pdfjs/pdf.worker.mjs";
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+    "./pdfjs/build/pdf.worker.mjs";
 
 const params=new URLSearchParams(location.search);
 
 const file=params.get("file");
+  console.log(file);
 const title=params.get("paper")||"PDF";
 
 document.getElementById("title").textContent=title;
@@ -170,20 +172,37 @@ let scale=1;
 
 async function load(){
 
-    pdf=await pdfjsLib.getDocument(file).promise;
+    try{
 
-    document.getElementById("pageCount").textContent="/ "+pdf.numPages;
+        console.log("Loading:", file);
 
-    for(let i=1;i<=pdf.numPages;i++){
+        pdf = await pdfjsLib.getDocument(file).promise;
 
-        renderPage(i);
+        console.log("Loaded PDF");
 
-        createThumb(i);
+        document.getElementById("title").textContent = title;
+
+        document.getElementById("pageCount").textContent =
+            "/ " + pdf.numPages;
+
+        for(let i=1;i<=pdf.numPages;i++){
+
+            await renderPage(i);
+
+            createThumb(i);
+
+        }
+
+    }catch(err){
+
+        console.error(err);
+
+        document.getElementById("title").textContent =
+            "Failed to load PDF";
 
     }
 
 }
-
 async function renderPage(num){
 
     const page=await pdf.getPage(num);
