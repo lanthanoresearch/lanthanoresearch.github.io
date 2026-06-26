@@ -280,6 +280,25 @@ console.log("File:", file);
 const viewer = document.getElementById("viewer");
   
   let currentScale = 1.5;
+  function getInitialScale(page) {
+
+    const viewport = page.getViewport({
+        scale: 1
+    });
+
+    const availableWidth = viewer.clientWidth - 60;
+
+    // Phones and small tablets
+    if (window.innerWidth <= 768) {
+
+        return availableWidth / viewport.width;
+
+    }
+
+    // Desktop
+    return 1;
+
+}
   const zoomLevels = [
     0.25,
     0.5,
@@ -319,6 +338,9 @@ try {
 
     pdfDoc = await loadingTask.promise;
 const pdf = pdfDoc;
+  const firstPage = await pdf.getPage(1);
+
+currentScale = getInitialScale(firstPage);
 
     console.log("PDF loaded!");
 
@@ -326,6 +348,9 @@ const pdf = pdfDoc;
 
    document.getElementById("pageCount").textContent =
     "/ " + pdf.numPages;
+
+  document.getElementById("zoomPercent").value =
+    Math.round(currentScale * 100) + "%";
 const pageInput = document.getElementById("pageNumber");
 
 for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
@@ -411,18 +436,20 @@ catch(err){
 
 }
   const backButton =
-
     document.getElementById("backBtn");
-
-
 
 backButton.addEventListener("click", (e) => {
 
-
-
     e.preventDefault();
 
-    loadPdf();
+    sessionStorage.setItem(
+        "restoreSearch",
+        "yes"
+    );
+
+    location.href = returnUrl || "index.html";
+
+    
   
   async function renderAllPages() {
 
@@ -524,14 +551,14 @@ function gotoSearchResult(index) {
   
 
 
-    sessionStorage.setItem(
-        "restoreSearch",
-        "yes"
-    );
+  
 
-    location.href = returnUrl || "index.html";
 
-});
+
+
+
+
+    
   menuButton.addEventListener("click", (event) => {
 
     event.stopPropagation();
@@ -830,6 +857,28 @@ if (
     gotoSearchResult(currentSearch + 1);
 
 };
+    let resizeTimer;
+
+window.addEventListener("resize", () => {
+
+    clearTimeout(resizeTimer);
+
+    resizeTimer = setTimeout(async () => {
+
+        // Only auto-fit on phones/tablets.
+        if (window.innerWidth <= 768) {
+
+            const firstPage = pageViews[0].page;
+
+            currentScale = getInitialScale(firstPage);
+
+            await renderAllPages();
+
+        }
+
+    }, 150);
+
+});
 </script>
 
 
