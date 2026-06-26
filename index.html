@@ -934,7 +934,11 @@ if(savedScroll){
 });
 
 }
-   
+   }
+else if(
+    returningToIndex &&
+    savedIndexScroll
+){
     requestAnimationFrame(()=>{
 
         requestAnimationFrame(()=>{
