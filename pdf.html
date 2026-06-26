@@ -158,12 +158,16 @@ console.log("PDF.js:", pdfjsLib.version);
 pdfjsLib.GlobalWorkerOptions.workerSrc = "./pdfjs/build/pdf.worker.mjs";
 
 const params = new URLSearchParams(location.search);
+  const returnUrl = params.get("return");
 const file = params.get("file");
+const title = params.get("paper") || "PDF";
 
+document.getElementById("title").textContent = title;
 console.log("File:", file);
 
 const viewer = document.getElementById("viewer");
-
+const menu = document.getElementById("menu");
+const menuButton = document.getElementById("menuBtn");
 try {
 
     console.log("Creating loading task...");
@@ -216,6 +220,55 @@ catch(err){
     console.error("ERROR:", err);
 
 }
+  document.getElementById("backBtn").addEventListener("click", () => {
+
+    if (returnUrl) {
+
+        location.href = returnUrl;
+
+    } else {
+
+        history.back();
+
+    }
+
+});
+  menuButton.addEventListener("click", (event) => {
+
+    event.stopPropagation();
+
+    if (menu.style.display === "block") {
+
+        menu.style.display = "none";
+
+    } else {
+
+        menu.style.display = "block";
+
+    }
+
+});
+  menu.addEventListener("click", (event) => {
+
+    event.stopPropagation();
+
+});
+  document.addEventListener("click", () => {
+
+    menu.style.display = "none";
+
+});
+  document.getElementById("downloadBtn").onclick = () => {
+    window.location.href = file;
+};
+
+document.getElementById("newTabBtn").onclick = () => {
+    window.open(file, "_blank");
+};
+
+document.getElementById("fullscreenBtn").onclick = () => {
+    document.documentElement.requestFullscreen();
+};
 </script>
 
 
