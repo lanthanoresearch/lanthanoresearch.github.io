@@ -205,6 +205,40 @@ button:hover{background:#3a3a3a;cursor:pointer}
     text-align:center;
 
 }
+  #loadingOverlay{
+    position:absolute;
+    inset:106px 0 0 0;   /* below header + toolbar */
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    background:#111;
+    z-index:5000;
+}
+
+.spinner{
+    width:60px;
+    height:60px;
+    border:6px solid #333;
+    border-top:6px solid #ffffff;
+    border-radius:50%;
+    animation:spin 0.9s linear infinite;
+}
+
+.loadingText{
+    margin-top:18px;
+    color:#ddd;
+    font-size:18px;
+}
+
+@keyframes spin{
+    from{
+        transform:rotate(0deg);
+    }
+    to{
+        transform:rotate(360deg);
+    }
+}
 </style>
 </head>
 <body>
@@ -271,8 +305,13 @@ button:hover{background:#3a3a3a;cursor:pointer}
   
 <div id="layout">
 
+    <div id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="loadingText">Loading PDF...</div>
+    </div>
 
-<div id="viewer"></div>
+    <div id="viewer"></div>
+
 </div>
 
 <div id="menu">
@@ -314,7 +353,8 @@ document.getElementById("title").textContent = title;
 console.log("File:", file);
 
 const viewer = document.getElementById("viewer");
-  
+  const loadingOverlay =
+    document.getElementById("loadingOverlay");
   let baseScale = 1;
 let zoomLevel = 1;
 let currentScale = 1;
@@ -525,7 +565,7 @@ console.log(textLayerDiv.children.length);
 
 }
   
-
+loadingOverlay.style.display = "none";
 
 }
 
@@ -535,7 +575,7 @@ console.log(textLayerDiv.children.length);
 
   
 catch(err){
-
+loadingOverlay.style.display = "none";
     console.error("ERROR:", err);
 
 }
