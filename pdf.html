@@ -99,27 +99,19 @@ button:hover{background:#3a3a3a;cursor:pointer}
     flex-wrap:wrap;
 }
 #layout{
-    display:flex;
     height:calc(100% - 106px);
 }
-#sidebar{
-    width:240px;
-    background:#171717;
-    overflow:auto;
-    border-right:1px solid #2d2d2d;
-}
-#thumbs{padding:10px}
-.thumb{
-    padding:10px;
-    margin-bottom:8px;
-    background:#222;
-    border-radius:8px;
-}
+
 #viewer{
-    flex:1;
+    width:100%;
+    height:100%;
     overflow:auto;
     padding:30px;
     background:#111;
+
+    display:flex;
+    flex-direction:column;
+    align-items:center;
 }
 .page{
     margin:0 auto 20px;
@@ -202,7 +194,7 @@ button:hover{background:#3a3a3a;cursor:pointer}
 </header>
 
 <div id="toolbar">
-<button id="togglePages">Pages</button>
+
 
 <button id="searchButton">🔍 Search</button>
 
@@ -243,9 +235,7 @@ button:hover{background:#3a3a3a;cursor:pointer}
 
   
 <div id="layout">
-<div id="sidebar">
-<div id="thumbs"></div>
-</div>
+
 
 <div id="viewer"></div>
 </div>
@@ -301,6 +291,25 @@ let currentSearch = -1;
 let pdfDoc = null;
 const menu = document.getElementById("menu");
 const menuButton = document.getElementById("menuBtn");
+const backButton =
+    document.getElementById("backBtn");
+
+backButton.href = returnUrl || "index.html";
+
+backButton.addEventListener("click", (e) => {
+
+    e.preventDefault();
+
+    sessionStorage.setItem(
+        "restoreSearch",
+        "yes"
+    );
+
+    location.href =
+        returnUrl || "index.html";
+
+});
+  
 try {
 
   
@@ -500,19 +509,7 @@ function gotoSearchResult(index) {
 
 
   
-  document.getElementById("backBtn").addEventListener("click", () => {
-
-    if (returnUrl) {
-
-        location.href = returnUrl;
-
-    } else {
-
-        history.back();
-
-    }
-
-});
+ 
   menuButton.addEventListener("click", (event) => {
 
     event.stopPropagation();
