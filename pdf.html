@@ -227,10 +227,9 @@ button:hover{background:#3a3a3a;cursor:pointer}
 <div id="searchPopup" class="hidden">
 
     <input
-    id="searchBox"
-    placeholder="Search loading..."
-    autocomplete="off"
-    disabled>
+        id="searchBox"
+        placeholder="Search..."
+        autocomplete="off">
 
     <button id="prevResult">▲</button>
 
@@ -281,8 +280,6 @@ document.getElementById("title").textContent = title;
 console.log("File:", file);
 
 const viewer = document.getElementById("viewer");
-
-  const thumbs = document.getElementById("thumbs");
   
   let currentScale = 1.5;
   const zoomLevels = [
@@ -366,9 +363,6 @@ pageViews.push({
     canvas,
     textLayerDiv
 });
-  
-
-  
 const ctx = canvas.getContext("2d");
 
 await page.render({
@@ -395,10 +389,7 @@ await textLayer.render();
 console.log(textLayerDiv.children.length);
 
 }
-  const searchBox = document.getElementById("searchBox");
-
-searchBox.disabled = false;
-searchBox.placeholder = "Search...";
+  
 
 
 }
@@ -436,16 +427,6 @@ catch(err){
             canvasContext: ctx,
             viewport
         }).promise;
-
-
-
-thumb.width = thumbViewport.width;
-thumb.height = thumbViewport.height;
-
-await page.render({
-    canvasContext: thumb.getContext("2d"),
-    viewport: thumbViewport
-}).promise;
       
     }
   document.getElementById("zoomPercent").value =
@@ -480,14 +461,10 @@ async function searchPDF(query) {
 
     if (searchResults.length === 0) {
 
-    currentSearch = -1;
+        alert("No results found.");
+        return;
 
-    document.getElementById("searchResults").textContent =
-        "0 of 0";
-
-    return;
-
-}
+    }
 
     currentSearch = 0;
 
@@ -832,14 +809,6 @@ if (
 }
 
     gotoSearchResult(currentSearch + 1);
-
-};
-
-  const sidebar = document.getElementById("sidebar");
-
-document.getElementById("togglePages").onclick = () => {
-
-    sidebar.classList.toggle("hidden");
 
 };
 </script>
