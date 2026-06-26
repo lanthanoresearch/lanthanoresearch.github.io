@@ -158,7 +158,9 @@ button:hover{background:#3a3a3a;cursor:pointer}
 <input id="searchBox" placeholder="Search">
 
 <button id="zoomOut">−</button>
-<input id="zoomPercent" value="100%" style="width:70px;text-align:center">
+<input id="zoomPercent"
+       value="150%"
+       style="width:70px;text-align:center">
 <button id="zoomIn">+</button>
 
 <button id="fitWidth">Fit Width</button>
@@ -213,6 +215,18 @@ console.log("File:", file);
 const viewer = document.getElementById("viewer");
   
   let currentScale = 1.5;
+  const zoomLevels = [
+    0.25,
+    0.5,
+    0.75,
+    1,
+    1.25,
+    1.5,
+    2,
+    3,
+    4,
+    5
+];
 const pageViews = [];
 let pdfDoc = null;
 const menu = document.getElementById("menu");
@@ -303,6 +317,11 @@ console.log(textLayerDiv.children.length);
 
 }
   
+
+
+}
+
+
 async function renderAllPages() {
 
     for (const view of pageViews) {
@@ -332,8 +351,9 @@ async function renderAllPages() {
     Math.round(currentScale * 100) + "%";
 
 }
-console.log("Finished!");
-}
+
+
+  
 catch(err){
 
     console.error("ERROR:", err);
@@ -423,16 +443,26 @@ document.getElementById("fullscreenBtn").onclick = () => {
     }
 
 });
-  document.getElementById("zoomIn").onclick = async () => {
+ document.getElementById("zoomIn").onclick = async () => {
 
-    currentScale *= 1.2;
+    const next = zoomLevels.find(z => z > currentScale);
+
+    if (!next) return;
+
+    currentScale = next;
 
     await renderAllPages();
 
 };
   document.getElementById("zoomOut").onclick = async () => {
 
-    currentScale /= 1.2;
+    const previous = [...zoomLevels]
+        .reverse()
+        .find(z => z < currentScale);
+
+    if (!previous) return;
+
+    currentScale = previous;
 
     await renderAllPages();
 
@@ -500,6 +530,35 @@ pageInput.addEventListener("keydown", e => {
         behavior: "smooth",
         block: "start"
     });
+
+});
+  const zoomBox = document.getElementById("zoomPercent");
+
+zoomBox.addEventListener("keydown", async e => {
+
+    if (e.key !== "Enter") return;
+
+    let value = parseFloat(
+        zoomBox.value.replace("%", "")
+    );
+
+    if (isNaN(value)) {
+        value = 100;
+    }
+
+    if (value < 25) {
+        value = 25;
+    }
+
+    if (value > 500) {
+        value = 500;
+    }
+
+    currentScale = value / 100;
+
+    zoomBox.value = value + "%";
+
+    await renderAllPages();
 
 });
   viewer.addEventListener("scroll", () => {
