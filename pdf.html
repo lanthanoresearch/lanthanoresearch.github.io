@@ -176,7 +176,17 @@ async function load(){
 
         console.log("Loading:", file);
 console.log("Starting getDocument");
-        pdf = await pdfjsLib.getDocument(file).promise;
+        const loadingTask = pdfjsLib.getDocument({
+    url: file
+});
+
+loadingTask.onProgress = function(progress){
+
+    console.log(progress);
+
+};
+
+pdf = await loadingTask.promise;
 console.log("Finished getDocument");
         console.log("Loaded PDF");
 
