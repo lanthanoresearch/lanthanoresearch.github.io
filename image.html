@@ -11,7 +11,35 @@ html,body{margin:0;height:100%;background:#111;color:#eee;font-family:Arial,sans
 body{display:flex;flex-direction:column}
 header{background:#1b1b1b;border-bottom:1px solid #333;padding:8px}
 .top{display:flex;justify-content:space-between;align-items:center;gap:8px}
-#pdfButton{
+#menu{
+    position:absolute;
+    right:10px;
+    top:58px;
+    background:#222;
+    border:1px solid #333;
+    border-radius:10px;
+    padding:8px;
+    display:none;
+    min-width:220px;
+    z-index:1000;
+}
+
+#menu button{
+    width:100%;
+    text-align:left;
+    margin:3px 0;
+    background:#333;
+    color:#fff;
+    border:none;
+    border-radius:7px;
+    padding:9px 12px;
+    cursor:pointer;
+}
+
+#menu button:hover{
+    background:#444;
+}
+    #pdfButton{
     display:none;
 }
     .title{
@@ -74,26 +102,32 @@ header{background:#1b1b1b;border-bottom:1px solid #333;padding:8px}
     PDF
 </a>
 
-<a
-    class="btn"
-    id="downloadButton"
-    download
->
-    Download
-</a>
-
 <button
     class="btn"
-    id="fullBtn"
+    id="menuBtn"
 >
-    ⛶
+    ☰
 </button>
 
 </div>
 </div>
 
 </header>
+<div id="menu">
 
+    <button id="downloadBtn">
+        Download Image
+    </button>
+
+    <button id="shareBtn">
+        Share
+    </button>
+
+    <button id="fullscreenBtn">
+        Fullscreen
+    </button>
+
+</div>
 <div id="viewer"><img id="img"></div>
 <div class="title" id="title">Loading...</div>
 <div id="zoomBar">
@@ -116,13 +150,16 @@ const fitButton = document.getElementById("fit");
 const lockButton = document.getElementById("lock");
 const minusButton = document.getElementById("minus");
 const plusButton = document.getElementById("plus");
+const menu =
+    document.getElementById("menu");
 
+const menuButton =
+    document.getElementById("menuBtn");
 const src = decodeURIComponent(p.get("image") || "");
  const returnPage = decodeURIComponent(
     p.get("return") || "index.html"
 );
-const fullBtn =
-    document.getElementById("fullBtn");
+
 const homeButton =
     document.getElementById("homeButton");
 
@@ -160,8 +197,27 @@ homeButton.href = returnPage;
     document.getElementById("pdfButton").href =
         paper.url;
 
-    document.getElementById("downloadButton").href =
-        src;
+    const downloadBtn =
+    document.getElementById("downloadBtn");
+
+downloadBtn.onclick = () => {
+
+    const a = document.createElement("a");
+
+    a.href = src;
+
+    a.download =
+        src.split("/").pop();
+
+    document.body.appendChild(a);
+
+    a.click();
+
+    a.remove();
+
+    menu.style.display = "none";
+
+};
 
 });
 img.src=src;
@@ -471,7 +527,21 @@ viewer.onpointercancel = e => {
     
 draw();
 fit();
-fullBtn.onclick=()=>document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();
+document.getElementById("fullscreenBtn").onclick = () => {
+
+    menu.style.display = "none";
+
+    if(document.fullscreenElement){
+
+        document.exitFullscreen();
+
+    }else{
+
+        document.documentElement.requestFullscreen();
+
+    }
+
+};
 viewer.addEventListener("wheel", e => {
 
     e.preventDefault();
@@ -518,7 +588,76 @@ viewer.addEventListener("wheel", e => {
 
 }, { passive:false });
 // TODO: reconnect previous/next using your existing code from the old image.html.
+menuButton.addEventListener("click", e => {
 
+    e.stopPropagation();
+
+    menu.style.display =
+        menu.style.display === "block"
+            ? "none"
+            : "block";
+
+});
+
+menu.addEventListener("click", e => {
+
+    e.stopPropagation();
+
+});
+
+document.addEventListener("click", () => {
+
+    menu.style.display = "none";
+
+});
+    document.getElementById("shareBtn").addEventListener("click", async () => {
+
+    const url = window.location.href;
+
+    menu.style.display = "none";
+
+    // Native share sheet
+    if(navigator.share){
+
+        try{
+
+            await navigator.share({
+
+                title: title.textContent,
+
+                text: title.textContent,
+
+                url: url
+
+            });
+
+            return;
+
+        }catch(err){
+
+            // User cancelled or sharing failed.
+        }
+
+    }
+
+    // Clipboard fallback
+    try{
+
+        await navigator.clipboard.writeText(url);
+
+        alert("Link copied to clipboard!");
+
+    }catch(err){
+
+        // Final fallback
+        window.prompt(
+            "Copy this link:",
+            url
+        );
+
+    }
+
+});
 </script>
 </body>
 </html>
