@@ -121,6 +121,20 @@ button:hover{background:#3a3a3a;cursor:pointer}
     flex-direction:column;
     align-items:center;
 }
+  .zoomControls{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    white-space:nowrap;
+    flex-shrink:0;
+}
+  .pageControls{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    white-space:nowrap;
+    flex-shrink:0;
+}
 .page{
     margin:0 auto 20px;
     box-shadow:0 0 14px rgba(0,0,0,.4);
@@ -206,22 +220,35 @@ button:hover{background:#3a3a3a;cursor:pointer}
 
 <button id="searchButton">🔍 Search</button>
 
-<button id="zoomOut">−</button>
-<input id="zoomPercent"
-       value="150%"
-       style="width:70px;text-align:center">
-<button id="zoomIn">+</button>
+<div class="zoomControls">
+
+    <button id="zoomOut">−</button>
+
+    <input
+        id="zoomPercent"
+        value="150%"
+        style="width:70px;text-align:center">
+
+    <button id="zoomIn">+</button>
+
+</div>
 
 <button id="fitWidth">Fit Width</button>
 <button id="fitPage">Fit Page</button>
 
-<label>Page</label>
-<input
-    id="pageNumber"
-    value="1"
-    inputmode="numeric"
-    style="width:60px;text-align:center">
-<span id="pageCount">/ 0</span>
+<div class="pageControls">
+
+    <label>Page</label>
+
+    <input
+        id="pageNumber"
+        value="1"
+        inputmode="numeric"
+        style="width:60px;text-align:center">
+
+    <span id="pageCount">of 0</span>
+
+</div>
 </div>
 
 <div id="searchPopup" class="hidden">
