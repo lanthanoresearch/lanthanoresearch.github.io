@@ -178,9 +178,14 @@ try {
 
     console.log("Pages:", pdf.numPages);
 
-    const page = await pdf.getPage(1);
+   document.getElementById("pageCount").textContent =
+    "/ " + pdf.numPages;
 
-    console.log("Page 1 loaded");
+for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+
+    console.log("Rendering page", pageNumber);
+
+    const page = await pdf.getPage(pageNumber);
 
     const viewport = page.getViewport({
         scale: 1.5
@@ -188,20 +193,23 @@ try {
 
     const canvas = document.createElement("canvas");
 
+    canvas.className = "page";
+
     canvas.width = viewport.width;
     canvas.height = viewport.height;
 
+    const ctx = canvas.getContext("2d");
+
     viewer.appendChild(canvas);
 
-    console.log("Rendering...");
-
     await page.render({
-        canvasContext: canvas.getContext("2d"),
+        canvasContext: ctx,
         viewport: viewport
     }).promise;
 
-    console.log("Finished!");
+}
 
+console.log("Finished!");
 }
 catch(err){
 
