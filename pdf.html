@@ -242,7 +242,7 @@ for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
 
     const page = await pdf.getPage(pageNumber);
   
-let currentScale = 1.5;
+
     const viewport = page.getViewport({
         scale: currentScale
     });
@@ -319,8 +319,7 @@ async function renderAllPages() {
 
         view.canvas.style.width = viewport.width + "px";
         view.canvas.style.height = viewport.height + "px";
-document.getElementById("zoomPercent").value =
-    Math.round(currentScale * 100) + "%";
+
         const ctx = view.canvas.getContext("2d");
 
         await view.page.render({
@@ -329,6 +328,8 @@ document.getElementById("zoomPercent").value =
         }).promise;
       
     }
+  document.getElementById("zoomPercent").value =
+    Math.round(currentScale * 100) + "%";
 
 }
 console.log("Finished!");
@@ -432,6 +433,39 @@ document.getElementById("fullscreenBtn").onclick = () => {
   document.getElementById("zoomOut").onclick = async () => {
 
     currentScale /= 1.2;
+
+    await renderAllPages();
+
+};
+  document.getElementById("fitWidth").onclick = async () => {
+
+    const firstPage = pageViews[0].page;
+
+    const viewport = firstPage.getViewport({
+        scale: 1
+    });
+
+    // 60 = 30px padding on each side of #viewer
+    currentScale = (viewer.clientWidth - 60) / viewport.width;
+
+    await renderAllPages();
+
+};
+  document.getElementById("fitPage").onclick = async () => {
+
+    const firstPage = pageViews[0].page;
+
+    const viewport = firstPage.getViewport({
+        scale: 1
+    });
+
+    const widthScale =
+        (viewer.clientWidth - 60) / viewport.width;
+
+    const heightScale =
+        (viewer.clientHeight - 60) / viewport.height;
+
+    currentScale = Math.min(widthScale, heightScale);
 
     await renderAllPages();
 
