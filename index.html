@@ -1027,11 +1027,12 @@ html += `
     pdfResults.forEach(result => {
 
                html += `
+html += `
 <a
-    href="${result.item.url}"
-    target="_blank"
-    class="search-result"
+    href="pdf.html?file=${encodeURIComponent(result.item.url)}&paper=${encodeURIComponent(result.item.displayTitle)}&return=${encodeURIComponent(window.location.href)}"
+    class="search-result pdf-link"
 >
+`
 
     <div
         class="search-thumb"
@@ -1209,7 +1210,7 @@ document.addEventListener("click", e => {
     }
 
 });
-  document.addEventListener("click", e => {
+document.addEventListener("click", e => {
 
     const link = e.target.closest("a");
 
@@ -1218,6 +1219,26 @@ document.addEventListener("click", e => {
     }
 
     if(link.classList.contains("image-link")){
+        return;
+    }
+
+    if(link.classList.contains("pdf-link")){
+
+        sessionStorage.setItem(
+            "scrollPosition",
+            window.scrollY
+        );
+
+        sessionStorage.setItem(
+            "restoreSearch",
+            "yes"
+        );
+
+        sessionStorage.setItem(
+            "searchResultsScroll",
+            searchResults.scrollTop
+        );
+
         return;
     }
 
@@ -1239,7 +1260,9 @@ document.addEventListener("click", e => {
     sessionStorage.removeItem("lastSearch");
 
 });
-function viewSensitiveImage(
+
+    
+    function viewSensitiveImage(
     image,
     paperTitle
 ){
