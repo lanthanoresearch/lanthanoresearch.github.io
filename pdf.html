@@ -500,15 +500,15 @@ function gotoSearchResult(index) {
 
 
   
-  document.getElementById("backBtn").addEventListener("click", () => {
+ document.getElementById("backBtn").addEventListener("click", () => {
 
-    if (returnUrl) {
-
-        location.href = returnUrl;
-
-    } else {
+    if (history.length > 1) {
 
         history.back();
+
+    } else if (returnUrl) {
+
+        location.replace(returnUrl);
 
     }
 
