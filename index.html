@@ -1166,7 +1166,55 @@ html += `
 
     searchResults.innerHTML = html;
         document.querySelectorAll(".image-link").forEach(link=>{
-            document.querySelectorAll(".pdf-link").forEach(link=>{
+           
+
+    link.addEventListener("click",function(e){
+
+        e.preventDefault();
+
+        const image =
+            decodeURIComponent(this.dataset.image);
+
+        const paper =
+            decodeURIComponent(this.dataset.paper);
+
+        if(this.dataset.warning === "true"){
+
+            viewSensitiveImage(
+                image,
+                paper
+            );
+
+        }else{
+sessionStorage.setItem(
+    "scrollPosition",
+    window.scrollY
+);
+
+sessionStorage.setItem(
+    "restoreSearch",
+    "yes"
+);
+            sessionStorage.setItem(
+    "searchResultsScroll",
+    searchResults.scrollTop
+);
+            window.location.href =
+                "image.html?" +
+                "image=" +
+                encodeURIComponent(image) +
+                "&paper=" +
+                encodeURIComponent(paper) +
+                "&return=" +
+                encodeURIComponent(window.location.href);
+
+        }
+
+    });
+
+});
+
+ document.querySelectorAll(".pdf-link").forEach(link=>{
 
     link.addEventListener("click",function(e){
 
@@ -1217,51 +1265,7 @@ html += `
 
 });
 
-    link.addEventListener("click",function(e){
-
-        e.preventDefault();
-
-        const image =
-            decodeURIComponent(this.dataset.image);
-
-        const paper =
-            decodeURIComponent(this.dataset.paper);
-
-        if(this.dataset.warning === "true"){
-
-            viewSensitiveImage(
-                image,
-                paper
-            );
-
-        }else{
-sessionStorage.setItem(
-    "scrollPosition",
-    window.scrollY
-);
-
-sessionStorage.setItem(
-    "restoreSearch",
-    "yes"
-);
-            sessionStorage.setItem(
-    "searchResultsScroll",
-    searchResults.scrollTop
-);
-            window.location.href =
-                "image.html?" +
-                "image=" +
-                encodeURIComponent(image) +
-                "&paper=" +
-                encodeURIComponent(paper) +
-                "&return=" +
-                encodeURIComponent(window.location.href);
-
-        }
-
-    });
-
-});
+        
 }
 
     searchResults.style.display =
@@ -1336,9 +1340,7 @@ document.addEventListener("click", e => {
 
 });
 
-    
-    function viewSensitiveImage(
-        function viewSensitivePdf(
+    function viewSensitivePdf(
     pdf,
     paperTitle
 ){
@@ -1392,9 +1394,14 @@ document.addEventListener("click", e => {
     currentPaperTitle = paperTitle;
 
     pendingType = "pdf";
-document.getElementById(
-    "continueImageButton"
-).textContent = "View Image";
+document.querySelector(
+    "#imageWarningBox h2"
+).textContent = "Graphic PDF";
+
+document.querySelector(
+    "#imageWarningBox p"
+).textContent =
+    "This PDF may contain graphic or disturbing content.";
     document.getElementById(
         "imageWarningOverlay"
     ).style.display = "flex";
@@ -1404,6 +1411,9 @@ document.getElementById(
     ).textContent = "View PDF";
 
 }
+    
+    function viewSensitiveImage(
+        
     image,
     paperTitle
 ){
@@ -1448,9 +1458,21 @@ sessionStorage.setItem(
     }
 
     pendingImage = image;
+        
 pendingType = "image";
     currentPaperTitle = paperTitle;
+document.querySelector(
+    "#imageWarningBox h2"
+).textContent = "Graphic Image";
 
+document.querySelector(
+    "#imageWarningBox p"
+).textContent =
+    "This image may contain graphic or disturbing content.";
+
+document.getElementById(
+    "continueImageButton"
+).textContent = "View Image";
     document.getElementById(
         "imageWarningOverlay"
     ).style.display = "flex";
@@ -1505,41 +1527,33 @@ function continueImageWarning(){
         searchResults.scrollTop
     );
 
+    const type = pendingType;
+    const pdf = pendingPdf;
+    const image = pendingImage;
+    const paper = currentPaperTitle;
+    const back = returnPage;
+
     closeImageWarning();
 
-    if(pendingType === "pdf"){
+    if(type === "pdf"){
 
         window.location.href =
             "pdf.html?" +
-
-            "file=" +
-            encodeURIComponent(pendingPdf) +
-
-            "&paper=" +
-            encodeURIComponent(currentPaperTitle) +
-
-            "&return=" +
-            encodeURIComponent(returnPage);
+            "file=" + encodeURIComponent(pdf) +
+            "&paper=" + encodeURIComponent(paper) +
+            "&return=" + encodeURIComponent(back);
 
         return;
 
     }
 
     window.location.href =
-
         "image.html?" +
+        "image=" + encodeURIComponent(image) +
+        "&paper=" + encodeURIComponent(paper) +
+        "&return=" + encodeURIComponent(back);
 
-        "image=" +
-        encodeURIComponent(pendingImage) +
-
-        "&paper=" +
-        encodeURIComponent(currentPaperTitle) +
-
-        "&return=" +
-        encodeURIComponent(returnPage);
-
-}
-    window.continueImageWarning =
+}    window.continueImageWarning =
     continueImageWarning;
     
 </script>
