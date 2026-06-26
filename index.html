@@ -23,7 +23,7 @@ body{
     width:100%;
     height:100%;
     background:rgba(0,0,0,0.92);
-    display:flex;
+   display:none;
     justify-content:center;
     align-items:center;
     z-index:9999;
@@ -507,8 +507,17 @@ mark{
     .music-cancel-button{
     margin-top:30px;
 }
-    
-</style></head><body><div id="warningBox"><div class="warningContent"><h2>CONTENT WARNING</h2><p>
+
+    .show-warning #warningBox{
+    display:flex;
+}
+</style></head><body>
+    <script>
+if(localStorage.getItem("warningAccepted") !== "yes"){
+    document.documentElement.classList.add("show-warning");
+}
+</script>
+    <div id="warningBox"><div class="warningContent"><h2>CONTENT WARNING</h2><p>
 This website contains graphic material that may include depictions of injury, death, violence, accidents, crime scenes, medical imagery, historical atrocities, and other disturbing content.
 </p><p>
 This material is provided for research, educational, historical, journalistic, and documentary purposes. The content is not intended to shock, glorify violence, or encourage harmful behavior.
@@ -636,9 +645,7 @@ Share Site
 
 import Fuse from "./fuse.basic.min.mjs";
 
-if(localStorage.getItem("warningAccepted") === "yes"){
-    document.getElementById("warningBox").style.display = "none";
-}
+
 
 function acceptWarning(){
         localStorage.setItem("warningAccepted","yes");
