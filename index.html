@@ -980,7 +980,9 @@ function highlightMatch(text, query){
 
 
 searchBox.addEventListener("input", () => {
-
+if(!searchReady){
+    return;
+}
     const query =
         searchBox.value.trim();
 
@@ -1264,14 +1266,16 @@ sessionStorage.setItem(
     });
 
 });
-
-        
 }
 
-    searchResults.style.display =
-        html ? "block" : "none";
+searchResults.style.display =
+    html ? "block" : "none";
 
 });
+        
+
+
+   
 
     
 
