@@ -629,9 +629,18 @@ const textLayer = new TextLayer({
 
 });
 
-await textLayer.render();
-  console.log(textLayerDiv);
-console.log(textLayerDiv.children.length);
+try {
+
+    await textLayer.render();
+
+    console.log("Text layer rendered");
+    console.log(textLayerDiv);
+    console.log("Children:", textLayerDiv.children.length);
+
+}
+catch (err) {
+
+    console.error("TEXT LAYER ERROR:", err);
 
 }
   
