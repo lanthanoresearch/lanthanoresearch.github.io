@@ -1350,9 +1350,9 @@ document.addEventListener("click", e => {
     paperTitle = decodeURIComponent(paperTitle);
 
     const alreadyAccepted =
-        sessionStorage.getItem(
-            "imageWarningAccepted"
-        ) === "yes";
+    sessionStorage.getItem(
+        "graphicPdfAccepted"
+    ) === "yes";
 
     returnPage = window.location.href;
 
@@ -1421,9 +1421,9 @@ image = decodeURIComponent(image);
 
 paperTitle = decodeURIComponent(paperTitle);
     const alreadyAccepted =
-        sessionStorage.getItem(
-            "imageWarningAccepted"
-        ) === "yes";
+    sessionStorage.getItem(
+        "graphicImageAccepted"
+    ) === "yes";
 
     returnPage = window.location.href;
 
@@ -1492,7 +1492,7 @@ pendingPdf = "";
 pendingType = "";
 
 currentPaperTitle = "";
-
+returnPage = "";
 document.getElementById(
     "continueImageButton"
 ).textContent = "View Image";
@@ -1516,11 +1516,23 @@ document
 
 });
 function continueImageWarning(){
+if(pendingType === "image"){
 
     sessionStorage.setItem(
-        "imageWarningAccepted",
+        "graphicImageAccepted",
         "yes"
     );
+
+}
+else if(pendingType === "pdf"){
+
+    sessionStorage.setItem(
+        "graphicPdfAccepted",
+        "yes"
+    );
+
+}
+    
 
     sessionStorage.setItem(
         "searchResultsScroll",
