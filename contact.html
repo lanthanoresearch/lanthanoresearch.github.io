@@ -59,7 +59,15 @@ h1{
     word-break:break-word;
 }
 
-</style></head><body><section><a class="back" href="index.html">◀ Home</a>
+</style></head><body><section>
+    
+    <a
+    class="back"
+    id="homeButton"
+    href="index.html"
+>
+    ◀ Home
+</a>
 
 <h1>Contact</h1><div class="card"><p>
 Questions, comments, corrections, research submissions, and other inquiries may be sent to:
@@ -67,5 +75,25 @@ Questions, comments, corrections, research submissions, and other inquiries may 
 <a href="mailto:LanthanoResearch@protonmail.com">
 LanthanoResearch@protonmail.com
 </a>
-</div></div></section></body>
+</div></div></section>
+<script>
+
+const homeButton =
+    document.getElementById("homeButton");
+
+homeButton.addEventListener("click", e => {
+
+    e.preventDefault();
+
+    sessionStorage.setItem(
+        "returnToIndex",
+        "yes"
+    );
+
+    location.href = "index.html";
+
+});
+
+</script>
+</body>
 </html>
