@@ -698,7 +698,7 @@ if ("serviceWorker" in navigator) {
     let pdfFuse;
 let imageFuse;
 let searchReady = false;
-
+let papersByUrl = {};
 let pendingImage = "";
 let pendingPdf = "";
 
@@ -722,7 +722,7 @@ Promise.all([
     fetch("descriptions.json").then(r => r.json())
 ])
 .then(([searchIndex, descriptions]) => {
-    const papersByUrl = {};
+    papersByUrl = {};
 
 Object.values(descriptions).forEach(paper => {
 
