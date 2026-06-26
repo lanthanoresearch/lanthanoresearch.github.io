@@ -182,11 +182,16 @@ button:hover{background:#3a3a3a;cursor:pointer}
 
 <script type="module">  
 
-import * as pdfjsLib from "./pdfjs/build/pdf.mjs";
+import {
+    getDocument,
+    GlobalWorkerOptions,
+    TextLayer
+} from "./pdfjs/build/pdf.mjs";
 
 console.log("PDF.js:", pdfjsLib.version);
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = "./pdfjs/build/pdf.worker.mjs";
+GlobalWorkerOptions.workerSrc =
+    "./pdfjs/build/pdf.worker.mjs";
 
 const params = new URLSearchParams(location.search);
   const returnUrl = params.get("return");
@@ -203,7 +208,7 @@ try {
 
     console.log("Creating loading task...");
 
-    const loadingTask = pdfjsLib.getDocument(file);
+    const loadingTask = getDocument(file);
 
     console.log("Waiting for PDF...");
 
@@ -253,17 +258,21 @@ await page.render({
     canvasContext: ctx,
     viewport
 }).promise;
-  const textContent = await page.getTextContent();
+ const textContent = await page.getTextContent();
 
-await pdfjsLib.renderTextLayer({
+const textLayer = new TextLayer({
 
     textContentSource: textContent,
 
     container: textLayerDiv,
 
-    viewport
+    viewport: viewport.clone({
+        dontFlip: true
+    })
 
 });
+
+await textLayer.render();
 
 }
 
