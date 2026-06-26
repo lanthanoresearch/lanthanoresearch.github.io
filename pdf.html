@@ -102,7 +102,12 @@ button:hover{background:#3a3a3a;cursor:pointer}
     display:flex;
     height:calc(100% - 106px);
 }
-
+#sidebar{
+    width:240px;
+    background:#171717;
+    overflow:auto;
+    border-right:1px solid #2d2d2d;
+}
 #thumbs{padding:10px}
 .thumb{
     padding:10px;
@@ -111,15 +116,10 @@ button:hover{background:#3a3a3a;cursor:pointer}
     border-radius:8px;
 }
 #viewer{
-    width:100%;
-    height:100%;
+    flex:1;
     overflow:auto;
     padding:30px;
     background:#111;
-
-    display:flex;
-    flex-direction:column;
-    align-items:center;
 }
 .page{
     margin:0 auto 20px;
@@ -202,7 +202,7 @@ button:hover{background:#3a3a3a;cursor:pointer}
 </header>
 
 <div id="toolbar">
-
+<button id="togglePages">Pages</button>
 
 <button id="searchButton">🔍 Search</button>
 
@@ -243,7 +243,9 @@ button:hover{background:#3a3a3a;cursor:pointer}
 
   
 <div id="layout">
-
+<div id="sidebar">
+<div id="thumbs"></div>
+</div>
 
 <div id="viewer"></div>
 </div>
@@ -280,25 +282,6 @@ console.log("File:", file);
 const viewer = document.getElementById("viewer");
   
   let currentScale = 1.5;
-  function getInitialScale(page) {
-
-    const viewport = page.getViewport({
-        scale: 1
-    });
-
-    const availableWidth = viewer.clientWidth - 60;
-
-    // Phones and small tablets
-    if (window.innerWidth <= 768) {
-
-        return availableWidth / viewport.width;
-
-    }
-
-    // Desktop
-    return 1;
-
-}
   const zoomLevels = [
     0.25,
     0.5,
@@ -318,14 +301,6 @@ let currentSearch = -1;
 let pdfDoc = null;
 const menu = document.getElementById("menu");
 const menuButton = document.getElementById("menuBtn");
-
-
-
-
-
-  
-  async function loadPdf() {
-    
 try {
 
   
@@ -338,9 +313,6 @@ try {
 
     pdfDoc = await loadingTask.promise;
 const pdf = pdfDoc;
-  const firstPage = await pdf.getPage(1);
-
-currentScale = getInitialScale(firstPage);
 
     console.log("PDF loaded!");
 
@@ -348,9 +320,6 @@ currentScale = getInitialScale(firstPage);
 
    document.getElementById("pageCount").textContent =
     "/ " + pdf.numPages;
-
-  document.getElementById("zoomPercent").value =
-    Math.round(currentScale * 100) + "%";
 const pageInput = document.getElementById("pageNumber");
 
 for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
@@ -424,7 +393,7 @@ console.log(textLayerDiv.children.length);
 
 
 }
- 
+
 
 
 
@@ -435,24 +404,6 @@ catch(err){
     console.error("ERROR:", err);
 
 }
-  }
-  const backButton =
-    document.getElementById("backBtn");
-
-backButton.addEventListener("click", (e) => {
-
-    e.preventDefault();
-
-  
-    sessionStorage.setItem(
-        "restoreSearch",
-        "yes"
-    );
-
-    location.href = returnUrl || "index.html";
-});
-    
-  
   async function renderAllPages() {
 
     for (const view of pageViews) {
@@ -478,8 +429,6 @@ backButton.addEventListener("click", (e) => {
         }).promise;
       
     }
-
-     
   document.getElementById("zoomPercent").value =
     Math.round(currentScale * 100) + "%";
 
@@ -551,16 +500,19 @@ function gotoSearchResult(index) {
 
 
   
+  document.getElementById("backBtn").addEventListener("click", () => {
 
+    if (returnUrl) {
 
-  
+        location.href = returnUrl;
 
+    } else {
 
+        history.back();
 
+    }
 
-
-
-    
+});
   menuButton.addEventListener("click", (event) => {
 
     event.stopPropagation();
@@ -859,29 +811,6 @@ if (
     gotoSearchResult(currentSearch + 1);
 
 };
-    let resizeTimer;
-
-window.addEventListener("resize", () => {
-
-    clearTimeout(resizeTimer);
-
-    resizeTimer = setTimeout(async () => {
-
-        // Only auto-fit on phones/tablets.
-        if (window.innerWidth <= 768) {
-
-            const firstPage = pageViews[0].page;
-
-            currentScale = getInitialScale(firstPage);
-
-            await renderAllPages();
-
-        }
-
-    }, 150);
-
-});
-  loadPdf();
 </script>
 
 
