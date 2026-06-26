@@ -897,12 +897,22 @@ if(savedScroll){
 
         requestAnimationFrame(()=>{
 
-            window.scrollTo({
+            document.documentElement.style.scrollBehavior = "auto";
 
-                top:parseInt(savedScroll),
-                behavior:"instant"
+            window.scrollTo(
+                0,
+                parseInt(savedScroll)
+            );
+
+            requestAnimationFrame(()=>{
+
+                document.documentElement.style.scrollBehavior = "";
 
             });
+
+            sessionStorage.removeItem(
+                "returnFromPage"
+            );
 
         });
 
