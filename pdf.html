@@ -288,7 +288,9 @@ console.log("File:", file);
 
 const viewer = document.getElementById("viewer");
   
-  let currentScale = 1.5;
+  let baseScale = 1;
+let zoomLevel = 1;
+let currentScale = 1;
   function getFitWidthScale(page) {
 
     const viewport = page.getViewport({
@@ -311,7 +313,19 @@ function getFitPageScale(page) {
     const heightScale =
         viewer.clientHeight / viewport.height;
 
-    return Math.min(widthScale, heightScale);
+    return Math.min(width
+                    
+                    
+                    
+                    Scale, heightScale);
+
+}
+  function updateScale() {
+
+    currentScale = baseScale * zoomLevel;
+
+    document.getElementById("zoomPercent").value =
+        Math.round(zoomLevel * 100) + "%";
 
 }
   const zoomLevels = [
@@ -381,10 +395,11 @@ try {
 const pdf = pdfDoc;
   const firstPage = await pdf.getPage(1);
 
-currentScale = getFitWidthScale(firstPage);
+baseScale = getFitWidthScale(firstPage);
 
-document.getElementById("zoomPercent").value =
-    Math.round(currentScale * 100) + "%";
+zoomLevel = 1;
+
+updateScale();
 
     console.log("PDF loaded!");
 
@@ -520,8 +535,7 @@ await view.page.render({
 }).promise;
       
     }
-  document.getElementById("zoomPercent").value =
-    Math.round(currentScale * 100) + "%";
+ 
 
 }
 
@@ -666,40 +680,52 @@ document.getElementById("fullscreenBtn").onclick = () => {
 });
  document.getElementById("zoomIn").onclick = async () => {
 
-    const next = zoomLevels.find(z => z > currentScale);
+    const next = zoomLevels.find(z => z > zoomLevel);
 
-    if (!next) return;
+if (!next) return;
 
-    currentScale = next;
+zoomLevel = next;
 
-    await renderAllPages();
+updateScale();
+
+await renderAllPages();
 
 };
   document.getElementById("zoomOut").onclick = async () => {
 
     const previous = [...zoomLevels]
-        .reverse()
-        .find(z => z < currentScale);
+    .reverse()
+    .find(z => z < zoomLevel);
 
-    if (!previous) return;
+if (!previous) return;
 
-    currentScale = previous;
+zoomLevel = previous;
 
-    await renderAllPages();
+updateScale();
+
+await renderAllPages();
 
 };
- document.getElementById("fitWidth").onclick = async () => {
+document.getElementById("fitWidth").onclick = async () => {
 
-    currentScale =
+    baseScale =
         getFitWidthScale(pageViews[0].page);
+
+    zoomLevel = 1;
+
+    updateScale();
 
     await renderAllPages();
 
 };
  document.getElementById("fitPage").onclick = async () => {
 
-    currentScale =
+    baseScale =
         getFitPageScale(pageViews[0].page);
+
+    zoomLevel = 1;
+
+    updateScale();
 
     await renderAllPages();
 
@@ -758,12 +784,11 @@ zoomBox.addEventListener("keydown", async e => {
         value = 500;
     }
 
-    currentScale = value / 100;
+    zoomLevel = value / 100;
 
-    zoomBox.value = value + "%";
+updateScale();
 
-    await renderAllPages();
-
+await renderAllPages();
 });
   viewer.addEventListener("scroll", () => {
 
@@ -885,10 +910,12 @@ window.addEventListener("resize", () => {
         // Only auto-fit phones/tablets.
         if (window.innerWidth <= 768 && pageViews.length) {
 
-           currentScale =
+           baseScale =
     getFitWidthScale(pageViews[0].page);
 
-            await renderAllPages();
+updateScale();
+
+await renderAllPages();
 
         }
 
