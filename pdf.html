@@ -282,7 +282,7 @@ const title = decodeURIComponent(
 const returnPage = decodeURIComponent(
     p.get("return") || "index.html"
 );
-
+console.log("returnPage =", returnPage);
 document.getElementById("title").textContent = title;
 console.log("File:", file);
 
