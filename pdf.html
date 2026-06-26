@@ -233,6 +233,8 @@ const menu = document.getElementById("menu");
 const menuButton = document.getElementById("menuBtn");
 try {
 
+  
+
     console.log("Creating loading task...");
 
     const loadingTask = getDocument(file);
@@ -322,7 +324,16 @@ console.log(textLayerDiv.children.length);
 }
 
 
-async function renderAllPages() {
+
+
+
+  
+catch(err){
+
+    console.error("ERROR:", err);
+
+}
+  async function renderAllPages() {
 
     for (const view of pageViews) {
 
@@ -349,14 +360,6 @@ async function renderAllPages() {
     }
   document.getElementById("zoomPercent").value =
     Math.round(currentScale * 100) + "%";
-
-}
-
-
-  
-catch(err){
-
-    console.error("ERROR:", err);
 
 }
   document.getElementById("backBtn").addEventListener("click", () => {
@@ -434,7 +437,8 @@ document.getElementById("fullscreenBtn").onclick = () => {
 
         alert("Link copied to clipboard!");
 
-    } catch (err) {
+    } 
+    catch (err) {
 
         console.error(err);
 
