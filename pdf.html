@@ -328,6 +328,11 @@ backButton.addEventListener("click", (e) => {
         "yes"
     );
 
+    sessionStorage.setItem(
+        "returnFromPage",
+        "yes"
+    );
+
     location.href =
         returnUrl || "index.html";
 
