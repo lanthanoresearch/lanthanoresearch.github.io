@@ -500,17 +500,19 @@ function gotoSearchResult(index) {
 
 
   
- document.getElementById("backBtn").addEventListener("click", () => {
+ const backButton =
+    document.getElementById("backBtn");
 
-    if (history.length > 1) {
+backButton.addEventListener("click", (e) => {
 
-        history.back();
+    e.preventDefault();
 
-    } else if (returnUrl) {
+    sessionStorage.setItem(
+        "restoreSearch",
+        "yes"
+    );
 
-        location.replace(returnUrl);
-
-    }
+    location.href = returnUrl || "index.html";
 
 });
   menuButton.addEventListener("click", (event) => {
