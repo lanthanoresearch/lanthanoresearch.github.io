@@ -700,8 +700,13 @@ let imageFuse;
 let searchReady = false;
 
 let pendingImage = "";
+let pendingPdf = "";
+
 let currentPaperTitle = "";
+
 let returnPage = "";
+
+let pendingType = "";
 
     const searchBox =
     document.getElementById("searchBox");
@@ -1029,28 +1034,49 @@ html += `
               
 html += `
 <a
-    href="pdf.html?file=${encodeURIComponent(result.item.url)}&paper=${encodeURIComponent(result.item.displayTitle)}&return=${encodeURIComponent(window.location.href)}"
+    href="#"
     class="search-result pdf-link"
+    data-pdf="${encodeURIComponent(result.item.url)}"
+    data-paper="${encodeURIComponent(result.item.displayTitle)}"
+    data-warning="${papersByUrl[result.item.url]?.warning}"
 >
-`
 
-    <div
-        class="search-thumb"
-        style="
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            font-size:40px;
-            background:#333;
-        "
-    >
-        📄
-    </div>
+    ${
+        papersByUrl[result.item.url]?.warning
+        ? `
+        <div
+            class="search-thumb"
+            style="
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                font-size:40px;
+                background:#333;
+            "
+        >
+            ⚠️
+        </div>
+        `
+        : `
+        <div
+            class="search-thumb"
+            style="
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                font-size:40px;
+                background:#333;
+            "
+        >
+            📄
+        </div>
+        `
+    }
 
     <div>
 
         <div class="search-title">
-           ${highlightMatch(result.item.displayTitle, query)}
+            ${highlightMatch(result.item.displayTitle, query)}
         </div>
 
         <div class="search-source">
@@ -1061,7 +1087,6 @@ html += `
 
 </a>
 `;
-
             });
       
 
@@ -1141,6 +1166,56 @@ html += `
 
     searchResults.innerHTML = html;
         document.querySelectorAll(".image-link").forEach(link=>{
+            document.querySelectorAll(".pdf-link").forEach(link=>{
+
+    link.addEventListener("click",function(e){
+
+        e.preventDefault();
+
+        const pdf =
+            decodeURIComponent(this.dataset.pdf);
+
+        const paper =
+            decodeURIComponent(this.dataset.paper);
+
+        if(this.dataset.warning === "true"){
+
+            viewSensitivePdf(
+                pdf,
+                paper
+            );
+
+        }else{
+
+            sessionStorage.setItem(
+                "scrollPosition",
+                window.scrollY
+            );
+
+            sessionStorage.setItem(
+                "restoreSearch",
+                "yes"
+            );
+
+            sessionStorage.setItem(
+                "searchResultsScroll",
+                searchResults.scrollTop
+            );
+
+            window.location.href =
+                "pdf.html?" +
+                "file=" +
+                encodeURIComponent(pdf) +
+                "&paper=" +
+                encodeURIComponent(paper) +
+                "&return=" +
+                encodeURIComponent(window.location.href);
+
+        }
+
+    });
+
+});
 
     link.addEventListener("click",function(e){
 
@@ -1263,6 +1338,72 @@ document.addEventListener("click", e => {
 
     
     function viewSensitiveImage(
+        function viewSensitivePdf(
+    pdf,
+    paperTitle
+){
+
+    pdf = decodeURIComponent(pdf);
+
+    paperTitle = decodeURIComponent(paperTitle);
+
+    const alreadyAccepted =
+        sessionStorage.getItem(
+            "imageWarningAccepted"
+        ) === "yes";
+
+    returnPage = window.location.href;
+
+    if(alreadyAccepted){
+
+        sessionStorage.setItem(
+            "scrollPosition",
+            window.scrollY
+        );
+
+        sessionStorage.setItem(
+            "restoreSearch",
+            "yes"
+        );
+
+        sessionStorage.setItem(
+            "searchResultsScroll",
+            searchResults.scrollTop
+        );
+
+        window.location.href =
+            "pdf.html?" +
+
+            "file=" +
+            encodeURIComponent(pdf) +
+
+            "&paper=" +
+            encodeURIComponent(paperTitle) +
+
+            "&return=" +
+            encodeURIComponent(window.location.href);
+
+        return;
+
+    }
+
+    pendingPdf = pdf;
+
+    currentPaperTitle = paperTitle;
+
+    pendingType = "pdf";
+document.getElementById(
+    "continueImageButton"
+).textContent = "View Image";
+    document.getElementById(
+        "imageWarningOverlay"
+    ).style.display = "flex";
+
+    document.getElementById(
+        "continueImageButton"
+    ).textContent = "View PDF";
+
+}
     image,
     paperTitle
 ){
@@ -1307,7 +1448,7 @@ sessionStorage.setItem(
     }
 
     pendingImage = image;
-
+pendingType = "image";
     currentPaperTitle = paperTitle;
 
     document.getElementById(
@@ -1324,7 +1465,15 @@ function closeImageWarning(){
 
     pendingImage = "";
 
-    currentPaperTitle = "";
+pendingPdf = "";
+
+pendingType = "";
+
+currentPaperTitle = "";
+
+document.getElementById(
+    "continueImageButton"
+).textContent = "View Image";
 
 }
     window.closeImageWarning = closeImageWarning;
@@ -1351,31 +1500,43 @@ function continueImageWarning(){
         "yes"
     );
 
-    const image = pendingImage;
-
-    const paper =
-        currentPaperTitle;
-
-    const back =
-        returnPage;
+    sessionStorage.setItem(
+        "searchResultsScroll",
+        searchResults.scrollTop
+    );
 
     closeImageWarning();
-sessionStorage.setItem(
-    "searchResultsScroll",
-    searchResults.scrollTop
-);
+
+    if(pendingType === "pdf"){
+
+        window.location.href =
+            "pdf.html?" +
+
+            "file=" +
+            encodeURIComponent(pendingPdf) +
+
+            "&paper=" +
+            encodeURIComponent(currentPaperTitle) +
+
+            "&return=" +
+            encodeURIComponent(returnPage);
+
+        return;
+
+    }
+
     window.location.href =
 
-    "image.html?" +
+        "image.html?" +
 
-    "image=" +
-    encodeURIComponent(image) +
+        "image=" +
+        encodeURIComponent(pendingImage) +
 
-    "&paper=" +
-    encodeURIComponent(paper) +
+        "&paper=" +
+        encodeURIComponent(currentPaperTitle) +
 
-    "&return=" +
-    encodeURIComponent(back);
+        "&return=" +
+        encodeURIComponent(returnPage);
 
 }
     window.continueImageWarning =
