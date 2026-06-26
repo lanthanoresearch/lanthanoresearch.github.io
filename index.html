@@ -1282,13 +1282,18 @@ searchResults.style.display =
 document.addEventListener("click", e => {
 
     if(
+        document.getElementById("imageWarningOverlay").contains(e.target)
+    ){
+        return;
+    }
+
+    if(
         !document
             .querySelector(".search-wrapper")
             .contains(e.target)
     ){
 
-        searchResults.style.display =
-            "none";
+        searchResults.style.display = "none";
 
     }
 
