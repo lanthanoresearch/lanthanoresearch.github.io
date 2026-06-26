@@ -250,7 +250,47 @@ button:hover{background:#3a3a3a;cursor:pointer}
     border-radius:50%;
     animation:spin 0.9s linear infinite;
 }
+/* ---------- Mobile Search Popup ---------- */
 
+@media (max-width:768px){
+
+    #searchPopup{
+
+        left:10px;
+        right:10px;
+        top:108px;
+
+        width:auto;
+
+        display:flex;
+        flex-wrap:wrap;
+
+        justify-content:center;
+
+        gap:8px;
+    }
+
+    #searchPopup input{
+
+        flex:1 1 100%;
+        width:100%;
+        min-width:0;
+    }
+
+    #prevResult,
+    #nextResult{
+
+        flex:0 0 auto;
+    }
+
+    #searchResults{
+
+        flex:1;
+        text-align:center;
+        min-width:0;
+    }
+
+}
 .loadingText{
     margin-top:18px;
     color:#ddd;
