@@ -179,11 +179,9 @@ const currentCategory =
 
     const scrollKey =
     "categoryScroll-" + currentCategory;
-    const returningFromImage =
-    sessionStorage.getItem(
-        "returnFromImage"
-    ) === "yes";
-if(!returningFromImage){
+    const returning =
+    sessionStorage.getItem("returnFromPage") === "yes";
+if(!returning){
 
     sessionStorage.removeItem(scrollKey);
 
@@ -381,7 +379,8 @@ paper.updated.split("-")[0]}
      style="display:none;">
 
                    <a class="button"
-   href="pdf.html?file=${encodeURIComponent(paper.url)}&paper=${encodeURIComponent(paper.title)}&return=${encodeURIComponent(window.location.href)}">
+   href="pdf.html?file=${encodeURIComponent(paper.url)}&paper=${encodeURIComponent(paper.title)}&return=${encodeURIComponent(window.location.href)}"
+   onclick="saveCategoryState()">
    Read PDF
 </a>
 
@@ -416,7 +415,8 @@ paper.updated.split("-")[0]}
                 </p>
 
                <a class="button"
-   href="pdf.html?file=${encodeURIComponent(paper.url)}&paper=${encodeURIComponent(paper.title)}&return=${encodeURIComponent(window.location.href)}">
+   href="pdf.html?file=${encodeURIComponent(paper.url)}&paper=${encodeURIComponent(paper.title)}&return=${encodeURIComponent(window.location.href)}"
+   onclick="saveCategoryState()">
    Read PDF
 </a>
 
@@ -437,7 +437,7 @@ paper.updated.split("-")[0]}
     
 
 });
-   if(returningFromImage){
+   if(returning){
 
     const openDetails =
         JSON.parse(
@@ -510,7 +510,7 @@ sortSelect.addEventListener("change", () => {
 
 
 
-if(returningFromImage){
+if(returning){
 
     
 
