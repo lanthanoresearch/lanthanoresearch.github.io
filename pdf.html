@@ -468,17 +468,34 @@ async function searchPDF(query) {
 
     currentSearch = 0;
 
-// Update the counter
-document.getElementById("searchResults").textContent =
-    `1 of ${searchResults.length}`;
-
-// Jump to the first result
-pageViews[searchResults[0]].pageDiv.scrollIntoView({
-    behavior: "smooth",
-    block: "start"
-});
+gotoSearchResult(0);
 
 }
+
+
+function gotoSearchResult(index) {
+
+    if (searchResults.length === 0)
+        return;
+
+    if (index < 0)
+        index = searchResults.length - 1;
+
+    if (index >= searchResults.length)
+        index = 0;
+
+    currentSearch = index;
+
+    document.getElementById("searchResults").textContent =
+        `${currentSearch + 1} of ${searchResults.length}`;
+
+    pageViews[searchResults[currentSearch]].pageDiv.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
+
+}
+
 
   
   document.getElementById("backBtn").addEventListener("click", () => {
@@ -703,8 +720,10 @@ zoomBox.addEventListener("keydown", async e => {
   const searchBox = document.getElementById("searchBox");
  searchBox.addEventListener("keydown", e => {
 
-    if (e.key !== "Enter") return;
+    if (e.key !== "Enter")
+        return;
 
+    // First search
     if (
         searchResults.length === 0 ||
         currentSearch === -1
@@ -715,24 +734,10 @@ zoomBox.addEventListener("keydown", async e => {
 
     }
 
-    currentSearch++;
-
-if (currentSearch >= searchResults.length) {
-    currentSearch = 0;
-}
-
-// Update the counter
-document.getElementById("searchResults").textContent =
-    `${currentSearch + 1} of ${searchResults.length}`;
-
-// Jump to that result
-pageViews[searchResults[currentSearch]].pageDiv.scrollIntoView({
-    behavior: "smooth",
-    block: "start"
-});
+    // Go to next result
+    gotoSearchResult(currentSearch + 1);
 
 });
-
 
   const searchButton = document.getElementById("searchButton");
 const searchPopup = document.getElementById("searchPopup");
@@ -760,6 +765,41 @@ searchButton.onclick = e => {
     searchPopup.classList.add("hidden");
 
 });
+  document.getElementById("prevResult").onclick = () => {
+
+    // If the user hasn't searched yet,
+    // perform the search first.
+    if (
+        searchResults.length === 0 ||
+        currentSearch === -1
+    ) {
+
+        searchPDF(searchBox.value);
+        return;
+
+    }
+
+    gotoSearchResult(currentSearch - 1);
+
+};
+
+  document.getElementById("nextResult").onclick = () => {
+
+    // If the user hasn't searched yet,
+    // perform the search first.
+    if (
+        searchResults.length === 0 ||
+        currentSearch === -1
+    ) {
+
+        searchPDF(searchBox.value);
+        return;
+
+    }
+
+    gotoSearchResult(currentSearch + 1);
+
+};
 </script>
 
 
