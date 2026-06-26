@@ -440,12 +440,7 @@ pageViews.push({
     canvas,
     textLayerDiv
 });
-const ctx = canvas.getContext("2d");
 
-await page.render({
-    canvasContext: ctx,
-    viewport
-}).promise;
  const textContent = await page.getTextContent();
 pageViews[pageViews.length - 1].textContent = textContent;
   
