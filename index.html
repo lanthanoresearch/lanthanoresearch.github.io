@@ -935,8 +935,22 @@ if(savedScroll){
 
 }
     else if(
-    returningToIndex &&
-    savedIndexScroll
+   document.documentElement.style.scrollBehavior = "auto";
+document.documentElement.style.scrollSnapType = "none";
+
+window.scrollTo({
+    top: parseInt(savedIndexScroll),
+    behavior: "instant"
+});
+
+requestAnimationFrame(() => {
+
+    document.documentElement.style.scrollBehavior = "";
+    document.documentElement.style.scrollSnapType = "";
+
+    sessionStorage.removeItem("returnToIndex");
+
+});
 ){
 
     requestAnimationFrame(()=>{
