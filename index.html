@@ -794,7 +794,11 @@ if ("serviceWorker" in navigator) {
 
 }
 
-function closeMusicPopup(){
+function closeMusicPopup(event){
+
+    if(event && event.target.id !== "musicPopup"){
+        return;
+    }
 
     document.getElementById(
         "musicPopup"
@@ -1755,19 +1759,12 @@ document
 
 });
         
-document
-.getElementById("musicPopup")
-.addEventListener("click", e => {
 
-    if(e.target.id === "musicPopup"){
-
-        closeMusicPopup();
-
-    }
-
-});
 </script>
-    <div id="musicPopup" class="music-popup-overlay">
+    <div
+    id="musicPopup"
+    class="music-popup-overlay"
+    onclick="closeMusicPopup(event)">
 
     <div class="music-popup">
 
