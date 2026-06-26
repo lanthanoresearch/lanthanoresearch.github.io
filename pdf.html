@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PDF Viewer</title>
+
+<!--
+  PDF.js files to add beside this file:
+  pdfjs/pdf.mjs
+  pdfjs/pdf.worker.mjs
+-->
+
+<style>
+:root{
+    --bg:#111;
+    --panel:#1d1d1d;
+    --panel2:#222;
+    --text:#eee;
+    --muted:#aaa;
+    --accent:#3a3a3a;
+}
+*{box-sizing:border-box}
+html,body{
+    margin:0;
+    height:100%;
+    background:var(--bg);
+    color:var(--text);
+    font-family:Arial,sans-serif;
+    overflow:hidden;
+}
+header{
+    height:58px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 14px;
+    background:#181818;
+    border-bottom:1px solid #2d2d2d;
+}
+#title{
+    font-size:1.2rem;
+    font-weight:bold;
+    overflow:hidden;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+}
+button,input{
+    background:#2b2b2b;
+    color:#fff;
+    border:none;
+    border-radius:8px;
+    padding:8px 12px;
+}
+button:hover{background:#3a3a3a;cursor:pointer}
+#toolbar{
+    display:flex;
+    gap:8px;
+    align-items:center;
+    padding:10px;
+    background:#1b1b1b;
+    border-bottom:1px solid #2d2d2d;
+    flex-wrap:wrap;
+}
+#layout{
+    display:flex;
+    height:calc(100% - 106px);
+}
+#sidebar{
+    width:240px;
+    background:#171717;
+    overflow:auto;
+    border-right:1px solid #2d2d2d;
+}
+#thumbs{padding:10px}
+.thumb{
+    padding:10px;
+    margin-bottom:8px;
+    background:#222;
+    border-radius:8px;
+}
+#viewer{
+    flex:1;
+    overflow:auto;
+    padding:30px;
+    background:#111;
+}
+.page{
+    margin:0 auto 20px;
+    box-shadow:0 0 14px rgba(0,0,0,.4);
+}
+.hidden{display:none}
+#menu{
+    position:absolute;
+    right:10px;
+    top:58px;
+    background:#222;
+    border:1px solid #333;
+    border-radius:10px;
+    padding:8px;
+    display:none;
+    min-width:220px;
+}
+#menu button{
+    width:100%;
+    text-align:left;
+    margin:3px 0;
+}
+</style>
+</head>
+<body>
+
+<header>
+<button id="backBtn">◀ Back</button>
+<div id="title">Loading PDF...</div>
+<button id="menuBtn">☰</button>
+</header>
+
+<div id="toolbar">
+<button id="togglePages">Pages</button>
+
+<input id="searchBox" placeholder="Search">
+
+<button id="zoomOut">−</button>
+<input id="zoomPercent" value="100%" style="width:70px;text-align:center">
+<button id="zoomIn">+</button>
+
+<button id="fitWidth">Fit Width</button>
+<button id="fitPage">Fit Page</button>
+
+<label>Page</label>
+<input id="pageNumber" value="1" style="width:60px;text-align:center">
+<span id="pageCount">/ 0</span>
+</div>
+
+<div id="layout">
+<div id="sidebar">
+<div id="thumbs"></div>
+</div>
+
+<div id="viewer"></div>
+</div>
+
+<div id="menu">
+<button id="downloadBtn">Download PDF</button>
+<button id="printBtn">Print</button>
+<button id="newTabBtn">Open in New Tab</button>
+<button id="copyLinkBtn">Copy Page Link</button>
+<button id="fullscreenBtn">Fullscreen</button>
+</div>
+
+<script type="module">
+
+import * as pdfjsLib from "./pdfjs/pdf.mjs";
+
+pdfjsLib.GlobalWorkerOptions.workerSrc="./pdfjs/pdf.worker.mjs";
+
+const params=new URLSearchParams(location.search);
+
+const file=params.get("file");
+const title=params.get("paper")||"PDF";
+
+document.getElementById("title").textContent=title;
+
+const viewer=document.getElementById("viewer");
+const thumbs=document.getElementById("thumbs");
+
+let pdf=null;
+let scale=1;
+
+async function load(){
+
+    pdf=await pdfjsLib.getDocument(file).promise;
+
+    document.getElementById("pageCount").textContent="/ "+pdf.numPages;
+
+    for(let i=1;i<=pdf.numPages;i++){
+
+        renderPage(i);
+
+        createThumb(i);
+
+    }
+
+}
+
+async function renderPage(num){
+
+    const page=await pdf.getPage(num);
+
+    const viewport=page.getViewport({scale});
+
+    const canvas=document.createElement("canvas");
+    canvas.className="page";
+
+    const ctx=canvas.getContext("2d");
+
+    canvas.width=viewport.width;
+    canvas.height=viewport.height;
+
+    viewer.appendChild(canvas);
+
+    await page.render({
+        canvasContext:ctx,
+        viewport
+    }).promise;
+
+}
+
+function createThumb(page){
+
+    const div=document.createElement("div");
+
+    div.className="thumb";
+
+    div.textContent="Page "+page;
+
+    div.onclick=()=>{
+        document.querySelectorAll(".page")[page-1]
+        ?.scrollIntoView({
+            behavior:"smooth",
+            block:"start"
+        });
+    };
+
+    thumbs.appendChild(div);
+
+}
+
+document.getElementById("togglePages").onclick=()=>{
+
+    sidebar.classList.toggle("hidden");
+
+};
+
+document.getElementById("menuBtn").onclick=()=>{
+
+    menu.style.display=
+    menu.style.display==="block"
+    ?"none":"block";
+
+};
+
+document.getElementById("downloadBtn").onclick=()=>{
+
+    location.href=file;
+
+};
+
+document.getElementById("newTabBtn").onclick=()=>{
+
+    window.open(file);
+
+};
+
+document.getElementById("fullscreenBtn").onclick=()=>{
+
+    document.documentElement.requestFullscreen();
+
+};
+
+document.getElementById("backBtn").onclick=()=>{
+
+    history.back();
+
+};
+
+document.getElementById("zoomIn").onclick=()=>{
+
+    alert("Zoom implementation coming in next version.");
+
+};
+
+document.getElementById("zoomOut").onclick=()=>{
+
+    alert("Zoom implementation coming in next version.");
+
+};
+
+load();
+
+</script>
+
+</body>
+</html>
