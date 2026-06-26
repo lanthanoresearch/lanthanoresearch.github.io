@@ -297,7 +297,14 @@ let currentScale = 1;
         scale: 1
     });
 
-    return viewer.clientWidth / viewport.width;
+    const styles = getComputedStyle(viewer);
+
+const width =
+    viewer.clientWidth
+    - parseFloat(styles.paddingLeft)
+    - parseFloat(styles.paddingRight);
+
+return width / viewport.width;
 
 }
 
@@ -313,11 +320,7 @@ function getFitPageScale(page) {
     const heightScale =
         viewer.clientHeight / viewport.height;
 
-    return Math.min(width
-                    
-                    
-                    
-                    Scale, heightScale);
+    return Math.min(widthScale, heightScale);
 
 }
   function updateScale() {
@@ -343,7 +346,7 @@ function getFitPageScale(page) {
     3,
     3.25,
     3.5,
-    3.75
+    3.75,
     4,
     4.25,
     4.5,
