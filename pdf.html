@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <link rel="stylesheet" href="./pdfjs/web/text_layer_builder.css">
   <link rel="icon" type="image/png" href="file_000000000c40722f92b1fe6758cb4855.png">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
@@ -42,7 +43,10 @@ html,body{
 
 .textLayer{
     position:absolute;
-    inset:0;
+    left:0;
+    top:0;
+    width:100%;
+    height:100%;
     overflow:hidden;
     opacity:1;
     line-height:1;
@@ -244,11 +248,15 @@ canvas.className = "pageCanvas";
 canvas.width = viewport.width;
 canvas.height = viewport.height;
 
+canvas.style.width = viewport.width + "px";
+canvas.style.height = viewport.height + "px";
+
 pageDiv.appendChild(canvas);
 
 const textLayerDiv = document.createElement("div");
 textLayerDiv.className = "textLayer";
-
+textLayerDiv.style.width = viewport.width + "px";
+textLayerDiv.style.height = viewport.height + "px";
 pageDiv.appendChild(textLayerDiv);
 
 viewer.appendChild(pageDiv);
