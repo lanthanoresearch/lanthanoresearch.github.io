@@ -142,6 +142,55 @@ button:hover{background:#3a3a3a;cursor:pointer}
     text-align:left;
     margin:3px 0;
 }
+  #searchPopup{
+
+    position:absolute;
+
+    top:108px;
+
+    left:110px;
+
+    display:flex;
+
+    align-items:center;
+
+    gap:8px;
+
+    padding:10px;
+
+    background:#222;
+
+    border:1px solid #444;
+
+    border-radius:10px;
+
+    box-shadow:0 8px 20px rgba(0,0,0,.45);
+
+    z-index:1000;
+
+}
+
+#searchPopup.hidden{
+
+    display:none;
+
+}
+
+#searchPopup input{
+
+    width:220px;
+
+}
+
+#searchResults{
+
+    color:#bbb;
+
+    min-width:70px;
+
+    text-align:center;
+
+}
 </style>
 </head>
 <body>
@@ -155,7 +204,7 @@ button:hover{background:#3a3a3a;cursor:pointer}
 <div id="toolbar">
 <button id="togglePages">Pages</button>
 
-<input id="searchBox" placeholder="Search">
+<button id="searchButton">🔍 Search</button>
 
 <button id="zoomOut">−</button>
 <input id="zoomPercent"
@@ -175,6 +224,24 @@ button:hover{background:#3a3a3a;cursor:pointer}
 <span id="pageCount">/ 0</span>
 </div>
 
+<div id="searchPopup" class="hidden">
+
+    <input
+        id="searchBox"
+        placeholder="Search..."
+        autocomplete="off">
+
+    <button id="prevResult">▲</button>
+
+    <button id="nextResult">▼</button>
+
+    <span id="searchResults">
+        0 of 0
+    </span>
+
+</div>
+
+  
 <div id="layout">
 <div id="sidebar">
 <div id="thumbs"></div>
@@ -649,6 +716,34 @@ zoomBox.addEventListener("keydown", async e => {
         behavior: "smooth",
         block: "start"
     });
+
+});
+
+
+  const searchButton = document.getElementById("searchButton");
+const searchPopup = document.getElementById("searchPopup");
+
+searchButton.onclick = e => {
+
+    e.stopPropagation();
+
+    searchPopup.classList.toggle("hidden");
+
+    if (!searchPopup.classList.contains("hidden")) {
+
+        document.getElementById("searchBox").focus();
+
+    }
+
+};
+  searchPopup.onclick = e => {
+
+    e.stopPropagation();
+
+};
+  document.addEventListener("click", () => {
+
+    searchPopup.classList.add("hidden");
 
 });
 </script>
