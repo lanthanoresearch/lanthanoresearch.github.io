@@ -281,6 +281,8 @@ document.getElementById("title").textContent = title;
 console.log("File:", file);
 
 const viewer = document.getElementById("viewer");
+
+  const thumbs = document.getElementById("thumbs");
   
   let currentScale = 1.5;
   const zoomLevels = [
@@ -364,6 +366,38 @@ pageViews.push({
     canvas,
     textLayerDiv
 });
+  const thumb = document.createElement("canvas");
+
+thumb.width = 150;
+thumb.height = 200;
+
+thumb.className = "thumbCanvas";
+
+const thumbDiv = document.createElement("div");
+thumbDiv.className = "thumb";
+
+const label = document.createElement("div");
+label.textContent = "Page " + pageNumber;
+
+label.style.textAlign = "center";
+label.style.marginTop = "6px";
+
+thumbDiv.appendChild(thumb);
+thumbDiv.appendChild(label);
+
+thumbDiv.onclick = () => {
+
+    pageDiv.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
+
+};
+
+thumbs.appendChild(thumbDiv);
+
+
+  
 const ctx = canvas.getContext("2d");
 
 await page.render({
@@ -431,6 +465,18 @@ catch(err){
             canvasContext: ctx,
             viewport
         }).promise;
+
+const thumbViewport = page.getViewport({
+    scale: 0.22
+});
+
+thumb.width = thumbViewport.width;
+thumb.height = thumbViewport.height;
+
+await page.render({
+    canvasContext: thumb.getContext("2d"),
+    viewport: thumbViewport
+}).promise;
       
     }
   document.getElementById("zoomPercent").value =
@@ -817,6 +863,14 @@ if (
 }
 
     gotoSearchResult(currentSearch + 1);
+
+};
+
+  const sidebar = document.getElementById("sidebar");
+
+document.getElementById("togglePages").onclick = () => {
+
+    sidebar.classList.toggle("hidden");
 
 };
 </script>
