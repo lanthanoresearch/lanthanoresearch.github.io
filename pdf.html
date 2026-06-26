@@ -435,6 +435,7 @@ catch(err){
     console.error("ERROR:", err);
 
 }
+  }
   const backButton =
     document.getElementById("backBtn");
 
@@ -442,13 +443,14 @@ backButton.addEventListener("click", (e) => {
 
     e.preventDefault();
 
+  
     sessionStorage.setItem(
         "restoreSearch",
         "yes"
     );
 
     location.href = returnUrl || "index.html";
-
+});
     
   
   async function renderAllPages() {
@@ -879,6 +881,7 @@ window.addEventListener("resize", () => {
     }, 150);
 
 });
+  loadPdf();
 </script>
 
 
