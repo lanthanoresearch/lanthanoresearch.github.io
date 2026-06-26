@@ -297,6 +297,7 @@ const viewer = document.getElementById("viewer");
 const pageViews = [];
   let searchResults = [];
 let currentSearch = -1;
+  let lastSearchQuery = "";
 let pdfDoc = null;
 const menu = document.getElementById("menu");
 const menuButton = document.getElementById("menuBtn");
@@ -441,6 +442,7 @@ async function searchPDF(query) {
     query = query.trim().toLowerCase();
 
     if (query === "") return;
+  lastSearchQuery = query;
 
     for (let i = 0; i < pageViews.length; i++) {
 
@@ -724,15 +726,18 @@ zoomBox.addEventListener("keydown", async e => {
         return;
 
     // First search
-    if (
-        searchResults.length === 0 ||
-        currentSearch === -1
-    ) {
+    const query = searchBox.value.trim().toLowerCase();
 
-        searchPDF(searchBox.value);
-        return;
+if (
+    query !== lastSearchQuery ||
+    searchResults.length === 0 ||
+    currentSearch === -1
+) {
 
-    }
+    searchPDF(query);
+    return;
+
+}
 
     // Go to next result
     gotoSearchResult(currentSearch + 1);
@@ -769,15 +774,18 @@ searchButton.onclick = e => {
 
     // If the user hasn't searched yet,
     // perform the search first.
-    if (
-        searchResults.length === 0 ||
-        currentSearch === -1
-    ) {
+    const query = searchBox.value.trim().toLowerCase();
 
-        searchPDF(searchBox.value);
-        return;
+if (
+    query !== lastSearchQuery ||
+    searchResults.length === 0 ||
+    currentSearch === -1
+) {
 
-    }
+    searchPDF(query);
+    return;
+
+}
 
     gotoSearchResult(currentSearch - 1);
 
@@ -787,15 +795,18 @@ searchButton.onclick = e => {
 
     // If the user hasn't searched yet,
     // perform the search first.
-    if (
-        searchResults.length === 0 ||
-        currentSearch === -1
-    ) {
+   const query = searchBox.value.trim().toLowerCase();
 
-        searchPDF(searchBox.value);
-        return;
+if (
+    query !== lastSearchQuery ||
+    searchResults.length === 0 ||
+    currentSearch === -1
+) {
 
-    }
+    searchPDF(query);
+    return;
+
+}
 
     gotoSearchResult(currentSearch + 1);
 
