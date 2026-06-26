@@ -270,7 +270,9 @@ GlobalWorkerOptions.workerSrc =
     "./pdfjs/build/pdf.worker.mjs";
 
 const params = new URLSearchParams(location.search);
-  const returnUrl = params.get("return");
+  const returnUrl = decodeURIComponent(
+    params.get("return") || "index.html"
+);
 const file = params.get("file");
 const title = params.get("paper") || "PDF";
 
