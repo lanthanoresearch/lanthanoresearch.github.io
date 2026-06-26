@@ -898,21 +898,18 @@ if(savedScroll){
         requestAnimationFrame(()=>{
 
             document.documentElement.style.scrollBehavior = "auto";
+            document.documentElement.style.scrollSnapType = "none";
 
-            window.scrollTo(
-                0,
-                parseInt(savedScroll)
-            );
+            window.scrollTo(0, parseInt(savedScroll));
 
             requestAnimationFrame(()=>{
 
                 document.documentElement.style.scrollBehavior = "";
+                document.documentElement.style.scrollSnapType = "";
+
+                sessionStorage.removeItem("returnFromPage");
 
             });
-
-            sessionStorage.removeItem(
-                "returnFromPage"
-            );
 
         });
 
