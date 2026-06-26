@@ -148,84 +148,67 @@ button:hover{background:#3a3a3a;cursor:pointer}
 <button id="copyLinkBtn">Copy Page Link</button>
 <button id="fullscreenBtn">Fullscreen</button>
 </div>
-<script type="module">
+
+<script type="module">  
+  <script type="module">
 import * as pdfjsLib from "./pdfjs/build/pdf.mjs";
 
-pdfjsLib.GlobalWorkerOptions.workerSrc =
-"./pdfjs/build/pdf.worker.mjs";
+console.log("PDF.js:", pdfjsLib.version);
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = "./pdfjs/build/pdf.worker.mjs";
 
 const params = new URLSearchParams(location.search);
-
 const file = params.get("file");
 
-const title = params.get("paper") || "PDF";
-
-document.getElementById("title").textContent = title;
+console.log("File:", file);
 
 const viewer = document.getElementById("viewer");
 
-(async () => {
+try {
 
-    try{
+    console.log("Creating loading task...");
 
-        console.log("Loading", file);
+    const loadingTask = pdfjsLib.getDocument(file);
 
-        const loadingTask =
-            pdfjsLib.getDocument(file);
+    console.log("Waiting for PDF...");
 
-        const pdf =
-            await loadingTask.promise;
+    const pdf = await loadingTask.promise;
 
-        console.log("Pages:", pdf.numPages);
+    console.log("PDF loaded!");
 
-        for(let pageNum = 1;
-            pageNum <= pdf.numPages;
-            pageNum++){
+    console.log("Pages:", pdf.numPages);
 
-            const page =
-                await pdf.getPage(pageNum);
+    const page = await pdf.getPage(1);
 
-            const viewport =
-                page.getViewport({
-                    scale:1.5
-                });
+    console.log("Page 1 loaded");
 
-            const canvas =
-                document.createElement("canvas");
+    const viewport = page.getViewport({
+        scale: 1.5
+    });
 
-            canvas.className="page";
+    const canvas = document.createElement("canvas");
 
-            canvas.width =
-                viewport.width;
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
 
-            canvas.height =
-                viewport.height;
+    viewer.appendChild(canvas);
 
-            viewer.appendChild(canvas);
+    console.log("Rendering...");
 
-            await page.render({
+    await page.render({
+        canvasContext: canvas.getContext("2d"),
+        viewport: viewport
+    }).promise;
 
-                canvasContext:
-                    canvas.getContext("2d"),
+    console.log("Finished!");
 
-                viewport
+}
+catch(err){
 
-            }).promise;
+    console.error("ERROR:", err);
 
-        }
-
-    }catch(error){
-
-        console.error(error);
-
-        document.getElementById("title")
-            .textContent =
-            "Failed to load PDF";
-
-    }
-
-})();
-              
+}
+</script>
 </script>
 
 </body>
