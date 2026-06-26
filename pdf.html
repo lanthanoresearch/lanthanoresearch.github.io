@@ -175,9 +175,9 @@ async function load(){
     try{
 
         console.log("Loading:", file);
-
+console.log("Starting getDocument");
         pdf = await pdfjsLib.getDocument(file).promise;
-
+console.log("Finished getDocument");
         console.log("Loaded PDF");
 
         document.getElementById("title").textContent = title;
