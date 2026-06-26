@@ -473,9 +473,9 @@ paper.updated.split("-")[0]}
     );
 
     sessionStorage.setItem(
-        "returnFromImage",
-        "yes"
-    );
+    "returnFromPage",
+    "yes"
+);
 
 });
 });
@@ -527,8 +527,8 @@ if(returning){
                     0,
                     parseInt(savedScroll)
                 );
-                sessionStorage.removeItem(
-    "returnFromImage"
+               sessionStorage.removeItem(
+    "returnFromPage"
 );
 
             });
@@ -558,6 +558,21 @@ function saveOpenDetails(){
     sessionStorage.setItem(
         "openDetails-" + currentCategory,
         JSON.stringify(open)
+    );
+
+}
+    function saveCategoryState(){
+
+    saveOpenDetails();
+
+    sessionStorage.setItem(
+        scrollKey,
+        window.scrollY
+    );
+
+    sessionStorage.setItem(
+        "returnFromPage",
+        "yes"
     );
 
 }
