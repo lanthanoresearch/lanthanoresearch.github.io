@@ -683,7 +683,20 @@ await view.page.render({
     canvasContext: ctx,
     viewport
 }).promise;
-      
+      view.textLayerDiv.replaceChildren();
+      const textLayer = new TextLayer({
+
+    textContentSource: view.textContent,
+
+    container: view.textLayerDiv,
+
+    viewport: viewport.clone({
+        dontFlip: true
+    })
+
+});
+
+await textLayer.render();
     }
  
 
