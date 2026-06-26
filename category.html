@@ -380,7 +380,7 @@ paper.updated.split("-")[0]}
 
                    <a class="button"
    href="pdf.html?file=${encodeURIComponent(paper.url)}&paper=${encodeURIComponent(paper.title)}&return=${encodeURIComponent(window.location.href)}"
-   onclick="saveCategoryState()">
+   
    Read PDF
 </a>
 
@@ -416,7 +416,7 @@ paper.updated.split("-")[0]}
 
                <a class="button"
    href="pdf.html?file=${encodeURIComponent(paper.url)}&paper=${encodeURIComponent(paper.title)}&return=${encodeURIComponent(window.location.href)}"
-   onclick="saveCategoryState()">
+   
    Read PDF
 </a>
 
@@ -479,7 +479,15 @@ paper.updated.split("-")[0]}
 
 });
 });
+document.querySelectorAll(".pdf-link").forEach(link=>{
 
+    link.addEventListener("click",()=>{
+
+        saveCategoryState();
+
+    });
+
+});
 }
 
 const sortSelect =
