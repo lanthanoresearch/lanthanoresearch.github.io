@@ -626,15 +626,29 @@ zoomBox.addEventListener("keydown", async e => {
     document.getElementById("pageNumber").value = current;
 
 });
-  const searchBox = document.getElementById("searchBox");
+ searchBox.addEventListener("keydown", e => {
 
-searchBox.addEventListener("keydown", e => {
+    if (e.key !== "Enter") return;
 
-    if (e.key === "Enter") {
+    if (
+        searchResults.length === 0 ||
+        currentSearch === -1
+    ) {
 
         searchPDF(searchBox.value);
+        return;
 
     }
+
+    currentSearch++;
+
+    if (currentSearch >= searchResults.length)
+        currentSearch = 0;
+
+    pageViews[searchResults[currentSearch]].pageDiv.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
 
 });
 </script>
