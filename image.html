@@ -162,7 +162,8 @@ homeButton.href = returnPage;
 
 });
 img.src=src;
-title.textContent=src.split("/").pop();
+const filename = src.split("/").pop();
+title.textContent = filename.replace(/\.[^/.]+$/, "");
 //MOVING SCROLLING ETC.
 
     
