@@ -29,6 +29,37 @@ html,body{
     font-family:Arial,sans-serif;
     overflow:hidden;
 }
+  .page{
+    position:relative;
+    margin:0 auto 20px;
+    box-shadow:0 0 14px rgba(0,0,0,.4);
+    background:white;
+}
+  .pageCanvas{
+    display:block;
+}
+
+.textLayer{
+    position:absolute;
+    inset:0;
+    overflow:hidden;
+    opacity:1;
+    line-height:1;
+    user-select:text;
+    cursor:text;
+}
+
+.textLayer span{
+    position:absolute;
+    color:transparent;
+    white-space:pre;
+    transform-origin:0 0;
+    cursor:text;
+}
+
+.textLayer ::selection{
+    background:rgba(0,120,255,.35);
+}
 header{
     height:58px;
     display:flex;
@@ -195,21 +226,44 @@ for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
         scale: 1.5
     });
 
-    const canvas = document.createElement("canvas");
+   const pageDiv = document.createElement("div");
+pageDiv.className = "page";
 
-    canvas.className = "page";
+pageDiv.style.width = viewport.width + "px";
+pageDiv.style.height = viewport.height + "px";
 
-    canvas.width = viewport.width;
-    canvas.height = viewport.height;
+const canvas = document.createElement("canvas");
+canvas.className = "pageCanvas";
 
-    const ctx = canvas.getContext("2d");
+canvas.width = viewport.width;
+canvas.height = viewport.height;
 
-    viewer.appendChild(canvas);
+pageDiv.appendChild(canvas);
 
-    await page.render({
-        canvasContext: ctx,
-        viewport: viewport
-    }).promise;
+const textLayerDiv = document.createElement("div");
+textLayerDiv.className = "textLayer";
+
+pageDiv.appendChild(textLayerDiv);
+
+viewer.appendChild(pageDiv);
+
+const ctx = canvas.getContext("2d");
+
+await page.render({
+    canvasContext: ctx,
+    viewport
+}).promise;
+  const textContent = await page.getTextContent();
+
+await pdfjsLib.renderTextLayer({
+
+    textContentSource: textContent,
+
+    container: textLayerDiv,
+
+    viewport
+
+});
 
 }
 
