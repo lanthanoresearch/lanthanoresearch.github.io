@@ -299,6 +299,12 @@ let currentSearch = -1;
 let pdfDoc = null;
 const menu = document.getElementById("menu");
 const menuButton = document.getElementById("menuBtn");
+
+
+
+
+
+  
   async function loadPdf() {
     
 try {
@@ -393,8 +399,7 @@ console.log(textLayerDiv.children.length);
 
 
 }
-  loadPdf();
-
+ 
 
 
 
@@ -405,6 +410,20 @@ catch(err){
     console.error("ERROR:", err);
 
 }
+  const backButton =
+
+    document.getElementById("backBtn");
+
+
+
+backButton.addEventListener("click", (e) => {
+
+
+
+    e.preventDefault();
+
+    loadPdf();
+  
   async function renderAllPages() {
 
     for (const view of pageViews) {
@@ -430,6 +449,8 @@ catch(err){
         }).promise;
       
     }
+
+     
   document.getElementById("zoomPercent").value =
     Math.round(currentScale * 100) + "%";
 
@@ -501,12 +522,7 @@ function gotoSearchResult(index) {
 
 
   
- const backButton =
-    document.getElementById("backBtn");
 
-backButton.addEventListener("click", (e) => {
-
-    e.preventDefault();
 
     sessionStorage.setItem(
         "restoreSearch",
