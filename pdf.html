@@ -149,173 +149,83 @@ button:hover{background:#3a3a3a;cursor:pointer}
 <button id="fullscreenBtn">Fullscreen</button>
 </div>
 
-<script type="module">
-
 import * as pdfjsLib from "./pdfjs/build/pdf.mjs";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc =
-    "./pdfjs/build/pdf.worker.mjs";
+"./pdfjs/build/pdf.worker.mjs";
 
-const params=new URLSearchParams(location.search);
+const params = new URLSearchParams(location.search);
 
-const file=params.get("file");
-  console.log(file);
-const title=params.get("paper")||"PDF";
+const file = params.get("file");
 
-document.getElementById("title").textContent=title;
+const title = params.get("paper") || "PDF";
 
-const viewer=document.getElementById("viewer");
-const thumbs=document.getElementById("thumbs");
+document.getElementById("title").textContent = title;
 
-let pdf=null;
-let scale=1;
+const viewer = document.getElementById("viewer");
 
-async function load(){
+(async () => {
 
     try{
 
-        console.log("Loading:", file);
-console.log("Starting getDocument");
-        const loadingTask = pdfjsLib.getDocument({
-    url: file
-});
+        console.log("Loading", file);
 
-loadingTask.onPassword = function(){
-    console.log("PASSWORD PROTECTED");
-};
+        const loadingTask =
+            pdfjsLib.getDocument(file);
 
-loadingTask.onProgress = function(progress){
-    console.log("Progress:", progress.loaded, progress.total);
-};
+        const pdf =
+            await loadingTask.promise;
 
-loadingTask.onProgress = function(progress){
+        console.log("Pages:", pdf.numPages);
 
-    console.log(progress);
+        for(let pageNum = 1;
+            pageNum <= pdf.numPages;
+            pageNum++){
 
-};
+            const page =
+                await pdf.getPage(pageNum);
 
-pdf = await loadingTask.promise;
-console.log("Finished getDocument");
-        console.log("Loaded PDF");
+            const viewport =
+                page.getViewport({
+                    scale:1.5
+                });
 
-        document.getElementById("title").textContent = title;
+            const canvas =
+                document.createElement("canvas");
 
-        document.getElementById("pageCount").textContent =
-            "/ " + pdf.numPages;
+            canvas.className="page";
 
-        for(let i=1;i<=pdf.numPages;i++){
+            canvas.width =
+                viewport.width;
 
-            await renderPage(i);
+            canvas.height =
+                viewport.height;
 
-            createThumb(i);
+            viewer.appendChild(canvas);
+
+            await page.render({
+
+                canvasContext:
+                    canvas.getContext("2d"),
+
+                viewport
+
+            }).promise;
 
         }
 
-    }catch(err){
+    }catch(error){
 
-        console.error(err);
+        console.error(error);
 
-        document.getElementById("title").textContent =
+        document.getElementById("title")
+            .textContent =
             "Failed to load PDF";
 
     }
 
-}
-async function renderPage(num){
-
-    const page=await pdf.getPage(num);
-
-    const viewport=page.getViewport({scale});
-
-    const canvas=document.createElement("canvas");
-    canvas.className="page";
-
-    const ctx=canvas.getContext("2d");
-
-    canvas.width=viewport.width;
-    canvas.height=viewport.height;
-
-    viewer.appendChild(canvas);
-
-    await page.render({
-        canvasContext:ctx,
-        viewport
-    }).promise;
-
-}
-
-function createThumb(page){
-
-    const div=document.createElement("div");
-
-    div.className="thumb";
-
-    div.textContent="Page "+page;
-
-    div.onclick=()=>{
-        document.querySelectorAll(".page")[page-1]
-        ?.scrollIntoView({
-            behavior:"smooth",
-            block:"start"
-        });
-    };
-
-    thumbs.appendChild(div);
-
-}
-
-document.getElementById("togglePages").onclick=()=>{
-
-    sidebar.classList.toggle("hidden");
-
-};
-
-document.getElementById("menuBtn").onclick=()=>{
-
-    menu.style.display=
-    menu.style.display==="block"
-    ?"none":"block";
-
-};
-
-document.getElementById("downloadBtn").onclick=()=>{
-
-    location.href=file;
-
-};
-
-document.getElementById("newTabBtn").onclick=()=>{
-
-    window.open(file);
-
-};
-
-document.getElementById("fullscreenBtn").onclick=()=>{
-
-    document.documentElement.requestFullscreen();
-
-};
-
-document.getElementById("backBtn").onclick=()=>{
-
-    history.back();
-
-};
-
-document.getElementById("zoomIn").onclick=()=>{
-
-    alert("Zoom implementation coming in next version.");
-
-};
-
-document.getElementById("zoomOut").onclick=()=>{
-
-    alert("Zoom implementation coming in next version.");
-
-};
-
-load();
-
+})();
+              
 </script>
 
 </body>
