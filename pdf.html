@@ -167,9 +167,8 @@ button:hover{background:#3a3a3a;cursor:pointer}
 <label>Page</label>
 <input
     id="pageNumber"
-    type="number"
     value="1"
-    min="1"
+    inputmode="numeric"
     style="width:60px;text-align:center">
 <span id="pageCount">/ 0</span>
 </div>
@@ -212,6 +211,7 @@ document.getElementById("title").textContent = title;
 console.log("File:", file);
 
 const viewer = document.getElementById("viewer");
+  
   let currentScale = 1.5;
 const pageViews = [];
 let pdfDoc = null;
@@ -235,7 +235,7 @@ const pdf = pdfDoc;
    document.getElementById("pageCount").textContent =
     "/ " + pdf.numPages;
 const pageInput = document.getElementById("pageNumber");
-pageInput.max = pdf.numPages;
+
 for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
 
     console.log("Rendering page", pageNumber);
@@ -442,12 +442,29 @@ pageInput.addEventListener("keydown", e => {
 
     if (e.key !== "Enter") return;
 
-    let page = Number(pageInput.value);
+    let page = parseInt(pageInput.value);
 
-    page = Math.max(1, Math.min(pageViews.length, page));
+    // If it's blank or invalid, go to page 1.
+    if (isNaN(page)) {
+        page = 1;
+    }
 
+    // Clamp to the valid range.
+    if (page < 1) {
+        page = 1;
+    }
+
+    if (page > pageViews.length) {
+        page = pageViews.length;
+    }
+
+    // Update the text box to the corrected page number.
+    pageInput.value = page;
+
+    // Jump to that page.
     pageViews[page - 1].pageDiv.scrollIntoView({
-        behavior: "smooth"
+        behavior: "smooth",
+        block: "start"
     });
 
 });
@@ -467,17 +484,7 @@ pageInput.addEventListener("keydown", e => {
     document.getElementById("pageNumber").value = current;
 
 });
-  pageInput.addEventListener("input", () => {
-
-    let value = parseInt(pageInput.value);
-
-    if (isNaN(value)) return;
-
-    if (value < 1) value = 1;
-    if (value > pdf.numPages) value = pdf.numPages;
-
-    pageInput.value = value;
-});
+  
 </script>
 
 
