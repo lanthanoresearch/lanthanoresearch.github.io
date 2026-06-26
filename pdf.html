@@ -207,6 +207,9 @@ document.getElementById("title").textContent = title;
 console.log("File:", file);
 
 const viewer = document.getElementById("viewer");
+  let currentScale = 1.5;
+const pageViews = [];
+let pdfDoc = null;
 const menu = document.getElementById("menu");
 const menuButton = document.getElementById("menuBtn");
 try {
@@ -217,7 +220,8 @@ try {
 
     console.log("Waiting for PDF...");
 
-    const pdf = await loadingTask.promise;
+    pdfDoc = await loadingTask.promise;
+const pdf = pdfDoc;
 
     console.log("PDF loaded!");
 
@@ -231,9 +235,10 @@ for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
     console.log("Rendering page", pageNumber);
 
     const page = await pdf.getPage(pageNumber);
-
+  
+let currentScale = 1.5;
     const viewport = page.getViewport({
-        scale: 1.5
+        scale: currentScale
     });
 
    const pageDiv = document.createElement("div");
@@ -260,7 +265,12 @@ textLayerDiv.style.height = viewport.height + "px";
 pageDiv.appendChild(textLayerDiv);
 
 viewer.appendChild(pageDiv);
-
+pageViews.push({
+    page,
+    pageDiv,
+    canvas,
+    textLayerDiv
+});
 const ctx = canvas.getContext("2d");
 
 await page.render({
@@ -286,7 +296,35 @@ await textLayer.render();
 console.log(textLayerDiv.children.length);
 
 }
+  
+async function renderAllPages() {
 
+    for (const view of pageViews) {
+
+        const viewport = view.page.getViewport({
+            scale: currentScale
+        });
+
+        view.pageDiv.style.width = viewport.width + "px";
+        view.pageDiv.style.height = viewport.height + "px";
+
+        view.canvas.width = viewport.width;
+        view.canvas.height = viewport.height;
+
+        view.canvas.style.width = viewport.width + "px";
+        view.canvas.style.height = viewport.height + "px";
+document.getElementById("zoomPercent").value =
+    Math.round(currentScale * 100) + "%";
+        const ctx = view.canvas.getContext("2d");
+
+        await view.page.render({
+            canvasContext: ctx,
+            viewport
+        }).promise;
+      
+    }
+
+}
 console.log("Finished!");
 }
 catch(err){
@@ -376,6 +414,51 @@ document.getElementById("fullscreenBtn").onclick = () => {
         alert("Failed to copy link.");
 
     }
+
+});
+  document.getElementById("zoomIn").onclick = async () => {
+
+    currentScale *= 1.2;
+
+    await renderAllPages();
+
+};
+  document.getElementById("zoomOut").onclick = async () => {
+
+    currentScale /= 1.2;
+
+    await renderAllPages();
+
+};
+  const pageInput = document.getElementById("pageNumber");
+
+pageInput.addEventListener("keydown", e => {
+
+    if (e.key !== "Enter") return;
+
+    let page = Number(pageInput.value);
+
+    page = Math.max(1, Math.min(pageViews.length, page));
+
+    pageViews[page - 1].pageDiv.scrollIntoView({
+        behavior: "smooth"
+    });
+
+});
+  viewer.addEventListener("scroll", () => {
+
+    let current = 1;
+
+    for (let i = 0; i < pageViews.length; i++) {
+
+        const rect = pageViews[i].pageDiv.getBoundingClientRect();
+
+        if (rect.top < 150)
+            current = i + 1;
+
+    }
+
+    document.getElementById("pageNumber").value = current;
 
 });
 </script>
