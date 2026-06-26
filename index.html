@@ -429,6 +429,81 @@ mark{
     cursor:pointer;
 
 }
+    .music-popup-overlay{
+
+    display:none;
+
+    position:fixed;
+
+    inset:0;
+
+    background:rgba(0,0,0,.88);
+
+    justify-content:center;
+
+    align-items:center;
+
+    z-index:999999;
+
+}
+
+.music-popup{
+
+    background:#1d1d1d;
+
+    width:90%;
+
+    max-width:420px;
+
+    padding:25px;
+
+    border-radius:12px;
+
+    text-align:center;
+
+}
+
+.music-popup h2{
+
+    margin-top:0;
+
+}
+
+.music-popup p{
+
+    color:#bbb;
+
+}
+
+.music-popup button{
+
+    display:block;
+
+    width:100%;
+
+    margin-top:12px;
+
+    padding:12px;
+
+    background:#333;
+
+    color:white;
+
+    border:none;
+
+    border-radius:8px;
+
+    cursor:pointer;
+
+    font-size:16px;
+
+}
+
+.music-popup button:hover{
+
+    background:#444;
+
+}
     
 </style></head><body><div id="warningBox"><div class="warningContent"><h2>CONTENT WARNING</h2><p>
 This website contains graphic material that may include depictions of injury, death, violence, accidents, crime scenes, medical imagery, historical atrocities, and other disturbing content.
@@ -517,6 +592,17 @@ class="music-banner"
 src="file_0000000053d0722fa786ebce8df37449.png"
 alt="Lanthano Music">
 </a>
+    <a
+href="https://rumble.com/user/Hitorah"
+target="_blank"
+rel="noopener">
+
+<img
+class="music-banner"
+src="file_000000003e4471f59b70a29802793a50.png"
+alt="Hitorah on Rumble">
+
+</a>
 
 <div class="footer-links">
 
@@ -524,7 +610,9 @@ alt="Lanthano Music">
 
 <a href="contact.html">Contact</a>
 
-<a href="music.html">Music</a>
+<a href="#" onclick="openMusicPopup(); return false;">
+Music
+</a>
 <button class="share-button" onclick="shareSite()">
 Share Site
 </button>
@@ -695,6 +783,39 @@ if ("serviceWorker" in navigator) {
 
 }
     window.shareSite = shareSite;
+    function openMusicPopup(){
+
+    document.getElementById(
+        "musicPopup"
+    ).style.display = "flex";
+
+}
+
+function closeMusicPopup(){
+
+    document.getElementById(
+        "musicPopup"
+    ).style.display = "none";
+
+}
+
+function goToLanthano(){
+
+    window.location.href = "music.html";
+
+}
+
+function goToHitorah(){
+
+    window.location.href =
+        "https://rumble.com/user/Hitorah";
+
+}
+
+window.openMusicPopup = openMusicPopup;
+window.closeMusicPopup = closeMusicPopup;
+window.goToLanthano = goToLanthano;
+window.goToHitorah = goToHitorah;
     let pdfFuse;
 let imageFuse;
 let searchReady = false;
@@ -1630,7 +1751,41 @@ document
     }
 
 });
+        
+document
+.getElementById("musicPopup")
+.addEventListener("click", e => {
 
+    if(e.target.id === "musicPopup"){
+
+        closeMusicPopup();
+
+    }
+
+});
 </script>
+    <div id="musicPopup" class="music-popup-overlay">
+
+    <div class="music-popup">
+
+        <h2>Choose Music</h2>
+
+        <p>Select where you'd like to go.</p>
+
+        <button onclick="goToLanthano()">
+            Lanthano Music
+        </button>
+
+        <button onclick="goToHitorah()">
+            Hitorah on Rumble
+        </button>
+
+        <button onclick="closeMusicPopup()">
+            Cancel
+        </button>
+
+    </div>
+
+</div>
 </body>
 </html>
