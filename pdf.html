@@ -188,7 +188,7 @@ button:hover{background:#3a3a3a;cursor:pointer}
 <body>
 
 <header>
-<button id="backBtn">◀ Back</button>
+<a id="backBtn" href="index.html">◀ Back</a>
 <div id="title">Loading PDF...</div>
 <button id="menuBtn">☰</button>
 </header>
@@ -308,10 +308,16 @@ let currentSearch = -1;
 let pdfDoc = null;
 const menu = document.getElementById("menu");
 const menuButton = document.getElementById("menuBtn");
+
+
+
+
+  
 const backButton =
     document.getElementById("backBtn");
 
-backButton.href = returnUrl || "index.html";
+backButton.href =
+    returnUrl || "index.html";
 
 backButton.addEventListener("click", (e) => {
 
@@ -326,6 +332,10 @@ backButton.addEventListener("click", (e) => {
         returnUrl || "index.html";
 
 });
+
+
+
+  
   
 try {
 
