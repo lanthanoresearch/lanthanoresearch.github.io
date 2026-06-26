@@ -269,12 +269,19 @@ import {
 GlobalWorkerOptions.workerSrc =
     "./pdfjs/build/pdf.worker.mjs";
 
-const params = new URLSearchParams(location.search);
-  const returnUrl = decodeURIComponent(
-    params.get("return") || "index.html"
+const p = new URLSearchParams(location.search);
+
+const file = decodeURIComponent(
+    p.get("file") || ""
 );
-const file = params.get("file");
-const title = params.get("paper") || "PDF";
+
+const title = decodeURIComponent(
+    p.get("paper") || "PDF"
+);
+
+const returnPage = decodeURIComponent(
+    p.get("return") || "index.html"
+);
 
 document.getElementById("title").textContent = title;
 console.log("File:", file);
@@ -327,7 +334,7 @@ const backButton =
     document.getElementById("backBtn");
 
 backButton.href =
-    returnUrl || "index.html";
+    returnPage || "index.html";
 
 backButton.addEventListener("click", (e) => {
 
@@ -344,7 +351,7 @@ backButton.addEventListener("click", (e) => {
     );
 
     location.href =
-        returnUrl || "index.html";
+        returnPage || "index.html";
 
 });
 
