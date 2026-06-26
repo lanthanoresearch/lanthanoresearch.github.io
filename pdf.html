@@ -406,8 +406,21 @@ pageDiv.style.height = viewport.height + "px";
 const canvas = document.createElement("canvas");
 canvas.className = "pageCanvas";
 
-canvas.width = viewport.width;
-canvas.height = viewport.height;
+const outputScale = window.devicePixelRatio || 1;
+
+canvas.width = Math.floor(viewport.width * outputScale);
+canvas.height = Math.floor(viewport.height * outputScale);
+
+canvas.style.width = viewport.width + "px";
+canvas.style.height = viewport.height + "px";
+
+const ctx = canvas.getContext("2d");
+ctx.setTransform(outputScale, 0, 0, outputScale, 0, 0);
+
+await page.render({
+    canvasContext: ctx,
+    viewport
+}).promise;
 
 canvas.style.width = viewport.width + "px";
 canvas.style.height = viewport.height + "px";
