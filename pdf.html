@@ -810,20 +810,45 @@ document.getElementById("fullscreenBtn").onclick = () => {
 
   document.getElementById("copyLinkBtn").addEventListener("click", async () => {
 
+    const url = window.location.href;
+
+    menu.style.display = "none";
+
+    // Try the native share sheet first.
+    if (navigator.share) {
+
+        try {
+
+            await navigator.share({
+                title: document.title,
+                text: document.getElementById("title").textContent,
+                url: url
+            });
+
+            return;
+
+        } catch (err) {
+
+            // User cancelled or sharing failed.
+            // Continue to clipboard fallback.
+        }
+
+    }
+
+    // Try copying to the clipboard.
     try {
 
-        await navigator.clipboard.writeText(window.location.href);
-
-        menu.style.display = "none";
+        await navigator.clipboard.writeText(url);
 
         alert("Link copied to clipboard!");
 
-    } 
-    catch (err) {
+    } catch (err) {
 
-        console.error(err);
-
-        alert("Failed to copy link.");
+        // Final fallback if clipboard isn't allowed.
+        window.prompt(
+            "Copy this link:",
+            url
+        );
 
     }
 
