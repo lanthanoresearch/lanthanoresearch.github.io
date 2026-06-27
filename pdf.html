@@ -808,13 +808,12 @@ document.getElementById("fullscreenBtn").onclick = () => {
     document.documentElement.requestFullscreen();
 };
 
-  document.getElementById("copyLinkBtn").addEventListener("click", async () => {
+document.getElementById("copyLinkBtn").addEventListener("click", async () => {
 
     const url = window.location.href;
 
     menu.style.display = "none";
 
-    // Try the native share sheet first.
     if (navigator.share) {
 
         try {
@@ -825,26 +824,23 @@ document.getElementById("fullscreenBtn").onclick = () => {
                 url: url
             });
 
-            return;
-
         } catch (err) {
 
-            // User cancelled or sharing failed.
-            // Continue to clipboard fallback.
+            // User cancelled or share failed.
         }
+
+        return;
 
     }
 
-    // Try copying to the clipboard.
     try {
 
         await navigator.clipboard.writeText(url);
 
         alert("Link copied to clipboard!");
 
-    } catch (err) {
+    } catch {
 
-        // Final fallback if clipboard isn't allowed.
         window.prompt(
             "Copy this link:",
             url
@@ -853,7 +849,8 @@ document.getElementById("fullscreenBtn").onclick = () => {
     }
 
 });
- document.getElementById("zoomIn").onclick = async () => {
+  
+  document.getElementById("zoomIn").onclick = async () => {
 
     const next = zoomLevels.find(z => z > zoomLevel);
 
