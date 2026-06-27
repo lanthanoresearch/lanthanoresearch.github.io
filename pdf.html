@@ -680,15 +680,16 @@ textLayerDiv.style.height = viewport.height + "px";
 pageDiv.appendChild(textLayerDiv);
 
 viewer.appendChild(pageDiv);
+const textContent =
+    await page.getTextContent();
+
 pageViews.push({
     page,
     pageDiv,
     canvas,
-    textLayerDiv
+    textLayerDiv,
+    textContent
 });
-
- const textContent = await page.getTextContent();
-pageViews[pageViews.length - 1].textContent = textContent;
   
 const textLayer = new TextLayer({
 
@@ -722,7 +723,15 @@ loadingOverlay.style.display = "none";
     console.error("ERROR:", err);
 
 }
-  async function renderAllPages() {
+
+
+
+
+
+
+async function renderAllPages() {
+
+    const outputScale = window.devicePixelRatio || 1;
 
     for (const view of pageViews) {
 
@@ -730,48 +739,88 @@ loadingOverlay.style.display = "none";
             scale: currentScale
         });
 
+        //
+        // Resize the page container
+        //
+
         view.pageDiv.style.width = viewport.width + "px";
         view.pageDiv.style.height = viewport.height + "px";
 
-      view.textLayerDiv.style.width =
-    viewport.width + "px";
+        //
+        // Resize the canvas
+        //
 
-view.textLayerDiv.style.height =
-    viewport.height + "px";
+        view.canvas.width =
+            Math.floor(viewport.width * outputScale);
 
-      
-        const outputScale = window.devicePixelRatio || 1;
+        view.canvas.height =
+            Math.floor(viewport.height * outputScale);
 
-view.canvas.width = Math.floor(viewport.width * outputScale);
-view.canvas.height = Math.floor(viewport.height * outputScale);
+        view.canvas.style.width =
+            viewport.width + "px";
 
-view.canvas.style.width = viewport.width + "px";
-view.canvas.style.height = viewport.height + "px";
+        view.canvas.style.height =
+            viewport.height + "px";
 
-const ctx = view.canvas.getContext("2d");
+        const ctx =
+            view.canvas.getContext("2d");
 
-ctx.setTransform(outputScale, 0, 0, outputScale, 0, 0);
+        ctx.setTransform(
+            outputScale,
+            0,
+            0,
+            outputScale,
+            0,
+            0
+        );
 
-await view.page.render({
-    canvasContext: ctx,
-    viewport
-}).promise;
-      view.textLayerDiv.replaceChildren();
+        //
+        // Render the page
+        //
 
-const textLayer = new TextLayer({
-    textContentSource: view.textContent,
-    container: view.textLayerDiv,
-    viewport: viewport.clone({
-        dontFlip: true
-    })
-});
+        await view.page.render({
+            canvasContext: ctx,
+            viewport
+        }).promise;
 
-await textLayer.render();
+        //
+        // Completely rebuild the text layer
+        //
+
+        view.textLayerDiv.replaceChildren();
+
+        view.textLayerDiv.style.width =
+            viewport.width + "px";
+
+        view.textLayerDiv.style.height =
+            viewport.height + "px";
+
+        const textLayer =
+            new TextLayer({
+
+                textContentSource:
+                    view.textContent,
+
+                container:
+                    view.textLayerDiv,
+
+                viewport:
+                    viewport.clone({
+                        dontFlip: true
+                    })
+
+            });
+
+        await textLayer.render();
+
     }
- 
 
 }
 
+
+  
+
+  
 async function searchPDF(query) {
 
     searchResults = [];
