@@ -118,7 +118,9 @@ header{background:#1b1b1b;border-bottom:1px solid #333;padding:8px}
     <button id="downloadBtn">
         Download Image
     </button>
-
+<button id="newTabBtn">
+        Open Page in New Tab
+    </button>
     <button id="shareBtn">
         Share
     </button>
@@ -196,7 +198,16 @@ homeButton.href = returnPage;
 
     document.getElementById("pdfButton").href =
         paper.url;
+document.getElementById("newTabBtn").onclick = () => {
 
+    menu.style.display = "none";
+
+    window.open(
+        src,
+        "_blank"
+    );
+
+};
     const downloadBtn =
     document.getElementById("downloadBtn");
 
