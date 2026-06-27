@@ -787,7 +787,7 @@ async function renderAllPages() {
         // Completely rebuild the text layer
         //
 
-        view.textLayerDiv.replaceChildren();
+        view.textLayerDiv.innerHTML = "";
 
         view.textLayerDiv.style.width =
             viewport.width + "px";
