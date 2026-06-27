@@ -31,6 +31,7 @@ html,body{
     font-family:Arial,sans-serif;
     overflow:hidden;
 }
+ 
   .page{
     position:relative;
     margin:0 auto 20px;
@@ -53,6 +54,9 @@ html,body{
     user-select:text;
     cursor:text;
 }
+  .pageCanvas{
+    pointer-events:none;
+}
 .btn{
     background:#333;
     color:#fff;
@@ -68,8 +72,23 @@ html,body{
     white-space:pre;
     transform-origin:0 0;
     cursor:text;
+  left:0;
+top:0;
+}
+  
+.pageCanvas{
+    position:absolute;
+    left:0;
+    top:0;
+    z-index:1;
 }
 
+.textLayer{
+    position:absolute;
+    left:0;
+    top:0;
+    z-index:2;
+}
 .textLayer ::selection{
     background:rgba(0,120,255,.35);
 }
@@ -135,10 +154,7 @@ button:hover{background:#3a3a3a;cursor:pointer}
     white-space:nowrap;
     flex-shrink:0;
 }
-.page{
-    margin:0 auto 20px;
-    box-shadow:0 0 14px rgba(0,0,0,.4);
-}
+
 .hidden{display:none}
 #menu{
     position:absolute;
@@ -683,7 +699,17 @@ await view.page.render({
     canvasContext: ctx,
     viewport
 }).promise;
-      
+      view.textLayerDiv.replaceChildren();
+
+const textLayer = new TextLayer({
+    textContentSource: view.textContent,
+    container: view.textLayerDiv,
+    viewport: viewport.clone({
+        dontFlip: true
+    })
+});
+
+await textLayer.render();
     }
  
 
