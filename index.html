@@ -879,11 +879,31 @@ function closeMusicPopup(event){
 
 function goToLanthano(){
 
+    sessionStorage.setItem(
+        "indexScroll",
+        window.scrollY
+    );
+
+    sessionStorage.setItem(
+        "returnToIndex",
+        "yes"
+    );
+
     window.location.href = "music.html";
 
 }
 
 function goToHitorah(){
+
+    sessionStorage.setItem(
+        "indexScroll",
+        window.scrollY
+    );
+
+    sessionStorage.setItem(
+        "returnToIndex",
+        "yes"
+    );
 
     window.location.href = "hitorahmusic.html";
 
