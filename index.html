@@ -40,6 +40,27 @@ html{
     font-size:1em;
     margin:20px 0;
     }
+
+    .store-banner{
+    display:block;
+    width:50%;
+    max-width:500px;
+    height:auto;
+    margin:30px auto;
+    border-radius:10px;
+    cursor:pointer;
+    transition:transform 0.2s ease;
+}
+
+.store-banner:hover{
+    transform:scale(1.02);
+}
+
+@media (max-width:700px){
+    .store-banner{
+        width:80%;
+    }
+}
 .warningContent{
     background:#1d1d1d;
     color:#eee;
@@ -616,6 +637,15 @@ alt="Hitorah on Rumble">
 
 </a>
 
+
+<a href="store.html">
+    <img
+        class="store-banner"
+        src="storeimage.png"
+        alt="Lanthano Store">
+</a>
+
+    
 <div class="footer-links">
 
 <a href="about.html">About</a>
