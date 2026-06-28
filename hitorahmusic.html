@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <link rel="icon" type="image/png" href="file_000000000c40722f92b1fe6758cb4855.png">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hitorah Music</title>
+
+<style>
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    position: relative;
+
+    background: #111;
+    color: #eee;
+    font-family: Arial, sans-serif;
+    text-align: center;
+}
+.profile-player{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:15px;
+    margin-bottom:20px;
+}
+
+.arrow-btn{
+    width:45px;
+    height:45px;
+    
+     position:relative;
+    top:8px;
+    
+    border:none;
+    border-radius:50%;
+    background:#1d1d1d;
+    color:white;
+    font-size:24px;
+    cursor:pointer;
+    
+}
+.arrow-icon{
+    position: relative;
+    top: -2px;
+}
+.arrow-btn:hover{
+    background:#2a2a2a;
+}
+
+.profile-wrapper{
+    position:relative;
+    width:200px;
+    height:200px;
+}
+
+.profile{
+    width:200px;
+    height:200px;
+    object-fit:cover;
+    border-radius:50%;
+    border:4px solid #333;
+    transition:opacity .4s ease;
+}
+.arrow-icon-left{
+    position:relative;
+    top:-2px;
+    left:-2px;
+}
+
+.arrow-icon-right{
+    position:relative;
+    top:-2px;
+    left:2px;
+}
+.play-btn{
+    position:absolute;
+    left:52%;
+    top:53%;
+    transform:translate(-50%,-50%);
+
+    width:60px;
+    height:60px;
+
+    border:none;
+    border-radius:50%;
+
+    background:rgba(0,0,0,.7);
+    color:white;
+    font-size:24px;
+    cursor:pointer;
+}
+
+.song-title{
+    margin-top:15px;
+    color:#ccc;
+    font-size:1.1em;
+}
+
+.song-dots{
+    margin-top:10px;
+}
+
+.song-dot{
+    display:inline-block;
+    width:10px;
+    height:10px;
+    border-radius:50%;
+    background:#444;
+    margin:0 4px;
+    transition:.3s;
+}
+
+.song-dot.active{
+    background:white;
+}
+/*
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+
+    background-image: url("file_000000004f1471f782b3512cf850a290.png");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+
+    z-index: 0;
+}
+*/
+.play-icon{
+    position:relative;
+    top:-2px;
+    left:2px;
+}
+.container {
+    position: relative;
+    z-index: 1;
+
+    max-width: 900px;
+    margin: auto;
+    padding: 40px 20px;
+}
+
+.back {
+    color: white;
+    text-decoration: none;
+    display: block;
+    text-align: left;
+    margin-bottom: 20px;
+}
+
+.back:hover {
+    color: #fff;
+}
+
+.profile {
+    width: 200px;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 4px solid #333;
+    margin-bottom: 20px;
+}
+
+h1 {
+    font-size: 3em;
+    margin-bottom: 10px;
+}
+
+.subtitle {
+    color: #aaa;
+    margin-bottom: 40px;
+}
+
+.button {
+    display: block;
+    width: 250px;
+    margin: 15px auto;
+    padding: 15px;
+    background: #1d1d1d;
+    color: white;
+    text-decoration: none;
+    border-radius: 10px;
+    font-size: 1.1em;
+}
+
+.button:hover {
+    background: #2a2a2a;
+}
+
+.banner {
+    width: 100%;
+    max-width: 900px;
+    border-radius: 10px;
+    margin-bottom: 40px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<a class="back" href="index.html">◀ Home</a>
+
+<div class="profile-player">
+
+    <button class="arrow-btn" onclick="prevSong()">
+    <span class="arrow-icon-left">❮</span>
+    </button>
+
+    <div class="profile-wrapper">
+
+        <img
+            id="albumCover"
+            class="profile"
+            src="cover1.png"
+            alt="Album Cover">
+
+        <button
+    id="playButton"
+    class="play-btn"
+    onclick="toggleAudio()">
+    <span class="play-icon">▶</span>
+        </button>
+
+    </div>
+
+    <button class="arrow-btn" onclick="nextSong()">
+    <span class="arrow-icon-right">❯</span>
+    </button>
+
+</div>
+
+<div id="songTitle" class="song-title">
+    Antisemitic
+</div>
+
+<div class="song-dots">
+    <span id="dot0" class="song-dot active"></span>
+    <span id="dot1" class="song-dot"></span>
+    <span id="dot2" class="song-dot"></span>
+</div>
+
+<audio id="player"></audio>
+
+<h1>Hitorah Music</h1>
+
+<p class="subtitle">
+Truth • History • Revelation
+</p>
+
+  <p class="description">
+For those who know, this is a breath of fresh air. For those who don't, it is something they want silenced. Hitorah is dedicated to exploring a very specific period of overlooked history, full of controversial ideas, and questions that many avoid and call evil.
+</p>
+  
+<a class="button" href="https://rumble.com/user/Hitorah">
+Rumble
+</a>
+
+</div>
+<script>
+
+const songs = [
+
+{
+    title:"Antisemitic",
+    cover:"coverh.png",
+    audio:"hsong1.mp3"
+},
+
+{
+    title:"I'm Literally Hitler",
+    cover:"coverh.png",
+    audio:"hsong2.mp3"
+},
+
+{
+    title:"It's Not True",
+    cover:"coverh.png",
+    audio:"hsong3.mp3"
+}
+
+];
+
+let currentSong = 0;
+
+const player = document.getElementById("player");
+const cover = document.getElementById("albumCover");
+const title = document.getElementById("songTitle");
+const playButton = document.getElementById("playButton");
+
+function loadSong(index){
+
+    const nextImage = new Image();
+
+    nextImage.onload = function(){
+
+        cover.style.opacity = 0;
+
+        setTimeout(() => {
+
+            cover.src = songs[index].cover;
+            title.textContent = songs[index].title;
+            player.src = songs[index].audio;
+
+            document.querySelectorAll(".song-dot")
+                .forEach(dot => dot.classList.remove("active"));
+
+            document
+                .getElementById("dot" + index)
+                .classList
+                .add("active");
+
+            cover.style.opacity = 1;
+
+        }, 200);
+
+    };
+
+    nextImage.src = songs[index].cover;
+}
+
+function toggleAudio(){
+
+    if(player.paused){
+
+        player.play();
+        playButton.innerHTML = "❚❚";
+
+    }else{
+
+        player.pause();
+        playButton.innerHTML = '<span class="play-icon">▶</span>';
+    }
+}
+
+function nextSong(){
+
+    const wasPlaying = !player.paused;
+
+    currentSong++;
+
+    if(currentSong >= songs.length){
+        currentSong = 0;
+    }
+
+    loadSong(currentSong);
+
+    if(wasPlaying){
+        setTimeout(() => {
+            player.play();
+            playButton.innerHTML = "❚❚";
+        }, 250);
+    }
+}
+
+function prevSong(){
+
+    const wasPlaying = !player.paused;
+
+    currentSong--;
+
+    if(currentSong < 0){
+        currentSong = songs.length - 1;
+    }
+
+    loadSong(currentSong);
+
+    if(wasPlaying){
+        setTimeout(() => {
+            player.play();
+            playButton.innerHTML = "❚❚";
+        }, 250);
+    }
+}
+
+player.addEventListener("ended", () => {
+    playButton.innerHTML = '<span class="play-icon">▶</span>';
+});
+
+loadSong(0);
+
+</script>
+</body>
+</html>
