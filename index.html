@@ -41,25 +41,30 @@ html{
     margin:20px 0;
     }
 
-    .store-banner{
-    display:block;
-    width:50%;
-    max-width:500px;
-    height:auto;
-    margin:30px auto;
-    border-radius:10px;
-    cursor:pointer;
-    transition:transform 0.2s ease;
+    .featured-links{
+    max-width:850px;
+    margin:60px auto;
+    padding:30px;
+    background:#181818;
+    border:1px solid #2b2b2b;
+    border-radius:16px;
 }
 
-.store-banner:hover{
+.feature-banner{
+    display:block;
+    width:100%;
+    max-width:500px;
+    margin:0 auto 25px;
+    border-radius:10px;
+    transition:transform .2s ease;
+}
+
+.feature-banner:hover{
     transform:scale(1.02);
 }
 
-@media (max-width:700px){
-    .store-banner{
-        width:80%;
-    }
+.featured-links a:last-child .feature-banner{
+    margin-bottom:0;
 }
 
 
@@ -230,19 +235,7 @@ a:active{
     margin:90px 0 50px;
     user-select:none;
 }
-.music-banner{
-    display:block;
-    width:100%;
-    max-width:1000px;
-    height:auto;
-    margin:30px auto;
-    border-radius:10px;
-    cursor:pointer;
-     transition:transform 0.2s ease;
-}
-.music-banner:hover{
-    transform:scale(1.02);
-}
+
 footer{
     text-align:center;
     color:#777;
@@ -656,32 +649,29 @@ Browse Research by Category
 
    <div class="section-break">•••</div>
     
-<a href="music.html">
-<img
-class="music-banner"
-src="file_0000000053d0722fa786ebce8df37449.png"
-alt="Lanthano Music">
-</a>
-    <a
-href="https://rumble.com/user/Hitorah"
-target="_blank"
-rel="noopener">
+<div class="featured-links">
 
-<img
-class="music-banner"
-src="file_000000003e4471f59b70a29802793a50.png"
-alt="Hitorah on Rumble">
+    <a href="music.html">
+        <img class="feature-banner"
+             src="file_0000000053d0722fa786ebce8df37449.png"
+             alt="Lanthano Music">
+    </a>
 
-</a>
+    <a href="https://rumble.com/user/Hitorah"
+       target="_blank"
+       rel="noopener">
+        <img class="feature-banner"
+             src="file_000000003e4471f59b70a29802793a50.png"
+             alt="Hytora Music">
+    </a>
 
+    <a href="store.html">
+        <img class="feature-banner"
+             src="storeimage.png"
+             alt="Lanthano Store">
+    </a>
 
-<a href="store.html">
-    <img
-        class="store-banner"
-        src="storeimage.png"
-        alt="Lanthano Store">
-</a>
-
+</div>
     
 <div class="footer-links">
 
