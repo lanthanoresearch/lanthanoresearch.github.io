@@ -1,4 +1,4 @@
-```html
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -30,7 +30,7 @@ body{
 .back{
     display:block;
     text-align:left;
-    color:white;
+    color:#fff;
     text-decoration:none;
     margin-bottom:30px;
     font-size:1rem;
@@ -42,45 +42,62 @@ body{
 
 h1{
     font-size:3em;
-    margin-bottom:12px;
+    margin-bottom:15px;
 }
 
 .subtitle{
-    max-width:700px;
-    margin:0 auto 45px;
     color:#bdbdbd;
     font-size:1.15rem;
-    line-height:1.7;
+    line-height:1.8;
+    max-width:750px;
+    margin:0 auto 45px;
 }
 
 .store-preview{
     width:100%;
     max-width:900px;
     border-radius:14px;
-    border:2px solid #2d2d2d;
-    box-shadow:0 15px 35px rgba(0,0,0,.45);
-    margin-bottom:45px;
+    border:2px solid #2b2b2b;
+    box-shadow:0 15px 45px rgba(0,0,0,.45);
+    margin-bottom:55px;
 }
 
 .shop-button{
     display:inline-block;
     padding:18px 60px;
-    background:#1d1d1d;
+
     color:white;
     text-decoration:none;
     font-size:1.2rem;
     font-weight:bold;
-    border-radius:12px;
-    transition:.25s;
+
+    border-radius:999px;
+
+    background:linear-gradient(135deg,#ff7a00,#ff5400);
+
+    box-shadow:
+        0 0 20px rgba(255,122,0,.45),
+        0 0 45px rgba(255,122,0,.25);
+
+    transition:
+        transform .25s,
+        box-shadow .25s,
+        filter .25s;
 }
 
 .shop-button:hover{
-    background:#2b2b2b;
-    transform:translateY(-3px);
+
+    transform:translateY(-4px) scale(1.03);
+
+    filter:brightness(1.08);
+
+    box-shadow:
+        0 0 35px rgba(255,122,0,.75),
+        0 0 65px rgba(255,122,0,.35);
 }
 
 .footer{
-    margin-top:35px;
+    margin-top:40px;
     color:#777;
     font-size:.95rem;
 }
@@ -88,7 +105,7 @@ h1{
 @media (max-width:700px){
 
     h1{
-        font-size:2.2em;
+        font-size:2.3em;
     }
 
     .subtitle{
@@ -97,7 +114,7 @@ h1{
 
     .shop-button{
         width:90%;
-        max-width:320px;
+        max-width:340px;
         padding:18px 0;
     }
 
@@ -120,26 +137,26 @@ Official merchandise inspired by the ideas behind Lanthano: history, mystery, fa
 </p>
 
 <img
-class="store-preview"
-src="store-preview.png"
-alt="Lanthano Store Preview">
+    class="store-preview"
+    src="store-preview.png"
+    alt="Lanthano Store Preview">
 
 <br>
 
 <a
-class="shop-button"
-href="https://lanthanostore.printful.me/"
-target="_blank">
-Browse the Collection →
+    class="shop-button"
+    href="https://lanthanostore.printful.me/"
+    target="_blank">
+    Browse the Collection →
 </a>
 
-<div class="footer">
+<p class="footer">
 Official merchandise powered by Printful.
-</div>
+</p>
 
 </div>
 
 </body>
 
 </html>
-```
+
