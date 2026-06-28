@@ -1,6 +1,7 @@
 ```html
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 
 <link rel="icon" type="image/png" href="file_000000000c40722f92b1fe6758cb4855.png">
@@ -14,28 +15,13 @@
 
 body{
     margin:0;
-    min-height:100vh;
     background:#111;
     color:#eee;
     font-family:Arial, sans-serif;
     text-align:center;
 }
 
-/* Background (optional) */
-body::before{
-    content:"";
-    position:fixed;
-    inset:0;
-    background-image:url("file_000000004f1471f782b3512cf850a290.png");
-    background-size:cover;
-    background-position:center;
-    background-repeat:no-repeat;
-    z-index:0;
-}
-
 .container{
-    position:relative;
-    z-index:1;
     max-width:1100px;
     margin:auto;
     padding:40px 20px 80px;
@@ -56,61 +42,46 @@ body::before{
 
 h1{
     font-size:3em;
-    margin-bottom:15px;
+    margin-bottom:12px;
 }
 
 .subtitle{
     max-width:700px;
     margin:0 auto 45px;
     color:#bdbdbd;
+    font-size:1.15rem;
     line-height:1.7;
-    font-size:1.1rem;
 }
 
-.store-image{
+.store-preview{
     width:100%;
     max-width:900px;
-    border-radius:15px;
+    border-radius:14px;
     border:2px solid #2d2d2d;
-    box-shadow:0 0 35px rgba(0,0,0,.45);
-    margin-bottom:50px;
+    box-shadow:0 15px 35px rgba(0,0,0,.45);
+    margin-bottom:45px;
 }
 
 .shop-button{
     display:inline-block;
-    padding:18px 55px;
-    font-size:1.2rem;
-    font-weight:bold;
+    padding:18px 60px;
+    background:#1d1d1d;
     color:white;
     text-decoration:none;
-
-    background:linear-gradient(135deg,#ff7a00,#ff5500);
-
-    border-radius:999px;
-
-    box-shadow:
-        0 0 20px rgba(255,122,0,.45),
-        0 0 40px rgba(255,122,0,.20);
-
-    transition:
-        transform .25s,
-        box-shadow .25s,
-        background .25s;
+    font-size:1.2rem;
+    font-weight:bold;
+    border-radius:12px;
+    transition:.25s;
 }
 
 .shop-button:hover{
-    transform:translateY(-4px) scale(1.03);
-
-    box-shadow:
-        0 0 35px rgba(255,122,0,.75),
-        0 0 70px rgba(255,122,0,.35);
-
-    background:linear-gradient(135deg,#ff8f1f,#ff6200);
+    background:#2b2b2b;
+    transform:translateY(-3px);
 }
 
-.footer-text{
-    margin-top:40px;
-    color:#8f8f8f;
+.footer{
+    margin-top:35px;
+    color:#777;
     font-size:.95rem;
 }
 
@@ -126,7 +97,7 @@ h1{
 
     .shop-button{
         width:90%;
-        max-width:340px;
+        max-width:320px;
         padding:18px 0;
     }
 
@@ -145,32 +116,30 @@ h1{
 <h1>Lanthano Store</h1>
 
 <p class="subtitle">
-Support Lanthano by exploring the official merchandise collection.
-Every purchase helps fund future research, music, videos, and new
-projects while letting you represent the community.
+Official merchandise inspired by the ideas behind Lanthano: history, mystery, faith, and independent research.
 </p>
 
 <img
-    class="store-image"
-    src="store-preview.png"
-    alt="Lanthano Store Preview">
+class="store-preview"
+src="store-preview.png"
+alt="Lanthano Store Preview">
 
 <br>
 
 <a
-    class="shop-button"
-    href="https://YOUR-PRINTFUL-STORE-URL-HERE"
-    target="_blank">
-    Visit the Store →
+class="shop-button"
+href="https://lanthanostore.printful.me/"
+target="_blank">
+Browse the Collection →
 </a>
 
-<p class="footer-text">
+<div class="footer">
 Official merchandise powered by Printful.
-</p>
+</div>
 
 </div>
 
 </body>
+
 </html>
 ```
-
