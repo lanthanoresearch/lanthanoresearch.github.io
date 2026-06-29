@@ -363,6 +363,57 @@ a:active{
     background:#262626;
     color:#fff;
 }
+
+    .featured-image-wrapper{
+    position:relative;
+    flex-shrink:0;
+}
+
+.featured-arrow{
+
+    position:absolute;
+
+    top:50%;
+    transform:translateY(-50%);
+
+    width:46px;
+    height:46px;
+
+    border:none;
+
+    border-radius:50%;
+
+    background:rgba(0,0,0,.55);
+
+    color:white;
+
+    font-size:26px;
+
+    cursor:pointer;
+
+    z-index:10;
+
+    transition:.2s;
+
+}
+
+.featured-arrow:hover{
+
+    background:rgba(0,0,0,.8);
+
+}
+
+.featured-left{
+
+    left:12px;
+
+}
+
+.featured-right{
+
+    right:12px;
+
+}
 .card{
     background:#1d1d1d;
     padding:20px;
@@ -1095,6 +1146,13 @@ let returnPage = "";
 
 let pendingType = "";
 
+
+  let touchStartX = 0;
+let touchEndX = 0;
+
+let swiping = false;
+
+    
     const searchBox =
     document.getElementById("searchBox");
 
@@ -2032,7 +2090,23 @@ href="pdf.html?file=${encodeURIComponent(paper.url)}&paper=${encodeURIComponent(
 
 <div class="featured-card">
 
+<div class="featured-image-wrapper">
+
+<button
+class="featured-arrow featured-left"
+onclick="previousFeatured(event)">
+❮
+</button>
+
 ${media}
+
+<button
+class="featured-arrow featured-right"
+onclick="nextFeaturedManual(event)">
+❯
+</button>
+
+</div>
 
 <div class="featured-content">
 
@@ -2078,6 +2152,23 @@ Read Research
 const card =
 document.querySelector(".featured-card");
 
+const link =
+document.querySelector("#featuredContainer a");
+
+if(link){
+
+    link.addEventListener("click", e=>{
+
+        if(swiping){
+
+            e.preventDefault();
+
+        }
+
+    });
+
+}
+
 if(card){
 
     card.addEventListener(
@@ -2090,10 +2181,74 @@ if(card){
         startFeaturedRotation
     );
 
+    card.addEventListener("touchstart", e=>{
+
+        touchStartX =
+            e.changedTouches[0].clientX;
+
+    });
+
+    card.addEventListener("touchend", e=>{
+
+        touchEndX =
+            e.changedTouches[0].clientX;
+
+        handleSwipe();
+
+    });
+
 }
+        
+}
+
+
+    function handleSwipe(){
+const distance =
+    touchEndX - touchStartX;
+
+if(Math.abs(distance) < 40){
+    return;
+}
+
+swiping = true;
+
+setTimeout(() => {
+
+    swiping = false;
+
+},250);
+    stopFeaturedRotation();
+
+    if(distance > 0){
+
+        featuredIndex--;
+
+        if(featuredIndex < 0){
+
+            featuredIndex =
+                featuredPapers.length - 1;
+
+        }
+
+    }else{
+
+        featuredIndex++;
+
+        if(featuredIndex >= featuredPapers.length){
+
+            featuredIndex = 0;
+
+        }
+
+    }
+
+    renderFeatured();
+
+    startFeaturedRotation();
 
 }
 
+    
 function renderDots(){
 
     document
@@ -2187,6 +2342,45 @@ function nextFeatured(){
     }
 
 }
+
+
+
+    function previousFeatured(event){
+
+    event.stopPropagation();
+    event.preventDefault();
+
+    stopFeaturedRotation();
+
+    featuredIndex--;
+
+    if(featuredIndex < 0){
+
+        featuredIndex = featuredPapers.length - 1;
+
+    }
+
+    renderFeatured();
+
+    startFeaturedRotation();
+
+}
+
+function nextFeaturedManual(event){
+
+    event.stopPropagation();
+    event.preventDefault();
+
+    stopFeaturedRotation();
+
+    nextFeatured();
+
+    startFeaturedRotation();
+
+}
+
+    window.previousFeatured = previousFeatured;
+window.nextFeaturedManual = nextFeaturedManual;
 
 function startFeaturedRotation(){
 
