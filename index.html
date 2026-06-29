@@ -34,6 +34,126 @@ html{
     scroll-behavior:smooth;
 }
 
+
+
+    /* ---------- Featured Research ---------- */
+
+.featured-section{
+    max-width:900px;
+    margin:45px auto 60px;
+}
+
+.featured-label{
+    text-align:center;
+    color:#888;
+    font-size:1em;
+    margin-bottom:15px;
+    letter-spacing:1px;
+}
+
+.featured-card{
+    display:flex;
+    gap:25px;
+    background:#1d1d1d;
+    border:1px solid #333;
+    border-radius:16px;
+    overflow:hidden;
+    cursor:pointer;
+    transition:.2s ease;
+}
+
+.featured-card:hover{
+    background:#252525;
+}
+
+.featured-image{
+    width:320px;
+    aspect-ratio:16/9;
+    object-fit:cover;
+    flex-shrink:0;
+}
+
+.featured-pdf-icon{
+    width:320px;
+    aspect-ratio:16/9;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    background:#2b2b2b;
+
+    font-size:90px;
+    color:#888;
+
+    flex-shrink:0;
+}
+
+.featured-content{
+    padding:25px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+}
+
+.featured-category{
+    color:#888;
+    font-size:.9em;
+    margin-bottom:10px;
+}
+
+.featured-title{
+    font-size:2em;
+    margin-bottom:15px;
+}
+
+.featured-description{
+    color:#ccc;
+    line-height:1.6;
+}
+
+.featured-read{
+    margin-top:25px;
+    color:white;
+    font-weight:bold;
+}
+
+.featured-dots{
+    text-align:center;
+    margin-top:15px;
+}
+
+.featured-dot{
+    width:10px;
+    height:10px;
+    border-radius:50%;
+    background:#444;
+    display:inline-block;
+    margin:0 5px;
+}
+
+.featured-dot.active{
+    background:white;
+}
+
+@media(max-width:750px){
+
+.featured-card{
+    flex-direction:column;
+}
+
+.featured-image,
+.featured-pdf-icon{
+    width:100%;
+}
+
+}
+
+
+
+
+
+    
     .category-note{
     text-align:center;
     color:#888;
@@ -623,7 +743,25 @@ Lanthano is an independent research project exploring controversial subjects, al
 Every idea should be judged by its evidence, not by its popularity.
 </p>
 
+<div class="featured-section">
+
+    <div class="featured-label">
+        Featured Research
+    </div>
+
+    <div id="featuredContainer"></div>
+
+    <div id="featuredDots"
+         class="featured-dots"></div>
+
+</div>
+
 <div class="search-wrapper">
+
+
+
+
+    
 
 <input
     type="text"
@@ -918,6 +1056,8 @@ window.goToHitorah = goToHitorah;
 let imageFuse;
 let searchReady = false;
 let papersByUrl = {};
+    let featuredPapers = [];
+let featuredIndex = 0;
 let pendingImage = "";
 let pendingPdf = "";
 
@@ -948,6 +1088,30 @@ Object.values(descriptions).forEach(paper => {
     papersByUrl[paper.url] = paper;
 
 });
+
+
+featuredPapers =
+
+Object.values(descriptions)
+
+.filter(p=>p.featured)
+
+.sort(
+
+(a,b)=>
+
+a.featuredOrder-b.featuredOrder
+
+);
+
+renderFeatured();
+
+if(featuredPapers.length>1){
+
+setInterval(nextFeatured,8000);
+
+}
+    
  console.log("PDF records:", searchIndex.length);
     console.log("Description records:", Object.keys(descriptions).length);
     
@@ -1750,6 +1914,175 @@ document
     }
 
 });
+
+
+
+
+    function renderFeatured(){
+
+    if(!featuredPapers.length){
+        return;
+    }
+
+    const paper =
+        featuredPapers[featuredIndex];
+
+    const hasImage =
+
+        Array.isArray(paper.images) &&
+        paper.images.length > 0 &&
+        Number.isInteger(paper.featuredImage) &&
+        paper.featuredImage >= 0 &&
+        paper.featuredImage < paper.images.length;
+
+    const media = hasImage
+
+    ?
+
+    `
+    <img
+
+    class="featured-image"
+
+    src="${paper.images[paper.featuredImage]}"
+
+    alt="${paper.title}">
+
+    `
+
+    :
+
+    `
+
+    <div class="featured-pdf-icon">
+
+        📄
+
+    </div>
+
+    `;
+
+    document
+
+    .getElementById(
+
+    "featuredContainer"
+
+    )
+
+    .innerHTML=
+
+    `
+
+<a
+
+href="pdf.html?file=${encodeURIComponent(paper.url)}&paper=${encodeURIComponent(paper.title)}">
+
+<div class="featured-card">
+
+${media}
+
+<div class="featured-content">
+
+<div class="featured-category">
+
+${paper.category.join(" • ")}
+
+</div>
+
+<div class="featured-title">
+
+${paper.title}
+
+</div>
+
+<div class="featured-description">
+
+${paper.description}
+
+</div>
+
+<div class="featured-read">
+
+Read Research →
+
+</div>
+
+</div>
+
+</div>
+
+</a>
+
+`;
+
+    renderDots();
+
+}
+
+function renderDots(){
+
+    document
+
+    .getElementById("featuredDots")
+
+    .innerHTML =
+
+    featuredPapers
+
+    .map((paper,index)=>
+
+`
+
+<span
+
+class="featured-dot
+
+${
+
+index===featuredIndex
+
+?
+
+"active"
+
+:
+
+""
+
+}
+
+"></span>
+
+`
+
+).join("");
+
+}
+
+function nextFeatured(){
+
+    featuredIndex++;
+
+    if(
+
+        featuredIndex>=featuredPapers.length
+
+    ){
+
+        featuredIndex=0;
+
+    }
+
+    renderFeatured();
+
+}
+
+
+
+
+
+    
 function continueImageWarning(){
 if(pendingType === "image"){
 
