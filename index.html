@@ -103,8 +103,21 @@ html{
 }
 
 .featured-title{
-    font-size:2em;
+
+    font-weight:bold;
+
+    line-height:1.2;
+
     margin-bottom:15px;
+
+    font-size:clamp(1.3rem,2.2vw,2rem);
+
+    white-space:nowrap;
+
+    overflow:hidden;
+
+    text-overflow:ellipsis;
+
 }
 
 .featured-description{
@@ -1989,7 +2002,12 @@ ${media}
 
 <div class="featured-category">
 
-${paper.category.join(" • ")}
+${paper.category
+    .map(category =>
+        category.charAt(0).toUpperCase() +
+        category.slice(1)
+    )
+    .join(" • ")}
 
 </div>
 
@@ -2082,19 +2100,55 @@ index===featuredIndex
 
 function nextFeatured(){
 
-    featuredIndex++;
+    let next =
+        featuredIndex + 1;
 
-    if(
+    if(next >= featuredPapers.length){
 
-        featuredIndex>=featuredPapers.length
-
-    ){
-
-        featuredIndex=0;
+        next = 0;
 
     }
 
-    renderFeatured();
+    const paper = featuredPapers[next];
+
+    const index =
+        Number(paper.featuredImage);
+
+    if(
+        Array.isArray(paper.images) &&
+        index >= 0 &&
+        index < paper.images.length
+    ){
+
+        const img = new Image();
+
+        img.onload = ()=>{
+
+            featuredIndex = next;
+
+            renderFeatured();
+
+        };
+
+        img.onerror = ()=>{
+
+            featuredIndex = next;
+
+            renderFeatured();
+
+        };
+
+        img.src =
+            paper.images[index];
+
+    }
+    else{
+
+        featuredIndex = next;
+
+        renderFeatured();
+
+    }
 
 }
 
