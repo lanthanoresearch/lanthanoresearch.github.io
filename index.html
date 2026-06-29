@@ -104,25 +104,12 @@ html{
 
 
 .featured-title{
-
     width:100%;
-
-    overflow:hidden;
-
-    white-space:nowrap;
-
-    text-overflow:ellipsis;
-
     font-weight:bold;
-
     font-size:1.8rem;
-
     line-height:1.2;
-
     margin:10px 0 15px;
-
     text-align:center;
-
 }
 
     
@@ -177,7 +164,21 @@ html{
 
 
 
+@media (max-width:750px){
 
+    .featured-title{
+
+        font-size:clamp(1.2rem,5vw,1.7rem);
+
+        white-space:normal;
+
+        overflow:visible;
+
+        text-overflow:clip;
+
+    }
+
+}
 
     
     .category-note{
