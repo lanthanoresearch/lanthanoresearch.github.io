@@ -170,7 +170,7 @@ html{
     background:white;
 }
 
-@media(max-width:750px){
+@media (max-width:750px){
 
     .featured-card{
 
@@ -184,7 +184,11 @@ html{
 
         width:100%;
 
-        height:220px;
+        height:220px;      /* Fixed height for every featured image */
+
+        overflow:hidden;
+
+        flex-shrink:0;
 
     }
 
@@ -196,6 +200,8 @@ html{
         height:100%;
 
         object-fit:cover;
+
+        display:block;
 
     }
 
