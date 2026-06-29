@@ -1058,6 +1058,7 @@ let searchReady = false;
 let papersByUrl = {};
     let featuredPapers = [];
 let featuredIndex = 0;
+let featuredTimer;
 let pendingImage = "";
 let pendingPdf = "";
 
@@ -1106,9 +1107,9 @@ a.featuredOrder-b.featuredOrder
 
 renderFeatured();
 
-if(featuredPapers.length>1){
+if(featuredPapers.length > 1){
 
-setInterval(nextFeatured,8000);
+    startFeaturedRotation();
 
 }
     
@@ -1925,33 +1926,35 @@ document
     }
 
     const paper =
-        featuredPapers[featuredIndex];
+    featuredPapers[featuredIndex];
 
-    const hasImage =
+const index = Number(paper.featuredImage);
 
-        Array.isArray(paper.images) &&
-        paper.images.length > 0 &&
-        Number.isInteger(paper.featuredImage) &&
-        paper.featuredImage >= 0 &&
-        paper.featuredImage < paper.images.length;
+const hasImage =
 
-    const media = hasImage
+    Array.isArray(paper.images) &&
+    paper.images.length &&
+    index >= 0 &&
+    index < paper.images.length;
 
-    ?
+const media = hasImage
 
-    `
-    <img
+?
 
-    class="featured-image"
+`
+<img
 
-    src="${paper.images[paper.featuredImage]}"
+class="featured-image"
 
-    alt="${paper.title}">
+src="${paper.images[index]}"
 
-    `
+alt="${paper.title}"
 
-    :
+onerror="this.outerHTML='<div class=&quot;featured-pdf-icon&quot;>📄</div>';">
 
+`
+
+:
     `
 
     <div class="featured-pdf-icon">
@@ -2018,6 +2021,23 @@ Read Research →
 
     renderDots();
 
+const card =
+document.querySelector(".featured-card");
+
+if(card){
+
+    card.addEventListener(
+        "mouseenter",
+        stopFeaturedRotation
+    );
+
+    card.addEventListener(
+        "mouseleave",
+        startFeaturedRotation
+    );
+
+}
+
 }
 
 function renderDots(){
@@ -2078,7 +2098,25 @@ function nextFeatured(){
 
 }
 
+function startFeaturedRotation(){
 
+    clearInterval(featuredTimer);
+
+    featuredTimer = setInterval(
+
+        nextFeatured,
+
+        8000
+
+    );
+
+}
+
+function stopFeaturedRotation(){
+
+    clearInterval(featuredTimer);
+
+}
 
 
 
