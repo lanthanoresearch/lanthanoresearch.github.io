@@ -53,22 +53,22 @@ html{
 
 .featured-card{
     display:flex;
-    gap:25px;
     background:#1d1d1d;
     border:1px solid #333;
     border-radius:16px;
     overflow:hidden;
     cursor:pointer;
     transition:.2s ease;
-}
 
+    height:260px;
+}
 .featured-card:hover{
     background:#252525;
 }
 
 .featured-image{
 
-    width:320px;
+    width:100%;
 
     height:100%;
 
@@ -76,10 +76,24 @@ html{
 
     display:block;
 
-    flex-shrink:0;
-
 }
 
+.featured-content{
+
+    flex:1;
+
+    padding:25px;
+
+    display:flex;
+
+    flex-direction:column;
+
+    justify-content:center;
+
+    text-align:center;
+
+}
+    
 .featured-pdf-icon{
     width:320px;
     aspect-ratio:16/9;
@@ -371,13 +385,13 @@ a:active{
     color:#fff;
 }
 
-    .featured-image-wrapper{
+   .featured-image-wrapper{
 
     position:relative;
 
     width:320px;
 
-    align-self:stretch;
+    height:100%;
 
     flex-shrink:0;
 
