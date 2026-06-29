@@ -19,8 +19,6 @@
       "Pentagon Security Key Frame.png",
       "Pentagon.png"
     ]
-    "featured": false,
-    "featuredOrder": 1
   },
 
 
@@ -41,8 +39,6 @@
       "Whole earth (day).jpg",
       "Whole earth (night).jpg"
     ]
-    "featured": false,
-    "featuredOrder": 1
   },
 
 
@@ -65,8 +61,6 @@
       "Nikon p900.png",
       "Seasons.png"
     ]
-    "featured": false,
-    "featuredOrder": 1
   },
 
 
@@ -81,8 +75,6 @@
     "url": "Biblical Marriage.pdf",
     "updated": "2025-09-07",
     "images": []
-    "featured": false,
-    "featuredOrder": 1
   },
 
 
@@ -98,8 +90,6 @@
     "url": "Breakfast.pdf",
     "updated": "2025-08-21",
     "images": []
-    "featured": false,
-    "featuredOrder": 1
   },
 
 
@@ -115,8 +105,6 @@
     "url": "Carbon Dating.pdf",
     "updated": "2022-09-12",
     "images": []
-    "featured": false,
-    "featuredOrder": 1
   },
 
 
@@ -131,8 +119,6 @@
     "url": "Duplicate Caesars.pdf",
     "updated": "2026-01-19",
     "images": []
-    "featured": false,
-    "featuredOrder": 1
   },
 
 
@@ -153,8 +139,6 @@
       "Zones.png",
       "Zones 2.png"
     ]
-    "featured": false,
-    "featuredOrder": 1
   },
 
 
@@ -170,8 +154,6 @@
     "url": "Genetic Degradation.pdf",
     "updated": "2022-08-09",
     "images": []
-    "featured": false,
-    "featuredOrder": 1
   },
 
 
@@ -195,8 +177,6 @@
       "IDF Destroy Statue of Christ.png",
       "Pro Palestinian Jew killed.jpg"
     ]
-    "featured": false,
-    "featuredOrder": 1
   },
 
 
@@ -211,8 +191,6 @@
     "url": "Hebrews 6 Deep Dive.pdf",
     "updated": "2024-04-20",
     "images": []
-    "featured": false,
-    "featuredOrder": 1
   },
 
 
@@ -227,8 +205,6 @@
     "url": "Once Saved, Always Saved.pdf",
     "updated": "2023-09-28",
     "images": []
-    "featured": false,
-    "featuredOrder": 1
   },
 
 
@@ -244,8 +220,6 @@
     "url": "Privacy.pdf",
     "updated": "2025-10-20",
     "images": []
-    "featured": false,
-    "featuredOrder": 1
   },
 
 
@@ -267,9 +241,10 @@
       "Rupes Nigra.png",
       "Signs of the Times.png",
       "Timeline.png"
-    ]
-    "featured": true,
-    "featuredOrder": 4
+    ],
+   "featured": true,
+   "featuredOrder": 1,
+   "featuredImage": 4
   },
 
 
@@ -291,8 +266,6 @@
       "Star of David.png",
       "Trinity.png"
     ]
-    "featured": false,
-    "featuredOrder": 1
   },
 
 
@@ -319,7 +292,8 @@
       "Verses Missing From Vaticanus and Sanaiticus.png"
     ]
     "featured": true,
-    "featuredOrder":4
+    "featuredOrder": 2,
+    "featuredImage": 4
   },
 
 
@@ -341,8 +315,6 @@
       "NASA Logo on first rover.png",
       "The Walrus' Bone.png"
     ]
-    "featured": false,
-    "featuredOrder": 1
   },
 
 
@@ -405,8 +377,6 @@
       "Take-off Path.png",
       "TETR Satellite.png"
     ]
-    "featured": false,
-    "featuredOrder": 1
   },
 
 
@@ -421,8 +391,6 @@
     "url": "The Mystery of the Titanic.pdf",
     "updated": "2023-09-14",
     "images": []
-    "featured": false,
-    "featuredOrder": 1
   },
 
 
@@ -457,8 +425,6 @@
       "Which one IS a real Nuke.png",
       "Which one isn't a real Nuke.png"
     ]
-    "featured": false,
-    "featuredOrder": 1
   },
 
 
@@ -476,8 +442,6 @@
     "images": [
       "Bismillah and the Beast's number.webp"
     ]
-    "featured": false,
-    "featuredOrder": 1
   },
 
 
@@ -498,8 +462,6 @@
       "Rapture Differences.png",
       "Verse Comparison.png"
     ]
-    "featured": false,
-    "featuredOrder": 1
   },
 
 
@@ -523,8 +485,6 @@
       "Degenerate Book Burning.png",
       "What we have been told.png"
     ]
-    "featured": false,
-    "featuredOrder": 1
   },
 
 
@@ -562,9 +522,10 @@
       "Vaccine Ingredients.png",
       "Vaccine schedule.PNG",
       "Yellow Fever (1800-2000).png"
-    ]
-    "featured": false,
-    "featuredOrder": 1
+    ],
+     "featured": true,
+     "featuredOrder": 3,
+     "featuredImage": 18
   },
 
 
@@ -583,8 +544,6 @@
       "Dragon.png",
       "Seref.png"
     ]
-    "featured": false,
-    "featuredOrder": 1
   },
 
 
@@ -601,8 +560,6 @@
     "url": "What is Everything.pdf",
     "updated": "2025-03-14",
     "images": []
-    "featured": false,
-    "featuredOrder": 1
   }
 
 
