@@ -397,21 +397,7 @@ a:active{
 
 }
 
-    .featured-left{
-
-    left:12px;
-
-    padding-right:3px;
-
-}
-
-.featured-right{
-
-    right:12px;
-
-    padding-left:3px;
-
-}
+   
 
 .featured-arrow:hover{
 
@@ -430,6 +416,28 @@ a:active{
     right:12px;
 
 }
+
+    .featured-left::before{
+
+    content:"❮";
+
+    display:inline-block;
+
+    transform:translate(-3px,-1px);
+
+}
+
+.featured-right::before{
+
+    content:"❯";
+
+    display:inline-block;
+
+    transform:translate(3px,-1px);
+
+}
+
+    
 .card{
     background:#1d1d1d;
     padding:20px;
@@ -2111,7 +2119,6 @@ href="pdf.html?file=${encodeURIComponent(paper.url)}&paper=${encodeURIComponent(
 <button
 class="featured-arrow featured-left"
 onclick="previousFeatured(event)">
-❮
 </button>
 
 ${media}
@@ -2119,7 +2126,6 @@ ${media}
 <button
 class="featured-arrow featured-right"
 onclick="nextFeaturedManual(event)">
-❯
 </button>
 
 </div>
