@@ -1118,14 +1118,36 @@ a.featuredOrder-b.featuredOrder
 
 );
 
+// Preload every featured image
+featuredPapers.forEach(paper => {
+
+    const index = Number(paper.featuredImage) - 1;
+
+    if(
+
+        Array.isArray(paper.images) &&
+
+        index >= 0 &&
+
+        index < paper.images.length
+
+    ){
+
+        const img = new Image();
+
+        img.src = paper.images[index];
+
+    }
+
+});
+
 renderFeatured();
 
 if(featuredPapers.length > 1){
 
     startFeaturedRotation();
 
-}
-    
+}    
  console.log("PDF records:", searchIndex.length);
     console.log("Description records:", Object.keys(descriptions).length);
     
@@ -2112,7 +2134,7 @@ function nextFeatured(){
     const paper = featuredPapers[next];
 
     const index =
-        Number(paper.featuredImage);
+        Number(paper.featuredImage) - 1;
 
     if(
         Array.isArray(paper.images) &&
