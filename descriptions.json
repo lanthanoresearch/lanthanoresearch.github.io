@@ -1,4 +1,7 @@
 {
+
+
+  
   "911": {
     "title": "9/11",
     "warning": false,
@@ -16,7 +19,12 @@
       "Pentagon Security Key Frame.png",
       "Pentagon.png"
     ]
+    "featured": false,
+    "featuredOrder": 1
   },
+
+
+  
   "artemis": {
     "title": "Artemis",
     "warning": false,
@@ -33,7 +41,12 @@
       "Whole earth (day).jpg",
       "Whole earth (night).jpg"
     ]
+    "featured": false,
+    "featuredOrder": 1
   },
+
+
+  
   "biblical_cosmology": {
     "title": "Biblical Cosmology",
     "warning": false,
@@ -52,7 +65,12 @@
       "Nikon p900.png",
       "Seasons.png"
     ]
+    "featured": false,
+    "featuredOrder": 1
   },
+
+
+  
   "biblical_marriage": {
     "title": "Biblical Marriage",
     "warning": false,
@@ -63,7 +81,12 @@
     "url": "Biblical Marriage.pdf",
     "updated": "2025-09-07",
     "images": []
+    "featured": false,
+    "featuredOrder": 1
   },
+
+
+  
   "breakfast": {
     "title": "Breakfast",
     "warning": false,
@@ -75,7 +98,12 @@
     "url": "Breakfast.pdf",
     "updated": "2025-08-21",
     "images": []
+    "featured": false,
+    "featuredOrder": 1
   },
+
+
+  
   "carbon_dating": {
     "title": "Carbon Dating",
     "warning": false,
@@ -87,7 +115,12 @@
     "url": "Carbon Dating.pdf",
     "updated": "2022-09-12",
     "images": []
+    "featured": false,
+    "featuredOrder": 1
   },
+
+
+  
   "duplicate_caesars": {
     "title": "Duplicate Caesars",
     "warning": false,
@@ -98,7 +131,12 @@
     "url": "Duplicate Caesars.pdf",
     "updated": "2026-01-19",
     "images": []
+    "featured": false,
+    "featuredOrder": 1
   },
+
+
+  
   "egypt": {
     "title": "Egypt",
     "warning": false,
@@ -115,7 +153,12 @@
       "Zones.png",
       "Zones 2.png"
     ]
+    "featured": false,
+    "featuredOrder": 1
   },
+
+
+  
   "genetic_degradation": {
     "title": "Genetic Degradation",
     "warning": false,
@@ -127,7 +170,12 @@
     "url": "Genetic Degradation.pdf",
     "updated": "2022-08-09",
     "images": []
+    "featured": false,
+    "featuredOrder": 1
   },
+
+
+  
   "godless_israel": {
     "title": "Godless Israel",
     "warning": true,
@@ -147,7 +195,12 @@
       "IDF Destroy Statue of Christ.png",
       "Pro Palestinian Jew killed.jpg"
     ]
+    "featured": false,
+    "featuredOrder": 1
   },
+
+
+  
   "hebrews_6": {
     "title": "Hebrews 6 Deep Dive",
     "warning": false,
@@ -158,7 +211,12 @@
     "url": "Hebrews 6 Deep Dive.pdf",
     "updated": "2024-04-20",
     "images": []
+    "featured": false,
+    "featuredOrder": 1
   },
+
+
+  
   "once_saved_always_saved": {
     "title": "Once Saved, Always Saved",
     "warning": false,
@@ -169,7 +227,12 @@
     "url": "Once Saved, Always Saved.pdf",
     "updated": "2023-09-28",
     "images": []
+    "featured": false,
+    "featuredOrder": 1
   },
+
+
+  
   "privacy": {
     "title": "Privacy",
     "warning": false,
@@ -181,7 +244,12 @@
     "url": "Privacy.pdf",
     "updated": "2025-10-20",
     "images": []
+    "featured": false,
+    "featuredOrder": 1
   },
+
+
+  
   "satans_little_season": {
     "title": "Satan's Little Season",
     "warning": false,
@@ -200,7 +268,12 @@
       "Signs of the Times.png",
       "Timeline.png"
     ]
+    "featured": true,
+    "featuredOrder": 4
   },
+
+
+  
   "symbolism": {
     "title": "Symbolism",
     "warning": false,
@@ -218,7 +291,12 @@
       "Star of David.png",
       "Trinity.png"
     ]
+    "featured": false,
+    "featuredOrder": 1
   },
+
+
+  
   "corrupt_versions": {
     "title": "The Corrupt Versions",
     "warning": false,
@@ -240,7 +318,12 @@
       "Vaticanus Umlauts.png",
       "Verses Missing From Vaticanus and Sanaiticus.png"
     ]
+    "featured": true,
+    "featuredOrder":4
   },
+
+
+  
   "mars_hoax": {
     "title": "The Mars Hoax",
     "warning": false,
@@ -258,7 +341,12 @@
       "NASA Logo on first rover.png",
       "The Walrus' Bone.png"
     ]
+    "featured": false,
+    "featuredOrder": 1
   },
+
+
+  
   "moon_hoax": {
     "title": "The Moon Hoax",
     "warning": false,
@@ -317,7 +405,12 @@
       "Take-off Path.png",
       "TETR Satellite.png"
     ]
+    "featured": false,
+    "featuredOrder": 1
   },
+
+
+  
   "titanic": {
     "title": "The Mystery of the Titanic",
     "warning": false,
@@ -328,7 +421,12 @@
     "url": "The Mystery of the Titanic.pdf",
     "updated": "2023-09-14",
     "images": []
+    "featured": false,
+    "featuredOrder": 1
   },
+
+
+  
   "nuclear_scare": {
     "title": "The Nuclear Scare",
     "warning": false,
@@ -359,7 +457,12 @@
       "Which one IS a real Nuke.png",
       "Which one isn't a real Nuke.png"
     ]
+    "featured": false,
+    "featuredOrder": 1
   },
+
+
+  
   "number_of_the_beast": {
     "title": "The Number of the Beast",
     "warning": false,
@@ -373,7 +476,13 @@
     "images": [
       "Bismillah and the Beast's number.webp"
     ]
+    "featured": false,
+    "featuredOrder": 1
   },
+
+
+
+  
   "rapture": {
     "title": "The Rapture",
     "warning": false,
@@ -389,7 +498,13 @@
       "Rapture Differences.png",
       "Verse Comparison.png"
     ]
+    "featured": false,
+    "featuredOrder": 1
   },
+
+
+
+  
   "real_nazis": {
     "title": "The Real Nazis",
     "warning": false,
@@ -408,7 +523,13 @@
       "Degenerate Book Burning.png",
       "What we have been told.png"
     ]
+    "featured": false,
+    "featuredOrder": 1
   },
+
+
+
+  
   "vaccines": {
     "title": "The Sad Truth About Vaccines",
     "warning": false,
@@ -442,7 +563,13 @@
       "Vaccine schedule.PNG",
       "Yellow Fever (1800-2000).png"
     ]
+    "featured": false,
+    "featuredOrder": 1
   },
+
+
+
+  
   "seraphim": {
     "title": "The Seraphim",
     "warning": false,
@@ -456,7 +583,13 @@
       "Dragon.png",
       "Seref.png"
     ]
+    "featured": false,
+    "featuredOrder": 1
   },
+
+
+
+  
   "what_is_everything": {
     "title": "What is Everything",
     "warning": false,
@@ -468,5 +601,11 @@
     "url": "What is Everything.pdf",
     "updated": "2025-03-14",
     "images": []
+    "featured": false,
+    "featuredOrder": 1
   }
+
+
+
+  
 }
