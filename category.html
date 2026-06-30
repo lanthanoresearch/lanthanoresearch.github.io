@@ -14,6 +14,20 @@ body{
     font-family:Arial,sans-serif;
 }
 
+
+
+    .favorite-star{
+    visibility:hidden;
+    pointer-events:none;
+}
+
+.favorite-star.ready{
+    visibility:visible;
+    pointer-events:auto;
+}
+
+
+    
 section{
     max-width:1000px;
     margin:auto;
@@ -203,6 +217,54 @@ const params =
 const currentCategory =
     params.get("category");
 
+    let favoritePapers = [];
+
+function loadFavorites(){
+
+    favoritePapers =
+        JSON.parse(
+            localStorage.getItem(
+                "favoritePapers"
+            ) || "[]"
+        );
+
+}
+
+function isFavorite(key){
+
+    return favoritePapers.includes(key);
+
+}
+
+function toggleFavorite(key, star){
+
+    if(isFavorite(key)){
+
+        favoritePapers =
+            favoritePapers.filter(
+                item=>item!==key
+            );
+
+    }else{
+
+        favoritePapers.push(key);
+
+    }
+
+    localStorage.setItem(
+        "favoritePapers",
+        JSON.stringify(favoritePapers)
+    );
+
+    star.classList.toggle("active");
+
+    star.textContent =
+        isFavorite(key)
+        ? "★"
+        : "☆";
+
+}
+
     const scrollKey =
     "categoryScroll-" + currentCategory;
     const returning =
@@ -353,6 +415,15 @@ if(
 ){
             cardHtml = `
             <div class="card">
+            <span
+class="favorite-star
+${isFavorite(key) ? " active" : ""}"
+onclick="
+event.stopPropagation();
+toggleFavorite('${key}',this);
+">
+${isFavorite(key) ? "★" : "☆"}
+</span>
  ${
         paper.featured
         ? `<div class="featured-badge">Featured</div>`
@@ -430,6 +501,15 @@ paper.updated.split("-")[0]}
 
             cardHtml = `
             <div class="card">
+            <span
+class="favorite-star
+${isFavorite(key) ? " active" : ""}"
+onclick="
+event.stopPropagation();
+toggleFavorite('${key}',this);
+">
+${isFavorite(key) ? "★" : "☆"}
+</span>
  ${
         paper.featured
         ? `<div class="featured-badge">Featured</div>`
@@ -520,7 +600,16 @@ document.querySelectorAll(".pdf-link").forEach(link=>{
     });
 
 });
+    document
+.querySelectorAll(".favorite-star")
+.forEach(star=>{
+
+    star.classList.add("ready");
+
+});
 }
+
+    
 
 const sortSelect =
     document.getElementById("sortSelect");
@@ -531,6 +620,8 @@ const savedSort =
 if(savedSort){
     sortSelect.value = savedSort;
 }
+
+loadFavorites();
 
 renderPapers();
 
