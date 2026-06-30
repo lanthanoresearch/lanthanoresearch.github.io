@@ -44,17 +44,17 @@ html,body{
 
 .title-featured{
 
+    order:2;
+
     display:inline-block;
 
-    margin-left:10px;
-
-    padding:3px 8px;
+    padding:4px 10px;
 
     background:#2f7cff;
 
     color:white;
 
-    font-size:.65em;
+    font-size:.72em;
 
     font-weight:bold;
 
@@ -62,18 +62,55 @@ html,body{
 
     text-transform:uppercase;
 
-    vertical-align:middle;
+    letter-spacing:.5px;
+
+    flex-shrink:0;
 
 }
 
+.title-text{
 
-  .title-text{
+    order:1;
 
-    font-size:18px;
+    min-width:0;
 
-    font-weight:bold;
+    overflow:hidden;
 
-    line-height:1.3;
+    text-overflow:ellipsis;
+
+    white-space:nowrap;
+
+}
+
+@media (max-width:768px){
+
+    #title{
+
+        flex-direction:column;
+
+        gap:6px;
+
+    }
+
+    .title-featured{
+
+        order:1;
+
+    }
+
+    .title-text{
+
+        order:2;
+
+        white-space:nowrap;
+
+        overflow:hidden;
+
+        text-overflow:ellipsis;
+
+        width:100%;
+
+    }
 
 }
   
@@ -233,9 +270,11 @@ button:hover{background:#3a3a3a;cursor:pointer}
 
     display:flex;
 
-    flex-direction:column;
+    justify-content:center;
 
     align-items:center;
+
+    gap:10px;
 
     text-align:center;
 
