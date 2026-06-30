@@ -277,13 +277,13 @@ function isFavorite(key){
 
 }
 
-function toggleFavorite(key, star){
+function toggleFavorite(key){
 
     if(isFavorite(key)){
 
         favoritePapers =
             favoritePapers.filter(
-                item=>item!==key
+                item => item !== key
             );
 
     }else{
@@ -297,12 +297,7 @@ function toggleFavorite(key, star){
         JSON.stringify(favoritePapers)
     );
 
-    star.classList.toggle("active");
-
-    star.textContent =
-        isFavorite(key)
-        ? "★"
-        : "☆";
+    renderPapers();
 
 }
 
@@ -336,7 +331,7 @@ fetch("descriptions.json")
         a[1].title.localeCompare(b[1].title)
     );
 function renderPapers(){
-
+loadFavorites();
 container.innerHTML = "";
 
 let filteredPapers = papers.filter(([key,paper]) =>
@@ -466,7 +461,7 @@ class="favorite-star
 ${isFavorite(key) ? " active" : ""}"
 onclick="
 event.stopPropagation();
-toggleFavorite('${key}',this);
+toggleFavorite('${key}');
 ">
 ${isFavorite(key) ? "★" : "☆"}
 </span>
@@ -552,7 +547,7 @@ class="favorite-star
 ${isFavorite(key) ? " active" : ""}"
 onclick="
 event.stopPropagation();
-toggleFavorite('${key}',this);
+toggleFavorite('${key}');
 ">
 ${isFavorite(key) ? "★" : "☆"}
 </span>
