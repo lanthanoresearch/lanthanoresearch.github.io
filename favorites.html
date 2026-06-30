@@ -16,9 +16,49 @@ body{
 
 
 
-    .favorite-star{
+.favorite-star{
+
+    position:absolute;
+
+    top:8px;
+    right:12px;
+
+    font-size:2rem;
+    line-height:1;
+
+    color:#8b8b8b;
+
+    cursor:pointer;
+
+    user-select:none;
+
     visibility:hidden;
     pointer-events:none;
+
+    transition:
+        transform .18s,
+        color .18s,
+        text-shadow .18s;
+}
+
+.favorite-star.ready{
+
+    visibility:visible;
+    pointer-events:auto;
+
+}
+
+.favorite-star.active{
+
+    color:#FFD700;
+    text-shadow:0 0 10px rgba(255,215,0,.6);
+
+}
+
+.favorite-star:hover{
+
+    transform:scale(1.12);
+
 }
 
 .favorite-star.ready{
@@ -89,13 +129,14 @@ h1{
     margin:15px 0;
     border-radius:10px;
 }
-    .featured-badge{
+
+.featured-badge{
 
     position:absolute;
 
     top:12px;
 
-    right:12px;
+    right:52px;
 
     background:#2f7cff;
 
@@ -114,7 +155,7 @@ h1{
     text-transform:uppercase;
 
 }
-
+    
 .card-description{
     color:#aaa;
     font-size:0.9em;
