@@ -51,6 +51,45 @@ html{
     letter-spacing:1px;
 }
 
+
+
+
+    .search-info{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:8px;
+
+    flex-wrap:wrap;
+
+}
+
+.search-featured{
+
+    background:#2f7cff;
+
+    color:white;
+
+    font-size:.68em;
+
+    font-weight:bold;
+
+    padding:3px 8px;
+
+    border-radius:999px;
+
+    text-transform:uppercase;
+
+    letter-spacing:.5px;
+
+}
+
+
+
+
+    
 .featured-card{
     display:flex;
     background:#1d1d1d;
@@ -1666,9 +1705,19 @@ html += `
             ${highlightMatch(result.item.displayTitle, query)}
         </div>
 
-        <div class="search-source">
-            PDF Document
-        </div>
+       <div class="search-info">
+
+    <div class="search-source">
+        PDF Document
+    </div>
+
+    ${
+        papersByUrl[result.item.url]?.featured
+        ? `<div class="search-featured">Featured</div>`
+        : ""
+    }
+
+</div>
 
     </div>
 
