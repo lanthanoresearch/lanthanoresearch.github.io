@@ -521,13 +521,17 @@ const returnPage = decodeURIComponent(
 );
 console.log("returnPage =", returnPage);
 document.getElementById("title").innerHTML = `
-${title}
 ${
     paper?.featured
-    ? `<span class="title-featured">Featured</span>`
-    : ""
+        ? `<div class="title-featured">FEATURED</div>`
+        : ""
 }
+
+<div class="title-text">
+    ${title}
+</div>
 `;
+  
 console.log("File:", file);
 
 const viewer = document.getElementById("viewer");
