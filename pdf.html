@@ -42,7 +42,29 @@ html,body{
     display:block;
 }
 
+.title-featured{
 
+    display:inline-block;
+
+    margin-left:10px;
+
+    padding:3px 8px;
+
+    background:#2f7cff;
+
+    color:white;
+
+    font-size:.65em;
+
+    font-weight:bold;
+
+    border-radius:999px;
+
+    text-transform:uppercase;
+
+    vertical-align:middle;
+
+}
   .pageCanvas{
     pointer-events:none;
 }
@@ -487,12 +509,25 @@ const file = decodeURIComponent(
 const title = decodeURIComponent(
     p.get("paper") || "PDF"
 );
+const descriptions =
+    await fetch("descriptions.json")
+    .then(r => r.json());
 
+const paper =
+    Object.values(descriptions)
+    .find(p => p.url === file);
 const returnPage = decodeURIComponent(
     p.get("return") || "index.html"
 );
 console.log("returnPage =", returnPage);
-document.getElementById("title").textContent = title;
+document.getElementById("title").innerHTML = `
+${title}
+${
+    paper?.featured
+    ? `<span class="title-featured">Featured</span>`
+    : ""
+}
+`;
 console.log("File:", file);
 
 const viewer = document.getElementById("viewer");
