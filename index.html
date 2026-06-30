@@ -194,7 +194,40 @@ html{
     justify-content:center;
 
 }
+.favorite-star{
 
+    position:absolute;
+
+    top:10px;
+    right:12px;
+
+    font-size:2rem;
+
+    color:#888;
+
+    cursor:pointer;
+
+    user-select:none;
+
+    z-index:50;
+
+    transition:.2s;
+
+}
+
+.favorite-star.active{
+
+    color:#FFD700;
+
+    text-shadow:0 0 10px rgba(255,215,0,.6);
+
+}
+
+.favorite-star:hover{
+
+    transform:scale(1.12);
+
+}
 .featured-read{
 
     margin-top:auto;
@@ -360,6 +393,12 @@ html{
     overflow-y:auto;
 }
 
+    .search-result{
+
+    position:relative;
+
+}
+    
 .warningContent h2{
     text-align:center;
     margin:0 0 10px 0;
@@ -1099,6 +1138,53 @@ function updateArrow(){
 window.addEventListener("scroll", updateArrow);
 window.addEventListener("load", updateArrow);
 
+    let favoritePapers = [];
+
+function loadFavorites(){
+
+    favoritePapers = JSON.parse(
+        localStorage.getItem("favoritePapers") || "[]"
+    );
+
+}
+
+function isFavorite(key){
+
+    return favoritePapers.includes(key);
+
+}
+
+function toggleFavorite(key, star){
+
+    if(isFavorite(key)){
+
+        favoritePapers =
+            favoritePapers.filter(item=>item!==key);
+
+    }else{
+
+        favoritePapers.push(key);
+
+    }
+
+    localStorage.setItem(
+        "favoritePapers",
+        JSON.stringify(favoritePapers)
+    );
+
+    star.classList.toggle("active");
+
+    star.textContent =
+        isFavorite(key)
+        ? "★"
+        : "☆";
+
+}
+
+loadFavorites();
+
+window.toggleFavorite = toggleFavorite;
+    
     fetch("descriptions.json")
 .then(response => response.json())
 .then(data => {
@@ -1666,6 +1752,16 @@ html += `
     data-paper="${encodeURIComponent(result.item.displayTitle)}"
     data-warning="${papersByUrl[result.item.url]?.warning}"
 >
+<span
+class="favorite-star
+${isFavorite(result.item.url) ? " active" : ""}"
+onclick="
+event.preventDefault();
+event.stopPropagation();
+toggleFavorite('${result.item.url}',this);
+">
+${isFavorite(result.item.url) ? "★" : "☆"}
+</span>
 
     ${
         papersByUrl[result.item.url]?.warning
@@ -2227,6 +2323,19 @@ href="pdf.html?file=${encodeURIComponent(paper.url)}&paper=${encodeURIComponent(
 <div class="featured-card">
 
 <div class="featured-image-wrapper">
+
+
+<span
+class="favorite-star
+${isFavorite(paper.url) ? " active" : ""}"
+onclick="
+event.preventDefault();
+event.stopPropagation();
+toggleFavorite('${paper.url}',this);
+">
+${isFavorite(paper.url) ? "★" : "☆"}
+</span>
+
 
 <button
 class="featured-arrow featured-left"
