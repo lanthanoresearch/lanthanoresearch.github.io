@@ -1690,6 +1690,9 @@ function highlightMatch(text, query){
 
 
 searchBox.addEventListener("input", () => {
+
+    loadFavorites();
+    
 if(!searchReady){
     return;
 }
@@ -2260,6 +2263,9 @@ document
 
     function renderFeatured(){
 
+        loadFavorites();
+
+        
     if(!featuredPapers.length){
         return;
     }
