@@ -286,11 +286,23 @@ if(!returning){
 
 }
     
-document.querySelector("h1").textContent =
-    currentCategory === "all"
-        ? "All Research"
-        : currentCategory.charAt(0).toUpperCase() +
-          currentCategory.slice(1);
+if(currentCategory === "all"){
+
+    document.querySelector("h1").textContent =
+        "All Research";
+
+}else if(currentCategory === "favorites"){
+
+    document.querySelector("h1").textContent =
+        "Favorite Papers";
+
+}else{
+
+    document.querySelector("h1").textContent =
+        currentCategory.charAt(0).toUpperCase() +
+        currentCategory.slice(1);
+
+}
 fetch("descriptions.json")
 .then(response => response.json())
 .then(data => {
@@ -337,11 +349,27 @@ container.innerHTML = "";
 
 let filteredPapers = papers.filter(([key,paper]) =>
 
-    currentCategory === "all" ||
+    currentCategory === "all"
+
+    ||
 
     (
+
+        currentCategory === "favorites"
+
+        &&
+
+        favoritePapers.includes(key)
+
+    )
+
+    ||
+
+    (
+
         paper.category &&
         paper.category.includes(currentCategory)
+
     )
 
 );
@@ -398,16 +426,35 @@ document.getElementById("paperCount").textContent =
     filteredPapers.length +
     (filteredPapers.length === 1 ? " Paper" : " Papers");
 
-filteredPapers.forEach(([key,paper]) => {
-if(
-    currentCategory !== "all" &&
-    (
-        !paper.category ||
-        !paper.category.includes(currentCategory)
-    )
+    if(
+    currentCategory === "favorites"
+    &&
+    filteredPapers.length === 0
 ){
+
+    container.innerHTML = `
+
+    <div style="
+        text-align:center;
+        padding:70px 20px;
+    ">
+
+        <h2>No Favorite Papers</h2>
+
+        <p style="color:#888;">
+            Tap the ☆ on any paper to save it here.
+        </p>
+
+    </div>
+
+    `;
+
     return;
+
 }
+
+filteredPapers.forEach(([key,paper]) => {
+
         let galleryHtml = "";
 
         if(paper.images && paper.images.length){
