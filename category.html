@@ -270,37 +270,7 @@ function isFavorite(key){
 
 }
 
-function toggleFavorite(key){
 
-    console.log("Clicked:", key);
-
-    if(isFavorite(key)){
-
-        favoritePapers =
-            favoritePapers.filter(
-                item => item !== key
-            );
-
-    }else{
-
-        favoritePapers.push(key);
-
-    }
-
-    console.log(favoritePapers);
-
-    localStorage.setItem(
-        "favoritePapers",
-        JSON.stringify(favoritePapers)
-    );
-
-    console.log("Calling renderPapers");
-
-    renderPapers();
-
-    console.log("Finished renderPapers");
-
-}
 
     const scrollKey =
     "categoryScroll-" + currentCategory;
@@ -334,6 +304,33 @@ fetch("descriptions.json")
     papers.sort((a,b)=>
         a[1].title.localeCompare(b[1].title)
     );
+
+    function toggleFavorite(key){
+
+    if(isFavorite(key)){
+
+        favoritePapers =
+            favoritePapers.filter(
+                item => item !== key
+            );
+
+    }else{
+
+        favoritePapers.push(key);
+
+    }
+
+    localStorage.setItem(
+        "favoritePapers",
+        JSON.stringify(favoritePapers)
+    );
+
+    renderPapers();
+
+}
+
+window.toggleFavorite = toggleFavorite;
+    
 function renderPapers(){
 loadFavorites();
 container.innerHTML = "";
