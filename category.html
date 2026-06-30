@@ -272,6 +272,8 @@ function isFavorite(key){
 
 function toggleFavorite(key){
 
+    console.log("Clicked:", key);
+
     if(isFavorite(key)){
 
         favoritePapers =
@@ -285,12 +287,18 @@ function toggleFavorite(key){
 
     }
 
+    console.log(favoritePapers);
+
     localStorage.setItem(
         "favoritePapers",
         JSON.stringify(favoritePapers)
     );
 
+    console.log("Calling renderPapers");
+
     renderPapers();
+
+    console.log("Finished renderPapers");
 
 }
 
