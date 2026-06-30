@@ -17,8 +17,45 @@ body{
 
 
     .favorite-star{
+
+    position:absolute;
+
+    top:10px;
+    right:14px;
+
+    font-size:2rem;
+    line-height:1;
+
+    color:#666;
+
+    cursor:pointer;
+
+    user-select:none;
+
     visibility:hidden;
     pointer-events:none;
+
+    transition:.2s;
+}
+
+.favorite-star.ready{
+
+    visibility:visible;
+    pointer-events:auto;
+
+}
+
+.favorite-star.active{
+
+    color:#FFD700;
+    text-shadow:0 0 10px rgba(255,215,0,.55);
+
+}
+
+.favorite-star:hover{
+
+    transform:scale(1.15);
+
 }
 
 .favorite-star.ready{
@@ -93,9 +130,9 @@ h1{
 
     position:absolute;
 
-    top:12px;
+    top:14px;
 
-    right:12px;
+    right:52px;
 
     background:#2f7cff;
 
