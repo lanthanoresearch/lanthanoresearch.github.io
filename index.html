@@ -129,6 +129,8 @@ html{
 
 .featured-content{
 
+    position:relative;
+
     flex:1;
 
     padding:25px;
@@ -138,6 +140,32 @@ html{
     flex-direction:column;
 
 }
+
+    .featured-content .favorite-star{
+
+    position:absolute;
+
+    top:12px;
+
+    right:12px;
+
+    width:34px;
+    height:34px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    font-size:2rem;
+
+    z-index:500;
+
+}
+
+
+
+
+    
     
 .featured-pdf-icon{
 
@@ -2351,17 +2379,7 @@ href="pdf.html?file=${encodeURIComponent(paper.url)}&paper=${encodeURIComponent(
 <div class="featured-image-wrapper">
 
 
-<span
-class="favorite-star${isFavorite(paper.url) ? " active" : ""}"
-onclick="
-event.preventDefault();
-event.stopPropagation();
-event.stopImmediatePropagation();
-toggleFavorite('${paper.url}',this);
-return false;
-">
-${isFavorite(paper.url) ? "★" : "☆"}
-</span>
+
 
 
 <button
@@ -2379,6 +2397,17 @@ onclick="nextFeaturedManual(event)">
 </div>
 
 <div class="featured-content">
+
+<span
+class="favorite-star${isFavorite(paper.url) ? " active" : ""}"
+onclick="
+event.preventDefault();
+event.stopPropagation();
+toggleFavorite('${paper.url}', this);
+return false;
+">
+${isFavorite(paper.url) ? "★" : "☆"}
+</span>
 
 <div class="featured-category">
 
