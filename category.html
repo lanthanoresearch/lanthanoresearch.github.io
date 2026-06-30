@@ -67,12 +67,38 @@ h1{
     display:inline-block;
     margin-bottom:20px;
 }
-
 .card{
+    position:relative;
+
     background:#1d1d1d;
     padding:20px;
     margin:15px 0;
     border-radius:10px;
+}
+    .featured-badge{
+
+    position:absolute;
+
+    top:12px;
+
+    right:12px;
+
+    background:#2f7cff;
+
+    color:white;
+
+    font-size:.72em;
+
+    font-weight:bold;
+
+    padding:5px 10px;
+
+    border-radius:999px;
+
+    letter-spacing:.5px;
+
+    text-transform:uppercase;
+
 }
 
 .card-description{
@@ -327,7 +353,11 @@ if(
 ){
             cardHtml = `
             <div class="card">
-
+ ${
+        paper.featured
+        ? `<div class="featured-badge">Featured</div>`
+        : ""
+    }
                 <h2>${paper.title}</h2>
 
                 <p class="card-description">
@@ -400,7 +430,11 @@ paper.updated.split("-")[0]}
 
             cardHtml = `
             <div class="card">
-
+ ${
+        paper.featured
+        ? `<div class="featured-badge">Featured</div>`
+        : ""
+    }
                 <h2>${paper.title}</h2>
 
                 <p class="card-description">
