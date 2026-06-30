@@ -1402,7 +1402,12 @@ window.goToHitorah = goToHitorah;
     let pdfFuse;
 let imageFuse;
 let searchReady = false;
+
+    
 let papersByUrl = {};
+let paperKeysByUrl = {};
+
+    
     let featuredPapers = [];
 let featuredIndex = 0;
 let featuredTimer;
@@ -1438,9 +1443,11 @@ Promise.all([
 .then(([searchIndex, descriptions]) => {
     papersByUrl = {};
 
-Object.values(descriptions).forEach(paper => {
+Object.entries(descriptions).forEach(([key, paper]) => {
 
     papersByUrl[paper.url] = paper;
+
+    paperKeysByUrl[paper.url] = key;
 
 });
 
@@ -1814,13 +1821,13 @@ html += `
 >
 <span
 class="favorite-star
-${isFavorite(result.item.url) ? " active" : ""}"
+${isFavorite(paperKeysByUrl[result.item.url]) ? " active" : ""}"
 onclick="
 event.preventDefault();
 event.stopPropagation();
-toggleFavorite('${result.item.url}',this);
+toggleFavorite('${paperKeysByUrl[result.item.url]}',this);
 ">
-${isFavorite(result.item.url) ? "★" : "☆"}
+${isFavorite(paperKeysByUrl[result.item.url]) ? "★" : "☆"}
 </span>
 
     ${
@@ -2408,14 +2415,14 @@ onclick="nextFeaturedManual(event)">
 <div class="featured-content">
 
 <span
-class="favorite-star${isFavorite(paper.url) ? " active" : ""}"
+class="favorite-star${isFavorite(paperKeysByUrl[paper.url]) ? " active" : ""}"
 onclick="
 event.preventDefault();
 event.stopPropagation();
-toggleFavorite('${paper.url}', this);
+toggleFavorite('${paperKeysByUrl[paper.url]}', this);
 return false;
 ">
-${isFavorite(paper.url) ? "★" : "☆"}
+${isFavorite(paperKeysByUrl[paper.url]) ? "★" : "☆"}
 </span>
 
 <div class="featured-category">
