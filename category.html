@@ -457,32 +457,34 @@ filteredPapers.forEach(([key,paper]) => {
 
         let galleryHtml = "";
 
-        if(paper.images && paper.images.length){
+       const visibleImages = (paper.images || []).filter(image =>
+    typeof image === "string" &&
+    !image.trim().startsWith("#$")
+);
 
-            galleryHtml = `
-                <details class="image-details" data-paper="${key}">
-                    <summary>Supporting Images (${paper.images.length})</summary>
+if(visibleImages.length){
+    galleryHtml = `
+        <details class="image-details" data-paper="${key}">
+            <summary>Supporting Images (${visibleImages.length})</summary>
 
-                    <div class="gallery">
+            <div class="gallery">
 
-                     ${paper.images.map(image => `
-    <a
-        href="image.html?image=${encodeURIComponent(image)}&paper=${encodeURIComponent(paper.title)}&return=${encodeURIComponent(window.location.href)}"
-        class="gallery-image"
-        data-scroll-key="${scrollKey}"
-    >
-        <img
-            src="${image}"
-            loading="lazy">
-    </a>
+             ${visibleImages.map(image => `
+<a
+    href="image.html?image=${encodeURIComponent(image)}&paper=${encodeURIComponent(paper.title)}&return=${encodeURIComponent(window.location.href)}"
+    class="gallery-image"
+    data-scroll-key="${scrollKey}"
+>
+    <img
+        src="${image}"
+        loading="lazy">
+</a>
 `).join("")}
 
-                    </div>
-                </details>
-            `;
-
-        }
-
+            </div>
+        </details>
+    `;
+}
         let cardHtml = "";
 const warningAccepted =
     sessionStorage.getItem(
