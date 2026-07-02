@@ -160,7 +160,7 @@
   
   "godless_israel": {
     "title": "Godless Israel",
-    "warning": true,
+    "warning": false,
     "category": [
       "biblical",
        "political"
@@ -169,13 +169,13 @@
     "url": "Israel.pdf",
     "updated": "2026-06-02",
     "images": [
-      "Boy shot in head 1.jpg",
-      "Boy shot in head 2.jpg",
-      "Girl shot in head 1.jpg",
-      "Girl shot in head 2.jpg",
-      "Girl shot in head 3.jpg",
-      "IDF Destroy Statue of Christ.png",
-      "Pro Palestinian Jew killed.jpg"
+      "#$ Boy shot in head 1.jpg",
+      "#$ Boy shot in head 2.jpg",
+      "#$ Girl shot in head 1.jpg",
+      "#$ Girl shot in head 2.jpg",
+      "#$ Girl shot in head 3.jpg",
+      "#$ IDF Destroy Statue of Christ.png",
+      "#$ Pro Palestinian Jew killed.jpg"
     ]
   },
 
