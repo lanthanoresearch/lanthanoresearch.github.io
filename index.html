@@ -9,22 +9,18 @@
     
 <title>Lanthano Research</title><style>
 
+
 @media (orientation:portrait){
 
-    /* stop sideways scrolling on mobile */
     html,
     body{
         overflow-x:hidden;
     }
 
-   
-
-    /* overall page spacing */
     section{
         padding:28px 14px 34px;
     }
 
-    /* intro area */
     .intro{
         max-width:100%;
         margin:0 auto 24px auto;
@@ -32,13 +28,13 @@
     }
 
     .intro h2{
-    font-size:clamp(1.15rem, 4.6vw, 1.55rem);
-    line-height:1.15;
-    margin-bottom:12px;
-    white-space:normal;
-    overflow-wrap:normal;
-    word-break:normal;
-}
+        font-size:clamp(1.2rem, 5vw, 1.55rem);
+        line-height:1.15;
+        margin-bottom:12px;
+        white-space:normal;
+        overflow-wrap:break-word;
+        word-break:normal;
+    }
 
     .intro p{
         font-size:.95rem;
@@ -46,7 +42,6 @@
         margin:8px 0;
     }
 
-    /* stats */
     .archive-stats{
         margin:18px 0 22px;
         padding:14px 10px;
@@ -65,7 +60,6 @@
         font-size:.72rem;
     }
 
-    /* featured section */
     .featured-section{
         margin:28px auto 24px;
     }
@@ -76,7 +70,23 @@
     }
 
     .featured-card{
+        flex-direction:column;
+        height:auto;
+        min-height:0;
         border-radius:14px;
+    }
+
+    .featured-image-wrapper{
+        width:100%;
+        height:220px;
+    }
+
+    .featured-image,
+    .featured-pdf-icon{
+        width:100%;
+        height:100%;
+        object-fit:cover;
+        display:block;
     }
 
     .featured-content{
@@ -92,6 +102,7 @@
         font-size:1.2rem;
         margin:0 0 12px 0;
         line-height:1.2;
+        white-space:normal;
     }
 
     .featured-description{
@@ -108,7 +119,6 @@
         margin-top:10px;
     }
 
-    /* search */
     .search-wrapper{
         margin:18px auto 0 auto;
     }
@@ -118,33 +128,29 @@
         font-size:16px;
     }
 
-    /* All Research */
-.all-research{
-    font-size:1.1rem;
-    margin-bottom:12px;
-    padding:16px 12px;
-    border-radius:12px;
-}
+    .all-research{
+        font-size:1.1rem;
+        margin-bottom:12px;
+        padding:16px 12px;
+        border-radius:12px;
+    }
 
     .all-research h2{
         margin:0;
         font-size:1.3rem;
     }
 
-    /* favorites */
-   .favorites-button{
-    margin:0 auto 18px;
-    padding:9px 18px;
-    font-size:.95rem;
-}
+    .favorites-button{
+        margin:0 auto 18px;
+        padding:9px 18px;
+        font-size:.95rem;
+    }
 
-    /* category heading */
     .category-note{
         margin:0 0 12px 0;
         font-size:.9rem;
     }
 
-    /* category cards */
     .card{
         padding:15px 12px;
         margin:10px 0;
@@ -158,16 +164,15 @@
         line-height:1.2;
     }
 
-    /* "More from Lanthano" block */
-   .more-section{
-    margin-top:30px;
-    margin-bottom:8px;
-}
+    .more-section{
+        margin-top:30px;
+        margin-bottom:8px;
+    }
 
-  .more-section h2{
-    font-size:clamp(1.15rem, 4.6vw, 1.55rem);
-    line-height:1.15;
-}
+    .more-section h2{
+        font-size:clamp(1.2rem, 5vw, 1.55rem);
+        line-height:1.15;
+    }
 
     .more-section p{
         margin-top:6px;
@@ -175,19 +180,17 @@
         line-height:1.45;
     }
 
-    /* music / merch box */
     .featured-links{
-    margin:10px auto 0;
-    padding:14px;
-    border-radius:14px;
-}
+        margin:10px auto 0;
+        padding:14px;
+        border-radius:14px;
+    }
 
     .feature-banner{
         margin:0 auto 14px;
         border-radius:8px;
     }
 
-    /* footer */
     .footer-links{
         margin-top:24px;
         margin-bottom:12px;
@@ -209,9 +212,13 @@
         font-size:.9rem;
     }
 
-
+    .top-button{
+        bottom:20px;
+    }
 }
 
+
+    
 
 
 
@@ -574,47 +581,6 @@ html{
 }
 
 
-@media (orientation:portrait){
-
-    .featured-card{
-
-    flex-direction:column;
-
-    height:520px;
-
-}
-
-    .featured-image-wrapper{
-
-        width:100%;
-
-        height:220px;
-
-    }
-
-    .featured-image,
-    .featured-pdf-icon{
-
-        width:100%;
-
-        height:100%;
-
-        object-fit:cover;
-
-        display:block;
-
-    }
-
-    .featured-title{
-
-        font-size:clamp(1.2rem,5vw,1.7rem);
-
-        white-space:normal;
-
-    }
-
-}
-
     
     .category-note{
     text-align:center;
@@ -756,14 +722,7 @@ html{
     height:100%;
 }
 
-@media (orientation:portrait){
 
-    .banner{
-        object-fit:cover;
-        object-position:center bottom;
-    }
-
-}
 
 @media (orientation:landscape){
 
