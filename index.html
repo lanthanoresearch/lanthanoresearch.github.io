@@ -9,26 +9,43 @@
     
 <title>Lanthano Research</title><style>
 
+@media (max-width: 700px){
 
+    /* stop sideways scrolling on mobile */
+    html,
+    body{
+        overflow-x:hidden;
+    }
 
-    @media (max-width: 700px){
+    /* mobile should scroll normally, not snap like a 2-panel landing page */
+    html{
+        scroll-snap-type:none;
+    }
 
-    /* overall section spacing */
+    .hero,
+    .research-section{
+        scroll-snap-align:none;
+    }
+
+    /* overall page spacing */
     section{
-        padding:28px 14px;
+        padding:28px 14px 34px;
     }
 
     /* intro area */
     .intro{
         max-width:100%;
         margin:0 auto 24px auto;
+        overflow:hidden;
     }
 
     .intro h2{
-        font-size:clamp(1.45rem, 5vw, 1.95rem);
+        font-size:clamp(1.2rem, 5.2vw, 1.6rem);
         line-height:1.15;
-        white-space:nowrap;
         margin-bottom:12px;
+        white-space:normal;
+        overflow-wrap:normal;
+        word-break:normal;
     }
 
     .intro p{
@@ -37,11 +54,15 @@
         margin:8px 0;
     }
 
-    /* stats box spacing */
+    /* stats */
     .archive-stats{
-        margin:18px auto 22px;
+        margin:18px 0 22px;
         padding:14px 10px;
         gap:10px;
+    }
+
+    .archive-stat{
+        min-width:72px;
     }
 
     .archive-stat-number{
@@ -52,7 +73,7 @@
         font-size:.72rem;
     }
 
-    /* featured section spacing */
+    /* featured section */
     .featured-section{
         margin:28px auto 24px;
     }
@@ -62,7 +83,6 @@
         font-size:.95rem;
     }
 
-    /* featured card itself */
     .featured-card{
         border-radius:14px;
     }
@@ -96,7 +116,7 @@
         margin-top:10px;
     }
 
-    /* search spacing */
+    /* search */
     .search-wrapper{
         margin:18px auto 0 auto;
     }
@@ -106,35 +126,35 @@
         font-size:16px;
     }
 
-    /* All Research button/card */
+    /* All Research */
     .all-research{
-        font-size:1.18rem;
-        margin-bottom:24px;
-        padding:18px 14px;
+        font-size:1.1rem;
+        margin-bottom:22px;
+        padding:16px 12px;
         border-radius:12px;
     }
 
     .all-research h2{
         margin:0;
-        font-size:1.45rem;
+        font-size:1.3rem;
     }
 
-    /* favorites button spacing */
+    /* favorites */
     .favorites-button{
-        margin:0 auto 28px;
+        margin:0 auto 24px;
         padding:9px 18px;
         font-size:.95rem;
     }
 
     /* category heading */
     .category-note{
-        margin:0 0 14px 0;
-        font-size:.92rem;
+        margin:0 0 12px 0;
+        font-size:.9rem;
     }
 
     /* category cards */
     .card{
-        padding:16px 14px;
+        padding:15px 12px;
         margin:10px 0;
         border-radius:10px;
         font-size:1rem;
@@ -142,35 +162,30 @@
 
     .card h2{
         margin:0;
-        font-size:1.2rem;
+        font-size:1.1rem;
         line-height:1.2;
     }
 
-    /* spacing before "More from Lanthano" area */
-    .section-break{
-        margin:42px 0 24px;
-        font-size:18px;
-        letter-spacing:8px;
-    }
-
+    /* "More from Lanthano" block */
     .more-section{
-        margin-top:40px;
-        margin-bottom:18px;
+        margin-top:38px;
+        margin-bottom:14px;
     }
 
     .more-section h2{
-        font-size:1.55rem;
+        font-size:1.18rem;
+        line-height:1.2;
     }
 
     .more-section p{
-        margin-top:8px;
-        font-size:.92rem;
+        margin-top:6px;
+        font-size:.88rem;
         line-height:1.45;
     }
 
-    /* music / merch banner section */
+    /* music / merch box */
     .featured-links{
-        margin:26px auto 0;
+        margin:18px auto 0;
         padding:14px;
         border-radius:14px;
     }
@@ -180,9 +195,9 @@
         border-radius:8px;
     }
 
-    /* footer links spacing */
+    /* footer */
     .footer-links{
-        margin-top:28px;
+        margin-top:24px;
         margin-bottom:12px;
     }
 
@@ -192,25 +207,20 @@
     }
 
     .share-button{
-        margin:20px auto 0;
+        margin:18px auto 0;
         padding:10px 18px;
         font-size:.95rem;
     }
 
     footer{
-        padding:26px 16px 34px;
+        padding:24px 16px 30px;
         font-size:.9rem;
     }
 
-    /* top arrow button slightly smaller on phone */
-    .top-button{
-        width:44px;
-        height:44px;
-        font-size:20px;
-        bottom:16px;
-    }
 
 }
+
+
 
 
 
