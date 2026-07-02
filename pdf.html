@@ -32,7 +32,15 @@ html,body{
     overflow:hidden;
 }
  
- 
+  .page{
+    position:relative;
+    margin:0 auto 20px;
+    box-shadow:0 0 14px rgba(0,0,0,.4);
+    background:white;
+}
+  .pageCanvas{
+    display:block;
+}
 
 .title-featured{
 
@@ -364,108 +372,79 @@ button:hover{background:#3a3a3a;cursor:pointer}
 
 
 
-
-
-
-  .page{
-    position: relative;
-    margin: 0 auto 20px;
-    box-shadow: 0 0 14px rgba(0,0,0,.4);
-    background: white;
-    overflow: hidden;
+ .textLayer{
+    position:absolute;
+    inset:0;
+    overflow:hidden;
+    line-height:1;
+    cursor:text;
+    user-select:text;
 }
-
-.pageCanvas{
-    position: absolute;
-    inset: 0;
-    display: block;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-}
-
-.textLayer{
-    position: absolute;
-    inset: 0;
-    overflow: hidden;
-    line-height: 1;
-    cursor: text;
-    user-select: text;
-    transform-origin: 0 0;
-    -webkit-text-size-adjust: none;
-    text-size-adjust: none;
-    font-kerning: none;
-}
-
 .textLayer span,
-.textLayer br{
-    position: absolute;
-    color: transparent;
-    white-space: pre;
-    cursor: text;
-    transform-origin: 0 0;
+.textLayer br {
+  color: transparent;
+  position: absolute;
+  white-space: pre;
+  cursor: text;
+  transform-origin: 0 0;
 }
 
 .textLayer span.markedContent {
-    top: 0;
-    height: 0;
+  top: 0;
+  height: 0;
 }
 
 .textLayer .highlight {
-    margin: -1px;
-    padding: 1px;
-    background-color: rgba(180, 0, 170, 0.2);
-    border-radius: 4px;
+  margin: -1px;
+  padding: 1px;
+  background-color: rgba(180, 0, 170, 0.2);
+  border-radius: 4px;
 }
 
 .textLayer .highlight.appended {
-    position: initial;
+  position: initial;
 }
 
 .textLayer .highlight.begin {
-    border-radius: 4px 0 0 4px;
+  border-radius: 4px 0 0 4px;
 }
 
 .textLayer .highlight.end {
-    border-radius: 0 4px 4px 0;
+  border-radius: 0 4px 4px 0;
 }
 
 .textLayer .highlight.middle {
-    border-radius: 0;
+  border-radius: 0;
 }
 
 .textLayer .highlight.selected {
-    background-color: rgba(0, 100, 255, 0.35);
+  background-color: rgba(0, 100, 255, 0.35);
 }
 
 .textLayer ::selection {
-    background: rgba(0, 120, 255, 0.35);
+  background: rgba(0, 120, 255, 0.35);
 }
 
 .textLayer br::selection {
-    background: transparent;
+  background: transparent;
 }
 
 .textLayer .endOfContent {
-    display: block;
-    position: absolute;
-    left: 0;
-    top: 100%;
-    right: 0;
-    bottom: 0;
-    z-index: -1;
-    cursor: default;
-    user-select: none;
+  display: block;
+  position: absolute;
+  left: 0;
+  top: 100%;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+  cursor: default;
+  user-select: none;
 }
 
 .textLayer .endOfContent.active {
-    top: 0;
+  top: 0;
 }
 
-
-
-
-  
 
   
 
