@@ -853,6 +853,75 @@ mark{
     border-radius:8px;
 }
 
+
+
+
+
+
+    .archive-stats{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:14px;
+    margin:28px 0 38px;
+    padding:16px 20px;
+    background:#181818;
+    border:1px solid #2b2b2b;
+    border-radius:14px;
+}
+
+.archive-stat{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    min-width:90px;
+}
+
+.archive-stat-number{
+    font-size:1.6rem;
+    font-weight:bold;
+    color:#fff;
+    line-height:1.1;
+}
+
+.archive-stat-label{
+    font-size:.9rem;
+    color:#999;
+    margin-top:4px;
+    letter-spacing:.4px;
+    text-transform:uppercase;
+}
+
+.archive-stat-divider{
+    color:#555;
+    font-size:1.2rem;
+    user-select:none;
+}
+
+@media (max-width:700px){
+    .archive-stats{
+        gap:10px;
+        padding:14px 12px;
+    }
+
+    .archive-stat{
+        min-width:72px;
+    }
+
+    .archive-stat-number{
+        font-size:1.35rem;
+    }
+
+    .archive-stat-label{
+        font-size:.78rem;
+    }
+}
+
+
+
+
+    
 .search-title{
 
     font-weight:bold;
@@ -1080,6 +1149,27 @@ Lanthano is an independent research project exploring controversial subjects, al
 Every idea should be judged by its evidence, not by its popularity.
 </p>
 
+<div id="archiveStats" class="archive-stats">
+    <div class="archive-stat">
+        <span id="statPapers" class="archive-stat-number">—</span>
+        <span class="archive-stat-label">Papers</span>
+    </div>
+
+    <div class="archive-stat-divider">•</div>
+
+    <div class="archive-stat">
+        <span id="statPages" class="archive-stat-number">—</span>
+        <span class="archive-stat-label">Pages</span>
+    </div>
+
+    <div class="archive-stat-divider">•</div>
+
+    <div class="archive-stat">
+        <span id="statImages" class="archive-stat-number">—</span>
+        <span class="archive-stat-label">Images</span>
+    </div>
+</div>
+    
 <div class="featured-section">
 
     <div class="featured-label">
@@ -1506,6 +1596,26 @@ Object.entries(descriptions).forEach(([key, paper]) => {
 
 });
 
+
+
+const paperCount = Object.keys(descriptions).length;
+
+const pageCount = Object.values(descriptions).reduce((total, paper) => {
+    return total + (Number(paper.pages) || 0);
+}, 0);
+
+const imageCount = Object.values(descriptions).reduce((total, paper) => {
+    return total + getVisibleImages(paper.images).length;
+}, 0);
+
+document.getElementById("statPapers").textContent = paperCount;
+document.getElementById("statPages").textContent = pageCount;
+document.getElementById("statImages").textContent = imageCount;
+
+
+    
+
+    
 
 featuredPapers =
 
