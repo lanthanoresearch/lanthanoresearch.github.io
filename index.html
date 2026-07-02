@@ -1475,6 +1475,12 @@ let touchEndX = 0;
 
 let swiping = false;
 
+    function getVisibleImages(images){
+    return (images || []).filter(image =>
+        typeof image === "string" &&
+        !image.trim().startsWith("#$")
+    );
+}
     
     const searchBox =
     document.getElementById("searchBox");
@@ -1518,26 +1524,20 @@ a.featuredOrder-b.featuredOrder
 // Preload every featured image
 featuredPapers.forEach(paper => {
 
+    const visibleImages = getVisibleImages(paper.images);
     const index = Number(paper.featuredImage) - 1;
 
     if(
-
-        Array.isArray(paper.images) &&
-
         index >= 0 &&
-
-        index < paper.images.length
-
+        index < visibleImages.length
     ){
-
         const img = new Image();
-
-        img.src = paper.images[index];
-
+        img.src = visibleImages[index];
     }
 
 });
 
+    
 renderFeatured();
 
 if(featuredPapers.length > 1){
@@ -1582,47 +1582,41 @@ pdfFuse = new Fuse(pdfRecords,{
 
     const imageRecords = [];
 
-    Object.values(descriptions).forEach(paper => {
+  Object.values(descriptions).forEach(paper => {
 
-        if(!paper.images) return;
+    const visibleImages = getVisibleImages(paper.images);
+    if(!visibleImages.length) return;
 
-        paper.images.forEach(image => {
+    visibleImages.forEach(image => {
 
-            imageRecords.push({
-
-    imageFile:image,
-
-   imageTitle:image
-    .replace(/\.[^/.]+$/,"")
-    .replace(/[_-]/g," "),
-
-imageType:image
-    .split(".")
-    .pop()
-    .toUpperCase(),
-                
-    paperTitle:paper.title,
-
-    paperUrl:paper.url,
-
-    warning: paper.warning,
-
-    searchText:
-        (
-            paper.title + " " +
-            (paper.description || "") + " " +
-            (
-                searchIndex.find(
-                    p => p.title === paper.title
-                )?.searchText || ""
-            )
-        )
-
-});
+        imageRecords.push({
+            imageFile:image,
+            imageTitle:image
+                .replace(/\.[^/.]+$/,"")
+                .replace(/[_-]/g," "),
+            imageType:image
+                .split(".")
+                .pop()
+                .toUpperCase(),
+            paperTitle:paper.title,
+            paperUrl:paper.url,
+            warning: paper.warning,
+            searchText:
+                (
+                    paper.title + " " +
+                    (paper.description || "") + " " +
+                    (
+                        searchIndex.find(
+                            p => p.title === paper.title
+                        )?.searchText || ""
+                    )
+                )
         });
 
     });
 
+});
+    
    imageFuse = new Fuse(imageRecords,{
     includeMatches:true,
     threshold:0.35,
@@ -2386,43 +2380,32 @@ document
     const paper =
     featuredPapers[featuredIndex];
 
+const visibleImages = getVisibleImages(paper.images);
 const index = Number(paper.featuredImage) - 1;
 
 const hasImage =
-
-    Array.isArray(paper.images) &&
-    paper.images.length &&
+    visibleImages.length &&
     index >= 0 &&
-    index < paper.images.length;
+    index < visibleImages.length;
 
 const media = hasImage
-
 ?
-
 `
 <img
-
 class="featured-image"
-
-src="${paper.images[index]}"
-
+src="${visibleImages[index]}"
 alt="${paper.title}"
-
 onerror="this.outerHTML='<div class=&quot;featured-pdf-icon&quot;>📄</div>';">
-
 `
-
 :
-    `
+`
+<div class="featured-pdf-icon">
+    📄
+</div>
+`;
 
-    <div class="featured-pdf-icon">
 
-        📄
-
-    </div>
-
-    `;
-
+        
     document
 
     .getElementById(
@@ -2665,46 +2648,37 @@ function nextFeatured(){
     }
 
     const paper = featuredPapers[next];
+const visibleImages = getVisibleImages(paper.images);
 
-    const index =
-        Number(paper.featuredImage) - 1;
+const index =
+    Number(paper.featuredImage) - 1;
 
-    if(
-        Array.isArray(paper.images) &&
-        index >= 0 &&
-        index < paper.images.length
-    ){
+if(
+    index >= 0 &&
+    index < visibleImages.length
+){
+    const img = new Image();
 
-        const img = new Image();
-
-        img.onload = ()=>{
-
-            featuredIndex = next;
-
-            renderFeatured();
-
-        };
-
-        img.onerror = ()=>{
-
-            featuredIndex = next;
-
-            renderFeatured();
-
-        };
-
-        img.src =
-            paper.images[index];
-
-    }
-    else{
-
+    img.onload = ()=>{
         featuredIndex = next;
-
         renderFeatured();
+    };
 
-    }
+    img.onerror = ()=>{
+        featuredIndex = next;
+        renderFeatured();
+    };
 
+    img.src = visibleImages[index];
+}
+else{
+    featuredIndex = next;
+    renderFeatured();
+}
+
+
+
+    
 }
 
 
