@@ -1,27 +1,56 @@
 <!DOCTYPE html><html>
-
 <head>
-    <link rel="icon" type="image/png" href="file_000000000c40722f92b1fe6758cb4855.png">
+<link rel="icon" type="image/png" href="file_000000000c40722f92b1fe6758cb4855.png">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link rel="manifest" href="manifest.json">
-
 <meta name="theme-color" content="#111111">
 
 <title>Lanthano Research</title><style>
 
-body{margin:0;background:#111;color:#eee;font-family,sans-serif;}
+body{
+margin:0;
+background:#111;
+color:#eee;
+font-family:Arial,sans-serif;
+}
 
-#warningBox{position;top:0;left:0;width:100%;height:100%;background(0,0,0,0.92);display;justify-content;align-items;z-index:9999;padding:10px;box-sizing;}html{scroll-behavior;}
+#warningBox{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.92);
+display:none;
+justify-content:center;
+align-items:center;
+z-index:9999;
+padding:10px;
+box-sizing:border-box;
+}
+html{
+scroll-behavior:smooth;
+}
 
 
 
 /* ---------- Featured Research ---------- */
 
-.featured-section{max-width:900px;margin:45px auto 60px;}
+.featured-section{
+max-width:900px;
+margin:45px auto 60px;
+}
 
-.featured-label{text-align;color:#888;font-size:1em;margin-bottom:15px;letter-spacing:1px;}
+.featured-label{
+text-align:center;
+color:#888;
+font-size:1em;
+margin-bottom:15px;
+letter-spacing:1px;
+}
+
 
 
 
@@ -57,6 +86,7 @@ letter-spacing:.5px;
 
 }
 
+
 .featured-badge{
 
 position:absolute;
@@ -69,11 +99,22 @@ z-index:45;
 
 }
 
-.featured-card{display;background:#1d1d1d;border:1px solid #333;border-radius:16px;overflow;cursor;transition:.2s ease;
+
+.featured-card{
+display:flex;
+background:#1d1d1d;
+border:1px solid #333;
+border-radius:16px;
+overflow:hidden;
+cursor:pointer;
+transition:.2s ease;
 
 height:260px;
+}
+.featured-card:hover{
+background:#252525;
+}
 
-}.featured-card
 
 .favorites-button{
 
@@ -101,7 +142,7 @@ transition:.2s;
 
 }
 
-.favorites-button{
+.favorites-button:hover{
 
 background:#2c2c2c;
 
@@ -164,6 +205,7 @@ z-index:500;
 
 
 
+
 .featured-pdf-icon{
 
 width:100%;
@@ -211,6 +253,7 @@ margin:0 0 18px 0;
 
 }
 
+
 .featured-description{
 
 flex:1;
@@ -227,7 +270,8 @@ align-items:center;
 
 justify-content:center;
 
-}.favorite-star{
+}
+.favorite-star{
 
 position:absolute;
 
@@ -266,11 +310,12 @@ text-shadow:0 0 10px rgba(255,215,0,.6);
 
 }
 
-.favorite-star{
+.favorite-star:hover{
 
 transform:scale(1.12);
 
-}.featured-read{
+}
+.featured-read{
 
 margin-top:auto;
 
@@ -284,11 +329,23 @@ text-align:center;
 
 }
 
-.featured-dots{text-align;margin-top:15px;}
+.featured-dots{
+text-align:center;
+margin-top:15px;
+}
 
-.featured-dot{width:10px;height:10px;border-radius:50%;background:#444;display;margin:0 5px;}
+.featured-dot{
+width:10px;
+height:10px;
+border-radius:50%;
+background:#444;
+display:inline-block;
+margin:0 5px;
+}
 
-.featured-dot.active{background;}
+.featured-dot.active{
+background:white;
+}
 
 
 
@@ -306,7 +363,8 @@ flex-shrink:0;
 
 }
 
-@media (orientation){
+
+@media (orientation:portrait){
 
 .featured-card{
 
@@ -318,34 +376,35 @@ height:520px;
 
 .featured-image-wrapper{
 
-    width:100%;
+width:100%;
 
-    height:220px;
+height:220px;
 
 }
 
 .featured-image,
 .featured-pdf-icon{
 
-    width:100%;
+width:100%;
 
-    height:100%;
+height:100%;
 
-    object-fit:cover;
+object-fit:cover;
 
-    display:block;
+display:block;
 
 }
 
 .featured-title{
 
-    font-size:clamp(1.2rem,5vw,1.7rem);
+font-size:clamp(1.2rem,5vw,1.7rem);
 
-    white-space:normal;
+white-space:normal;
+
+}
 
 }
 
-}
 
 .category-note{
 text-align:center;
@@ -361,10 +420,14 @@ padding:30px;
 background:#181818;
 border:1px solid #2b2b2b;
 border-radius:16px;
-
 }
 
-.feature-banner{display;width:100%;max-width:500px;height;aspect-ratio:2 / 1;
+.feature-banner{
+display:block;
+width:100%;
+max-width:500px;
+height:auto;
+aspect-ratio:2 / 1;
 
 object-fit:cover;
 object-position:center;
@@ -372,29 +435,50 @@ object-position:center;
 margin:0 auto 25px;
 border-radius:10px;
 transition:transform .2s ease;
-
 }
 
-.feature-banner{transform(1.02);}
+.feature-banner:hover{
+transform:scale(1.02);
+}
 
-.featured-links a .feature-banner{margin-bottom:0;}
+.featured-links a:last-child .feature-banner{
+margin-bottom:0;
+}
+
 
 .more-section{
 margin-top:100px;      /* Large gap above ads */
 margin-bottom:30px;
 text-align:center;
-
 }
 
-.more-section h2{margin:0;font-size:2em;color:#fff;}
+.more-section h2{
+margin:0;
+font-size:2em;
+color:#fff;
+}
 
-.more-section p{margin-top:10px;color:#888;font-size:1em;}
+.more-section p{
+margin-top:10px;
+color:#888;
+font-size:1em;
+}
 
 
 
 
 
-.warningContent{background:#1d1d1d;color:#eee;width:100%;max-width:600px;padding:20px;border-radius:12px;text-align;max-height:90vh;overflow-y;}
+.warningContent{
+background:#1d1d1d;
+color:#eee;
+width:100%;
+max-width:600px;
+padding:20px;
+border-radius:12px;
+text-align:left;
+max-height:90vh;
+overflow-y:auto;
+}
 
 .search-result{
 
@@ -402,41 +486,114 @@ position:relative;
 
 }
 
-.warningContent h2{text-align;margin:0 0 10px 0;font-size:1.4em;}
+.warningContent h2{
+text-align:center;
+margin:0 0 10px 0;
+font-size:1.4em;
+}
 
-.warningContent p{line-height:1.4;margin:10px 0;font-size:0.95em;}html{scroll-behavior;scroll-snap-type mandatory;}
+.warningContent p{
+line-height:1.4;
+margin:10px 0;
+font-size:0.95em;
+}
+html{
+scroll-behavior:smooth;
+scroll-snap-type:y mandatory;
+}
 
-.hero{scroll-snap-align;height:100svh;position;}
+.hero{
+scroll-snap-align:start;
+height:100svh;
+position:relative;
+}
 
-.research-section{scroll-snap-align;}.warningContent button{display;width:100%;margin-top:15px;padding:12px;background:#333;color;border;border-radius:6px;cursor;font-size:16px;}
+.research-section{
+scroll-snap-align:start;
+}
+.warningContent button{
+display:block;
+width:100%;
+margin-top:15px;
+padding:12px;
+background:#333;
+color:white;
+border:none;
+border-radius:6px;
+cursor:pointer;
+font-size:16px;
+}
 
-.warningContent button.search-result > div{text-align;display;flex-direction;justify-content;}.banner{display;width:100%;height:100vh;object-fit;}
-
-.banner{display;width:100%;height:100%;}
-
-@media (orientation){
+.warningContent button:hover{
+background:#444;
+}
+.search-result > div:last-child{
+text-align:left;
+display:flex;
+flex-direction:column;
+justify-content:center;
+}
+.banner{
+display:block;
+width:100%;
+height:100vh;
+object-fit:cover;
+}
 
 .banner{
-    object-fit:cover;
-    object-position:center bottom;
+display:block;
+width:100%;
+height:100%;
 }
 
-}
-
-@media (orientation){
+@media (orientation:portrait){
 
 .banner{
-    object-fit:cover;
-    object-position:left 65%;
+object-fit:cover;
+object-position:center bottom;
 }
 
 }
 
-section{max-width:1000px;margin;padding:40px 20px;}
+@media (orientation:landscape){
 
-a,a,a,a,a{text-decoration;color;}.share-button{display;margin:30px auto;padding:12px 24px;background:#1d1d1d;color:#aaa;border;border-radius:10px;cursor;font-size:1em;}
+.banner{
+object-fit:cover;
+object-position:left 65%;
+}
 
-.share-button
+}
+
+section{
+max-width:1000px;
+margin:auto;
+padding:40px 20px;
+}
+
+a,
+a:link,
+a:visited,
+a:hover,
+a:active{
+text-decoration:none;
+color:inherit;
+}
+.share-button{
+display:block;
+margin:30px auto;
+padding:12px 24px;
+background:#1d1d1d;
+color:#aaa;
+border:none;
+border-radius:10px;
+cursor:pointer;
+font-size:1em;
+}
+
+.share-button:hover{
+background:#262626;
+color:#fff;
+}
 
 
 
@@ -470,7 +627,7 @@ transition:.2s;
 
 
 
-.featured-arrow{
+.featured-arrow:hover{
 
 background:rgba(0,0,0,.8);
 
@@ -508,28 +665,141 @@ transform:translate(2px,-2px);
 
 }
 
-.card{background:#1d1d1d;padding:20px;margin:15px 0;border-radius:10px;text-align;font-size:1.2em;cursor;}.all-research{font-size:1.5em;margin-bottom:50px;border:2px solid #444;}.card.section-break{display;justify-content;align-items;gap:12px;color:#444;font-size:26px;margin:90px 0 50px;user-select;}
 
-footer{text-align;color:#777;padding:40px;border-top:1px solid #222;}.footer-links{text-align;margin-top:40px;margin-bottom:15px;}
+.card{
+background:#1d1d1d;
+padding:20px;
+margin:15px 0;
+border-radius:10px;
+text-align:center;
+font-size:1.2em;
+cursor:pointer;
+}
+.all-research{
+font-size:1.5em;
+margin-bottom:50px;
+border:2px solid #444;
+}
+.card:hover{
+background:#262626;
+}
+.section-break{
+display:flex;
+justify-content:center;
+align-items:center;
+gap:12px;
+color:#444;
+font-size:26px;
+margin:90px 0 50px;
+user-select:none;
+}
 
-.footer-links a{color:#aaa;text-decoration;margin:0 15px;font-size:1em;}
+footer{
+text-align:center;
+color:#777;
+padding:40px;
+border-top:1px solid #222;
+}
+.footer-links{
+text-align:center;
+margin-top:40px;
+margin-bottom:15px;
+}
 
-.footer-links a
+.footer-links a{
+color:#aaa;
+text-decoration:none;
+margin:0 15px;
+font-size:1em;
+}
+
+.footer-links a:hover{
+color:#fff;
+}
 
 .search-empty{
 padding:20px;
 color:#888;
 text-align:center;
-
 }
 
-.intro{text-align;max-width:800px;margin:0 auto 40px auto;line-height:1.8;}
 
-.intro h2{font-size:2em;margin-bottom:15px;}mark{background:#555;color;padding:0 2px;border-radius:2px;}.intro p{color:#ccc;font-size:1.05em;margin:10px 0;}.top-button{position;bottom:20px;left:50%;transform(-50%);width:50px;height:50px;background:#2a2a2a;color;text-decoration;border-radius:50%;display;align-items;justify-content;font-size:24px;z-index:1000;opacity:0.6;}.search-result.selected{background:#333;}.search-section-title{padding:10px 15px;background:#181818;color:#aaa;font-size:.9em;font-weight;border-bottom:1px solid #333;}.top-button{opacity:.6;background:#2a2a2a;}.search-wrapper{position;max-width:800px;margin:30px auto 0 auto;}
+.intro{
+text-align:center;
+max-width:800px;
+margin:0 auto 40px auto;
+line-height:1.8;
+}
 
-#searchBox{width:100%;box-sizing;padding:16px;background:#1d1d1d;color:#fff;border:1px solid #333;border-radius:10px;font-size:18px;}
+.intro h2{
+font-size:2em;
+margin-bottom:15px;
+}
+mark{
+background:#555;
+color:white;
+padding:0 2px;
+border-radius:2px;
+}
+.intro p{
+color:#ccc;
+font-size:1.05em;
+margin:10px 0;
+}
+.top-button{
+position:fixed;
+bottom:20px;
+left:50%;
+transform:translateX(-50%);
+width:50px;
+height:50px;
+background:#2a2a2a;
+color:white;
+text-decoration:none;
+border-radius:50%;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:24px;
+z-index:1000;
+opacity:0.6;
+}
+.search-result.selected{
+background:#333;
+}
+.search-section-title{
+padding:10px 15px;
+background:#181818;
+color:#aaa;
+font-size:.9em;
+font-weight:bold;
+border-bottom:1px solid #333;
+}
+.top-button:hover{
+opacity:.6;
+background:#2a2a2a;
+}
+.search-wrapper{
+position:relative;
+max-width:800px;
+margin:30px auto 0 auto;
+}
 
-#searchBox{outline;border-color:#666;}
+#searchBox{
+width:100%;
+box-sizing:border-box;
+padding:16px;
+background:#1d1d1d;
+color:#fff;
+border:1px solid #333;
+border-radius:10px;
+font-size:18px;
+}
+
+#searchBox:focus{
+outline:none;
+border-color:#666;
+}
 
 #searchResults{
 
@@ -556,8 +826,7 @@ overflow-y:auto;
 z-index:99999;
 
 box-shadow:
-    0 10px 40px rgba(0,0,0,.6);
-
+0 10px 40px rgba(0,0,0,.6);
 }
 
 .search-result{
@@ -573,12 +842,19 @@ border-bottom:1px solid #333;
 color:white;
 
 text-decoration:none;
-
 }
 
-.search-result
+.search-result:hover{
+background:#262626;
+}
 
-.search-thumb{width:70px;height:70px;object-fit;border-radius:8px;}
+.search-thumb{
+width:70px;
+height:70px;
+object-fit:cover;
+border-radius:8px;
+}
+
 
 
 
@@ -595,31 +871,53 @@ padding:16px 20px;
 background:#181818;
 border:1px solid #2b2b2b;
 border-radius:14px;
-
 }
 
-.archive-stat{display;flex-direction;align-items;min-width:90px;}
-
-.archive-stat-number{font-size:1.6rem;font-weight;color:#fff;line-height:1.1;}
-
-.archive-stat-label{font-size:.9rem;color:#999;margin-top:4px;letter-spacing:.4px;text-transform;}
-
-.archive-stat-divider{color:#555;font-size:1.2rem;user-select;}
-
-@media (max-width:700px){.archive-stats{gap:10px;padding:14px 12px;}
-
 .archive-stat{
-    min-width:72px;
+display:flex;
+flex-direction:column;
+align-items:center;
+min-width:90px;
 }
 
 .archive-stat-number{
-    font-size:1.35rem;
+font-size:1.6rem;
+font-weight:bold;
+color:#fff;
+line-height:1.1;
 }
 
 .archive-stat-label{
-    font-size:.78rem;
+font-size:.9rem;
+color:#999;
+margin-top:4px;
+letter-spacing:.4px;
+text-transform:uppercase;
 }
 
+.archive-stat-divider{
+color:#555;
+font-size:1.2rem;
+user-select:none;
+}
+
+@media (max-width:700px){
+.archive-stats{
+gap:10px;
+padding:14px 12px;
+}
+
+.archive-stat{
+min-width:72px;
+}
+
+.archive-stat-number{
+font-size:1.35rem;
+}
+
+.archive-stat-label{
+font-size:.78rem;
+}
 }
 
 
@@ -638,7 +936,11 @@ word-break:break-word;
 
 }
 
-.search-source{color:#888;font-size:.85em;}#imageWarningOverlay{
+.search-source{
+color:#888;
+font-size:.85em;
+}
+#imageWarningOverlay{
 
 display:none;
 
@@ -708,7 +1010,8 @@ border-radius:8px;
 
 cursor:pointer;
 
-}.music-popup-overlay{
+}
+.music-popup-overlay{
 
 display:none;
 
@@ -778,15 +1081,17 @@ font-size:16px;
 
 }
 
-.music-popup button{
+.music-popup button:hover{
 
 background:#444;
 
-}.music-cancel-button{margin-top:30px;}
+}
+.music-cancel-button{
+margin-top:30px;
+}
 
 .show-warning #warningBox{
 display:flex;
-
 }
 
 
@@ -795,101 +1100,106 @@ display:flex;
 
 @media (max-width: 700px) {
 
-/* tighten overall section spacing on phones */
-section{
-    padding:28px 14px;
+    /* tighten overall section spacing on phones */
+    section{
+        padding:28px 14px;
+    }
+
+    .intro{
+        margin:0 auto 26px auto;
+    }
+
+    .featured-section{
+        margin:28px auto 34px;
+    }
+
+    .search-wrapper{
+        margin:20px auto 0 auto;
+    }
+
+    .category-note{
+        margin:14px 0 12px;
+        font-size:.95em;
+    }
+
+    /* make category buttons smaller */
+    .card{
+        padding:13px 14px;
+        margin:10px 0;
+        border-radius:9px;
+        font-size:1rem;
+    }
+
+    .card h2{
+        margin:0;
+        font-size:1.08rem;
+        line-height:1.2;
+    }
+
+    /* keep All Research a little bigger than category buttons */
+    .all-research{
+        padding:16px 14px;
+        margin-bottom:22px;
+        font-size:1.12rem;
+    }
+
+    .all-research h2{
+        font-size:1.3rem;
+    }
+
+    /* tighten favorites button spacing too */
+    .favorites-button{
+        margin:12px auto 26px;
+        padding:9px 18px;
+        font-size:.95rem;
+    }
+
+    /* reduce spacing before "More from Lanthano" */
+    .more-section{
+        margin-top:48px;
+        margin-bottom:20px;
+    }
+
+    .more-section h2{
+        font-size:1.5rem;
+    }
+
+    .more-section p{
+        margin-top:8px;
+        font-size:.95rem;
+    }
+
+    .featured-links{
+        margin:28px auto;
+        padding:16px;
+        border-radius:12px;
+    }
+
+    .feature-banner{
+        margin:0 auto 16px;
+        border-radius:8px;
+    }
+
+    .footer-links{
+        margin-top:24px;
+        margin-bottom:10px;
+    }
+
+    footer{
+        padding:28px 16px;
+    }
 }
 
-.intro{
-    margin:0 auto 26px auto;
+
+    
+</style></head><body>
+<script>
+if(localStorage.getItem("warningAccepted") !== "yes"){
+document.documentElement.classList.add("show-warning");
 }
-
-.featured-section{
-    margin:28px auto 34px;
-}
-
-.search-wrapper{
-    margin:20px auto 0 auto;
-}
-
-.category-note{
-    margin:14px 0 12px;
-    font-size:.95em;
-}
-
-/* make category buttons smaller */
-.card{
-    padding:13px 14px;
-    margin:10px 0;
-    border-radius:9px;
-    font-size:1rem;
-}
-
-.card h2{
-    margin:0;
-    font-size:1.08rem;
-    line-height:1.2;
-}
-
-/* keep All Research a little bigger than category buttons */
-.all-research{
-    padding:16px 14px;
-    margin-bottom:22px;
-    font-size:1.12rem;
-}
-
-.all-research h2{
-    font-size:1.3rem;
-}
-
-/* tighten favorites button spacing too */
-.favorites-button{
-    margin:12px auto 26px;
-    padding:9px 18px;
-    font-size:.95rem;
-}
-
-/* reduce spacing before "More from Lanthano" */
-.more-section{
-    margin-top:48px;
-    margin-bottom:20px;
-}
-
-.more-section h2{
-    font-size:1.5rem;
-}
-
-.more-section p{
-    margin-top:8px;
-    font-size:.95rem;
-}
-
-.featured-links{
-    margin:28px auto;
-    padding:16px;
-    border-radius:12px;
-}
-
-.feature-banner{
-    margin:0 auto 16px;
-    border-radius:8px;
-}
-
-.footer-links{
-    margin-top:24px;
-    margin-bottom:10px;
-}
-
-footer{
-    padding:28px 16px;
-}
-
-}
-
-
-
-</style></head><body><script>if(localStorage.getItem("warningAccepted") !== "yes"){document.documentElement.classList.add("show-warning");}</script><div id="warningBox"><div class="warningContent"><h2>CONTENT WARNING</h2><p>This website contains graphic material that may include depictions of injury, death, violence, accidents, crime scenes, medical imagery, historical atrocities, and other disturbing content.
-
+</script>
+<div id="warningBox"><div class="warningContent"><h2>CONTENT WARNING</h2><p>
+This website contains graphic material that may include depictions of injury, death, violence, accidents, crime scenes, medical imagery, historical atrocities, and other disturbing content.
 </p><p>
 This material is provided for research, educational, historical, journalistic, and documentary purposes. The content is not intended to shock, glorify violence, or encourage harmful behavior.
 </p><p>
@@ -905,17 +1215,17 @@ I Understand, Proceed
 <picture>
 
 <source
-    media="(orientation: portrait)"
-    srcset="file_0000000007f472099da6ef16a4a6ed95.png">
+media="(orientation: portrait)"
+srcset="file_0000000007f472099da6ef16a4a6ed95.png">
 
 <source
-    media="(orientation: landscape)"
-    srcset="file_00000000ecb4722f9273c2a87dca3a4c.png">
+media="(orientation: landscape)"
+srcset="file_00000000ecb4722f9273c2a87dca3a4c.png">
 
 <img
-    class="banner"
-    src="file_00000000ecb4722f9273c2a87dca3a4c.png"
-    alt="Lanthano Research">
+class="banner"
+src="file_00000000ecb4722f9273c2a87dca3a4c.png"
+alt="Lanthano Research">
 
 </picture>
 
@@ -926,6 +1236,7 @@ I Understand, Proceed
 </div>
 
 <section id="research" class="research-section">
+
 
 <div class="intro">
 
@@ -940,37 +1251,36 @@ Every idea should be judged by its evidence, not by its popularity.
 </p>
 
 <div id="archiveStats" class="archive-stats">
-    <div class="archive-stat">
-        <span id="statPapers" class="archive-stat-number">—</span>
-        <span class="archive-stat-label">Papers</span>
-    </div>
-
-<div class="archive-stat-divider">•</div>
-
 <div class="archive-stat">
-    <span id="statPages" class="archive-stat-number">—</span>
-    <span class="archive-stat-label">Pages</span>
+<span id="statPapers" class="archive-stat-number">—</span>
+<span class="archive-stat-label">Papers</span>
 </div>
 
 <div class="archive-stat-divider">•</div>
 
 <div class="archive-stat">
-    <span id="statImages" class="archive-stat-number">—</span>
-    <span class="archive-stat-label">Images</span>
+<span id="statPages" class="archive-stat-number">—</span>
+<span class="archive-stat-label">Pages</span>
 </div>
 
+<div class="archive-stat-divider">•</div>
+
+<div class="archive-stat">
+<span id="statImages" class="archive-stat-number">—</span>
+<span class="archive-stat-label">Images</span>
+</div>
 </div>
 
 <div class="featured-section">
 
 <div class="featured-label">
-    Featured Research
+Featured Research
 </div>
 
 <div id="featuredContainer"></div>
 
 <div id="featuredDots"
-     class="featured-dots"></div>
+class="featured-dots"></div>
 
 </div>
 
@@ -980,9 +1290,13 @@ Every idea should be judged by its evidence, not by its popularity.
 
 
 
-<inputtype="text"id="searchBox"placeholder="Loading search index..."disabled
 
-
+<input
+type="text"
+id="searchBox"
+placeholder="Loading search index..."
+disabled
+>
 
 <div id="searchResults"></div>
 
@@ -992,51 +1306,53 @@ Every idea should be judged by its evidence, not by its popularity.
 
 <a href="category.html?category=all">
 
+
 <div class="card all-research">
 <h2>All Research</h2>
 </div>
 </a>
 
+
 <a
 href="category.html?category=favorites"
 class="favorites-button"
-
-
-
+>
 ⭐ Favorites
-
 </a>
 
+
 <p class="category-note">
+Browse Research by Category
+</p>
 
-Browse Research by Category</p>
 
-   <div id="categoryButtons"></div> 
+<div id="categoryButtons"></div> 
 
-   <div class="more-section">
-    <h2>More from Lanthano</h2>
-    <p>Mainstream releases, restricted music, and merchandise.</p>
+
+<div class="more-section">
+<h2>More from Lanthano</h2>
+<p>Mainstream releases, restricted music, and merchandise.</p>
 </div>
+
 
 <div class="featured-links">
 
 <a href="music.html">
-    <img class="feature-banner"
-         src="file_0000000053d0722fa786ebce8df37449.png"
-         alt="Lanthano Music">
+<img class="feature-banner"
+src="file_0000000053d0722fa786ebce8df37449.png"
+alt="Lanthano Music">
 </a>
 
 <a href="hitorahmusic.html">
 <img class="feature-banner"
-     src="file_000000003e4471f59b70a29802793a50.png"
-     alt="Hitorah Music">
-
+src="file_000000003e4471f59b70a29802793a50.png"
+alt="Hitorah Music">
 </a>
 
 <a href="store.html">
-    <img class="feature-banner"
-         src="store.png"
-         alt="Lanthano Store">
+<img class="feature-banner"
+src="store.png"
+alt="Lanthano Store">
 </a>
 
 </div>
@@ -1065,7 +1381,7 @@ Share Site
 </section>
 
 <a href="#research" class="top-button"
- id="topButton">▼</a>
+id="topButton">▼</a>
 
 
 
@@ -1076,8 +1392,8 @@ import Fuse from "./fuse.basic.min.mjs";
 
 
 function acceptWarning(){
-        localStorage.setItem("warningAccepted","yes");
-    document.getElementById("warningBox").style.display = "none";
+localStorage.setItem("warningAccepted","yes");
+document.getElementById("warningBox").style.display = "none";
 }
 window.acceptWarning = acceptWarning;
 // Restore previous position
@@ -1086,239 +1402,239 @@ window.acceptWarning = acceptWarning;
 // Save current position
 
 const topButton =
-    document.getElementById("topButton");
+document.getElementById("topButton");
 
 const research =
-    document.getElementById("research");
+document.getElementById("research");
 
 function updateArrow(){
 
-    const researchTop = research.offsetTop;
-    const scrollPos = window.scrollY;
+const researchTop = research.offsetTop;
+const scrollPos = window.scrollY;
 
-    if(scrollPos < researchTop - 50){
+if(scrollPos < researchTop - 50){
 
-        topButton.innerHTML = "▼";
-        topButton.href = "#research";
-        topButton.style.display = "flex";
+topButton.innerHTML = "▼";
+topButton.href = "#research";
+topButton.style.display = "flex";
 
-    }
-    else if(scrollPos < researchTop + 50){
+}
+else if(scrollPos < researchTop + 50){
 
-        topButton.style.display = "none";
+topButton.style.display = "none";
 
-    }
-    else{
+}
+else{
 
-        topButton.innerHTML = '<span style="position:relative; top:-3px;">▲</span>';
-        topButton.href = "#research";
-        topButton.style.display = "flex";
+topButton.innerHTML = '<span style="position:relative; top:-3px;">▲</span>';
+topButton.href = "#research";
+topButton.style.display = "flex";
 
-    }
+}
 
 }
 
 window.addEventListener("scroll", updateArrow);
 window.addEventListener("load", updateArrow);
 
-    let favoritePapers = [];
+let favoritePapers = [];
 
 function loadFavorites(){
 
-    favoritePapers = JSON.parse(
-        localStorage.getItem("favoritePapers") || "[]"
-    );
+favoritePapers = JSON.parse(
+localStorage.getItem("favoritePapers") || "[]"
+);
 
 }
 
 function isFavorite(key){
 
-    return favoritePapers.includes(key);
+return favoritePapers.includes(key);
 
 }
 
 function toggleFavorite(key, star){
 
-    if(isFavorite(key)){
+if(isFavorite(key)){
 
-        favoritePapers =
-            favoritePapers.filter(item=>item!==key);
+favoritePapers =
+favoritePapers.filter(item=>item!==key);
 
-    }else{
+}else{
 
-        favoritePapers.push(key);
+favoritePapers.push(key);
 
-    }
+}
 
-    localStorage.setItem(
-        "favoritePapers",
-        JSON.stringify(favoritePapers)
-    );
+localStorage.setItem(
+"favoritePapers",
+JSON.stringify(favoritePapers)
+);
 
-    star.classList.toggle("active");
+star.classList.toggle("active");
 
-    star.textContent =
-        isFavorite(key)
-        ? "★"
-        : "☆";
+star.textContent =
+isFavorite(key)
+? "★"
+: "☆";
 if(document.getElementById("featuredContainer").innerHTML){
-    renderFeatured();
+renderFeatured();
 }
 }
 
 loadFavorites();
 
 window.toggleFavorite = toggleFavorite;
-    
-    fetch("descriptions.json")
+
+fetch("descriptions.json")
 .then(response => response.json())
 .then(data => {
 
-    const categories = new Set();
+const categories = new Set();
 
-    Object.values(data).forEach(paper => {
+Object.values(data).forEach(paper => {
 
-        if(paper.category){
+if(paper.category){
 
-            paper.category.forEach(category => {
-                categories.add(category);
-            });
+paper.category.forEach(category => {
+categories.add(category);
+});
 
-        }
+}
 
-    });
+});
 
-    const container =
-        document.getElementById("categoryButtons");
+const container =
+document.getElementById("categoryButtons");
 
-    [...categories]
-        .sort()
-        .forEach(category => {
+[...categories]
+.sort()
+.forEach(category => {
 
-            container.innerHTML += `
-                <a href="category.html?category=${encodeURIComponent(category)}">
-                    <div class="card">
-                        <h2>${
-    category.charAt(0).toUpperCase() +
-    category.slice(1)
+container.innerHTML += `
+               <a href="category.html?category=${encodeURIComponent(category)}">
+                   <div class="card">
+                       <h2>${
+   category.charAt(0).toUpperCase() +
+   category.slice(1)
 }</h2>
-                    </div>
-                </a>
-            `;
+                   </div>
+               </a>
+           `;
 
-        });
+});
 
 });
 if ("serviceWorker" in navigator) {
 
-    navigator.serviceWorker
-        .register("sw.js")
-        .then(() => console.log("Service Worker Registered"));
+navigator.serviceWorker
+.register("sw.js")
+.then(() => console.log("Service Worker Registered"));
 
 }
-    
-    function shareSite(){
 
-    const url =
-        "https://lanthanoresearch.com";
+function shareSite(){
 
-    if(navigator.share){
+const url =
+"https://lanthanoresearch.com";
 
-        navigator.share({
+if(navigator.share){
 
-            title:"Lanthano Research",
+navigator.share({
 
-            text:"Explore Lanthano Research",
+title:"Lanthano Research",
 
-            url:url
+text:"Explore Lanthano Research",
 
-        });
+url:url
 
-        return;
+});
 
-    }
-
-    if(navigator.clipboard){
-
-        navigator.clipboard
-            .writeText(url)
-            .then(()=>{
-
-                alert(
-                    "Website link copied to clipboard."
-                );
-
-            })
-            .catch(()=>{
-
-                prompt(
-                    "Copy this link:",
-                    url
-                );
-
-            });
-
-    }
-    else{
-
-        prompt(
-            "Copy this link:",
-            url
-        );
-
-    }
+return;
 
 }
-    window.shareSite = shareSite;
-    function openMusicPopup(){
 
-    document.getElementById(
-        "musicPopup"
-    ).style.display = "flex";
+if(navigator.clipboard){
+
+navigator.clipboard
+.writeText(url)
+.then(()=>{
+
+alert(
+"Website link copied to clipboard."
+);
+
+})
+.catch(()=>{
+
+prompt(
+"Copy this link:",
+url
+);
+
+});
+
+}
+else{
+
+prompt(
+"Copy this link:",
+url
+);
+
+}
+
+}
+window.shareSite = shareSite;
+function openMusicPopup(){
+
+document.getElementById(
+"musicPopup"
+).style.display = "flex";
 
 }
 
 function closeMusicPopup(event){
 
-    if(event && event.target.id !== "musicPopup"){
-        return;
-    }
+if(event && event.target.id !== "musicPopup"){
+return;
+}
 
-    document.getElementById(
-        "musicPopup"
-    ).style.display = "none";
+document.getElementById(
+"musicPopup"
+).style.display = "none";
 
 }
 
 function goToLanthano(){
 
-    sessionStorage.setItem(
-        "indexScroll",
-        window.scrollY
-    );
+sessionStorage.setItem(
+"indexScroll",
+window.scrollY
+);
 
-    sessionStorage.setItem(
-        "returnToIndex",
-        "yes"
-    );
+sessionStorage.setItem(
+"returnToIndex",
+"yes"
+);
 
-    window.location.href = "music.html";
+window.location.href = "music.html";
 
 }
 
 function goToHitorah(){
 
-    sessionStorage.setItem(
-        "indexScroll",
-        window.scrollY
-    );
+sessionStorage.setItem(
+"indexScroll",
+window.scrollY
+);
 
-    sessionStorage.setItem(
-        "returnToIndex",
-        "yes"
-    );
+sessionStorage.setItem(
+"returnToIndex",
+"yes"
+);
 
-    window.location.href = "hitorahmusic.html";
+window.location.href = "hitorahmusic.html";
 
 }
 
@@ -1326,17 +1642,17 @@ window.openMusicPopup = openMusicPopup;
 window.closeMusicPopup = closeMusicPopup;
 window.goToLanthano = goToLanthano;
 window.goToHitorah = goToHitorah;
-    
-    let pdfFuse;
+
+let pdfFuse;
 let imageFuse;
 let searchReady = false;
 
-    
+
 let papersByUrl = {};
 let paperKeysByUrl = {};
 
-    
-    let featuredPapers = [];
+
+let featuredPapers = [];
 let featuredIndex = 0;
 let featuredTimer;
 let pendingImage = "";
@@ -1349,39 +1665,39 @@ let returnPage = "";
 let pendingType = "";
 
 
-  let touchStartX = 0;
+let touchStartX = 0;
 let touchEndX = 0;
 
 let swiping = false;
 
-    function getVisibleImages(images){
-    return (images || []).filter(image =>
-        typeof image === "string" &&
-        !image.trim().startsWith("#$")
-    );
+function getVisibleImages(images){
+return (images || []).filter(image =>
+typeof image === "string" &&
+!image.trim().startsWith("#$")
+);
 }
-    
-    const searchBox =
-    document.getElementById("searchBox");
+
+const searchBox =
+document.getElementById("searchBox");
 
 
-    
 
-    
+
+
 const searchResults =
-    document.getElementById("searchResults");
+document.getElementById("searchResults");
 Promise.all([
-    fetch("search-index.json").then(r => r.json()),
-    fetch("descriptions.json").then(r => r.json())
+fetch("search-index.json").then(r => r.json()),
+fetch("descriptions.json").then(r => r.json())
 ])
 .then(([searchIndex, descriptions]) => {
-    papersByUrl = {};
+papersByUrl = {};
 
 Object.entries(descriptions).forEach(([key, paper]) => {
 
-    papersByUrl[paper.url] = paper;
+papersByUrl[paper.url] = paper;
 
-    paperKeysByUrl[paper.url] = key;
+paperKeysByUrl[paper.url] = key;
 
 });
 
@@ -1390,11 +1706,11 @@ Object.entries(descriptions).forEach(([key, paper]) => {
 const paperCount = Object.keys(descriptions).length;
 
 const pageCount = Object.values(descriptions).reduce((total, paper) => {
-    return total + (Number(paper.pages) || 0);
+return total + (Number(paper.pages) || 0);
 }, 0);
 
 const imageCount = Object.values(descriptions).reduce((total, paper) => {
-    return total + getVisibleImages(paper.images).length;
+return total + getVisibleImages(paper.images).length;
 }, 0);
 
 document.getElementById("statPapers").textContent = paperCount;
@@ -1402,9 +1718,9 @@ document.getElementById("statPages").textContent = pageCount;
 document.getElementById("statImages").textContent = imageCount;
 
 
-    
 
-    
+
+
 
 featuredPapers =
 
@@ -1423,343 +1739,343 @@ a.featuredOrder-b.featuredOrder
 // Preload every featured image
 featuredPapers.forEach(paper => {
 
-    const visibleImages = getVisibleImages(paper.images);
-    const index = Number(paper.featuredImage) - 1;
+const visibleImages = getVisibleImages(paper.images);
+const index = Number(paper.featuredImage) - 1;
 
-    if(
-        index >= 0 &&
-        index < visibleImages.length
-    ){
-        const img = new Image();
-        img.src = visibleImages[index];
-    }
+if(
+index >= 0 &&
+index < visibleImages.length
+){
+const img = new Image();
+img.src = visibleImages[index];
+}
 
 });
 
-    
+
 renderFeatured();
 
 if(featuredPapers.length > 1){
 
-    startFeaturedRotation();
+startFeaturedRotation();
 
 }    
- console.log("PDF records:", searchIndex.length);
-    console.log("Description records:", Object.keys(descriptions).length);
-    
+console.log("PDF records:", searchIndex.length);
+console.log("Description records:", Object.keys(descriptions).length);
 
-    const pdfRecords = searchIndex.map(record => ({
 
-    ...record,
+const pdfRecords = searchIndex.map(record => ({
 
-    displayTitle:
-        papersByUrl[record.url]?.title ||
-        record.title
+...record,
+
+displayTitle:
+papersByUrl[record.url]?.title ||
+record.title
 
 }));
 
 pdfFuse = new Fuse(pdfRecords,{
 
 
-    
-    includeScore:true,
-    includeMatches:true,
-    threshold:0.4,
-    ignoreLocation:true,
-    minMatchCharLength:2,
-    keys:[
-        {
-            name:"title",
-            weight:10
-        },
-        {
-            name:"searchText",
-            weight:1
-        }
-    ]
+
+includeScore:true,
+includeMatches:true,
+threshold:0.4,
+ignoreLocation:true,
+minMatchCharLength:2,
+keys:[
+{
+name:"title",
+weight:10
+},
+{
+name:"searchText",
+weight:1
+}
+]
 });
 
-    const imageRecords = [];
+const imageRecords = [];
 
-  Object.values(descriptions).forEach(paper => {
+Object.values(descriptions).forEach(paper => {
 
-    const visibleImages = getVisibleImages(paper.images);
-    if(!visibleImages.length) return;
+const visibleImages = getVisibleImages(paper.images);
+if(!visibleImages.length) return;
 
-    visibleImages.forEach(image => {
+visibleImages.forEach(image => {
 
-        imageRecords.push({
-            imageFile:image,
-            imageTitle:image
-                .replace(/\.[^/.]+$/,"")
-                .replace(/[_-]/g," "),
-            imageType:image
-                .split(".")
-                .pop()
-                .toUpperCase(),
-            paperTitle:paper.title,
-            paperUrl:paper.url,
-            warning: paper.warning,
-            searchText:
-                (
-                    paper.title + " " +
-                    (paper.description || "") + " " +
-                    (
-                        searchIndex.find(
-                            p => p.title === paper.title
-                        )?.searchText || ""
-                    )
-                )
-        });
-
-    });
+imageRecords.push({
+imageFile:image,
+imageTitle:image
+.replace(/\.[^/.]+$/,"")
+.replace(/[_-]/g," "),
+imageType:image
+.split(".")
+.pop()
+.toUpperCase(),
+paperTitle:paper.title,
+paperUrl:paper.url,
+warning: paper.warning,
+searchText:
+(
+paper.title + " " +
+(paper.description || "") + " " +
+(
+searchIndex.find(
+p => p.title === paper.title
+)?.searchText || ""
+)
+)
+});
 
 });
-    
-   imageFuse = new Fuse(imageRecords,{
-    includeMatches:true,
-    threshold:0.35,
-    keys:[
-        {
-            name:"imageTitle",
-            weight:5
-        },
-        {
-            name:"paperTitle",
-            weight:10
-        },
-        {
-            name:"searchText",
-            weight:3
-        }
-    ]
+
 });
-    
+
+imageFuse = new Fuse(imageRecords,{
+includeMatches:true,
+threshold:0.35,
+keys:[
+{
+name:"imageTitle",
+weight:5
+},
+{
+name:"paperTitle",
+weight:10
+},
+{
+name:"searchText",
+weight:3
+}
+]
+});
+
 searchReady = true;
 
 searchBox.disabled = false;
 searchBox.placeholder = "Search all research...";
-    
+
 const savedScroll =
-    sessionStorage.getItem(
-        "scrollPosition"
-    );
-    const savedIndexScroll =
-    sessionStorage.getItem(
-        "indexScroll"
-    );
+sessionStorage.getItem(
+"scrollPosition"
+);
+const savedIndexScroll =
+sessionStorage.getItem(
+"indexScroll"
+);
 
 const returningToIndex =
-    sessionStorage.getItem(
-        "returnToIndex"
-    ) === "yes";
+sessionStorage.getItem(
+"returnToIndex"
+) === "yes";
 
 if(!returningToIndex){
 
-    sessionStorage.removeItem(
-        "indexScroll"
-    );
+sessionStorage.removeItem(
+"indexScroll"
+);
 
 }
 const restoreSearch =
-    sessionStorage.getItem("restoreSearch");
+sessionStorage.getItem("restoreSearch");
 
 const savedSearch =
-    sessionStorage.getItem("lastSearch");
+sessionStorage.getItem("lastSearch");
 const savedSearchResultsScroll =
-    sessionStorage.getItem(
-        "searchResultsScroll"
-    );
+sessionStorage.getItem(
+"searchResultsScroll"
+);
 if(restoreSearch === "yes" && savedSearch){
 
-    sessionStorage.removeItem("restoreSearch");
+sessionStorage.removeItem("restoreSearch");
 
-    searchBox.value = savedSearch;
+searchBox.value = savedSearch;
 
-    requestAnimationFrame(() => {
+requestAnimationFrame(() => {
 
-    searchBox.dispatchEvent(
-        new Event("input")
-    );
-
-    setTimeout(() => {
-
-        searchResults.style.display = "block";
-        if(savedSearchResultsScroll){
-
-    requestAnimationFrame(()=>{
-
-        searchResults.scrollTop =
-            parseInt(
-                savedSearchResultsScroll
-            );
-        sessionStorage.removeItem(
-    "searchResultsScroll"
+searchBox.dispatchEvent(
+new Event("input")
 );
 
-    });
+setTimeout(() => {
 
-}
-if(savedScroll){
+searchResults.style.display = "block";
+if(savedSearchResultsScroll){
 
-    requestAnimationFrame(()=>{
+requestAnimationFrame(()=>{
 
-        requestAnimationFrame(()=>{
-
-            document.documentElement.style.scrollBehavior = "auto";
-            document.documentElement.style.scrollSnapType = "none";
-
-            window.scrollTo(0, parseInt(savedScroll));
-
-            requestAnimationFrame(()=>{
-
-                document.documentElement.style.scrollBehavior = "";
-                document.documentElement.style.scrollSnapType = "";
-
-                sessionStorage.removeItem("returnFromPage");
-
-            });
-
-        });
-
-    });
-
-}
-        if(
-    restoreSearch === "yes" &&
-    !savedScroll
-){
-
-    document
-        .getElementById("research")
-        .scrollIntoView({
-            block:"start"
-        });
-
-}
-
-    }, 50);
+searchResults.scrollTop =
+parseInt(
+savedSearchResultsScroll
+);
+sessionStorage.removeItem(
+"searchResultsScroll"
+);
 
 });
 
 }
-   
-else if(
-    returningToIndex &&
-    savedIndexScroll
+if(savedScroll){
+
+requestAnimationFrame(()=>{
+
+requestAnimationFrame(()=>{
+
+document.documentElement.style.scrollBehavior = "auto";
+document.documentElement.style.scrollSnapType = "none";
+
+window.scrollTo(0, parseInt(savedScroll));
+
+requestAnimationFrame(()=>{
+
+document.documentElement.style.scrollBehavior = "";
+document.documentElement.style.scrollSnapType = "";
+
+sessionStorage.removeItem("returnFromPage");
+
+});
+
+});
+
+});
+
+}
+if(
+restoreSearch === "yes" &&
+!savedScroll
 ){
-    requestAnimationFrame(()=>{
 
-        requestAnimationFrame(()=>{
+document
+.getElementById("research")
+.scrollIntoView({
+block:"start"
+});
 
-            window.scrollTo(
-                0,
-                parseInt(savedIndexScroll)
-            );
-            
-sessionStorage.removeItem(
-    "returnToIndex"
+}
+
+}, 50);
+
+});
+
+}
+
+else if(
+returningToIndex &&
+savedIndexScroll
+){
+requestAnimationFrame(()=>{
+
+requestAnimationFrame(()=>{
+
+window.scrollTo(
+0,
+parseInt(savedIndexScroll)
 );
-        });
 
-    });
+sessionStorage.removeItem(
+"returnToIndex"
+);
+});
+
+});
 
 }
 
 })
 .catch(error => {
 
-    console.error(
-        "SEARCH ERROR:",
-        error
-    );
+console.error(
+"SEARCH ERROR:",
+error
+);
 
-    searchBox.disabled = false;
+searchBox.disabled = false;
 
-    searchBox.placeholder =
-        "Search unavailable";
+searchBox.placeholder =
+"Search unavailable";
 
 });
 function highlightMatch(text, query){
 
-    if(!query) return text;
+if(!query) return text;
 
-    const escaped =
-        query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const escaped =
+query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-    return text.replace(
-        new RegExp(`(${escaped})`, "ig"),
-        "<mark>$1</mark>"
-    );
+return text.replace(
+new RegExp(`(${escaped})`, "ig"),
+"<mark>$1</mark>"
+);
 
 }
 
 
 searchBox.addEventListener("input", () => {
 
-    loadFavorites();
-    
-if(!searchReady){
-    return;
-}
-    const query =
-        searchBox.value.trim();
+loadFavorites();
 
-    sessionStorage.setItem(
-    "lastSearch",
-    query
+if(!searchReady){
+return;
+}
+const query =
+searchBox.value.trim();
+
+sessionStorage.setItem(
+"lastSearch",
+query
 );
 
-    
-    if(query.length < 2){
 
-    searchResults.innerHTML = `
-        <div class="search-empty">
-            Type at least 2 characters...
-        </div>
-    `;
+if(query.length < 2){
 
-    searchResults.style.display = "block";
-    return;
+searchResults.innerHTML = `
+       <div class="search-empty">
+           Type at least 2 characters...
+       </div>
+   `;
+
+searchResults.style.display = "block";
+return;
 }
 
-   let html = "";
+let html = "";
 
 const pdfResults =
-    pdfFuse
-        ? pdfFuse.search(query).slice(0,5)
-        : [];
+pdfFuse
+? pdfFuse.search(query).slice(0,5)
+: [];
 
 const imageResults =
-    imageFuse
-        ? imageFuse.search(query).slice(0,10)
-        : [];
+imageFuse
+? imageFuse.search(query).slice(0,10)
+: [];
 
 html += `
 <div class="search-count">
-    ${pdfResults.length} Documents •
-    ${imageResults.length} Images
+   ${pdfResults.length} Documents •
+   ${imageResults.length} Images
 </div>
 `;
 
-  if(pdfResults.length){
+if(pdfResults.length){
 
-    html += `
-    <div class="search-section-title">
-        Documents
-    </div>
-    `;
+html += `
+   <div class="search-section-title">
+       Documents
+   </div>
+   `;
 
-    pdfResults.forEach(result => {
+pdfResults.forEach(result => {
 
-              
+
 html += `
 <a
-    href="#"
-    class="search-result pdf-link"
-    data-pdf="${encodeURIComponent(result.item.url)}"
-    data-paper="${encodeURIComponent(result.item.displayTitle)}"
-    data-warning="${papersByUrl[result.item.url]?.warning}"
+   href="#"
+   class="search-result pdf-link"
+   data-pdf="${encodeURIComponent(result.item.url)}"
+   data-paper="${encodeURIComponent(result.item.displayTitle)}"
+   data-warning="${papersByUrl[result.item.url]?.warning}"
 >
 <span
 class="favorite-star
@@ -1772,468 +2088,468 @@ toggleFavorite('${paperKeysByUrl[result.item.url]}',this);
 ${isFavorite(paperKeysByUrl[result.item.url]) ? "★" : "☆"}
 </span>
 
-    ${
-        papersByUrl[result.item.url]?.warning
-        ? `
-        <div
-            class="search-thumb"
-            style="
-                display:flex;
-                align-items:center;
-                justify-content:center;
-                font-size:40px;
-                background:#333;
-            "
-        >
-            ⚠️
-        </div>
-        `
-        : `
-        <div
-            class="search-thumb"
-            style="
-                display:flex;
-                align-items:center;
-                justify-content:center;
-                font-size:40px;
-                background:#333;
-            "
-        >
-            📄
-        </div>
-        `
-    }
+   ${
+       papersByUrl[result.item.url]?.warning
+       ? `
+       <div
+           class="search-thumb"
+           style="
+               display:flex;
+               align-items:center;
+               justify-content:center;
+               font-size:40px;
+               background:#333;
+           "
+       >
+           ⚠️
+       </div>
+       `
+       : `
+       <div
+           class="search-thumb"
+           style="
+               display:flex;
+               align-items:center;
+               justify-content:center;
+               font-size:40px;
+               background:#333;
+           "
+       >
+           📄
+       </div>
+       `
+   }
 
-    <div>
+   <div>
 
-        <div class="search-title">
-            ${highlightMatch(result.item.displayTitle, query)}
-        </div>
+       <div class="search-title">
+           ${highlightMatch(result.item.displayTitle, query)}
+       </div>
 
-       <div class="search-info">
+      <div class="search-info">
 
-    <div class="search-source">
-        PDF Document
-    </div>
+   <div class="search-source">
+       PDF Document
+   </div>
 
-    ${
-        papersByUrl[result.item.url]?.featured
-        ? `<div class="search-featured">Featured</div>`
-        : ""
-    }
+   ${
+       papersByUrl[result.item.url]?.featured
+       ? `<div class="search-featured">Featured</div>`
+       : ""
+   }
 
 </div>
 
-    </div>
+   </div>
 
 </a>
 `;
-            });
-      
+});
 
-    }
 
-   if(imageResults.length){
+}
 
-    html += `
-    <div class="search-section-title">
-        Images
-    </div>
-    `;
+if(imageResults.length){
 
-    imageResults.forEach(result => {
+html += `
+   <div class="search-section-title">
+       Images
+   </div>
+   `;
 
-    html += `
+imageResults.forEach(result => {
+
+html += `
 <a
-    href="#"
-    class="search-result image-link"
-    data-image="${encodeURIComponent(result.item.imageFile)}"
-    data-paper="${encodeURIComponent(result.item.paperTitle)}"
-    data-warning="${result.item.warning}"
+   href="#"
+   class="search-result image-link"
+   data-image="${encodeURIComponent(result.item.imageFile)}"
+   data-paper="${encodeURIComponent(result.item.paperTitle)}"
+   data-warning="${result.item.warning}"
 >
 
-    ${
-        result.item.warning
-        ? `
-        <div
-            class="search-thumb"
-            style="
-                display:flex;
-                align-items:center;
-                justify-content:center;
-                font-size:40px;
-                background:#333;
-            "
-        >
-            ⚠️
-        </div>
-        `
-        : `
-        <img
-            src="${result.item.imageFile}"
-            class="search-thumb"
-        >
-        `
-    }
+   ${
+       result.item.warning
+       ? `
+       <div
+           class="search-thumb"
+           style="
+               display:flex;
+               align-items:center;
+               justify-content:center;
+               font-size:40px;
+               background:#333;
+           "
+       >
+           ⚠️
+       </div>
+       `
+       : `
+       <img
+           src="${result.item.imageFile}"
+           class="search-thumb"
+       >
+       `
+   }
 
-    <div>
+   <div>
 
-        <div class="search-title">
-            ${highlightMatch(result.item.imageTitle, query)}
-        </div>
+       <div class="search-title">
+           ${highlightMatch(result.item.imageTitle, query)}
+       </div>
 
-        <div class="search-source">
-            ${result.item.imageType} Image • From: ${result.item.paperTitle}
-        </div>
+       <div class="search-source">
+           ${result.item.imageType} Image • From: ${result.item.paperTitle}
+       </div>
 
-    </div>
+   </div>
 
 </a>
 `;
 
 });
-       
-    }
 
-    if(!html){
+}
 
-    searchResults.innerHTML = `
-        <div class="search-empty">
-            No results found.
-        </div>
-    `;
+if(!html){
+
+searchResults.innerHTML = `
+       <div class="search-empty">
+           No results found.
+       </div>
+   `;
 
 }else{
 
-    searchResults.innerHTML = html;
-        document.querySelectorAll(".image-link").forEach(link=>{
-           
+searchResults.innerHTML = html;
+document.querySelectorAll(".image-link").forEach(link=>{
 
-    link.addEventListener("click",function(e){
 
-        e.preventDefault();
+link.addEventListener("click",function(e){
 
-        const image =
-            decodeURIComponent(this.dataset.image);
+e.preventDefault();
 
-        const paper =
-            decodeURIComponent(this.dataset.paper);
+const image =
+decodeURIComponent(this.dataset.image);
 
-        if(this.dataset.warning === "true"){
+const paper =
+decodeURIComponent(this.dataset.paper);
 
-            viewSensitiveImage(
-                image,
-                paper
-            );
+if(this.dataset.warning === "true"){
 
-        }else{
+viewSensitiveImage(
+image,
+paper
+);
+
+}else{
 sessionStorage.setItem(
-    "scrollPosition",
-    window.scrollY
+"scrollPosition",
+window.scrollY
 );
 
 sessionStorage.setItem(
-    "restoreSearch",
-    "yes"
+"restoreSearch",
+"yes"
 );
-            sessionStorage.setItem(
-    "searchResultsScroll",
-    searchResults.scrollTop
+sessionStorage.setItem(
+"searchResultsScroll",
+searchResults.scrollTop
 );
-            window.location.href =
-                "image.html?" +
-                "image=" +
-                encodeURIComponent(image) +
-                "&paper=" +
-                encodeURIComponent(paper) +
-                "&return=" +
-                encodeURIComponent(window.location.href);
+window.location.href =
+"image.html?" +
+"image=" +
+encodeURIComponent(image) +
+"&paper=" +
+encodeURIComponent(paper) +
+"&return=" +
+encodeURIComponent(window.location.href);
 
-        }
-
-    });
+}
 
 });
 
- document.querySelectorAll(".pdf-link").forEach(link=>{
+});
 
-    link.addEventListener("click",function(e){
+document.querySelectorAll(".pdf-link").forEach(link=>{
 
-        e.preventDefault();
+link.addEventListener("click",function(e){
 
-        const pdf =
-            decodeURIComponent(this.dataset.pdf);
+e.preventDefault();
 
-        const paper =
-            decodeURIComponent(this.dataset.paper);
+const pdf =
+decodeURIComponent(this.dataset.pdf);
 
-        if(this.dataset.warning === "true"){
+const paper =
+decodeURIComponent(this.dataset.paper);
 
-            viewSensitivePdf(
-                pdf,
-                paper
-            );
+if(this.dataset.warning === "true"){
 
-        }else{
+viewSensitivePdf(
+pdf,
+paper
+);
 
-            sessionStorage.setItem(
-                "scrollPosition",
-                window.scrollY
-            );
+}else{
 
-            sessionStorage.setItem(
-                "restoreSearch",
-                "yes"
-            );
+sessionStorage.setItem(
+"scrollPosition",
+window.scrollY
+);
 
-            sessionStorage.setItem(
-                "searchResultsScroll",
-                searchResults.scrollTop
-            );
+sessionStorage.setItem(
+"restoreSearch",
+"yes"
+);
 
-            window.location.href =
-                "pdf.html?" +
-                "file=" +
-                encodeURIComponent(pdf) +
-                "&paper=" +
-                encodeURIComponent(paper) +
-                "&return=" +
-                encodeURIComponent(window.location.href);
+sessionStorage.setItem(
+"searchResultsScroll",
+searchResults.scrollTop
+);
 
-        }
+window.location.href =
+"pdf.html?" +
+"file=" +
+encodeURIComponent(pdf) +
+"&paper=" +
+encodeURIComponent(paper) +
+"&return=" +
+encodeURIComponent(window.location.href);
 
-    });
+}
+
+});
 
 });
 }
 
 searchResults.style.display =
-    html ? "block" : "none";
+html ? "block" : "none";
 
 });
-        
 
 
-   
 
-    
+
+
+
 
 document.addEventListener("click", e => {
 
-    if(
-        document.getElementById("imageWarningOverlay").contains(e.target)
-    ){
-        return;
-    }
+if(
+document.getElementById("imageWarningOverlay").contains(e.target)
+){
+return;
+}
 
-    if(
-        !document
-            .querySelector(".search-wrapper")
-            .contains(e.target)
-    ){
-
-        searchResults.style.display = "none";
-
-    }
-
-});
-document.addEventListener("click", e => {
-
-    const link = e.target.closest("a");
-
-    if(!link){
-        return;
-    }
-
-    if(link.classList.contains("image-link")){
-        return;
-    }
-
-    if(link.classList.contains("pdf-link")){
-
-        sessionStorage.setItem(
-            "scrollPosition",
-            window.scrollY
-        );
-
-        sessionStorage.setItem(
-            "restoreSearch",
-            "yes"
-        );
-
-        sessionStorage.setItem(
-            "searchResultsScroll",
-            searchResults.scrollTop
-        );
-
-        return;
-    }
-
-    if(link.getAttribute("href")?.startsWith("#")){
-        return;
-    }
-
-    sessionStorage.setItem(
-        "indexScroll",
-        window.scrollY
-    );
-
-    sessionStorage.setItem(
-        "returnToIndex",
-        "yes"
-    );
-
-    sessionStorage.removeItem("restoreSearch");
-    sessionStorage.removeItem("lastSearch");
-
-});
-
-    function viewSensitivePdf(
-    pdf,
-    paperTitle
+if(
+!document
+.querySelector(".search-wrapper")
+.contains(e.target)
 ){
 
-    pdf = decodeURIComponent(pdf);
+searchResults.style.display = "none";
 
-    paperTitle = decodeURIComponent(paperTitle);
+}
 
-    const alreadyAccepted =
-    sessionStorage.getItem(
-        "graphicPdfAccepted"
-    ) === "yes";
+});
+document.addEventListener("click", e => {
 
-    returnPage = window.location.href;
+const link = e.target.closest("a");
 
-    if(alreadyAccepted){
+if(!link){
+return;
+}
 
-        sessionStorage.setItem(
-            "scrollPosition",
-            window.scrollY
-        );
+if(link.classList.contains("image-link")){
+return;
+}
 
-        sessionStorage.setItem(
-            "restoreSearch",
-            "yes"
-        );
+if(link.classList.contains("pdf-link")){
 
-        sessionStorage.setItem(
-            "searchResultsScroll",
-            searchResults.scrollTop
-        );
+sessionStorage.setItem(
+"scrollPosition",
+window.scrollY
+);
 
-        window.location.href =
-            "pdf.html?" +
+sessionStorage.setItem(
+"restoreSearch",
+"yes"
+);
 
-            "file=" +
-            encodeURIComponent(pdf) +
+sessionStorage.setItem(
+"searchResultsScroll",
+searchResults.scrollTop
+);
 
-            "&paper=" +
-            encodeURIComponent(paperTitle) +
+return;
+}
 
-            "&return=" +
-            encodeURIComponent(window.location.href);
+if(link.getAttribute("href")?.startsWith("#")){
+return;
+}
 
-        return;
+sessionStorage.setItem(
+"indexScroll",
+window.scrollY
+);
 
-    }
+sessionStorage.setItem(
+"returnToIndex",
+"yes"
+);
 
-    pendingPdf = pdf;
+sessionStorage.removeItem("restoreSearch");
+sessionStorage.removeItem("lastSearch");
 
-    currentPaperTitle = paperTitle;
+});
 
-    pendingType = "pdf";
+function viewSensitivePdf(
+pdf,
+paperTitle
+){
+
+pdf = decodeURIComponent(pdf);
+
+paperTitle = decodeURIComponent(paperTitle);
+
+const alreadyAccepted =
+sessionStorage.getItem(
+"graphicPdfAccepted"
+) === "yes";
+
+returnPage = window.location.href;
+
+if(alreadyAccepted){
+
+sessionStorage.setItem(
+"scrollPosition",
+window.scrollY
+);
+
+sessionStorage.setItem(
+"restoreSearch",
+"yes"
+);
+
+sessionStorage.setItem(
+"searchResultsScroll",
+searchResults.scrollTop
+);
+
+window.location.href =
+"pdf.html?" +
+
+"file=" +
+encodeURIComponent(pdf) +
+
+"&paper=" +
+encodeURIComponent(paperTitle) +
+
+"&return=" +
+encodeURIComponent(window.location.href);
+
+return;
+
+}
+
+pendingPdf = pdf;
+
+currentPaperTitle = paperTitle;
+
+pendingType = "pdf";
 document.querySelector(
-    "#imageWarningBox h2"
+"#imageWarningBox h2"
 ).textContent = "Graphic PDF";
 
 document.querySelector(
-    "#imageWarningBox p"
+"#imageWarningBox p"
 ).textContent =
-    "This PDF may contain graphic or disturbing content.";
-    document.getElementById(
-        "imageWarningOverlay"
-    ).style.display = "flex";
+"This PDF may contain graphic or disturbing content.";
+document.getElementById(
+"imageWarningOverlay"
+).style.display = "flex";
 
-    document.getElementById(
-        "continueImageButton"
-    ).textContent = "View PDF";
+document.getElementById(
+"continueImageButton"
+).textContent = "View PDF";
 
 }
-    
-    function viewSensitiveImage(
-        
-    image,
-    paperTitle
+
+function viewSensitiveImage(
+
+image,
+paperTitle
 ){
 image = decodeURIComponent(image);
 
 paperTitle = decodeURIComponent(paperTitle);
-    const alreadyAccepted =
-    sessionStorage.getItem(
-        "graphicImageAccepted"
-    ) === "yes";
+const alreadyAccepted =
+sessionStorage.getItem(
+"graphicImageAccepted"
+) === "yes";
 
-    returnPage = window.location.href;
+returnPage = window.location.href;
 
-    if(alreadyAccepted){
+if(alreadyAccepted){
 sessionStorage.setItem(
-    "scrollPosition",
-    window.scrollY
+"scrollPosition",
+window.scrollY
 );
 
 sessionStorage.setItem(
-    "restoreSearch",
-    "yes"
+"restoreSearch",
+"yes"
 );
-        sessionStorage.setItem(
-    "searchResultsScroll",
-    searchResults.scrollTop
+sessionStorage.setItem(
+"searchResultsScroll",
+searchResults.scrollTop
 );
-        window.location.href =
-    "image.html?" +
+window.location.href =
+"image.html?" +
 
-    "image=" +
-    encodeURIComponent(image) +
+"image=" +
+encodeURIComponent(image) +
 
-    "&paper=" +
-    encodeURIComponent(paperTitle) +
+"&paper=" +
+encodeURIComponent(paperTitle) +
 
-    "&return=" +
-    encodeURIComponent(window.location.href);
+"&return=" +
+encodeURIComponent(window.location.href);
 
-        return;
+return;
 
-    }
+}
 
-    pendingImage = image;
-        
+pendingImage = image;
+
 pendingType = "image";
-    currentPaperTitle = paperTitle;
+currentPaperTitle = paperTitle;
 document.querySelector(
-    "#imageWarningBox h2"
+"#imageWarningBox h2"
 ).textContent = "Graphic Image";
 
 document.querySelector(
-    "#imageWarningBox p"
+"#imageWarningBox p"
 ).textContent =
-    "This image may contain graphic or disturbing content.";
+"This image may contain graphic or disturbing content.";
 
 document.getElementById(
-    "continueImageButton"
+"continueImageButton"
 ).textContent = "View Image";
-    document.getElementById(
-        "imageWarningOverlay"
-    ).style.display = "flex";
+document.getElementById(
+"imageWarningOverlay"
+).style.display = "flex";
 
 }
 
 function closeImageWarning(){
 
-    document.getElementById(
-        "imageWarningOverlay"
-    ).style.display = "none";
+document.getElementById(
+"imageWarningOverlay"
+).style.display = "none";
 
-    pendingImage = "";
+pendingImage = "";
 
 pendingPdf = "";
 
@@ -2242,50 +2558,50 @@ pendingType = "";
 currentPaperTitle = "";
 returnPage = "";
 document.getElementById(
-    "continueImageButton"
+"continueImageButton"
 ).textContent = "View Image";
 
 }
-    window.closeImageWarning = closeImageWarning;
+window.closeImageWarning = closeImageWarning;
 document
 
-    document.addEventListener("keydown", e => {
+document.addEventListener("keydown", e => {
 
-    if(
-        e.key === "Escape" &&
-        document.getElementById(
-            "imageWarningOverlay"
-        ).style.display === "flex"
-    ){
+if(
+e.key === "Escape" &&
+document.getElementById(
+"imageWarningOverlay"
+).style.display === "flex"
+){
 
-        closeImageWarning();
+closeImageWarning();
 
-    }
+}
 
 });
 
 
 
 
-    function renderFeatured(){
+function renderFeatured(){
 
-        loadFavorites();
+loadFavorites();
 
-        
-    if(!featuredPapers.length){
-        return;
-    }
 
-    const paper =
-    featuredPapers[featuredIndex];
+if(!featuredPapers.length){
+return;
+}
+
+const paper =
+featuredPapers[featuredIndex];
 
 const visibleImages = getVisibleImages(paper.images);
 const index = Number(paper.featuredImage) - 1;
 
 const hasImage =
-    visibleImages.length &&
-    index >= 0 &&
-    index < visibleImages.length;
+visibleImages.length &&
+index >= 0 &&
+index < visibleImages.length;
 
 const media = hasImage
 ?
@@ -2299,23 +2615,23 @@ onerror="this.outerHTML='<div class=&quot;featured-pdf-icon&quot;>📄</div>';">
 :
 `
 <div class="featured-pdf-icon">
-    📄
+   📄
 </div>
 `;
 
 
-        
-    document
 
-    .getElementById(
+document
 
-    "featuredContainer"
+.getElementById(
 
-    )
+"featuredContainer"
 
-    .innerHTML=
+)
 
-    `
+.innerHTML=
+
+`
 
 <a
 
@@ -2359,11 +2675,11 @@ ${isFavorite(paperKeysByUrl[paper.url]) ? "★" : "☆"}
 <div class="featured-category">
 
 ${paper.category
-    .map(category =>
-        category.charAt(0).toUpperCase() +
-        category.slice(1)
-    )
-    .join(" • ")}
+   .map(category =>
+       category.charAt(0).toUpperCase() +
+       category.slice(1)
+   )
+   .join(" • ")}
 
 </div>
 
@@ -2393,7 +2709,7 @@ Read Research
 
 `;
 
-    renderDots();
+renderDots();
 
 const card =
 document.querySelector(".featured-card");
@@ -2403,109 +2719,109 @@ document.querySelector("#featuredContainer a");
 
 if(link){
 
-    link.addEventListener("click", e=>{
+link.addEventListener("click", e=>{
 
-        if(swiping){
+if(swiping){
 
-            e.preventDefault();
+e.preventDefault();
 
-        }
+}
 
-    });
+});
 
 }
 
 if(card){
 
-    card.addEventListener(
-        "mouseenter",
-        stopFeaturedRotation
-    );
+card.addEventListener(
+"mouseenter",
+stopFeaturedRotation
+);
 
-    card.addEventListener(
-        "mouseleave",
-        startFeaturedRotation
-    );
+card.addEventListener(
+"mouseleave",
+startFeaturedRotation
+);
 
-    card.addEventListener("touchstart", e=>{
+card.addEventListener("touchstart", e=>{
 
-        touchStartX =
-            e.changedTouches[0].clientX;
+touchStartX =
+e.changedTouches[0].clientX;
 
-    });
+});
 
-    card.addEventListener("touchend", e=>{
+card.addEventListener("touchend", e=>{
 
-        touchEndX =
-            e.changedTouches[0].clientX;
+touchEndX =
+e.changedTouches[0].clientX;
 
-        handleSwipe();
+handleSwipe();
 
-    });
+});
 
 }
-        
+
 }
 
 
-    function handleSwipe(){
+function handleSwipe(){
 const distance =
-    touchEndX - touchStartX;
+touchEndX - touchStartX;
 
 if(Math.abs(distance) < 40){
-    return;
+return;
 }
 
 swiping = true;
 
 setTimeout(() => {
 
-    swiping = false;
+swiping = false;
 
 },250);
-    stopFeaturedRotation();
+stopFeaturedRotation();
 
-    if(distance > 0){
+if(distance > 0){
 
-        featuredIndex--;
+featuredIndex--;
 
-        if(featuredIndex < 0){
+if(featuredIndex < 0){
 
-            featuredIndex =
-                featuredPapers.length - 1;
-
-        }
-
-    }else{
-
-        featuredIndex++;
-
-        if(featuredIndex >= featuredPapers.length){
-
-            featuredIndex = 0;
-
-        }
-
-    }
-
-    renderFeatured();
-
-    startFeaturedRotation();
+featuredIndex =
+featuredPapers.length - 1;
 
 }
 
-    
+}else{
+
+featuredIndex++;
+
+if(featuredIndex >= featuredPapers.length){
+
+featuredIndex = 0;
+
+}
+
+}
+
+renderFeatured();
+
+startFeaturedRotation();
+
+}
+
+
 function renderDots(){
 
-    document
+document
 
-    .getElementById("featuredDots")
+.getElementById("featuredDots")
 
-    .innerHTML =
+.innerHTML =
 
-    featuredPapers
+featuredPapers
 
-    .map((paper,index)=>
+.map((paper,index)=>
 
 `
 
@@ -2537,234 +2853,236 @@ index===featuredIndex
 
 function nextFeatured(){
 
-    let next =
-        featuredIndex + 1;
+let next =
+featuredIndex + 1;
 
-    if(next >= featuredPapers.length){
+if(next >= featuredPapers.length){
 
-        next = 0;
+next = 0;
 
-    }
+}
 
-    const paper = featuredPapers[next];
+const paper = featuredPapers[next];
 const visibleImages = getVisibleImages(paper.images);
 
 const index =
-    Number(paper.featuredImage) - 1;
+Number(paper.featuredImage) - 1;
 
 if(
-    index >= 0 &&
-    index < visibleImages.length
+index >= 0 &&
+index < visibleImages.length
 ){
-    const img = new Image();
+const img = new Image();
 
-    img.onload = ()=>{
-        featuredIndex = next;
-        renderFeatured();
-    };
+img.onload = ()=>{
+featuredIndex = next;
+renderFeatured();
+};
 
-    img.onerror = ()=>{
-        featuredIndex = next;
-        renderFeatured();
-    };
+img.onerror = ()=>{
+featuredIndex = next;
+renderFeatured();
+};
 
-    img.src = visibleImages[index];
+img.src = visibleImages[index];
 }
 else{
-    featuredIndex = next;
-    renderFeatured();
+featuredIndex = next;
+renderFeatured();
 }
 
 
 
-    
+
 }
 
 
 
-    function previousFeatured(event){
+function previousFeatured(event){
 
-    event.stopPropagation();
-    event.preventDefault();
+event.stopPropagation();
+event.preventDefault();
 
-    stopFeaturedRotation();
+stopFeaturedRotation();
 
-    featuredIndex--;
+featuredIndex--;
 
-    if(featuredIndex < 0){
+if(featuredIndex < 0){
 
-        featuredIndex = featuredPapers.length - 1;
+featuredIndex = featuredPapers.length - 1;
 
-    }
+}
 
-    renderFeatured();
+renderFeatured();
 
-    startFeaturedRotation();
+startFeaturedRotation();
 
 }
 
 function nextFeaturedManual(event){
 
-    event.stopPropagation();
-    event.preventDefault();
+event.stopPropagation();
+event.preventDefault();
 
-    stopFeaturedRotation();
+stopFeaturedRotation();
 
-    nextFeatured();
+nextFeatured();
 
-    startFeaturedRotation();
+startFeaturedRotation();
 
 }
 
-    window.previousFeatured = previousFeatured;
+window.previousFeatured = previousFeatured;
 window.nextFeaturedManual = nextFeaturedManual;
 
 function startFeaturedRotation(){
 
-    clearInterval(featuredTimer);
+clearInterval(featuredTimer);
 
-    featuredTimer = setInterval(
+featuredTimer = setInterval(
 
-        nextFeatured,
+nextFeatured,
 
-        8000
+8000
 
-    );
+);
 
 }
 
 function stopFeaturedRotation(){
 
-    clearInterval(featuredTimer);
+clearInterval(featuredTimer);
 
 }
 
 
 
-    
+
 function continueImageWarning(){
 if(pendingType === "image"){
 
-    sessionStorage.setItem(
-        "graphicImageAccepted",
-        "yes"
-    );
+sessionStorage.setItem(
+"graphicImageAccepted",
+"yes"
+);
 
 }
 else if(pendingType === "pdf"){
 
-    sessionStorage.setItem(
-        "graphicPdfAccepted",
-        "yes"
-    );
+sessionStorage.setItem(
+"graphicPdfAccepted",
+"yes"
+);
 
 }
-    
 
-    sessionStorage.setItem(
-        "searchResultsScroll",
-        searchResults.scrollTop
-    );
 
-    const type = pendingType;
-    const pdf = pendingPdf;
-    const image = pendingImage;
-    const paper = currentPaperTitle;
-    const back = returnPage;
+sessionStorage.setItem(
+"searchResultsScroll",
+searchResults.scrollTop
+);
 
-    closeImageWarning();
+const type = pendingType;
+const pdf = pendingPdf;
+const image = pendingImage;
+const paper = currentPaperTitle;
+const back = returnPage;
 
-    if(type === "pdf"){
+closeImageWarning();
 
-        window.location.href =
-            "pdf.html?" +
-            "file=" + encodeURIComponent(pdf) +
-            "&paper=" + encodeURIComponent(paper) +
-            "&return=" + encodeURIComponent(back);
+if(type === "pdf"){
 
-        return;
+window.location.href =
+"pdf.html?" +
+"file=" + encodeURIComponent(pdf) +
+"&paper=" + encodeURIComponent(paper) +
+"&return=" + encodeURIComponent(back);
 
-    }
+return;
 
-    window.location.href =
-        "image.html?" +
-        "image=" + encodeURIComponent(image) +
-        "&paper=" + encodeURIComponent(paper) +
-        "&return=" + encodeURIComponent(back);
+}
+
+window.location.href =
+"image.html?" +
+"image=" + encodeURIComponent(image) +
+"&paper=" + encodeURIComponent(paper) +
+"&return=" + encodeURIComponent(back);
 
 }    window.continueImageWarning =
-    continueImageWarning;
-    
+continueImageWarning;
+
 </script>
 
 <div id="imageWarningOverlay" style="display:none;">
 
 <div id="imageWarningBox">
 
-    <div class="warningIcon">
-        ⚠️
-    </div>
+<div class="warningIcon">
+⚠️
+</div>
 
-    <h2>Graphic Image</h2>
+<h2>Graphic Image</h2>
 
-    <p>
-        This image may contain graphic or disturbing content.
-    </p>
+<p>
+This image may contain graphic or disturbing content.
+</p>
 
-    <div class="warningButtons">
+<div class="warningButtons">
 
-        <button onclick="closeImageWarning()">
-            Cancel
-        </button>
+<button onclick="closeImageWarning()">
+Cancel
+</button>
 
-       <button
+<button
 id="continueImageButton"
 onclick="continueImageWarning()">
 View Image
-
 </button>
 
-    </div>
-
 </div>
 
 </div>
-    <script>
 
-document.getElementById("imageWarningOverlay").addEventListener("click", e => {
+</div>
+<script>
+
+document
+.getElementById("imageWarningOverlay")
+.addEventListener("click", e => {
 
 if(e.target.id === "imageWarningOverlay"){
 
-    closeImageWarning();
+closeImageWarning();
 
 }
 
 });
 
+
 </script>
-    <div
-    id="musicPopup"
-    class="music-popup-overlay"
-    onclick="closeMusicPopup(event)">
+<div
+id="musicPopup"
+class="music-popup-overlay"
+onclick="closeMusicPopup(event)">
 
 <div class="music-popup">
 
-    <h2>Choose Music</h2>
+<h2>Choose Music</h2>
 
-    <p>Select a music artist.</p>
+<p>Select a music artist.</p>
 
-    <button onclick="goToLanthano()">
-        Lanthano
-    </button>
+<button onclick="goToLanthano()">
+Lanthano
+</button>
 
-    <button onclick="goToHitorah()">
-        Hitorah
-    </button>
+<button onclick="goToHitorah()">
+Hitorah
+</button>
 
-    <div style="height:30px;"></div>
+<div style="height:30px;"></div>
 
 <button onclick="closeMusicPopup()">
-    Cancel
+Cancel
 </button>
 
 </div>
