@@ -162,6 +162,12 @@ h1{
     margin-top:10px;
 }
 
+    .card-pages{
+    color:#777;
+    font-size:0.8em;
+    margin-top:4px;
+}
+    
 .button{
     display:inline-block;
     background:#333;
@@ -519,10 +525,14 @@ ${isFavorite(key) ? "★" : "☆"}
                 </p>
 
                 <p class="card-date">
-                    Created: ${parseInt(paper.updated.split("-")[1])}-${
+    Created: ${parseInt(paper.updated.split("-")[1])}-${
 parseInt(paper.updated.split("-")[2])}-${
 paper.updated.split("-")[0]}
-                </p>
+</p>
+
+<p class="card-pages">
+    ${Number(paper.pages) || 0} ${(Number(paper.pages) || 0) === 1 ? "page" : "pages"}
+</p>
 
                 <div id="warning-${key}">
 
@@ -605,10 +615,14 @@ ${isFavorite(key) ? "★" : "☆"}
                 </p>
 
                 <p class="card-date">
-                    Created: ${parseInt(paper.updated.split("-")[1])}-${
+    Created: ${parseInt(paper.updated.split("-")[1])}-${
 parseInt(paper.updated.split("-")[2])}-${
 paper.updated.split("-")[0]}
-                </p>
+</p>
+
+<p class="card-pages">
+    ${Number(paper.pages) || 0} ${(Number(paper.pages) || 0) === 1 ? "page" : "pages"}
+</p>
 
               <a class="button pdf-link"
    href="pdf.html?file=${encodeURIComponent(paper.url)}&paper=${encodeURIComponent(paper.title)}&return=${encodeURIComponent(window.location.href)}">
