@@ -1400,7 +1400,7 @@ Browse Research by Category
 
 <div class="featured-links">
 
-<a href="https://lanthanomusic.com">
+<a href="https://lanthanomusic.com" target="_blank" rel="noopener" id="lanthanoMusicLink">
 <img class="feature-banner"
 src="file_0000000053d0722fa786ebce8df37449.png"
 alt="Lanthano Music">
@@ -3131,6 +3131,23 @@ closeImageWarning();
 
 
 </script>
+
+
+<script>
+function openLanthanoMusic(e){
+const isStandalone =
+window.matchMedia("(display-mode: standalone)").matches ||
+window.navigator.standalone === true;
+
+if(isStandalone){
+e.preventDefault();
+window.location.href = "https://lanthanomusic.com";
+}
+}
+
+document.getElementById("lanthanoMusicLink")?.addEventListener("click", openLanthanoMusic);
+</script>
+    
 <div
 id="musicPopup"
 class="music-popup-overlay"
@@ -3159,5 +3176,7 @@ Cancel
 </div>
 
 </div>
+
+    
 </body>
 </html>
