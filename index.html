@@ -441,6 +441,9 @@ padding:30px;
 background:#181818;
 border:1px solid #2b2b2b;
 border-radius:16px;
+display:flex;
+flex-direction:column;
+gap:25px;
 }
 
 .feature-banner{
@@ -449,21 +452,15 @@ width:100%;
 max-width:500px;
 height:auto;
 aspect-ratio:2 / 1;
-
 object-fit:cover;
 object-position:center;
-
-margin:0 auto 25px;
+margin:0 auto;
 border-radius:10px;
 transition:transform .2s ease;
 }
 
 .feature-banner:hover{
 transform:scale(1.02);
-}
-
-.featured-links a:last-child .feature-banner{
-margin-bottom:0;
 }
 
 
@@ -1189,16 +1186,17 @@ display:flex;
         font-size:.95rem;
     }
 
-    .featured-links{
-        margin:28px auto;
-        padding:16px;
-        border-radius:12px;
-    }
+   .featured-links{
+    margin:28px auto;
+    padding:16px;
+    border-radius:12px;
+    gap:16px;
+}
 
-    .feature-banner{
-        margin:0 auto 16px;
-        border-radius:8px;
-    }
+.feature-banner{
+    margin:0 auto;
+    border-radius:8px;
+}
 
     .footer-links{
         margin-top:24px;
