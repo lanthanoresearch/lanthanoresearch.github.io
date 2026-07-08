@@ -435,32 +435,38 @@ margin:20px 0;
 }
 
 .featured-links{
-max-width:850px;
-margin:60px auto;
-padding:30px;
-background:#181818;
-border:1px solid #2b2b2b;
-border-radius:16px;
-display:flex;
-flex-direction:column;
-gap:25px;
+  max-width:850px;
+  margin:60px auto;
+  padding:30px;
+  background:#181818;
+  border:1px solid #2b2b2b;
+  border-radius:16px;
+  display:flex;
+  flex-direction:column;
+  gap:25px;
+}
+
+.feature-banner-link,
+.feature-banner-static{
+  display:block;
+  width:100%;
+  max-width:500px;
+  margin:0 auto;
 }
 
 .feature-banner{
-display:block;
-width:100%;
-max-width:500px;
-height:auto;
-aspect-ratio:2 / 1;
-object-fit:cover;
-object-position:center;
-margin:0 auto;
-border-radius:10px;
-transition:transform .2s ease;
+  display:block;
+  width:100%;
+  height:auto;
+  aspect-ratio:2 / 1;
+  object-fit:cover;
+  object-position:center;
+  border-radius:10px;
+  transition:transform .2s ease;
 }
 
-.feature-banner:hover{
-transform:scale(1.02);
+.feature-banner-link:hover .feature-banner{
+  transform:scale(1.02);
 }
 
 
@@ -1187,17 +1193,15 @@ display:flex;
     }
 
    .featured-links{
-    margin:28px auto;
-    padding:16px;
-    border-radius:12px;
-    gap:16px;
+  margin:28px auto;
+  padding:16px;
+  border-radius:12px;
+  gap:16px;
 }
 
 .feature-banner{
-    margin:0 auto;
-    border-radius:8px;
+  border-radius:8px;
 }
-
     .footer-links{
         margin-top:24px;
         margin-bottom:10px;
@@ -1398,23 +1402,35 @@ Browse Research by Category
 
 <div class="featured-links">
 
-<a href="https://lanthanomusic.com" target="_blank" rel="noopener" id="lanthanoMusicLink">
-<img class="feature-banner"
-src="file_0000000053d0722fa786ebce8df37449.png"
-alt="Lanthano Music">
-</a>
+  <a
+    class="feature-banner-link"
+    href="https://lanthanomusic.com"
+    target="_blank"
+    rel="noopener"
+    id="lanthanoMusicLink"
+  >
+    <img
+      class="feature-banner"
+      src="file_0000000053d0722fa786ebce8df37449.png"
+      alt="Lanthano Music"
+    >
+  </a>
 
-<a href="hitorahmusic.html">
-<img class="feature-banner"
-src="file_000000003e4471f59b70a29802793a50.png"
-alt="Hitorah Music">
-</a>
+  <a class="feature-banner-link" href="hitorahmusic.html">
+    <img
+      class="feature-banner"
+      src="file_000000003e4471f59b70a29802793a50.png"
+      alt="Hitorah Music"
+    >
+  </a>
 
-<a href="store.html">
-<img class="feature-banner"
-src="store.png"
-alt="Lanthano Store">
-</a>
+  <a class="feature-banner-link" href="store.html">
+    <img
+      class="feature-banner"
+      src="store.png"
+      alt="Lanthano Store"
+    >
+  </a>
 
 </div>
 
