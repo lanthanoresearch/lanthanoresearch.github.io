@@ -1,0 +1,11 @@
+{
+  "name": "lanthano-research",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build-search": "node build-search.js"
+  },
+  "dependencies": {
+    "pdf-parse": "^1.1.1"
+  }
+}
