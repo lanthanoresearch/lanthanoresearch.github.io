@@ -590,5 +590,24 @@
 
 
 
+"psychedelics": {
+    "title": "Psychedelic Mushrooms",
+    "warning": false,
+    "category": [
+      "medical",
+      "scientific",
+      "biblical"
+    ],
+     "pages": 8,
+    "description": "A scientific exploration of psychedelic mushrooms, their effects, and what there role in our history.",
+    "url": "Psychedelics.pdf",
+    "updated": "2026-07-25",
+    "images": [
+      "Drug Comparision.png"
+    ]
+  }
+
+
+
   
 }
