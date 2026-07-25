@@ -87,6 +87,20 @@ flex-wrap:wrap;
 
 }
 
+
+
+    .search-new{
+    background:#28b44b;
+    color:white;
+    font-size:.68em;
+    font-weight:bold;
+    padding:3px 8px;
+    border-radius:999px;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+}
+
+    
 .search-featured{
 
 background:#2f7cff;
@@ -121,6 +135,37 @@ z-index:45;
 }
 
 
+
+
+
+
+    .new-badge{
+    position:absolute;
+    top:12px;
+    right:56px;
+
+    z-index:46;
+
+    background:#28b44b;
+    color:white;
+
+    font-size:.68em;
+    font-weight:bold;
+
+    padding:3px 8px;
+
+    border-radius:999px;
+
+    text-transform:uppercase;
+    letter-spacing:.5px;
+}
+
+.new-badge.with-featured{
+    right:150px;
+}
+
+
+    
 .featured-card{
 display:flex;
 background:#1d1d1d;
@@ -382,6 +427,32 @@ overflow:hidden;
 
 flex-shrink:0;
 
+}
+
+
+  .new-image-badge{
+    position:absolute;
+
+    top:12px;
+    right:12px;
+
+    z-index:60;
+
+    background:#28b44b;
+
+    color:white;
+
+    padding:5px 10px;
+
+    border-radius:999px;
+
+    font-size:.72em;
+
+    font-weight:bold;
+
+    letter-spacing:.5px;
+
+    text-transform:uppercase;
 }
 
 
@@ -1580,6 +1651,23 @@ fetch("descriptions.json")
 .then(response => response.json())
 .then(data => {
 
+
+    const newestEntry = Object.entries(data)
+    .sort((a, b) =>
+        new Date(b[1].updated) - new Date(a[1].updated)
+    )[0];
+
+newestKey = newestEntry[0];
+const newestDate = new Date(newestEntry[1].updated);
+
+const today = new Date();
+
+const oneYearAgo = new Date(today);
+oneYearAgo.setFullYear(today.getFullYear() - 1);
+
+showNewestBadge = newestDate >= oneYearAgo;
+    
+
 const categories = new Set();
 
 Object.values(data).forEach(paper => {
@@ -1745,6 +1833,11 @@ let paperKeysByUrl = {};
 let featuredPapers = [];
 let featuredIndex = 0;
 let featuredTimer;
+
+    let newestKey = "";
+let showNewestBadge = false;
+
+    
 let pendingImage = "";
 let pendingPdf = "";
 
@@ -2222,11 +2315,18 @@ ${isFavorite(paperKeysByUrl[result.item.url]) ? "★" : "☆"}
        PDF Document
    </div>
 
-   ${
-       papersByUrl[result.item.url]?.featured
-       ? `<div class="search-featured">Featured</div>`
-       : ""
-   }
+  ${
+    showNewestBadge &&
+    paperKeysByUrl[result.item.url] === newestKey
+    ? `<div class="search-new">NEW</div>`
+    : ""
+}
+
+${
+    papersByUrl[result.item.url]?.featured
+    ? `<div class="search-featured">Featured</div>`
+    : ""
+}
 
 </div>
 
@@ -2685,6 +2785,13 @@ return;
 const paper =
 featuredPapers[featuredIndex];
 
+
+
+    const isNewest =
+    showNewestBadge &&
+    paperKeysByUrl[paper.url] === newestKey;
+
+    
 const visibleImages = getVisibleImages(paper.images);
 const index = Number(paper.featuredImage) - 1;
 
@@ -2732,7 +2839,15 @@ href="pdf.html?file=${encodeURIComponent(paper.url)}&paper=${encodeURIComponent(
 <div class="featured-image-wrapper">
 
 
-
+${
+isNewest
+?
+`<div class="new-image-badge">
+NEW
+</div>`
+:
+""
+}
 
 
 <button
