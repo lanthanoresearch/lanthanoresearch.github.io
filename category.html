@@ -258,7 +258,10 @@ const currentCategory =
     params.get("category");
 
     let favoritePapers = [];
+let newestKey = "";
+let showNewestBadge = false;
 
+    
 function loadFavorites(){
 
     favoritePapers =
@@ -323,6 +326,23 @@ fetch("descriptions.json")
         a[1].title.localeCompare(b[1].title)
     );
 
+    const newestEntry = [...papers].sort(
+    (a, b) =>
+        new Date(b[1].updated) - new Date(a[1].updated)
+)[0];
+
+newestKey = newestEntry[0];
+
+const newestDate = new Date(newestEntry[1].updated);
+
+const today = new Date();
+
+const oneYearAgo = new Date(today);
+oneYearAgo.setFullYear(today.getFullYear() - 1);
+
+showNewestBadge = newestDate >= oneYearAgo;
+
+    
     function toggleFavorite(key){
 
     if(isFavorite(key)){
@@ -354,18 +374,25 @@ window.toggleFavorite = toggleFavorite;
         !image.trim().startsWith("#$")
     ).length;
 }
-    function getPaperBadge(paper){
 
-    if (paper.newest) {
+    
+    function getPaperBadge(key, paper){
+
+    const isNewest =
+        showNewestBadge &&
+        key === newestKey;
+
+    if (isNewest){
         return `<div class="paper-badge newest">Newest</div>`;
     }
 
-    if (paper.featured) {
+    if (paper.featured){
         return `<div class="paper-badge featured">Featured</div>`;
     }
 
     return "";
 }
+    
 function renderPapers(){
 loadFavorites();
 container.innerHTML = "";
@@ -530,7 +557,7 @@ toggleFavorite('${key}');
 ">
 ${isFavorite(key) ? "★" : "☆"}
 </span>
-${getPaperBadge(paper)}
+${getPaperBadge(key, paper)}
 
                 <h2>${paper.title}</h2>
                 
@@ -618,7 +645,7 @@ toggleFavorite('${key}');
 ">
 ${isFavorite(key) ? "★" : "☆"}
 </span>
-${getPaperBadge(paper)}
+${getPaperBadge(key, paper)}
 
 
                 <h2>${paper.title}</h2>
