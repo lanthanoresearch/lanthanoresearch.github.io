@@ -42,15 +42,11 @@ html,body{
     display:block;
 }
 
-.title-featured{
-
-    order:2;
+.title-badge{
 
     display:inline-block;
 
     padding:4px 10px;
-
-    background:#2f7cff;
 
     color:white;
 
@@ -65,6 +61,22 @@ html,body{
     letter-spacing:.5px;
 
     flex-shrink:0;
+
+}
+
+.title-badge.new{
+
+    order:1;
+
+    background:#00b050;
+
+}
+
+.title-badge.featured{
+
+    order:2;
+
+    background:#2f7cff;
 
 }
 
@@ -92,11 +104,11 @@ html,body{
 
     }
 
-    .title-featured{
+   .title-badge{
 
-        order:1;
+    order:1;
 
-    }
+}
 
     .title-text{
 
@@ -569,17 +581,58 @@ const descriptions =
     await fetch("descriptions.json")
     .then(r => r.json());
 
+
+  const newestEntry = Object.entries(descriptions)
+    .sort((a,b)=>
+        new Date(b[1].updated) -
+        new Date(a[1].updated)
+    )[0];
+
+const newestKey = newestEntry[0];
+
+const newestDate = new Date(newestEntry[1].updated);
+
+const today = new Date();
+
+const oneYearAgo = new Date(today);
+oneYearAgo.setFullYear(today.getFullYear() - 1);
+
+const showNewestBadge =
+    newestDate >= oneYearAgo;
+
+  
 const paper =
     Object.values(descriptions)
     .find(p => p.url === file);
+
+
+
+  const paperKey = Object.keys(descriptions)
+    .find(key => descriptions[key].url === file);
+
+const isNewest =
+    showNewestBadge &&
+    paperKey === newestKey;
+
+
+  
 const returnPage = decodeURIComponent(
     p.get("return") || "index.html"
 );
 console.log("returnPage =", returnPage);
-document.getElementById("title").innerHTML = `
+
+
+
+  document.getElementById("title").innerHTML = `
+${
+    isNewest
+        ? `<div class="title-badge new">NEW</div>`
+        : ""
+}
+
 ${
     paper?.featured
-        ? `<div class="title-featured">FEATURED</div>`
+        ? `<div class="title-badge featured">FEATURED</div>`
         : ""
 }
 
@@ -587,6 +640,9 @@ ${
     ${title}
 </div>
 `;
+
+
+  
   
 console.log("File:", file);
 
