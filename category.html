@@ -123,32 +123,32 @@ h1{
     margin:15px 0;
     border-radius:10px;
 }
-    .featured-badge{
 
+
+    
+    .paper-badge{
     position:absolute;
-
     top:14px;
-
     right:52px;
-
-    background:#2f7cff;
-
-    color:white;
-
+    color:#fff;
     font-size:.72em;
-
     font-weight:bold;
-
     padding:5px 10px;
-
     border-radius:999px;
-
     letter-spacing:.5px;
-
     text-transform:uppercase;
-
 }
 
+.paper-badge.featured{
+    background:#2f7cff;
+}
+
+.paper-badge.newest{
+    background:#00b050;
+}
+
+
+    
 .card-description{
     color:#aaa;
     font-size:0.9em;
@@ -354,6 +354,18 @@ window.toggleFavorite = toggleFavorite;
         !image.trim().startsWith("#$")
     ).length;
 }
+    function getPaperBadge(paper){
+
+    if (paper.newest) {
+        return `<div class="paper-badge newest">Newest</div>`;
+    }
+
+    if (paper.featured) {
+        return `<div class="paper-badge featured">Featured</div>`;
+    }
+
+    return "";
+}
 function renderPapers(){
 loadFavorites();
 container.innerHTML = "";
@@ -518,12 +530,10 @@ toggleFavorite('${key}');
 ">
 ${isFavorite(key) ? "★" : "☆"}
 </span>
- ${
-        paper.featured
-        ? `<div class="featured-badge">Featured</div>`
-        : ""
-    }
+${getPaperBadge(paper)}
+
                 <h2>${paper.title}</h2>
+                
 
                 <p class="card-description">
                     ${paper.description}
@@ -608,11 +618,9 @@ toggleFavorite('${key}');
 ">
 ${isFavorite(key) ? "★" : "☆"}
 </span>
- ${
-        paper.featured
-        ? `<div class="featured-badge">Featured</div>`
-        : ""
-    }
+${getPaperBadge(paper)}
+
+
                 <h2>${paper.title}</h2>
 
                 <p class="card-description">
