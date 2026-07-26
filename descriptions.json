@@ -603,7 +603,10 @@
     "updated": "2026-07-25",
     "images": [
       "Drug Comparision.png"
-    ]
+    ],
+   "featured": true,
+   "featuredOrder": 4,
+   "featuredImage": 1
 }
 
 
