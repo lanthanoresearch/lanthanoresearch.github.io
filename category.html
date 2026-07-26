@@ -299,23 +299,30 @@ if(!returning){
 
 }
     
+
+let pageTitle = "";
+
 if(currentCategory === "all"){
 
-    document.querySelector("h1").textContent =
-        "All Research";
+    pageTitle = "All Research";
 
 }else if(currentCategory === "favorites"){
 
-    document.querySelector("h1").textContent =
-        "Favorite Papers";
+    pageTitle = "Favorite Papers";
 
 }else{
 
-    document.querySelector("h1").textContent =
+    pageTitle =
         currentCategory.charAt(0).toUpperCase() +
         currentCategory.slice(1);
 
 }
+
+document.querySelector("h1").textContent = pageTitle;
+document.title = `Lanthano Research - ${pageTitle}`;
+
+
+    
 fetch("descriptions.json")
 .then(response => response.json())
 .then(data => {
