@@ -66,7 +66,7 @@ html,body{
 
 .title-badge.new{
 
-    order:1;
+    order:2;
 
     background:#00b050;
 
@@ -74,7 +74,7 @@ html,body{
 
 .title-badge.featured{
 
-    order:2;
+    order:3;
 
     background:#2f7cff;
 
@@ -83,6 +83,8 @@ html,body{
 .title-text{
 
     order:1;
+
+    flex:1;
 
     min-width:0;
 
@@ -98,32 +100,39 @@ html,body{
 
     #title{
 
-        flex-direction:column;
+    flex-direction:column;
 
-        gap:6px;
+    align-items:center;
 
-    }
+    gap:6px;
 
-   .title-badge{
+}
+
+.title-text{
+
+    order:2;
+
+    width:100%;
+
+    white-space:nowrap;
+
+    overflow:hidden;
+
+    text-overflow:ellipsis;
+
+}
+
+.title-badge.new{
 
     order:1;
 
 }
 
-    .title-text{
+.title-badge.featured{
 
-        order:2;
+    order:1;
 
-        width:100%;
-
-        white-space:nowrap;
-
-        overflow:hidden;
-
-        text-overflow:ellipsis;
-
-    }
-
+}
 }  
   .pageCanvas{
     pointer-events:none;
