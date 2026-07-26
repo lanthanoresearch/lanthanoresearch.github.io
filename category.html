@@ -147,6 +147,10 @@ h1{
     background:#00b050;
 }
 
+.paper-badge.newest.with-featured{
+    right:150px;
+}
+
 
     
 .card-description{
@@ -376,21 +380,31 @@ window.toggleFavorite = toggleFavorite;
 }
 
     
-    function getPaperBadge(key, paper){
+function getPaperBadge(key, paper){
 
     const isNewest =
         showNewestBadge &&
         key === newestKey;
 
+    let html = "";
+
     if (isNewest){
-        return `<div class="paper-badge newest">New</div>`;
+
+        html += `
+        <div class="paper-badge newest${paper.featured ? " with-featured" : ""}">
+            New
+        </div>`;
     }
 
     if (paper.featured){
-        return `<div class="paper-badge featured">Featured</div>`;
+
+        html += `
+        <div class="paper-badge featured">
+            Featured
+        </div>`;
     }
 
-    return "";
+    return html;
 }
     
 function renderPapers(){
