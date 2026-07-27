@@ -1,7 +1,4 @@
 {
-
-
-  
   "911": {
     "title": "9/11",
     "warning": false,
@@ -10,7 +7,7 @@
       "political"
     ],
     "pages": 23,
-    "description": "An investigation into September 11, examining the official narrative and alternative theories.",
+    "description": "A review of the events of September 11, 2001, including the towers, the Pentagon attack, Building 7, and the questions raised around the official account.",
     "url": "9-11.pdf",
     "updated": "2023-09-14",
     "images": [
@@ -21,9 +18,6 @@
       "Pentagon.png"
     ]
   },
-
-
-  
   "artemis": {
     "title": "Artemis",
     "warning": false,
@@ -31,8 +25,8 @@
       "astronomy",
       "technology"
     ],
-     "pages": 7,
-    "description": "A study of NASA's Artemis program and the evidence used to question its authenticity.",
+    "pages": 7,
+    "description": "An overview of Artemis II, its mission timeline, the published imagery, and the concerns raised about how the mission is presented.",
     "url": "Artemis.pdf",
     "updated": "2026-04-04",
     "images": [
@@ -42,19 +36,16 @@
       "Whole earth (night).jpg"
     ]
   },
-
-
-  
   "biblical_cosmology": {
     "title": "Biblical Cosmology",
     "warning": false,
     "category": [
-      "biblical", 
+      "biblical",
       "astronomy",
       "philosophy"
     ],
-     "pages": 21,
-    "description": "Scriptural cosmology, ancient worldviews, and challenges to modern cosmological models.",
+    "pages": 21,
+    "description": "A discussion of scriptural cosmology, ancient worldviews, and how they compare with modern models of space and distance.",
     "url": "Biblical Cosmology.pdf",
     "updated": "2026-03-05",
     "images": [
@@ -65,24 +56,18 @@
       "Seasons.png"
     ]
   },
-
-
-  
   "biblical_marriage": {
     "title": "Biblical Marriage",
     "warning": false,
     "category": [
       "biblical"
     ],
-     "pages": 7,
-    "description": "A biblical examination of marriage, family structure, and covenant relationships.",
+    "pages": 7,
+    "description": "A biblical study of marriage, family structure, covenant, and the roles of husband and wife.",
     "url": "Biblical Marriage.pdf",
     "updated": "2025-09-07",
     "images": []
   },
-
-
-  
   "breakfast": {
     "title": "Breakfast",
     "warning": false,
@@ -90,54 +75,45 @@
       "medical",
       "scientific"
     ],
-     "pages": 17,
-    "description": "An evidence-based look at whether breakfast is truly the most important meal of the day.",
+    "pages": 17,
+    "description": "A look at breakfast and the question of whether it truly deserves its reputation as the most important meal of the day.",
     "url": "Breakfast.pdf",
     "updated": "2025-08-21",
     "images": []
   },
-
-
-  
   "carbon_dating": {
     "title": "Carbon Dating",
     "warning": false,
     "category": [
-      "scientific", 
+      "scientific",
       "historical"
     ],
-     "pages": 3,
-    "description": "An examination of radiocarbon dating, its assumptions, strengths, and limitations.",
+    "pages": 3,
+    "description": "A discussion of radiocarbon dating, the assumptions behind it, and the limits of how its results are interpreted.",
     "url": "Carbon Dating.pdf",
     "updated": "2022-09-12",
     "images": []
   },
-
-
-  
   "duplicate_caesars": {
     "title": "Duplicate Caesars",
     "warning": false,
     "category": [
       "historical"
     ],
-     "pages": 10,
-    "description": "A study of historical repetitions and the possibility of duplicated Roman timelines.",
+    "pages": 10,
+    "description": "An examination of Roman chronology and the possibility that some rulers were duplicated in the historical record.",
     "url": "Duplicate Caesars.pdf",
     "updated": "2026-01-19",
     "images": []
   },
-
-
-  
   "egypt": {
     "title": "Egypt",
     "warning": false,
     "category": [
       "historical"
     ],
-     "pages": 14,
-    "description": "Ancient Egypt, its monuments, mysteries, and unexplained achievements.",
+    "pages": 14,
+    "description": "An overview of ancient Egypt, its monuments, and the mysteries surrounding its remarkable achievements.",
     "url": "Egypt.pdf",
     "updated": "2025-06-02",
     "images": [
@@ -148,9 +124,6 @@
       "Zones 2.png"
     ]
   },
-
-
-  
   "genetic_degradation": {
     "title": "Genetic Degradation",
     "warning": false,
@@ -158,24 +131,21 @@
       "scientific",
       "medical"
     ],
-     "pages": 5,
-    "description": "Research into mutation accumulation and the long-term decline of genetic information.",
+    "pages": 5,
+    "description": "A study of mutation accumulation, inheritance, and the long-term decline of genetic information.",
     "url": "Genetic Degradation.pdf",
     "updated": "2022-08-09",
     "images": []
   },
-
-
-  
   "godless_israel": {
     "title": "Godless Israel",
     "warning": false,
     "category": [
       "biblical",
-       "political"
+      "political"
     ],
-     "pages": 6,
-    "description": "An examination of modern Israel through biblical, historical, and theological perspectives.",
+    "pages": 6,
+    "description": "A biblical, historical, and theological look at modern Israel and the claims made about it.",
     "url": "Israel.pdf",
     "updated": "2026-06-02",
     "images": [
@@ -188,55 +158,43 @@
       "#$ Pro Palestinian Jew killed.jpg"
     ]
   },
-
-
-  
   "hebrews_6": {
     "title": "Hebrews 6 Deep Dive",
     "warning": false,
     "category": [
       "biblical"
     ],
-     "pages": 7,
-    "description": "A verse-by-verse analysis of Hebrews 6:4–6 in Greek, English, and context.",
+    "pages": 7,
+    "description": "A verse-by-verse study of Hebrews 6:4–6 in Greek, English, and context.",
     "url": "Hebrews 6 Deep Dive.pdf",
     "updated": "2024-04-20",
     "images": []
   },
-
-
-  
   "once_saved_always_saved": {
     "title": "Once Saved, Always Saved",
     "warning": false,
     "category": [
       "biblical"
     ],
-     "pages": 12,
-    "description": "Biblical arguments for and against the doctrine of eternal security.",
+    "pages": 12,
+    "description": "A study of eternal security and the biblical arguments for and against the doctrine.",
     "url": "Once Saved, Always Saved.pdf",
     "updated": "2023-09-28",
     "images": []
   },
-
-
-  
   "privacy": {
     "title": "Privacy",
     "warning": false,
     "category": [
-      "technology", 
+      "technology",
       "political"
     ],
-     "pages": 4,
-    "description": "A look at modern surveillance, data collection, and the erosion of personal privacy.",
+    "pages": 4,
+    "description": "A look at digital surveillance, data collection, and the erosion of personal privacy.",
     "url": "Privacy.pdf",
     "updated": "2025-10-20",
     "images": []
   },
-
-
-  
   "satans_little_season": {
     "title": "Satan's Little Season",
     "warning": false,
@@ -244,7 +202,7 @@
       "biblical",
       "historical"
     ],
-     "pages": 71,
+    "pages": 71,
     "description": "An investigation into whether the present age matches biblical descriptions of Satan's Little Season.",
     "url": "Satan's Little Season.pdf",
     "updated": "2025-11-20",
@@ -256,13 +214,10 @@
       "Signs of the Times.png",
       "Timeline.png"
     ],
-   "featured": true,
-   "featuredOrder": 1,
-   "featuredImage": 4
+    "featured": true,
+    "featuredOrder": 1,
+    "featuredImage": 4
   },
-
-
-  
   "symbolism": {
     "title": "Symbolism",
     "warning": false,
@@ -270,7 +225,7 @@
       "biblical",
       "philosophy"
     ],
-     "pages": 6,
+    "pages": 6,
     "description": "A study of recurring symbols, hidden meanings, and their influence throughout history.",
     "url": "Symbolism.pdf",
     "updated": "2025-08-26",
@@ -282,9 +237,6 @@
       "Trinity.png"
     ]
   },
-
-
-  
   "corrupt_versions": {
     "title": "The Corrupt Versions",
     "warning": false,
@@ -292,8 +244,8 @@
       "biblical",
       "historical"
     ],
-     "pages": 128,
-    "description": "An examination of modern Bible translations and the arguments surrounding their reliability.",
+    "pages": 128,
+    "description": "A comparison of modern Bible translations with the King James Bible and the reasons their reliability is questioned.",
     "url": "The KJV Bible.pdf",
     "updated": "2024-04-27",
     "images": [
@@ -311,17 +263,14 @@
     "featuredOrder": 2,
     "featuredImage": 4
   },
-
-
-  
   "mars_hoax": {
     "title": "The Mars Hoax",
     "warning": false,
     "category": [
       "astronomy"
     ],
-     "pages": 4,
-    "description": "An exploration of anomalies and evidence cited by critics of NASA's Mars missions.",
+    "pages": 4,
+    "description": "An exploration of anomalies and evidence cited in criticism of NASA's Mars missions and imagery.",
     "url": "The Mars Hoax.pdf",
     "updated": "2024-02-23",
     "images": [
@@ -333,18 +282,15 @@
       "The Walrus' Bone.png"
     ]
   },
-
-
-  
   "moon_hoax": {
     "title": "The Moon Hoax",
     "warning": false,
     "category": [
-      "astronomy", 
+      "astronomy",
       "historical"
     ],
-     "pages": 59,
-    "description": "A detailed investigation into the Apollo moon landings and the debate surrounding them.",
+    "pages": 59,
+    "description": "A detailed review of the Apollo moon landings, focusing on the images, shadows, distances, and other anomalies discussed by critics.",
     "url": "The Moon Hoax.pdf",
     "updated": "2024-03-28",
     "images": [
@@ -396,24 +342,18 @@
       "TETR Satellite.png"
     ]
   },
-
-
-  
   "titanic": {
     "title": "The Mystery of the Titanic",
     "warning": false,
     "category": [
       "historical"
     ],
-     "pages": 5,
-    "description": "An investigation into the Titanic disaster and the mysteries that continue to surround it.",
+    "pages": 5,
+    "description": "An examination of the Titanic disaster and the mysteries that continue to surround it.",
     "url": "The Mystery of the Titanic.pdf",
     "updated": "2023-09-14",
     "images": []
   },
-
-
-  
   "nuclear_scare": {
     "title": "The Nuclear Scare",
     "warning": false,
@@ -422,8 +362,8 @@
       "historical",
       "political"
     ],
-     "pages": 16,
-    "description": "A review of evidence, inconsistencies, and questions surrounding nuclear technology.",
+    "pages": 16,
+    "description": "A review of nuclear technology, the evidence behind it, and the inconsistencies that have raised questions about it.",
     "url": "The Nuclear Scare.pdf",
     "updated": "2023-09-12",
     "images": [
@@ -446,9 +386,6 @@
       "Which one isn't a real Nuke.png"
     ]
   },
-
-
-  
   "number_of_the_beast": {
     "title": "The Number of the Beast",
     "warning": false,
@@ -456,26 +393,22 @@
       "biblical",
       "historical"
     ],
-     "pages": 6,
-    "description": "A study of biblical prophecy and the identity of the mysterious number 666.",
+    "pages": 6,
+    "description": "A study of biblical prophecy and the identity of 666, commonly called the number of the beast.",
     "url": "The Number of the Beast.pdf",
     "updated": "2025-04-25",
     "images": [
       "Bismillah and the Beast's number.webp"
     ]
   },
-
-
-
-  
   "rapture": {
     "title": "The Rapture",
     "warning": false,
     "category": [
       "biblical"
     ],
-     "pages": 23,
-    "description": "A biblical study examining the origins, development, and validity of the rapture doctrine.",
+    "pages": 23,
+    "description": "A study of the rapture doctrine, tracing its development and testing its biblical basis.",
     "url": "The Rapture.pdf",
     "updated": "2024-08-27",
     "images": [
@@ -485,10 +418,6 @@
       "Verse Comparison.png"
     ]
   },
-
-
-
-  
   "real_nazis": {
     "title": "The Real Nazis",
     "warning": false,
@@ -496,8 +425,8 @@
       "historical",
       "political"
     ],
-     "pages": 32,
-    "description": "A historical examination of disputed claims, overlooked facts, and common misconceptions.",
+    "pages": 32,
+    "description": "A historical look at disputed claims, overlooked evidence, and common misconceptions about Nazi Germany.",
     "url": "The Real Nazis.pdf",
     "updated": "2025-10-30",
     "images": [
@@ -509,10 +438,6 @@
       "What we have been told.png"
     ]
   },
-
-
-
-  
   "vaccines": {
     "title": "The Sad Truth About Vaccines",
     "warning": false,
@@ -520,8 +445,8 @@
       "medical",
       "scientific"
     ],
-     "pages": 65,
-    "description": "Medical studies, historical records, and concerns surrounding vaccine safety and effectiveness.",
+    "pages": 65,
+    "description": "A review of vaccine history, medical studies, and the concerns surrounding safety and effectiveness.",
     "url": "The Sad Truth About Vaccines.pdf",
     "updated": "2024-05-11",
     "images": [
@@ -547,22 +472,18 @@
       "Vaccine schedule.PNG",
       "Yellow Fever (1800-2000).png"
     ],
-     "featured": true,
-     "featuredOrder": 3,
-     "featuredImage": 18
+    "featured": true,
+    "featuredOrder": 3,
+    "featuredImage": 18
   },
-
-
-
-  
   "seraphim": {
     "title": "The Seraphim",
     "warning": false,
     "category": [
       "biblical"
     ],
-     "pages": 14,
-    "description": "An exploration of the Seraphim, their biblical role, appearance, and significance.",
+    "pages": 14,
+    "description": "A study of the seraphim, their biblical role, appearance, and significance.",
     "url": "The Seraphim.pdf",
     "updated": "2026-01-29",
     "images": [
@@ -570,10 +491,6 @@
       "Seref.png"
     ]
   },
-
-
-
-  
   "what_is_everything": {
     "title": "What is Everything",
     "warning": false,
@@ -581,15 +498,13 @@
       "philosophy",
       "scientific"
     ],
-     "pages": 5,
-    "description": "A philosophical and theological exploration of reality, existence, and the nature of everything.",
+    "pages": 5,
+    "description": "A philosophical and theological exploration of reality, existence, and what everything is.",
     "url": "What is Everything.pdf",
     "updated": "2025-03-14",
     "images": []
   },
-
-
-"psychedelics": {
+  "psychedelics": {
     "title": "Psychedelic Mushrooms",
     "warning": false,
     "category": [
@@ -597,15 +512,12 @@
       "scientific",
       "biblical"
     ],
-     "pages": 8,
-    "description": "A scientific exploration of psychedelic mushrooms, their effects, and what there role in our history.",
+    "pages": 8,
+    "description": "A review of psychedelic mushrooms, their effects, and their place in human history.",
     "url": "Psychedelics.pdf",
     "updated": "2026-07-25",
     "images": [
       "Drug Comparision.png"
     ]
-}
-
-
-  
+  }
 }
