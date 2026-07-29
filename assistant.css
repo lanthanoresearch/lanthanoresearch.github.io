@@ -14,7 +14,7 @@
     right:24px;
     bottom:24px;
 
-    z-index:999999;
+    z-index:9999;
 
     opacity:0;
 
@@ -131,6 +131,8 @@
     bottom:92px;
 
     width:430px;
+
+    z-index:10000;
 
     height:680px;
 
