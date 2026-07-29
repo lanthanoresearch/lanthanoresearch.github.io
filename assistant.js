@@ -1,20 +1,87 @@
-// Prevent duplicates
-if (!document.getElementById("lr-ai-button")) {
+/* ==========================================================
+   assistant.js
+   Floating AI Button
+   ========================================================== */
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    // ---------------------------------------
+    // Create Root
+    // ---------------------------------------
+
+    const root = document.createElement("div");
+    root.id = "lr-ai-root";
+    root.className = "hidden";
+
+    // ---------------------------------------
+    // Create Button
+    // ---------------------------------------
 
     const button = document.createElement("button");
-
     button.id = "lr-ai-button";
+    button.type = "button";
+    button.setAttribute("aria-label", "AI Assistant");
 
-    button.innerHTML = `
-        <img src="aiimge.png" alt="AI Assistant">
-    `;
+    const img = document.createElement("img");
+    img.src = "aiimage.png";
+    img.alt = "AI Assistant";
+
+    button.appendChild(img);
+
+    root.appendChild(button);
+
+    document.body.appendChild(root);
+
+    // ---------------------------------------
+    // Hero Detection
+    // ---------------------------------------
+
+    const hero = document.querySelector(".hero");
+
+    function updateButtonVisibility() {
+
+        // Every page except homepage
+        if (!hero) {
+
+            root.classList.remove("hidden");
+            root.classList.add("visible");
+            return;
+
+        }
+
+        const rect = hero.getBoundingClientRect();
+
+        // Hero still occupies part of the screen
+        if (rect.bottom > 100) {
+
+            root.classList.remove("visible");
+            root.classList.add("hidden");
+
+        } else {
+
+            root.classList.remove("hidden");
+            root.classList.add("visible");
+
+        }
+
+    }
+
+    window.addEventListener("scroll", updateButtonVisibility, {
+        passive: true
+    });
+
+    window.addEventListener("resize", updateButtonVisibility);
+
+    updateButtonVisibility();
+
+    // ---------------------------------------
+    // Temporary Click Test
+    // ---------------------------------------
 
     button.addEventListener("click", () => {
 
-        alert("Assistant coming soon.");
+        console.log("AI button clicked.");
 
     });
 
-    document.body.appendChild(button);
-
-}
+});
