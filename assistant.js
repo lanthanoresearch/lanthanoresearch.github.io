@@ -32,6 +32,13 @@ console.log(img.src);
 
     root.appendChild(button);
 
+   // Window will be added by assistant-window.js
+const windowContainer = document.createElement("div");
+windowContainer.id = "lr-ai-window";
+
+root.appendChild(windowContainer);
+
+   
     document.body.appendChild(root);
 
     // ---------------------------------------
@@ -82,8 +89,16 @@ console.log(img.src);
 
     button.addEventListener("click", () => {
 
-        console.log("AI button clicked.");
+    if (!window.AssistantWindow) {
 
-    });
+        console.error("AssistantWindow has not loaded.");
+
+        return;
+
+    }
+
+    window.AssistantWindow.toggle();
+
+});
 
 });
