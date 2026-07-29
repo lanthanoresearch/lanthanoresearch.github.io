@@ -6,18 +6,14 @@
 
 
 (() => {
-const DEBUG_DISABLE_AI = false;
+
 
 
    let aiSession = null;
 
 async function getAISession() {
 
-    if (DEBUG_DISABLE_AI) {
-
-        return null;
-
-    }
+  
 
     if (aiSession) {
 
@@ -154,31 +150,30 @@ class AssistantWindow {
 
         );
 
-        this.sendButton.addEventListener(
-
-            "click",
-
-            () => {
+       this.sendButton.addEventListener(
+    "click",
+    async () => {
 
                 const text = this.input.value.trim();
 
                 if (!text) return;
 
-               const session = async () => {
+              const session = await getAISession();
 
 if (!session) {
 
-    alert("Browser AI isn't available.");
+    this.addAssistantMessage(
+    "Your browser doesn't support the built-in AI required for the Lanthano Research Assistant."
+);
 
     return;
 
 }
 
-const reply = await session.prompt(text);
 
-console.log(reply);
+if (!text) return;
 
-                this.input.value = "";
+this.input.value = "";
 
             }
 
