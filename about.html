@@ -1,9 +1,12 @@
-<!DOCTYPE html><html>
+<!DOCTYPE html>
+<html>
 <head>
     <link rel="icon" type="image/png" href="file_000000000c40722f92b1fe6758cb4855.png">
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>About</title><style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About</title>
+
+    <style>
 
 body{
     margin:0;
@@ -17,12 +20,14 @@ section{
     margin:auto;
     padding:40px 20px;
 }
+
 .update-note{
     text-align:center;
     color:#777;
     font-size:0.9em;
     margin-top:40px;
 }
+
 h1{
     text-align:center;
     margin-bottom:40px;
@@ -46,31 +51,63 @@ p{
     line-height:1.7;
 }
 
-</style></head><body><section><a class="back" href="index.html">◀ Home</a>
+    </style>
+</head>
 
-<h1>About Lanthano Research</h1><div class="card"><h2>Who Are We?</h2><p>
-That is not important, or disclosed.
-</p><p>
-Our identities remain hidden. The focus is not on personalities, credentials, or public recognition. The focus is on the ideas, evidence, and arguments presented.
-</p></div><div class="card"><h2>What Do We Do?</h2><p>
-We investigate, document, and analyze theories, historical claims, biblical topics, unexplained events, and controversial ideas.
-</p><p>
-What began as private research and the writing of in-depth papers has grown into a public effort to share findings, raise questions, and challenge accepted narratives.
-</p><p>
-Our goal is not to demand belief, but to encourage examination.
-</p><p>
-Every claim should be tested. Every assumption should be questioned. Every idea should stand or fall on the strength of its evidence.
-</p></div><div class="card"><h2>Our Purpose</h2><p>
-Lanthano exists to explore what others overlook, and to find out truth.
-</p></div>
-    
-    <div class="update-note" id="lastUpdate">
-Loading research date...
+<body>
+
+<section>
+
+    <a class="back" href="index.html">◀ Home</a>
+
+    <h1>About Lanthano Research</h1>
+
+    <div class="card">
+        <h2>Who Are We?</h2>
+
+        <p>
+            That is not important, or disclosed.
+        </p>
+
+        <p>
+            Our identities remain hidden. The focus is not on personalities, credentials, or public recognition. The focus is on the ideas, evidence, and arguments presented.
+        </p>
     </div>
 
+    <div class="card">
+        <h2>What Do We Do?</h2>
 
-    
+        <p>
+            We investigate, document, and analyze theories, historical claims, biblical topics, unexplained events, and controversial ideas.
+        </p>
+
+        <p>
+            What began as private research and the writing of in-depth papers has grown into a public effort to share findings, raise questions, and challenge accepted narratives.
+        </p>
+
+        <p>
+            Our goal is not to demand belief, but to encourage examination.
+        </p>
+
+        <p>
+            Every claim should be tested. Every assumption should be questioned. Every idea should stand or fall on the strength of its evidence.
+        </p>
+    </div>
+
+    <div class="card">
+        <h2>Our Purpose</h2>
+
+        <p>
+            Lanthano exists to explore what others overlook, and to find out truth.
+        </p>
+    </div>
+
+    <div class="update-note" id="lastUpdate">
+        Loading research date...
+    </div>
+
 </section>
+
 <script>
 
 fetch("descriptions.json")
@@ -81,21 +118,32 @@ fetch("descriptions.json")
 
     Object.values(data).forEach(paper => {
 
-        if(
+        if (
             paper.updated &&
             paper.updated > newestDate
-        ){
+        ) {
             newestDate = paper.updated;
         }
 
     });
 
+    let formattedDate = newestDate;
+
+    if (newestDate) {
+        const parts = newestDate.split("-");
+        formattedDate =
+            parts[1] + "/" +
+            parts[2] + "/" +
+            parts[0];
+    }
+
     document.getElementById("lastUpdate").textContent =
         "Latest research paper: " +
-        newestDate + ".";
+        formattedDate + ".";
 
 });
 
 </script>
+
 </body>
 </html>
