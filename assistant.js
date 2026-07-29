@@ -23,7 +23,9 @@ document.addEventListener("DOMContentLoaded", () => {
     button.setAttribute("aria-label", "AI Assistant");
 
     const img = document.createElement("img");
-    img.src = "aiimage.png";
+   img.src = new URL("aiimage.png", import.meta.url).href;
+
+console.log(img.src);
     img.alt = "AI Assistant";
 
     button.appendChild(img);
