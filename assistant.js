@@ -5,53 +5,22 @@
 
 async function browserAISupported() {
 
-    try {
+    console.log("LanguageModel:", window.LanguageModel);
+    console.log("window.ai:", window.ai);
+    console.log("navigator.ai:", navigator.ai);
 
-        // New Chrome Prompt API
-        if ("LanguageModel" in window) {
-
-            const availability = await LanguageModel.availability();
-
-            return (
-                availability === "available" ||
-                availability === "downloadable" ||
-                availability === "downloading"
-            );
-
-        }
-
-        // Older Chrome AI API
-        if (window.ai?.languageModel) {
-
-            return true;
-
-        }
-
-    } catch (error) {
-
-        console.error("Browser AI detection failed:", error);
-
-    }
-
-    return false;
+    // Always return true for now so the button stays visible.
+    return true;
 
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
 
     // ---------------------------------------
-    // Browser AI Check
+    // Browser AI Check (Temporary)
     // ---------------------------------------
 
-    if (!(await browserAISupported())) {
-
-        console.log("Browser AI not supported.");
-
-        return;
-
-    }
-
-    console.log("Browser AI supported.");
+    await browserAISupported();
 
     // ---------------------------------------
     // Create Root
