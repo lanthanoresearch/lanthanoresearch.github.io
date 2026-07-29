@@ -140,72 +140,94 @@ class AssistantWindow {
 
     }
 
-    bindEvents() {
 
-        this.closeButton.addEventListener(
+   bindEvents() {
 
-            "click",
+    this.closeButton.addEventListener(
 
-            () => this.close()
+        "click",
 
-        );
+        () => this.close()
 
-       this.sendButton.addEventListener(
-    "click",
-    async () => {
+    );
 
-                const text = this.input.value.trim();
+    this.sendButton.addEventListener(
 
-                if (!text) return;
+        "click",
 
-              const session = await getAISession();
+        async () => {
 
-if (!session) {
+            const text = this.input.value.trim();
 
-    this.addAssistantMessage(
-    "Your browser doesn't support the built-in AI required for the Lanthano Research Assistant."
-);
+            if (!text) return;
 
-    return;
+            this.input.value = "";
+
+            const session = await getAISession();
+
+            if (!session) {
+
+                alert(
+                    "Your browser doesn't support the built-in AI required for the Lanthano Research Assistant."
+                );
+
+                return;
+
+            }
+
+            try {
+
+                const reply = await session.prompt(text);
+
+                console.log(reply);
+
+                // Later:
+                // this.addUserMessage(text);
+                // this.addAssistantMessage(reply);
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert(
+                    "An error occurred while communicating with the built-in AI."
+                );
+
+            }
+
+        }
+
+    );
+
+    this.input.addEventListener(
+
+        "keydown",
+
+        event => {
+
+            if (event.key === "Escape") {
+
+                this.close();
+
+                return;
+
+            }
+
+            if (event.key === "Enter") {
+
+                event.preventDefault();
+
+                this.sendButton.click();
+
+            }
+
+        }
+
+    );
 
 }
 
-
-if (!text) return;
-
-this.input.value = "";
-
-            }
-
-        );
-
-        this.input.addEventListener(
-
-            "keydown",
-
-            event => {
-
-                if (event.key === "Escape") {
-
-                    this.close();
-
-                    return;
-
-                }
-
-                if (event.key === "Enter") {
-
-                    event.preventDefault();
-
-                    this.sendButton.click();
-
-                }
-
-            }
-
-        );
-
-    }
+   
 
     open() {
 
