@@ -51,7 +51,7 @@ class AssistantWindow {
                         src="${new URL("aiimage.png", import.meta.url).href}"
                         alt="AI">
 
-                    <span>Lanthano AI</span>
+                    <span>Lanthano Research Assistant</span>
 
                 </div>
 
@@ -77,7 +77,7 @@ class AssistantWindow {
                     type="text"
                     autocomplete="off"
                     spellcheck="false"
-                    placeholder="Ask Lanthano AI anything...">
+                    placeholder="Ask Lanthano Research Assistant anything...">
 
                 <button
                     id="lr-ai-send"
