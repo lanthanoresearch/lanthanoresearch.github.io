@@ -203,6 +203,6 @@ class AssistantWindow {
 
 }
 
-
+window.AssistantWindowClass = AssistantWindow;
 
 })();
