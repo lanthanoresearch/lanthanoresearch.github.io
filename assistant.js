@@ -1,10 +1,41 @@
+async function browserAISupported() {
+
+    if (!("LanguageModel" in self)) {
+        return false;
+    }
+
+    try {
+
+        const availability = await LanguageModel.availability();
+
+        return (
+            availability === "available" ||
+            availability === "downloadable" ||
+            availability === "downloading"
+        );
+
+    } catch {
+
+        return false;
+
+    }
+
+}
+
+
 /* ==========================================================
    assistant.js
    Floating AI Button
    ========================================================== */
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+if (!(await browserAISupported())) {
 
+    console.log("Browser AI not supported.");
+
+    return;
+
+}
     // ---------------------------------------
     // Create Root
     // ---------------------------------------
