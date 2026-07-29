@@ -1,3 +1,6 @@
+
+
+
 /* ==========================================================
    assistant.js
    Floating AI Button
@@ -8,8 +11,12 @@
 
 document.addEventListener("DOMContentLoaded", async () => {
 
-    
+    const ENABLE_AI_BUTTON = false;
 
+
+   if (!ENABLE_AI_BUTTON) {
+    return;
+}
     // ---------------------------------------
     // Create Root
     // ---------------------------------------
