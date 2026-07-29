@@ -28,8 +28,6 @@
 
 }
 
-/* Visible */
-
 #lr-ai-root.visible{
 
     opacity:1;
@@ -39,8 +37,6 @@
     pointer-events:auto;
 
 }
-
-/* Hidden */
 
 #lr-ai-root.hidden{
 
@@ -136,13 +132,13 @@
 
     width:430px;
 
-    height:650px;
+    height:680px;
 
     background:#181818;
 
     border:1px solid #2d2d2d;
 
-    border-radius:18px;
+    border-radius:20px;
 
     overflow:hidden;
 
@@ -162,23 +158,17 @@
     pointer-events:none;
 
     transition:
-
         opacity .22s ease,
-
         transform .22s ease;
 
 }
-
-/* Open */
 
 #lr-ai-window.open{
 
     opacity:1;
 
     transform:
-
         translateY(0)
-
         scale(1);
 
     pointer-events:auto;
@@ -191,7 +181,7 @@
 
 #lr-ai-header{
 
-    height:64px;
+    height:72px;
 
     display:flex;
 
@@ -199,7 +189,7 @@
 
     justify-content:space-between;
 
-    padding:0 18px;
+    padding:0 20px;
 
     border-bottom:1px solid #2d2d2d;
 
@@ -215,9 +205,7 @@
 
     align-items:center;
 
-    gap:12px;
-
-    font-weight:600;
+    gap:14px;
 
     color:#fff;
 
@@ -225,19 +213,47 @@
 
 #lr-ai-title img{
 
-    width:34px;
+    width:40px;
 
-    height:34px;
+    height:40px;
 
     border-radius:50%;
 
 }
 
+#lr-ai-title-text{
+
+    display:flex;
+
+    flex-direction:column;
+
+    line-height:1.15;
+
+}
+
+#lr-ai-title-text strong{
+
+    font-size:18px;
+
+    font-weight:700;
+
+}
+
+#lr-ai-title-text span{
+
+    font-size:12px;
+
+    color:#9c9c9c;
+
+    margin-top:3px;
+
+}
+
 #lr-ai-close{
 
-    width:36px;
+    width:40px;
 
-    height:36px;
+    height:40px;
 
     border:none;
 
@@ -249,19 +265,17 @@
 
     cursor:pointer;
 
-    font-size:22px;
+    font-size:24px;
 
     transition:
-
         background .2s ease,
-
         color .2s ease;
 
 }
 
 #lr-ai-close:hover{
 
-    background:#2c2c2c;
+    background:#2f2f2f;
 
     color:#fff;
 
@@ -277,15 +291,15 @@
 
     overflow-y:auto;
 
-    padding:18px;
+    padding:22px;
 
-    color:white;
+    color:#fff;
 
     display:flex;
 
     flex-direction:column;
 
-    gap:16px;
+    gap:18px;
 
     scroll-behavior:smooth;
 
@@ -315,7 +329,7 @@
 
     gap:10px;
 
-    padding:14px;
+    padding:16px;
 
     border-top:1px solid #2d2d2d;
 
@@ -329,19 +343,25 @@
 
     flex:1;
 
+    min-height:52px;
+
     border:1px solid #333;
 
     background:#2a2a2a;
 
     color:white;
 
-    padding:12px 14px;
+    padding:0 16px;
 
-    border-radius:10px;
+    border-radius:12px;
 
     outline:none;
 
-    font-size:15px;
+    font-size:16px;
+
+    transition:
+        border-color .2s ease,
+        background .2s ease;
 
 }
 
@@ -349,15 +369,21 @@
 
     border-color:#5d8dff;
 
+    background:#303030;
+
 }
 
 #lr-ai-send{
 
-    padding:0 18px;
+    width:52px;
+
+    min-width:52px;
+
+    height:52px;
 
     border:none;
 
-    border-radius:10px;
+    border-radius:12px;
 
     background:#4c7bff;
 
@@ -365,10 +391,18 @@
 
     cursor:pointer;
 
+    font-size:18px;
+
+    font-weight:600;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
     transition:
-
         background .2s ease,
-
         transform .2s ease;
 
 }
@@ -381,7 +415,7 @@
 
 #lr-ai-send:active{
 
-    transform:scale(.96);
+    transform:scale(.95);
 
 }
 
@@ -389,13 +423,13 @@
    Mobile
    ========================================================== */
 
-@media (max-width:950px){
+@media (max-width:768px){
 
     #lr-ai-root{
 
-        right:18px;
+        right:16px;
 
-        bottom:18px;
+        bottom:16px;
 
     }
 
@@ -417,13 +451,61 @@
 
     #lr-ai-window{
 
-        width:calc(100vw - 24px);
+        position:fixed;
 
-        height:78vh;
+        top:10px;
 
-        right:0;
+        left:10px;
 
-        bottom:82px;
+        right:10px;
+
+        bottom:10px;
+
+        width:auto;
+
+        height:auto;
+
+        border-radius:18px;
+
+    }
+
+    #lr-ai-header{
+
+        height:68px;
+
+        padding:0 18px;
+
+    }
+
+    #lr-ai-title img{
+
+        width:36px;
+
+        height:36px;
+
+    }
+
+    #lr-ai-title-text strong{
+
+        font-size:17px;
+
+    }
+
+    #lr-ai-title-text span{
+
+        font-size:11px;
+
+    }
+
+    #lr-ai-messages{
+
+        padding:18px;
+
+    }
+
+    #lr-ai-input-area{
+
+        padding:14px;
 
     }
 
