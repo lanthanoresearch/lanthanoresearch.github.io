@@ -1,41 +1,58 @@
-async function browserAISupported() {
-
-    if (!("LanguageModel" in self)) {
-        return false;
-    }
-
-    try {
-
-        const availability = await LanguageModel.availability();
-
-        return (
-            availability === "available" ||
-            availability === "downloadable" ||
-            availability === "downloading"
-        );
-
-    } catch {
-
-        return false;
-
-    }
-
-}
-
-
 /* ==========================================================
    assistant.js
    Floating AI Button
    ========================================================== */
 
-document.addEventListener("DOMContentLoaded", async () => {
-if (!(await browserAISupported())) {
+async function browserAISupported() {
 
-    console.log("Browser AI not supported.");
+    try {
 
-    return;
+        // New Chrome Prompt API
+        if ("LanguageModel" in window) {
+
+            const availability = await LanguageModel.availability();
+
+            return (
+                availability === "available" ||
+                availability === "downloadable" ||
+                availability === "downloading"
+            );
+
+        }
+
+        // Older Chrome AI API
+        if (window.ai?.languageModel) {
+
+            return true;
+
+        }
+
+    } catch (error) {
+
+        console.error("Browser AI detection failed:", error);
+
+    }
+
+    return false;
 
 }
+
+document.addEventListener("DOMContentLoaded", async () => {
+
+    // ---------------------------------------
+    // Browser AI Check
+    // ---------------------------------------
+
+    if (!(await browserAISupported())) {
+
+        console.log("Browser AI not supported.");
+
+        return;
+
+    }
+
+    console.log("Browser AI supported.");
+
     // ---------------------------------------
     // Create Root
     // ---------------------------------------
@@ -54,30 +71,37 @@ if (!(await browserAISupported())) {
     button.setAttribute("aria-label", "AI Assistant");
 
     const img = document.createElement("img");
-   img.src = new URL("aiimage.png", import.meta.url).href;
 
+    img.src = new URL("aiimage.png", import.meta.url).href;
 
     img.alt = "AI Assistant";
-img.onerror = () => {
-    console.error("Failed to load aiimage.png");
-};
+
+    img.onerror = () => {
+
+        console.error("Failed to load aiimage.png");
+
+    };
+
     button.appendChild(img);
 
     root.appendChild(button);
 
-  
-
-   
     document.body.appendChild(root);
-// ---------------------------------------
-// Create Assistant Window
-// ---------------------------------------
 
-if (window.AssistantWindowClass) {
-    window.AssistantWindow = new window.AssistantWindowClass();
-} else {
-    console.error("AssistantWindowClass is not available.");
-}
+    // ---------------------------------------
+    // Create Assistant Window
+    // ---------------------------------------
+
+    if (window.AssistantWindowClass) {
+
+        window.AssistantWindow = new window.AssistantWindowClass();
+
+    } else {
+
+        console.error("AssistantWindowClass is not available.");
+
+    }
+
     // ---------------------------------------
     // Hero Detection
     // ---------------------------------------
@@ -86,18 +110,17 @@ if (window.AssistantWindowClass) {
 
     function updateButtonVisibility() {
 
-        // Every page except homepage
         if (!hero) {
 
             root.classList.remove("hidden");
             root.classList.add("visible");
+
             return;
 
         }
 
         const rect = hero.getBoundingClientRect();
 
-        // Hero still occupies part of the screen
         if (rect.bottom > 100) {
 
             root.classList.remove("visible");
@@ -121,21 +144,21 @@ if (window.AssistantWindowClass) {
     updateButtonVisibility();
 
     // ---------------------------------------
-    // Temporary Click Test
+    // Open Assistant
     // ---------------------------------------
 
     button.addEventListener("click", () => {
 
-    if (!window.AssistantWindow) {
+        if (!window.AssistantWindow) {
 
-        console.error("AssistantWindow has not loaded.");
+            console.error("AssistantWindow has not loaded.");
 
-        return;
+            return;
 
-    }
+        }
 
-    window.AssistantWindow.toggle();
+        window.AssistantWindow.toggle();
 
-});
+    });
 
 });
