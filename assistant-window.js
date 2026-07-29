@@ -203,6 +203,8 @@ class AssistantWindow {
 
 }
 
-window.AssistantWindow = new AssistantWindow();
+document.addEventListener("DOMContentLoaded", () => {
+    window.AssistantWindow = new AssistantWindow();
+});
 
 })();
