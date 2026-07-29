@@ -38,7 +38,15 @@ img.onerror = () => {
 
    
     document.body.appendChild(root);
+// ---------------------------------------
+// Create Assistant Window
+// ---------------------------------------
 
+if (window.AssistantWindowClass) {
+    window.AssistantWindow = new window.AssistantWindowClass();
+} else {
+    console.error("AssistantWindowClass is not available.");
+}
     // ---------------------------------------
     // Hero Detection
     // ---------------------------------------
