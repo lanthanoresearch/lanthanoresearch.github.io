@@ -3,25 +3,12 @@
    Floating AI Button
    ========================================================== */
 
-async function browserAISupported() {
 
-    console.log("LanguageModel:", window.LanguageModel);
-    console.log("window.ai:", window.ai);
-    console.log("navigator.ai:", navigator.ai);
-
-    // Always return true for now so the button stays visible.
-    return true;
-
-}
 
 
 document.addEventListener("DOMContentLoaded", async () => {
 
-    // ---------------------------------------
-    // Browser AI Check (Temporary)
-    // ---------------------------------------
-
-    await browserAISupported();
+    
 
     // ---------------------------------------
     // Create Root
