@@ -25,18 +25,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const img = document.createElement("img");
    img.src = new URL("aiimage.png", import.meta.url).href;
 
-console.log(img.src);
-    img.alt = "AI Assistant";
 
+    img.alt = "AI Assistant";
+img.onerror = () => {
+    console.error("Failed to load aiimage.png");
+};
     button.appendChild(img);
 
     root.appendChild(button);
 
-   // Window will be added by assistant-window.js
-const windowContainer = document.createElement("div");
-windowContainer.id = "lr-ai-window";
-
-root.appendChild(windowContainer);
+  
 
    
     document.body.appendChild(root);
