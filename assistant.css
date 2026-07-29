@@ -1,60 +1,215 @@
-/* Floating AI Button */
+/* ==========================================================
+   Lanthano Research Assistant
+   assistant.css
+   ========================================================== */
+
+/* ---------- Root Container ---------- */
+
+#lr-ai-root{
+
+    position:fixed;
+
+    right:24px;
+    bottom:24px;
+
+    z-index:999999;
+
+    opacity:0;
+
+    transform:translateY(35px);
+
+    pointer-events:none;
+
+    transition:
+        opacity .35s ease,
+        transform .35s ease;
+
+}
+
+/* Visible */
+
+#lr-ai-root.visible{
+
+    opacity:1;
+
+    transform:translateY(0);
+
+    pointer-events:auto;
+
+}
+
+/* Hidden */
+
+#lr-ai-root.hidden{
+
+    opacity:0;
+
+    transform:translateY(35px);
+
+    pointer-events:none;
+
+}
+
+/* ==========================================================
+   Floating Button
+   ========================================================== */
 
 #lr-ai-button{
-    position:fixed;
-    right:20px;
-    bottom:20px;
 
-    width:64px;
-    height:64px;
+    width:72px;
+    height:72px;
 
     border:none;
-    border-radius:50%;
 
-    background:#181818;
+    background:transparent;
+
     cursor:pointer;
 
     padding:0;
 
+    border-radius:50%;
+
     display:flex;
-    justify-content:center;
+
     align-items:center;
 
-    box-shadow:0 6px 18px rgba(0,0,0,.45);
-
-    z-index:999999;
+    justify-content:center;
 
     transition:
-        transform .2s ease,
-        box-shadow .2s ease;
+        transform .20s ease,
+        filter .20s ease;
+
+    user-select:none;
+
 }
+
+/* Hover */
 
 #lr-ai-button:hover{
+
     transform:scale(1.08);
-    box-shadow:0 10px 24px rgba(0,0,0,.55);
+
+    filter:brightness(1.08);
+
 }
+
+/* Click */
 
 #lr-ai-button:active{
-    transform:scale(.95);
+
+    transform:scale(.96);
+
 }
+
+/* ==========================================================
+   Button Image
+   ========================================================== */
 
 #lr-ai-button img{
-    width:70%;
-    height:70%;
+
+    width:72px;
+
+    height:72px;
+
+    display:block;
+
+    border-radius:50%;
+
     object-fit:contain;
+
     pointer-events:none;
-}
 
-@media (max-width:900px){
+    user-select:none;
 
-#lr-ai-button{
+    -webkit-user-drag:none;
 
-    width:56px;
-    height:56px;
-
-    right:16px;
-    bottom:16px;
+    filter:
+        drop-shadow(0 8px 24px rgba(0,0,0,.45));
 
 }
+
+/* ==========================================================
+   Chat Window
+   (Hidden for now)
+   ========================================================== */
+
+#lr-ai-window{
+
+    position:absolute;
+
+    right:0;
+
+    bottom:92px;
+
+    width:420px;
+
+    height:600px;
+
+    background:#181818;
+
+    border:1px solid #2d2d2d;
+
+    border-radius:18px;
+
+    box-shadow:
+        0 20px 60px rgba(0,0,0,.45);
+
+    display:none;
+
+    overflow:hidden;
+
+}
+
+/* Future */
+
+#lr-ai-window.open{
+
+    display:flex;
+
+    flex-direction:column;
+
+}
+
+/* ==========================================================
+   Mobile
+   ========================================================== */
+
+@media (max-width:950px){
+
+    #lr-ai-root{
+
+        right:18px;
+
+        bottom:18px;
+
+    }
+
+    #lr-ai-button{
+
+        width:64px;
+
+        height:64px;
+
+    }
+
+    #lr-ai-button img{
+
+        width:64px;
+
+        height:64px;
+
+    }
+
+    #lr-ai-window{
+
+        width:calc(100vw - 24px);
+
+        height:75vh;
+
+        right:0;
+
+        bottom:82px;
+
+    }
 
 }
