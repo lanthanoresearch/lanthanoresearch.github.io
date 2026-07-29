@@ -14,6 +14,7 @@ async function browserAISupported() {
 
 }
 
+
 document.addEventListener("DOMContentLoaded", async () => {
 
     // ---------------------------------------
