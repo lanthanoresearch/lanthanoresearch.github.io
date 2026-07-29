@@ -78,7 +78,7 @@ class AssistantWindow {
                     type="text"
                     autocomplete="off"
                     spellcheck="false"
-                    placeholder="Ask Lanthano Research Assistant anything...">
+                    placeholder="Ask anything...">
 
                 <button
                     id="lr-ai-send"
