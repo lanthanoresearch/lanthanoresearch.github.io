@@ -62,7 +62,7 @@ class AssistantWindow {
             this.window = document.createElement("div");
             this.window.id = "lr-ai-window";
 
-            this.root.appendChild(this.window);
+           document.body.appendChild(this.window);
 
         }
 
