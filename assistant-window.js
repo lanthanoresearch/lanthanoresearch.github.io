@@ -6,7 +6,45 @@
 
 
 (() => {
+const DEBUG_DISABLE_AI = false;
 
+
+   let aiSession = null;
+
+async function getAISession() {
+
+    if (DEBUG_DISABLE_AI) {
+
+        return null;
+
+    }
+
+    if (aiSession) {
+
+        return aiSession;
+
+    }
+
+    try {
+
+        aiSession = await LanguageModel.create();
+
+        return aiSession;
+
+    } catch (error) {
+
+        console.error(error);
+
+        aiSession = null;
+
+        return null;
+
+    }
+
+}
+
+
+   
 class AssistantWindow {
 
     constructor() {
@@ -126,7 +164,19 @@ class AssistantWindow {
 
                 if (!text) return;
 
-                console.log(text);
+               const session = async () => {
+
+if (!session) {
+
+    alert("Browser AI isn't available.");
+
+    return;
+
+}
+
+const reply = await session.prompt(text);
+
+console.log(reply);
 
                 this.input.value = "";
 
