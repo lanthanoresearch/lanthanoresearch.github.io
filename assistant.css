@@ -15,15 +15,7 @@ body{
 
 #lr-ai-window{
 
-    position:fixed;
-
-    top:20px;
-
-    right:20px;
-
-    bottom:20px;
-
-    width:clamp(420px,32vw,600px);
+   
 
     background:#181818;
 
@@ -54,6 +46,13 @@ body{
 
     z-index:10000;
 
+}
+#lr-ai-window {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    bottom: 20px;
+    width: clamp(420px, 32vw, 600px);
 }
 
 #lr-ai-root.visible{
@@ -460,21 +459,17 @@ body{
 
     }
 
-#lr-ai-window{
+ #lr-ai-window{
 
-    position:fixed;
+        position:fixed;
 
-    inset:10px;
+        inset:10px;
 
-    width:auto;
+        width:auto;
 
-    height:calc(100dvh - 20px);
+        height:auto;
 
-    max-height:calc(100dvh - 20px);
-
-    border-radius:18px;
-
-}
+    }
 
     #lr-ai-header{
 
