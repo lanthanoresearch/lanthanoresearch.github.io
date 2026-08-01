@@ -231,29 +231,35 @@ class AssistantWindow {
 
     open() {
 
-        if (this.isOpen) return;
+    if (this.isOpen) return;
 
-        this.window.classList.add("open");
+    document.getElementById("lr-ai-button").style.opacity = "0";
+    document.getElementById("lr-ai-button").style.pointerEvents = "none";
 
-        this.isOpen = true;
+    this.window.classList.add("open");
 
-        requestAnimationFrame(() => {
+    this.isOpen = true;
 
-            this.input.focus();
+    requestAnimationFrame(() => {
 
-        });
+        this.input.focus();
 
-    }
+    });
 
-    close() {
+}
 
-        if (!this.isOpen) return;
+   close() {
 
-        this.window.classList.remove("open");
+    if (!this.isOpen) return;
 
-        this.isOpen = false;
+    document.getElementById("lr-ai-button").style.opacity = "";
+    document.getElementById("lr-ai-button").style.pointerEvents = "";
 
-    }
+    this.window.classList.remove("open");
+
+    this.isOpen = false;
+
+}
 
     toggle() {
 
