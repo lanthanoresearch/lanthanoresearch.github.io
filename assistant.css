@@ -2,31 +2,57 @@
    Lanthano Research Assistant
    assistant.css
    ========================================================== */
+html,
+body{
 
+    height:100%;
+
+}
 
 /* ==========================================================
    Root
    ========================================================== */
 
-#lr-ai-root{
+#lr-ai-window{
 
-     position:fixed;
+    position:fixed;
 
+    top:20px;
 
-    right:24px;
-    bottom:24px;
+    right:20px;
 
-    z-index:9999;
+    bottom:20px;
+
+    width:clamp(420px,32vw,600px);
+
+    background:#181818;
+
+    border:1px solid #2d2d2d;
+
+    border-radius:22px;
+
+    overflow:hidden;
+
+    display:flex;
+
+    flex-direction:column;
+
+    box-shadow:
+        0 20px 60px rgba(0,0,0,.45);
 
     opacity:0;
 
-    transform:translateY(35px);
+    transform:
+        translateX(20px)
+        scale(.98);
 
     pointer-events:none;
 
     transition:
-        opacity .35s ease,
-        transform .35s ease;
+        opacity .25s ease,
+        transform .25s ease;
+
+    z-index:10000;
 
 }
 
@@ -124,46 +150,25 @@
    Chat Window
    ========================================================== */
 
-#lr-ai-window{
+#lr-ai-root{
 
-    position:absolute;
+    position:fixed;
 
-    right:0;
+    right:24px;
 
-    bottom:92px;
+    bottom:24px;
 
-    width:430px;
-
-    z-index:10000;
-
-    height:680px;
-
-    background:#181818;
-
-    border:1px solid #2d2d2d;
-
-    border-radius:20px;
-
-    overflow:hidden;
-
-    display:flex;
-
-    flex-direction:column;
-
-    box-shadow:
-        0 24px 70px rgba(0,0,0,.45);
+    z-index:9999;
 
     opacity:0;
 
-    transform:
-        translateY(12px)
-        scale(.98);
+    transform:translateY(35px);
 
     pointer-events:none;
 
     transition:
-        opacity .22s ease,
-        transform .22s ease;
+        opacity .35s ease,
+        transform .35s ease;
 
 }
 
@@ -172,7 +177,9 @@
     opacity:1;
 
     transform:
-        translateY(0)
+
+        translateX(0)
+
         scale(1);
 
     pointer-events:auto;
@@ -453,25 +460,21 @@
 
     }
 
-    #lr-ai-window{
+#lr-ai-window{
 
-        position:fixed;
+    position:fixed;
 
-        top:10px;
+    inset:10px;
 
-        left:10px;
+    width:auto;
 
-        right:10px;
+    height:calc(100dvh - 20px);
 
-        bottom:10px;
+    max-height:calc(100dvh - 20px);
 
-        width:auto;
+    border-radius:18px;
 
-        height:auto;
-
-        border-radius:18px;
-
-    }
+}
 
     #lr-ai-header{
 
@@ -514,3 +517,5 @@
     }
 
 }
+
+
