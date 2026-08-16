@@ -32,15 +32,13 @@
 .featured-video-thumbnail{
     position:relative;
     width:100%;
-    aspect-ratio:16 / 9;
-    overflow:hidden;
     background:#111;
+    overflow:hidden;
 }
 
 .featured-video-preview-image{
     width:100%;
-    height:100%;
-    object-fit:cover;
+    height:auto;
     display:block;
 }
 
