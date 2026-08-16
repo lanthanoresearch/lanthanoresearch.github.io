@@ -37,17 +37,11 @@
     background:#111;
 }
 
-.featured-video-thumbnail img{
+.featured-video-preview-image{
     width:100%;
     height:100%;
     object-fit:cover;
     display:block;
-    transition:transform .25s ease;
-}
-
-.featured-video-preview:hover
-.featured-video-thumbnail img{
-    transform:scale(1.02);
 }
 
 .featured-video-play{
@@ -107,78 +101,129 @@
 }
 
 
-/* ---------- Expanded Video ---------- */
+/* ---------- Fullscreen Overlay ---------- */
 
 .featured-video-expanded{
     display:none;
-}
 
-.featured-video-card.expanded
-.featured-video-preview{
-    display:none;
+    position:fixed;
+    inset:0;
+
+    width:100vw;
+    height:100vh;
+    height:100dvh;
+
+    background:rgba(0,0,0,.97);
+
+    z-index:999999;
+
+    align-items:center;
+    justify-content:center;
+
+    padding:20px;
+    box-sizing:border-box;
 }
 
 .featured-video-card.expanded
 .featured-video-expanded{
-    display:block;
+    display:flex;
+}
+
+.featured-video-expanded-inner{
+    width:100%;
+    max-width:1400px;
+    max-height:95vh;
+
+    position:relative;
 }
 
 .featured-video-player{
     width:100%;
     background:#000;
+
+    border-radius:10px;
+    overflow:hidden;
+
+    box-shadow:0 10px 60px rgba(0,0,0,.8);
 }
 
 .featured-video-player video{
     display:block;
+
     width:100%;
     height:auto;
-    max-height:75vh;
+
+    max-height:82vh;
+
     background:#000;
 }
 
+
+/* ---------- Expanded Information ---------- */
+
 .featured-video-expanded-content{
-    padding:20px 25px 25px;
+    padding:18px 10px 0;
+    text-align:center;
 }
 
 .featured-video-expanded-title{
     font-size:1.5rem;
     font-weight:bold;
     color:#fff;
-    margin-bottom:10px;
+    margin-bottom:8px;
 }
 
 .featured-video-expanded-description{
     color:#bbb;
-    line-height:1.65;
-    text-align:left;
-    max-width:760px;
+    line-height:1.5;
+
+    max-width:800px;
+
     margin:0 auto;
 }
 
 .featured-video-expanded-meta{
-    margin-top:15px;
+    margin-top:10px;
     color:#777;
     font-size:.9rem;
 }
 
+
+/* ---------- Close Button ---------- */
+
 .featured-video-close{
-    margin-top:20px;
+    position:absolute;
 
-    padding:9px 18px;
+    top:-15px;
+    right:-15px;
 
-    background:#333;
-    border:1px solid #444;
-    border-radius:8px;
+    width:44px;
+    height:44px;
 
-    color:#ddd;
+    border-radius:50%;
+
+    background:#222;
+    border:1px solid #555;
+
+    color:#fff;
 
     cursor:pointer;
-    font-size:.95rem;
+
+    font-size:25px;
+    line-height:1;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    z-index:10;
+
+    transition:.2s ease;
 }
 
 .featured-video-close:hover{
     background:#444;
-    color:#fff;
+    border-color:#777;
 }
 
 
@@ -208,8 +253,42 @@
         font-size:27px;
     }
 
+    .featured-video-expanded{
+        padding:10px;
+    }
+
+    .featured-video-expanded-inner{
+        max-height:100%;
+    }
+
+    .featured-video-player{
+        border-radius:6px;
+    }
+
+    .featured-video-player video{
+        max-height:75vh;
+    }
+
     .featured-video-expanded-content{
-        padding:16px 18px 20px;
+        padding:12px 5px 0;
+    }
+
+    .featured-video-expanded-title{
+        font-size:1.25rem;
+    }
+
+    .featured-video-expanded-description{
+        font-size:.9rem;
+    }
+
+    .featured-video-close{
+        top:-8px;
+        right:-8px;
+
+        width:38px;
+        height:38px;
+
+        font-size:22px;
     }
 
 }
