@@ -6,7 +6,6 @@
 
     <div class="featured-video-card" id="featuredVideoCard">
 
-        <!-- Collapsed version -->
         <div
             class="featured-video-preview"
             onclick="openFeaturedVideo()"
@@ -14,10 +13,14 @@
 
             <div class="featured-video-thumbnail">
 
-                <img
-                    src="prediction.jpg"
-                    alt="Featured Video"
+                <video
+                    class="featured-video-preview-image"
+                    muted
+                    preload="metadata"
+                    poster="prediction.jpg"
                 >
+                    <source src="prediction.mp4" type="video/mp4">
+                </video>
 
                 <div class="featured-video-play">
                     ▶
@@ -32,12 +35,12 @@
                 </div>
 
                 <div class="featured-video-description">
-                    A 15-minute presentation exploring the predictions,
+                    A 2-minute presentation exploring the predictions,
                     evidence, and ideas presented by Lanthano.
                 </div>
 
                 <div class="featured-video-meta">
-                    15 minutes • Lanthano Research
+                    2 minutes • Lanthano Research
                 </div>
 
             </div>
@@ -45,53 +48,55 @@
         </div>
 
 
-        <!-- Expanded version -->
         <div
             class="featured-video-expanded"
             id="featuredVideoExpanded"
         >
 
-            <div class="featured-video-player">
-
-                <video
-                    id="featuredVideoPlayer"
-                    controls
-                    preload="metadata"
-                >
-                    <source
-                        src="prediction.mp4"
-                        type="video/mp4"
-                    >
-
-                    Your browser does not support HTML5 video.
-                </video>
-
-            </div>
-
-            <div class="featured-video-expanded-content">
-
-                <div class="featured-video-expanded-title">
-                    Prediction
-                </div>
-
-                <div class="featured-video-expanded-description">
-                    A 15-minute presentation exploring the predictions,
-                    evidence, and ideas presented by Lanthano.
-
-                    This video examines the subject in greater detail
-                    and presents the material in documentary format.
-                </div>
-
-                <div class="featured-video-expanded-meta">
-                    15 minutes • Lanthano Research
-                </div>
+            <div class="featured-video-expanded-inner">
 
                 <button
                     class="featured-video-close"
                     onclick="closeFeaturedVideo(event)"
+                    aria-label="Close video"
                 >
-                    Close Video
+                    ×
                 </button>
+
+                <div class="featured-video-player">
+
+                    <video
+                        id="featuredVideoPlayer"
+                        controls
+                        playsinline
+                        preload="metadata"
+                    >
+                        <source
+                            src="prediction.mp4"
+                            type="video/mp4"
+                        >
+
+                        Your browser does not support HTML5 video.
+                    </video>
+
+                </div>
+
+                <div class="featured-video-expanded-content">
+
+                    <div class="featured-video-expanded-title">
+                        Prediction
+                    </div>
+
+                    <div class="featured-video-expanded-description">
+                        A 2-minute presentation exploring the predictions,
+                        evidence, and ideas presented by Lanthano.
+                    </div>
+
+                    <div class="featured-video-expanded-meta">
+                        2 minutes • Lanthano Research
+                    </div>
+
+                </div>
 
             </div>
 
