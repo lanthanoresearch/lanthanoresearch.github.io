@@ -2,11 +2,15 @@
 
 fetch("featured-video.html")
     .then(response => {
+
         if(!response.ok){
-            throw new Error("Could not load featured video.");
+            throw new Error(
+                "Could not load featured-video.html"
+            );
         }
 
         return response.text();
+
     })
     .then(html => {
 
@@ -14,6 +18,10 @@ fetch("featured-video.html")
             document.getElementById("featuredVideo");
 
         if(!container){
+            console.error(
+                "Element #featuredVideo was not found."
+            );
+
             return;
         }
 
@@ -46,6 +54,10 @@ function openFeaturedVideo(){
 
     card.classList.add("expanded");
 
+    document.body.style.overflow = "hidden";
+
+    video.currentTime = 0;
+
     video.play().catch(() => {});
 
 }
@@ -55,7 +67,9 @@ function openFeaturedVideo(){
 
 function closeFeaturedVideo(event){
 
-    event.stopPropagation();
+    if(event){
+        event.stopPropagation();
+    }
 
     const card =
         document.getElementById("featuredVideoCard");
@@ -73,4 +87,31 @@ function closeFeaturedVideo(event){
 
     card.classList.remove("expanded");
 
+    document.body.style.overflow = "";
 }
+
+
+/* ---------- Escape Key ---------- */
+
+document.addEventListener(
+    "keydown",
+    function(event){
+
+        if(event.key !== "Escape"){
+            return;
+        }
+
+        const card =
+            document.getElementById("featuredVideoCard");
+
+        if(
+            card &&
+            card.classList.contains("expanded")
+        ){
+
+            closeFeaturedVideo();
+
+        }
+
+    }
+);
