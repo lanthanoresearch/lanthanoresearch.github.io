@@ -34,7 +34,6 @@ section{
     padding:40px 20px;
 }
 
-
 h1{
     text-align:center;
     margin-bottom:40px;
@@ -90,12 +89,19 @@ p{
 .progress{
     display:none;
     margin:20px auto 0;
-    max-width:600px;
+    max-width:650px;
+}
+
+.progress-percent{
+    text-align:center;
+    color:#aaa;
+    font-size:1.05em;
+    margin-bottom:8px;
 }
 
 .progress-bar{
     width:100%;
-    height:8px;
+    height:9px;
     background:#333;
     border-radius:10px;
     overflow:hidden;
@@ -105,19 +111,13 @@ p{
     width:0%;
     height:100%;
     background:#aaa;
-    transition:width .2s;
+    transition:width .2s ease;
 }
 
 .progress-text{
-    margin-top:8px;
+    margin-top:10px;
     color:#aaa;
-    font-size:0.9em;
-}
-
-.status{
-    margin-top:15px;
-    color:#777;
-    font-size:0.9em;
+    font-size:0.95em;
     line-height:1.5;
 }
 
@@ -125,17 +125,107 @@ p{
     display:none;
     margin:20px auto 0;
     padding:15px;
-    background:#181818;
-    border:1px solid #333;
+    background:#211515;
+    border:1px solid #5a2525;
     border-radius:8px;
-    color:#bbb;
+    color:#ddd;
     font-size:0.9em;
     line-height:1.6;
     max-width:650px;
 }
 
 .download-warning strong{
-    color:#eee;
+    color:#ff5555;
+}
+
+.status{
+    margin-top:15px;
+    color:#888;
+    font-size:0.9em;
+    line-height:1.5;
+}
+
+
+/* ======================================================
+   LEAVE PAGE POPUP
+   ====================================================== */
+
+.leave-popup{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.78);
+    z-index:9999;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+}
+
+.leave-popup-box{
+    width:100%;
+    max-width:500px;
+    background:#1d1d1d;
+    border:1px solid #444;
+    border-radius:10px;
+    padding:25px;
+    box-shadow:0 10px 40px rgba(0,0,0,0.5);
+}
+
+.leave-popup-box h2{
+    margin-top:0;
+    margin-bottom:15px;
+}
+
+.leave-popup-box p{
+    color:#ccc;
+    line-height:1.6;
+}
+
+.leave-popup-warning{
+    color:#ff5555 !important;
+    font-weight:bold;
+}
+
+.leave-popup-buttons{
+    display:flex;
+    gap:10px;
+    margin-top:25px;
+}
+
+.leave-popup-button{
+    flex:1;
+    padding:12px 15px;
+    border:none;
+    border-radius:7px;
+    font-size:15px;
+    cursor:pointer;
+}
+
+.stay-button{
+    background:#fff;
+    color:#111;
+}
+
+.stay-button:hover{
+    background:#ddd;
+}
+
+.leave-button{
+    background:#333;
+    color:#fff;
+}
+
+.leave-button:hover{
+    background:#444;
+}
+
+
+@media(max-width:600px){
+
+    .leave-popup-buttons{
+        flex-direction:column;
+    }
+
 }
 
     </style>
@@ -149,7 +239,62 @@ p{
 <section>
 
 
-    <a class="back" href="index.html">
+    <!-- =================================================
+         LEAVE PAGE POPUP
+         ================================================= -->
+
+    <div
+        id="leavePopup"
+        class="leave-popup"
+    >
+
+        <div class="leave-popup-box">
+
+            <h2>Archive Still Compiling</h2>
+
+            <p class="leave-popup-warning">
+                Leaving this page will stop the archive
+                from being created.
+            </p>
+
+            <p>
+                The archive has not finished yet. If you
+                leave now, you will need to start the
+                process again.
+            </p>
+
+            <div class="leave-popup-buttons">
+
+                <button
+                    class="leave-popup-button stay-button"
+                    onclick="stayOnPage()"
+                >
+                    Stay on Page
+                </button>
+
+                <button
+                    class="leave-popup-button leave-button"
+                    onclick="leavePage()"
+                >
+                    Leave Anyway
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =================================================
+         BACK BUTTON
+         ================================================= -->
+
+    <a
+        class="back"
+        href="index.html"
+        onclick="return handleNavigation(event, 'index.html')"
+    >
         ◀ Home
     </a>
 
@@ -157,7 +302,9 @@ p{
     <h1>Support Lanthano Research</h1>
 
 
-    <!-- PRESERVE THE RESEARCH -->
+    <!-- =================================================
+         PRESERVE THE RESEARCH
+         ================================================= -->
 
     <div class="card">
 
@@ -189,7 +336,9 @@ p{
     </div>
 
 
-    <!-- DOWNLOAD ENTIRE ARCHIVE -->
+    <!-- =================================================
+         DOWNLOAD ENTIRE ARCHIVE
+         ================================================= -->
 
     <div class="card download-section">
 
@@ -216,34 +365,41 @@ p{
         </button>
 
 
+        <!-- WARNING -->
+
         <div
             id="downloadWarning"
             class="download-warning"
         >
 
             <strong>
-                Do not leave this page while the archive is being created.
+                DO NOT CLOSE OR LEAVE THIS PAGE
             </strong>
 
             <br><br>
 
-            The archive must finish downloading and
-            compressing before the ZIP file can be
-            downloaded. Closing, refreshing, or leaving
-            this page may interrupt the process.
-
-            <br><br>
-
-            You may leave this page once the browser has
-            started downloading the ZIP file.
+            The archive is being prepared on your device.
+            Closing, refreshing, or leaving this page may
+            interrupt the process before the ZIP file is
+            created.
 
         </div>
 
+
+        <!-- PROGRESS -->
 
         <div
             id="progress"
             class="progress"
         >
+
+            <div
+                id="progressPercent"
+                class="progress-percent"
+            >
+                0%
+            </div>
+
 
             <div class="progress-bar">
 
@@ -259,11 +415,13 @@ p{
                 id="progressText"
                 class="progress-text"
             >
-                Preparing archive...
+                Preparing: Waiting to begin...
             </div>
 
         </div>
 
+
+        <!-- STATUS -->
 
         <div
             id="status"
@@ -273,7 +431,9 @@ p{
     </div>
 
 
-    <!-- WHY KEEP A COPY -->
+    <!-- =================================================
+         WHY KEEP A COPY
+         ================================================= -->
 
     <div class="card">
 
@@ -298,17 +458,32 @@ p{
     </div>
 
 
-    
-
-
 </section>
 
 
+
+<!-- ======================================================
+     JSZIP
+     ====================================================== -->
 
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 
 
 <script>
+
+
+/*
+==========================================================
+ARCHIVE STATE
+==========================================================
+*/
+
+let archiveCompiling = false;
+
+let pendingNavigation = null;
+
+let allowNavigation = false;
+
 
 
 /*
@@ -361,24 +536,26 @@ CLEAN PAPER FOLDER NAME
 
 function cleanFolderName(name){
 
-    return String(name || "Untitled Paper")
+    return String(
+        name || "Untitled Paper"
+    )
 
-        .replace(
-            /[<>:"/\\|?*\x00-\x1F]/g,
-            "_"
-        )
+    .replace(
+        /[<>:"/\\|?*\x00-\x1F]/g,
+        "_"
+    )
 
-        .replace(
-            /\s+/g,
-            " "
-        )
+    .replace(
+        /\s+/g,
+        " "
+    )
 
-        .trim()
+    .trim()
 
-        .replace(
-            /\.+$/,
-            ""
-        );
+    .replace(
+        /\.+$/,
+        ""
+    );
 
 }
 
@@ -418,7 +595,7 @@ async function fetchFile(url){
 
 /*
 ==========================================================
-UPDATE PROGRESS
+SET PROGRESS
 ==========================================================
 */
 
@@ -427,10 +604,28 @@ function setProgress(
     text
 ){
 
+    const safePercent =
+        Math.max(
+            0,
+            Math.min(
+                100,
+                percent
+            )
+        );
+
+
     document
         .getElementById("progressFill")
         .style.width =
-        percent + "%";
+        safePercent + "%";
+
+
+    document
+        .getElementById("progressPercent")
+        .textContent =
+        Math.round(
+            safePercent
+        ) + "%";
 
 
     document
@@ -439,6 +634,154 @@ function setProgress(
         text;
 
 }
+
+
+
+/*
+==========================================================
+SHOW LEAVE POPUP
+==========================================================
+*/
+
+function showLeavePopup(){
+
+    if(!archiveCompiling){
+
+        return false;
+
+    }
+
+
+    document
+        .getElementById("leavePopup")
+        .style.display =
+        "flex";
+
+
+    return true;
+
+}
+
+
+
+/*
+==========================================================
+STAY ON PAGE
+==========================================================
+*/
+
+function stayOnPage(){
+
+    pendingNavigation =
+        null;
+
+
+    document
+        .getElementById("leavePopup")
+        .style.display =
+        "none";
+
+}
+
+
+
+/*
+==========================================================
+LEAVE PAGE
+==========================================================
+*/
+
+function leavePage(){
+
+    allowNavigation =
+        true;
+
+
+    archiveCompiling =
+        false;
+
+
+    document
+        .getElementById("leavePopup")
+        .style.display =
+        "none";
+
+
+    if(
+        pendingNavigation
+    ){
+
+        window.location.href =
+            pendingNavigation;
+
+        return;
+
+    }
+
+
+    window.history.back();
+
+}
+
+
+
+/*
+==========================================================
+PROTECT NORMAL PAGE NAVIGATION
+==========================================================
+*/
+
+function handleNavigation(
+    event,
+    destination
+){
+
+    if(!archiveCompiling){
+
+        return true;
+
+    }
+
+
+    event.preventDefault();
+
+
+    pendingNavigation =
+        destination;
+
+
+    showLeavePopup();
+
+
+    return false;
+
+}
+
+
+
+/*
+==========================================================
+BROWSER REFRESH / CLOSE PROTECTION
+==========================================================
+*/
+
+window.addEventListener(
+    "beforeunload",
+    function(event){
+
+        if(
+            archiveCompiling &&
+            !allowNavigation
+        ){
+
+            event.preventDefault();
+
+            event.returnValue = "";
+
+        }
+
+    }
+);
 
 
 
@@ -475,19 +818,46 @@ async function downloadArchive(){
         );
 
 
-    button.disabled = true;
+    /*
+    ------------------------------------------------------
+    START STATE
+    ------------------------------------------------------
+    */
+
+    archiveCompiling =
+        true;
+
+    allowNavigation =
+        false;
+
+    pendingNavigation =
+        null;
+
+
+    button.disabled =
+        true;
+
 
     button.textContent =
-        "Creating Archive...";
+        "Preparing Archive...";
+
 
     progress.style.display =
         "block";
 
+
     warning.style.display =
         "block";
 
+
     status.textContent =
         "";
+
+
+    setProgress(
+        0,
+        "Preparing: Loading archive information..."
+    );
 
 
 
@@ -495,12 +865,14 @@ async function downloadArchive(){
 
 
         /*
-        --------------------------------------------------
-        Check JSZip
-        --------------------------------------------------
+        ==================================================
+        CHECK JSZIP
+        ==================================================
         */
 
-        if(typeof JSZip === "undefined"){
+        if(
+            typeof JSZip === "undefined"
+        ){
 
             throw new Error(
                 "The ZIP library could not be loaded."
@@ -511,16 +883,10 @@ async function downloadArchive(){
 
 
         /*
-        --------------------------------------------------
-        Load descriptions.json
-        --------------------------------------------------
+        ==================================================
+        LOAD DESCRIPTIONS
+        ==================================================
         */
-
-        setProgress(
-            2,
-            "Loading research..."
-        );
-
 
         const response =
             await fetch(
@@ -544,11 +910,17 @@ async function downloadArchive(){
             await response.json();
 
 
+        setProgress(
+            2,
+            "Preparing: Counting archive files..."
+        );
+
+
 
         /*
-        --------------------------------------------------
-        Create ZIP
-        --------------------------------------------------
+        ==================================================
+        CREATE ZIP
+        ==================================================
         */
 
         const zip =
@@ -575,9 +947,9 @@ async function downloadArchive(){
 
 
         /*
-        --------------------------------------------------
+        ==================================================
         README
-        --------------------------------------------------
+        ==================================================
         */
 
         root.file(
@@ -606,9 +978,9 @@ ${new Date().toLocaleString()}
 
 
         /*
-        --------------------------------------------------
-        Count files
-        --------------------------------------------------
+        ==================================================
+        GET PAPERS
+        ==================================================
         */
 
         const entries =
@@ -617,13 +989,24 @@ ${new Date().toLocaleString()}
             );
 
 
-        let totalFiles = 0;
+
+        /*
+        ==================================================
+        COUNT FILES
+        ==================================================
+        */
+
+        let totalFiles =
+            0;
 
 
         entries.forEach(
             ([key, paper]) => {
 
-                if(paper.url){
+
+                if(
+                    paper.url
+                ){
 
                     totalFiles++;
 
@@ -655,16 +1038,18 @@ ${new Date().toLocaleString()}
             VIDEO_FILES.length;
 
 
-        let completedFiles = 0;
+        let completedFiles =
+            0;
 
 
-        const failedFiles = [];
+        const failedFiles =
+            [];
 
 
 
         /*
         ==================================================
-        PAPERS
+        PROCESS PAPERS
         ==================================================
         */
 
@@ -702,25 +1087,31 @@ ${new Date().toLocaleString()}
 
 
             /*
-            ------------------------------------------------
+            =================================================
             PDF
-            ------------------------------------------------
+            =================================================
             */
 
-            if(paper.url){
+            if(
+                paper.url
+            ){
+
+                const pdfName =
+                    getFileName(
+                        paper.url
+                    );
+
 
                 try{
+
 
                     setProgress(
                         (
                             completedFiles /
-                            Math.max(
-                                totalFiles,
-                                1
-                            )
+                            totalFiles
                         ) * 90,
 
-                        `Downloading ${title}...`
+                        `Compiling: ${title} (PDF 1 of 1)`
                     );
 
 
@@ -731,9 +1122,7 @@ ${new Date().toLocaleString()}
 
 
                     paperFolder.file(
-                        getFileName(
-                            paper.url
-                        ),
+                        pdfName,
                         pdf
                     );
 
@@ -741,15 +1130,30 @@ ${new Date().toLocaleString()}
                     completedFiles++;
 
 
+                    setProgress(
+                        (
+                            completedFiles /
+                            totalFiles
+                        ) * 90,
+
+                        `Compiling: ${title} (PDF 1 of 1)`
+                    );
+
+
                 }catch(error){
+
 
                     console.error(
                         error
                     );
 
+
                     failedFiles.push(
                         paper.url
                     );
+
+
+                    completedFiles++;
 
                 }
 
@@ -758,15 +1162,16 @@ ${new Date().toLocaleString()}
 
 
             /*
-            ------------------------------------------------
+            =================================================
             IMAGES
-            ------------------------------------------------
+            =================================================
             */
 
             const images =
                 Array.isArray(
                     paper.images
                 )
+
                     ? paper.images.filter(
                         image =>
                             typeof image === "string" &&
@@ -774,10 +1179,14 @@ ${new Date().toLocaleString()}
                                 .trim()
                                 .startsWith("#$")
                     )
+
                     : [];
 
 
-            if(images.length){
+            if(
+                images.length
+            ){
+
 
                 const imageFolder =
                     paperFolder.folder(
@@ -791,22 +1200,27 @@ ${new Date().toLocaleString()}
                     j++
                 ){
 
+
                     const image =
                         images[j];
 
 
+                    const imageName =
+                        getFileName(
+                            image
+                        );
+
+
                     try{
+
 
                         setProgress(
                             (
                                 completedFiles /
-                                Math.max(
-                                    totalFiles,
-                                    1
-                                )
+                                totalFiles
                             ) * 90,
 
-                            `Downloading ${title} — image ${j + 1} of ${images.length}...`
+                            `Compiling: ${title} (Image ${j + 1} of ${images.length})`
                         );
 
 
@@ -817,9 +1231,7 @@ ${new Date().toLocaleString()}
 
 
                         imageFolder.file(
-                            getFileName(
-                                image
-                            ),
+                            imageName,
                             imageBlob
                         );
 
@@ -827,15 +1239,30 @@ ${new Date().toLocaleString()}
                         completedFiles++;
 
 
+                        setProgress(
+                            (
+                                completedFiles /
+                                totalFiles
+                            ) * 90,
+
+                            `Compiling: ${title} (Image ${j + 1} of ${images.length})`
+                        );
+
+
                     }catch(error){
+
 
                         console.error(
                             error
                         );
 
+
                         failedFiles.push(
                             image
                         );
+
+
+                        completedFiles++;
 
                     }
 
@@ -859,22 +1286,27 @@ ${new Date().toLocaleString()}
             i++
         ){
 
+
             const video =
                 VIDEO_FILES[i];
 
 
+            const videoName =
+                getFileName(
+                    video
+                );
+
+
             try{
+
 
                 setProgress(
                     (
                         completedFiles /
-                        Math.max(
-                            totalFiles,
-                            1
-                        )
+                        totalFiles
                     ) * 90,
 
-                    "Downloading video..."
+                    `Compiling: ${videoName} (Video ${i + 1} of ${VIDEO_FILES.length})`
                 );
 
 
@@ -885,9 +1317,7 @@ ${new Date().toLocaleString()}
 
 
                 videosFolder.file(
-                    getFileName(
-                        video
-                    ),
+                    videoName,
                     videoBlob
                 );
 
@@ -895,15 +1325,30 @@ ${new Date().toLocaleString()}
                 completedFiles++;
 
 
+                setProgress(
+                    (
+                        completedFiles /
+                        totalFiles
+                    ) * 90,
+
+                    `Compiling: ${videoName} (Video ${i + 1} of ${VIDEO_FILES.length})`
+                );
+
+
             }catch(error){
+
 
                 console.error(
                     error
                 );
 
+
                 failedFiles.push(
                     video
                 );
+
+
+                completedFiles++;
 
             }
 
@@ -936,21 +1381,24 @@ ${failedFiles.join("\n")}
 
         /*
         ==================================================
-        CREATE ZIP
+        ZIP COMPILATION
         ==================================================
         */
 
         setProgress(
-            94,
-            "Creating ZIP file..."
+            90,
+            "Compiling: ZIP archive"
         );
 
 
         const blob =
             await zip.generateAsync(
+
                 {
                     type:"blob",
+
                     compression:"DEFLATE",
+
                     compressionOptions:{
                         level:6
                     }
@@ -958,32 +1406,48 @@ ${failedFiles.join("\n")}
 
                 metadata => {
 
-                    setProgress(
-                        94 +
+
+                    const overallPercent =
+                        90 +
                         (
                             metadata.percent *
-                            0.06
-                        ),
+                            0.10
+                        );
 
-                        "Creating ZIP file..."
+
+                    setProgress(
+                        overallPercent,
+                        "Compiling: ZIP archive"
                     );
 
                 }
+
             );
 
 
 
         /*
         ==================================================
-        START DOWNLOAD
+        ZIP COMPLETELY CREATED
         ==================================================
         */
 
         setProgress(
             100,
-            "Starting download..."
+            "Compiling: ZIP archive complete"
         );
 
+
+        button.textContent =
+            "Starting Download...";
+
+
+
+        /*
+        ==================================================
+        CREATE DOWNLOAD
+        ==================================================
+        */
 
         const url =
             URL.createObjectURL(
@@ -1016,38 +1480,83 @@ ${failedFiles.join("\n")}
         link.remove();
 
 
+
         setTimeout(
-            () =>
+            () => {
+
                 URL.revokeObjectURL(
                     url
-                ),
+                );
+
+            },
             10000
         );
 
 
-        status.textContent =
-            "The ZIP file has been created and the download has started.";
+
+        /*
+        ==================================================
+        DOWNLOAD HAS STARTED
+        ==================================================
+        */
+
+        archiveCompiling =
+            false;
+
+        allowNavigation =
+            true;
 
 
-        warning.innerHTML =
-            "<strong>Download started.</strong><br><br>You may now leave this page.";
+        setProgress(
+            100,
+            "Download Started"
+        );
 
 
         button.textContent =
-            "Archive Downloaded";
+            "Download Started";
+
+
+        warning.innerHTML =
+
+            "<strong>DOWNLOAD STARTED</strong>" +
+
+            "<br><br>" +
+
+            "The ZIP file has been created and your " +
+            "browser has started downloading it." +
+
+            "<br><br>" +
+
+            "You may now leave this page.";
+
+
+        status.textContent =
+            "Lanthano-Research-Archive.zip is now downloading.";
 
 
     }catch(error){
 
 
+        /*
+        ==================================================
+        ERROR
+        ==================================================
+        */
+
         console.error(
+            "Archive creation failed:",
             error
         );
 
 
+        archiveCompiling =
+            false;
+
+
         setProgress(
             0,
-            "Download failed."
+            "Preparing: Archive creation failed"
         );
 
 
@@ -1057,7 +1566,13 @@ ${failedFiles.join("\n")}
 
 
         warning.innerHTML =
-            "<strong>The archive could not be completed.</strong><br><br>You can try again by pressing the Download Archive button.";
+
+            "<strong>ARCHIVE CREATION FAILED</strong>" +
+
+            "<br><br>" +
+
+            "The archive was not completed. " +
+            "You can try again.";
 
 
         button.disabled =
@@ -1070,9 +1585,6 @@ ${failedFiles.join("\n")}
     }
 
 }
-
-
-
 
 </script>
 
