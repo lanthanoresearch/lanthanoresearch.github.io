@@ -1,126 +1,270 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/png" href="file_000000000c40722f92b1fe6758cb4855.png">
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Advanced Image Viewer</title>
-<style>
-*{box-sizing:border-box}
-html,body{margin:0;height:100%;background:#111;color:#eee;font-family:Arial,sans-serif;overflow:hidden}
-body{display:flex;flex-direction:column}
-header{background:#1b1b1b;border-bottom:1px solid #333;padding:8px}
-.top{display:flex;justify-content:space-between;align-items:center;gap:8px}
-#menu{
-    position:absolute;
-    right:10px;
-    top:58px;
-    background:#222;
-    border:1px solid #333;
-    border-radius:10px;
-    padding:8px;
-    display:none;
-    min-width:220px;
-    z-index:1000;
-}
 
-#menu button{
-    width:100%;
-    text-align:left;
-    margin:3px 0;
-    background:#333;
-    color:#fff;
-    border:none;
-    border-radius:7px;
-    padding:9px 12px;
-    cursor:pointer;
-}
+    <link
+        rel="icon"
+        type="image/png"
+        href="file_000000000c40722f92b1fe6758cb4855.png"
+    >
 
-#menu button:hover{
-    background:#444;
-}
-    #pdfButton{
-    display:none;
-}
-    .title{
+    <meta charset="utf-8">
 
-    padding:8px 15px;
+    <meta
+        name="viewport"
+        content="width=device-width,initial-scale=1"
+    >
 
-    text-align:center;
+    <title>Advanced Image Viewer</title>
 
-    font-weight:bold;
+    <style>
 
-    font-size:1rem;
+        *{
+            box-sizing:border-box;
+        }
 
-    white-space:nowrap;
+        html,
+        body{
+            margin:0;
+            height:100%;
+            background:#111;
+            color:#eee;
+            font-family:Arial,sans-serif;
+            overflow:hidden;
+        }
 
-    overflow:hidden;
+        body{
+            display:flex;
+            flex-direction:column;
+        }
 
-    text-overflow:ellipsis;
 
-    background:#181818;
+        /* ---------- Header ---------- */
 
-    border-top:1px solid #2b2b2b;
+        header{
+            background:#1b1b1b;
+            border-bottom:1px solid #333;
+            padding:8px;
+        }
 
-}
-.controls{display:flex;gap:6px;flex-wrap:wrap}
-.btn{background:#333;color:#fff;border:none;border-radius:7px;padding:9px 12px;text-decoration:none;cursor:pointer}
-#nav{display:flex;justify-content:space-between;padding:8px;background:#181818}
-#viewer{flex:1;position:relative;overflow:hidden;touch-action:none}
-#img{position:absolute;left:50%;top:50%;transform-origin:center center;user-select:none;-webkit-user-drag:none;max-width:none}
-#zoomBar{display:flex;justify-content:center;gap:8px;padding:8px;background:#181818}
-#zoom{
+        .top{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:8px;
+        }
 
-    display:flex;
-    align-items:center;
 
-    position:relative;
-    top:3px;
+        /* ---------- Menu ---------- */
 
-    min-width:60px;
-    justify-content:center;
+        #menu{
+            position:absolute;
+            right:10px;
+            top:58px;
+            background:#222;
+            border:1px solid #333;
+            border-radius:10px;
+            padding:8px;
+            display:none;
+            min-width:220px;
+            z-index:1000;
+        }
 
-}
- @media(max-width:700px){
- .top{align-items:flex-start}
- .controls .btn{padding:8px 10px;font-size:.9rem}
- .title{font-size:.95rem}
-}
-</style>
+        #menu button{
+            width:100%;
+            text-align:left;
+            margin:3px 0;
+            background:#333;
+            color:#fff;
+            border:none;
+            border-radius:7px;
+            padding:9px 12px;
+            cursor:pointer;
+        }
+
+        #menu button:hover{
+            background:#444;
+        }
+
+
+        /* ---------- PDF Button ---------- */
+
+        #pdfButton{
+            display:none;
+        }
+
+
+        /* ---------- Title ---------- */
+
+        .title{
+
+            padding:12px 18px;
+
+            text-align:center;
+
+            font-weight:bold;
+
+            font-size:1.2rem;
+
+            white-space:nowrap;
+
+            overflow:hidden;
+
+            text-overflow:ellipsis;
+
+            background:rgba(24,24,24,.92);
+
+            border-top:1px solid #333;
+
+            backdrop-filter:blur(6px);
+
+        }
+
+
+        /* ---------- Controls ---------- */
+
+        .controls{
+            display:flex;
+            gap:6px;
+            flex-wrap:wrap;
+        }
+
+        .btn{
+            background:#333;
+            color:#fff;
+            border:none;
+            border-radius:7px;
+            padding:9px 12px;
+            text-decoration:none;
+            cursor:pointer;
+        }
+
+
+        /* ---------- Viewer ---------- */
+
+        #viewer{
+            flex:1;
+            position:relative;
+            overflow:hidden;
+            touch-action:none;
+        }
+
+        #img{
+            position:absolute;
+            left:50%;
+            top:50%;
+            transform-origin:center center;
+            user-select:none;
+            -webkit-user-drag:none;
+            max-width:none;
+        }
+
+
+        /* ---------- Zoom Bar ---------- */
+
+        #zoomBar{
+            display:flex;
+            justify-content:center;
+            gap:8px;
+            padding:8px;
+            background:#181818;
+        }
+
+        #zoom{
+
+            display:flex;
+
+            align-items:center;
+
+            position:relative;
+
+            top:3px;
+
+            min-width:60px;
+
+            justify-content:center;
+
+        }
+
+
+        /* ---------- Mobile ---------- */
+
+        @media(max-width:700px){
+
+            .top{
+                align-items:flex-start;
+            }
+
+            .controls .btn{
+                padding:8px 10px;
+                font-size:.9rem;
+            }
+
+            .title{
+                font-size:1.2rem;
+                padding:10px 14px;
+            }
+
+        }
+
+    </style>
+
 </head>
+
+
 <body>
+
+
 <header>
-<div class="top">
-<a class="btn" id="homeButton" href="index.html">◀ Back</a>
-<div class="controls">
 
-<a
-    class="btn"
-    id="pdfButton"
-    target="_blank"
->
-    PDF
-</a>
+    <div class="top">
 
-<button
-    class="btn"
-    id="menuBtn"
->
-    ☰
-</button>
+        <a
+            class="btn"
+            id="homeButton"
+            href="index.html"
+        >
+            ◀ Back
+        </a>
 
-</div>
-</div>
+
+        <div class="controls">
+
+            <a
+                class="btn"
+                id="pdfButton"
+                target="_blank"
+            >
+                PDF
+            </a>
+
+
+            <button
+                class="btn"
+                id="menuBtn"
+            >
+                ☰
+            </button>
+
+        </div>
+
+    </div>
 
 </header>
+
+
+<!-- ---------- Menu ---------- -->
+
 <div id="menu">
 
     <button id="downloadBtn">
         Download Image
     </button>
-<button id="newTabBtn">
+
+    <button id="newTabBtn">
         Open in New Tab
     </button>
+
     <button id="shareBtn">
         Share
     </button>
@@ -130,148 +274,262 @@ header{background:#1b1b1b;border-bottom:1px solid #333;padding:8px}
     </button>
 
 </div>
-<div id="viewer"><img id="img"></div>
-<div class="title" id="title">Loading...</div>
-<div id="zoomBar">
-<button class="btn" id="minus">−</button>
-<div id="zoom">100%</div>
-<button class="btn" id="plus">+</button>
-<button class="btn" id="fit">Reset</button>
-<button class="btn" id="lock">🔓 Free</button>
+
+
+<!-- ---------- Image Viewer ---------- -->
+
+<div id="viewer">
+
+    <img
+        id="img"
+        alt=""
+    >
+
 </div>
 
+
+<!-- ---------- File Name ---------- -->
+
+<div
+    class="title"
+    id="title"
+>
+    Loading...
+</div>
+
+
+<!-- ---------- Zoom Controls ---------- -->
+
+<div id="zoomBar">
+
+    <button
+        class="btn"
+        id="minus"
+    >
+        −
+    </button>
+
+
+    <div id="zoom">
+        100%
+    </div>
+
+
+    <button
+        class="btn"
+        id="plus"
+    >
+        +
+    </button>
+
+
+    <button
+        class="btn"
+        id="fit"
+    >
+        Reset
+    </button>
+
+
+    <button
+        class="btn"
+        id="lock"
+    >
+        🔓 Free
+    </button>
+
+</div>
+
+
 <script>
-// NOTE: Replace this navigation section with your existing descriptions.json logic.
-const p = new URLSearchParams(location.search);
 
-const img = document.getElementById("img");
-const viewer = document.getElementById("viewer");
-const title = document.getElementById("title");
 
-const fitButton = document.getElementById("fit");
-const lockButton = document.getElementById("lock");
-const minusButton = document.getElementById("minus");
-const plusButton = document.getElementById("plus");
+/* =========================================================
+   IMAGE VIEWER
+   ========================================================= */
+
+
+/* ---------- URL Parameters ---------- */
+
+const p =
+    new URLSearchParams(
+        location.search
+    );
+
+
+const img =
+    document.getElementById("img");
+
+
+const viewer =
+    document.getElementById("viewer");
+
+
+const title =
+    document.getElementById("title");
+
+
+const fitButton =
+    document.getElementById("fit");
+
+
+const lockButton =
+    document.getElementById("lock");
+
+
+const minusButton =
+    document.getElementById("minus");
+
+
+const plusButton =
+    document.getElementById("plus");
+
+
 const menu =
     document.getElementById("menu");
 
+
 const menuButton =
     document.getElementById("menuBtn");
-const src = decodeURIComponent(p.get("image") || "");
- const returnPage = decodeURIComponent(
-    p.get("return") || "index.html"
-);
+
+
+const src =
+    decodeURIComponent(
+        p.get("image") || ""
+    );
+
+
+const returnPage =
+    decodeURIComponent(
+        p.get("return") || "index.html"
+    );
+
+
+/* ---------- Back Button ---------- */
 
 const homeButton =
     document.getElementById("homeButton");
 
-homeButton.href = returnPage;
- homeButton.addEventListener("click", (e) => {
 
-    e.preventDefault();
+homeButton.href =
+    returnPage;
 
-    sessionStorage.setItem(
-        "restoreSearch",
-        "yes"
-    );
 
-    location.href = returnPage;
+homeButton.addEventListener(
+    "click",
+    function(e){
 
-});
- fetch("descriptions.json")
-.then(r=>r.json())
-.then(data=>{
+        e.preventDefault();
 
-    let paper=null;
 
-    Object.values(data).forEach(p=>{
+        sessionStorage.setItem(
+            "restoreSearch",
+            "yes"
+        );
 
-        if(!p.images) return;
+
+        location.href =
+            returnPage;
+
+    }
+);
+
+
+/* ---------- Find PDF ---------- */
+
+fetch("descriptions.json")
+.then(r => r.json())
+.then(data => {
+
+    let paper = null;
+
+
+    Object.values(data).forEach(p => {
+
+        if(!p.images)
+            return;
+
 
         if(p.images.includes(src)){
-            paper=p;
+
+            paper = p;
+
         }
 
     });
 
-    if(!paper) return;
 
-    document.getElementById("pdfButton").href =
+    if(!paper)
+        return;
+
+
+    document.getElementById(
+        "pdfButton"
+    ).href =
         paper.url;
-document.getElementById("newTabBtn").onclick = () => {
-
-    menu.style.display = "none";
-
-    window.open(
-        src,
-        "_blank"
-    );
-
-};
-    const downloadBtn =
-    document.getElementById("downloadBtn");
-
-downloadBtn.onclick = () => {
-
-    const a = document.createElement("a");
-
-    a.href = src;
-
-    a.download =
-        src.split("/").pop();
-
-    document.body.appendChild(a);
-
-    a.click();
-
-    a.remove();
-
-    menu.style.display = "none";
-
-};
 
 });
-img.src=src;
-const filename = src.split("/").pop();
-title.textContent = filename.replace(/\.[^/.]+$/, "");
-//MOVING SCROLLING ETC.
-
-    
-    
-    
-    
-    // FIRST HALF... ^^^^^
 
 
-    // ------------------------
-    // One finger = Drag
-    // ------------------------
+/* ---------- Image ---------- */
 
-    
-// ===============================
-// POINTER EVENT INTERACTION ENGINE
-// ===============================
+img.src =
+    src;
+
+
+const filename =
+    src
+        .split("/")
+        .pop();
+
+
+const displayName =
+    filename
+        .replace(/\.[^/.]+$/, "")
+        .replace(/[-_]+/g, " ")
+        .replace(/\b\w/g, function(char){
+
+            return char.toUpperCase();
+
+        });
+
+
+title.textContent =
+    displayName;
+
+
+document.title =
+    displayName;
+
+
+/* =========================================================
+   IMAGE MOVEMENT / ZOOM
+   ========================================================= */
+
 
 let base = 1;
+
 let zoom = 1;
 
 let offsetX = 0;
+
 let offsetY = 0;
 
 let verticalLock = false;
 
+
 const zoomLabel =
     document.getElementById("zoom");
 
-const pointers = new Map();
+
+const pointers =
+    new Map();
+
 
 let pinchDistance = 0;
+
 let pinchZoom = 1;
 
-let pinchCenter = {
-    x: 0,
-    y: 0
-};
 
 function clampZoom(){
 
@@ -281,6 +539,7 @@ function clampZoom(){
 
     }
 
+
     if(zoom > 50){
 
         zoom = 50;
@@ -289,23 +548,32 @@ function clampZoom(){
 
 }
 
+
 function draw(){
 
     clampZoom();
 
+
     img.style.transform =
-        `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))
-         scale(${base * zoom})`;
+
+        `translate(
+            calc(-50% + ${offsetX}px),
+            calc(-50% + ${offsetY}px)
+        )
+        scale(${base * zoom})`;
+
 
     zoomLabel.textContent =
         Math.round(zoom * 100) + "%";
 
 }
 
+
 function fit(){
 
     if(!img.naturalWidth)
         return;
+
 
     base = Math.min(
 
@@ -317,358 +585,608 @@ function fit(){
 
     );
 
+
     zoom = 1;
 
+
     offsetX = 0;
+
     offsetY = 0;
+
 
     img.style.transition =
         "transform .22s";
 
+
     draw();
 
-    setTimeout(()=>{
 
-        img.style.transition="";
+    setTimeout(
+        () => {
 
-    },220);
+            img.style.transition = "";
+
+        },
+        220
+    );
 
 }
 
-img.onload = fit;
+
+img.onload =
+    fit;
+
 
 window.addEventListener(
     "resize",
     fit
 );
 
-minusButton.onclick=()=>{
 
-    zoom/=1.1;
+/* ---------- Zoom Buttons ---------- */
 
-    draw();
+minusButton.onclick =
+    () => {
 
-};
-
-plusButton.onclick=()=>{
-
-    zoom*=1.1;
-
-    draw();
-
-};
-
-fitButton.onclick=fit;
-
-lockButton.onclick=()=>{
-
-    verticalLock=!verticalLock;
-
-    lockButton.textContent=
-
-        verticalLock
-
-        ? "🔒 Vertical"
-
-        : "🔓 Free";
-
-};
-
-    viewer.onpointerdown=e=>{
-
-    viewer.setPointerCapture(
-        e.pointerId
-    );
-
-    pointers.set(
-
-        e.pointerId,
-
-        {
-
-            x:e.clientX,
-            y:e.clientY
-
-        }
-
-    );
-
-   if(pointers.size === 2){
-
-    const pts =
-        [...pointers.values()];
-
-    pinchDistance =
-        Math.hypot(
-
-            pts[0].x - pts[1].x,
-
-            pts[0].y - pts[1].y
-
-        );
-
-    pinchZoom = zoom;
-
-   pinchCenter = {
-
-    x:
-        viewer.clientWidth / 2,
-
-    y:
-        viewer.clientHeight / 2
-
-};
-
-}
-
-};
-    //MOVINF SCROLLING ETC.^^^^^
-viewer.onpointermove = e => {
-
-    if(!pointers.has(e.pointerId))
-        return;
-
-    const previous =
-        pointers.get(e.pointerId);
-
-    pointers.set(
-        e.pointerId,
-        {
-            x:e.clientX,
-            y:e.clientY
-        }
-    );
-
-    if(pointers.size === 1){
-
-        const dx =
-            e.clientX - previous.x;
-
-        const dy =
-            e.clientY - previous.y;
-
-        if(!verticalLock){
-
-            offsetX += dx;
-
-        }
-
-        offsetY += dy;
+        zoom /= 1.1;
 
         draw();
 
-        return;
+    };
 
-    }
 
-    const pts =
-    [...pointers.values()];
+plusButton.onclick =
+    () => {
 
-const distance =
-    Math.hypot(
+        zoom *= 1.1;
 
-        pts[0].x - pts[1].x,
+        draw();
 
-        pts[0].y - pts[1].y
+    };
 
-    );
 
-const center = {
+fitButton.onclick =
+    fit;
 
-    x:
-        viewer.clientWidth / 2,
 
-    y:
-        viewer.clientHeight / 2
+/* ---------- Vertical Lock ---------- */
 
-};
+lockButton.onclick =
+    () => {
 
-const oldScale =
-    base * zoom;
+        verticalLock =
+            !verticalLock;
 
-zoom =
-    pinchZoom *
-    (distance / pinchDistance);
 
-clampZoom();
+        lockButton.textContent =
 
-const newScale =
-    base * zoom;
+            verticalLock
 
-const ratio =
-    newScale / oldScale;
+            ? "🔒 Vertical"
 
-// Keep the current view centered while zooming.
-offsetX *= ratio;
-offsetY *= ratio;
+            : "🔓 Free";
 
-pinchDistance = distance;
-pinchZoom = zoom;
+    };
 
-draw();
-};
 
-viewer.onpointerup = e => {
+/* =========================================================
+   POINTER EVENTS
+   ========================================================= */
 
-    pointers.delete(
-        e.pointerId
-    );
 
-    if(pointers.size < 2){
+/* ---------- Pointer Down ---------- */
 
-        pinchDistance = 0;
+viewer.onpointerdown =
+    e => {
 
-    }
+        viewer.setPointerCapture(
+            e.pointerId
+        );
 
-};
 
-viewer.onpointercancel = e => {
+        pointers.set(
 
-    pointers.delete(
-        e.pointerId
-    );
+            e.pointerId,
 
-    if(pointers.size < 2){
+            {
+                x:e.clientX,
+                y:e.clientY
+            }
 
-        pinchDistance = 0;
+        );
 
-    }
 
-};
-    
-draw();
-fit();
-document.getElementById("fullscreenBtn").onclick = () => {
+        if(pointers.size === 2){
 
-    menu.style.display = "none";
+            const pts =
+                [...pointers.values()];
 
-    if(document.fullscreenElement){
 
-        document.exitFullscreen();
+            pinchDistance =
+                Math.hypot(
 
-    }else{
+                    pts[0].x -
+                    pts[1].x,
 
-        document.documentElement.requestFullscreen();
+                    pts[0].y -
+                    pts[1].y
 
-    }
+                );
 
-};
-viewer.addEventListener("wheel", e => {
 
-    e.preventDefault();
+            pinchZoom =
+                zoom;
 
-    const rect =
-        viewer.getBoundingClientRect();
+        }
 
-    const mouseX =
-        e.clientX - rect.left - rect.width / 2;
+    };
 
-    const mouseY =
-        e.clientY - rect.top - rect.height / 2;
 
-    const oldScale =
-        base * zoom;
+/* ---------- Pointer Move ---------- */
 
-    if(e.deltaY < 0){
+viewer.onpointermove =
+    e => {
 
-        zoom *= 1.12;
+        if(!pointers.has(e.pointerId))
+            return;
 
-    }else{
 
-        zoom /= 1.12;
+        const previous =
+            pointers.get(
+                e.pointerId
+            );
 
-    }
 
-    clampZoom();
+        pointers.set(
 
-    const newScale =
-        base * zoom;
+            e.pointerId,
 
-    const ratio =
-        newScale / oldScale;
+            {
+                x:e.clientX,
+                y:e.clientY
+            }
 
-    offsetX =
-        mouseX -
-        (mouseX - offsetX) * ratio;
+        );
 
-    offsetY =
-        mouseY -
-        (mouseY - offsetY) * ratio;
 
-    draw();
+        /* One finger */
 
-}, { passive:false });
-// TODO: reconnect previous/next using your existing code from the old image.html.
-menuButton.addEventListener("click", e => {
+        if(pointers.size === 1){
 
-    e.stopPropagation();
+            const dx =
+                e.clientX -
+                previous.x;
 
-    menu.style.display =
-        menu.style.display === "block"
-            ? "none"
-            : "block";
 
-});
+            const dy =
+                e.clientY -
+                previous.y;
 
-menu.addEventListener("click", e => {
 
-    e.stopPropagation();
+            if(!verticalLock){
 
-});
+                offsetX += dx;
 
-document.addEventListener("click", () => {
+            }
 
-    menu.style.display = "none";
 
-});
-    document.getElementById("shareBtn").addEventListener("click", async () => {
+            offsetY += dy;
 
-    const url = window.location.href;
 
-    menu.style.display = "none";
+            draw();
 
-    // Native share sheet
-    if(navigator.share){
-
-        try{
-
-            await navigator.share({
-
-                title: title.textContent,
-
-                text: title.textContent,
-
-                url: url
-
-            });
 
             return;
 
-        }catch(err){
-
-            // User cancelled or sharing failed.
         }
 
-    }
 
-    // Clipboard fallback
-    try{
+        /* Two fingers */
 
-        await navigator.clipboard.writeText(url);
+        const pts =
+            [...pointers.values()];
 
-        alert("Link copied to clipboard!");
 
-    }catch(err){
+        const distance =
+            Math.hypot(
 
-        // Final fallback
-        window.prompt(
-            "Copy this link:",
-            url
+                pts[0].x -
+                pts[1].x,
+
+                pts[0].y -
+                pts[1].y
+
+            );
+
+
+        const oldScale =
+            base * zoom;
+
+
+        zoom =
+            pinchZoom *
+            (
+                distance /
+                pinchDistance
+            );
+
+
+        clampZoom();
+
+
+        const newScale =
+            base * zoom;
+
+
+        const ratio =
+            newScale /
+            oldScale;
+
+
+        offsetX *= ratio;
+
+        offsetY *= ratio;
+
+
+        pinchDistance =
+            distance;
+
+
+        pinchZoom =
+            zoom;
+
+
+        draw();
+
+    };
+
+
+/* ---------- Pointer Up ---------- */
+
+viewer.onpointerup =
+    e => {
+
+        pointers.delete(
+            e.pointerId
         );
 
-    }
 
-});
+        if(pointers.size < 2){
+
+            pinchDistance = 0;
+
+        }
+
+    };
+
+
+/* ---------- Pointer Cancel ---------- */
+
+viewer.onpointercancel =
+    e => {
+
+        pointers.delete(
+            e.pointerId
+        );
+
+
+        if(pointers.size < 2){
+
+            pinchDistance = 0;
+
+        }
+
+    };
+
+
+/* ---------- Initial Draw ---------- */
+
+draw();
+
+fit();
+
+
+/* =========================================================
+   FULLSCREEN
+   ========================================================= */
+
+document
+    .getElementById("fullscreenBtn")
+    .onclick = () => {
+
+        menu.style.display =
+            "none";
+
+
+        if(document.fullscreenElement){
+
+            document.exitFullscreen();
+
+        }else{
+
+            document.documentElement
+                .requestFullscreen();
+
+        }
+
+    };
+
+
+/* =========================================================
+   MOUSE WHEEL ZOOM
+   ========================================================= */
+
+viewer.addEventListener(
+    "wheel",
+    e => {
+
+        e.preventDefault();
+
+
+        const rect =
+            viewer.getBoundingClientRect();
+
+
+        const mouseX =
+            e.clientX -
+            rect.left -
+            rect.width / 2;
+
+
+        const mouseY =
+            e.clientY -
+            rect.top -
+            rect.height / 2;
+
+
+        const oldScale =
+            base * zoom;
+
+
+        if(e.deltaY < 0){
+
+            zoom *= 1.12;
+
+        }else{
+
+            zoom /= 1.12;
+
+        }
+
+
+        clampZoom();
+
+
+        const newScale =
+            base * zoom;
+
+
+        const ratio =
+            newScale /
+            oldScale;
+
+
+        offsetX =
+
+            mouseX -
+            (
+                mouseX -
+                offsetX
+            ) * ratio;
+
+
+        offsetY =
+
+            mouseY -
+            (
+                mouseY -
+                offsetY
+            ) * ratio;
+
+
+        draw();
+
+    },
+    {
+        passive:false
+    }
+);
+
+
+/* =========================================================
+   MENU
+   ========================================================= */
+
+menuButton.addEventListener(
+    "click",
+    e => {
+
+        e.stopPropagation();
+
+
+        menu.style.display =
+
+            menu.style.display === "block"
+
+            ? "none"
+
+            : "block";
+
+    }
+);
+
+
+menu.addEventListener(
+    "click",
+    e => {
+
+        e.stopPropagation();
+
+    }
+);
+
+
+document.addEventListener(
+    "click",
+    () => {
+
+        menu.style.display =
+            "none";
+
+    }
+);
+
+
+/* =========================================================
+   NEW TAB
+   ========================================================= */
+
+document
+    .getElementById("newTabBtn")
+    .onclick = () => {
+
+        menu.style.display =
+            "none";
+
+
+        window.open(
+            src,
+            "_blank"
+        );
+
+    };
+
+
+/* =========================================================
+   DOWNLOAD
+   ========================================================= */
+
+document
+    .getElementById("downloadBtn")
+    .onclick = () => {
+
+        const a =
+            document.createElement("a");
+
+
+        a.href =
+            src;
+
+
+        a.download =
+            src.split("/").pop();
+
+
+        document.body.appendChild(a);
+
+
+        a.click();
+
+
+        a.remove();
+
+
+        menu.style.display =
+            "none";
+
+    };
+
+
+/* =========================================================
+   SHARE
+   ========================================================= */
+
+document
+    .getElementById("shareBtn")
+    .addEventListener(
+        "click",
+        async () => {
+
+            const url =
+                window.location.href;
+
+
+            menu.style.display =
+                "none";
+
+
+            /* Native share */
+
+            if(navigator.share){
+
+                try{
+
+                    await navigator.share({
+
+                        title:
+                            title.textContent,
+
+                        text:
+                            title.textContent,
+
+                        url:
+                            url
+
+                    });
+
+
+                    return;
+
+                }catch(err){
+
+                    if(
+                        err &&
+                        err.name ===
+                        "AbortError"
+                    ){
+
+                        return;
+
+                    }
+
+                }
+
+            }
+
+
+            /* Clipboard fallback */
+
+            if(
+                navigator.clipboard &&
+                typeof navigator.clipboard.writeText ===
+                "function"
+            ){
+
+                try{
+
+                    await navigator.clipboard.writeText(
+                        url
+                    );
+
+
+                    return;
+
+                }catch(err){
+
+                    /* Continue to final fallback */
+
+                }
+
+            }
+
+
+            /* Manual fallback */
+
+            window.prompt(
+                "Copy this link:",
+                url
+            );
+
+        }
+    );
+
+
 </script>
+
 </body>
 </html>
