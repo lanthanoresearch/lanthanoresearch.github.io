@@ -551,12 +551,17 @@ if(!src){
 
 if(src){
 
-    const filename =
-        src.split("/").pop();
+   const filename =
+    src.split("/").pop();
 
-    title.textContent =
-        decodeURIComponent(filename)
-            .replace(/\.[^/.]+$/, "");
+const displayName =
+    decodeURIComponent(filename)
+        .replace(/\.[^/.]+$/, "")
+        .replace(/[-_]+/g, " ")
+        .replace(/\b\w/g, char => char.toUpperCase());
+
+title.textContent =
+    displayName;
 
 }
 
