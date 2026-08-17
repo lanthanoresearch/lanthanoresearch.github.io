@@ -116,7 +116,7 @@ p{
 
 .progress-text{
     margin-top:8px;
-    color:#777;
+    color:#aaa;
     font-size:0.9em;
 }
 
@@ -124,6 +124,24 @@ p{
     margin-top:15px;
     color:#777;
     font-size:0.9em;
+    line-height:1.5;
+}
+
+.download-warning{
+    display:none;
+    margin:20px auto 0;
+    padding:15px;
+    background:#181818;
+    border:1px solid #333;
+    border-radius:8px;
+    color:#bbb;
+    font-size:0.9em;
+    line-height:1.6;
+    max-width:650px;
+}
+
+.download-warning strong{
+    color:#eee;
 }
 
     </style>
@@ -145,6 +163,8 @@ p{
     <h1>Support Lanthano Research</h1>
 
 
+    <!-- PRESERVE THE RESEARCH -->
+
     <div class="card">
 
         <h2>Preserve the Research</h2>
@@ -156,9 +176,9 @@ p{
         </p>
 
         <p>
-            However, a website is not permanent. Websites can be
-            taken down, hosting can change, files can disappear,
-            and information can become inaccessible.
+            A website is not permanent. Websites can be taken
+            down, hosting can change, files can disappear, and
+            information can become inaccessible.
         </p>
 
         <p>
@@ -167,46 +187,29 @@ p{
         </p>
 
         <p>
-            One of the simplest ways to help ensure that Lanthano
-            Research continues to exist is to keep an offline
-            copy of it.
+            One of the simplest ways to help ensure that
+            Lanthano Research continues to exist is to keep
+            an offline copy of it.
         </p>
 
     </div>
 
 
-    <div class="card">
-
-        <h2>Download the Archive</h2>
-
-        <p>
-            You can download the available Lanthano Research
-            papers, supporting images, and video as a single
-            archive.
-        </p>
-
-        <p>
-            The files will be organized automatically so that
-            the research can be preserved and accessed without
-            needing to visit the website.
-        </p>
-
-        <p>
-            If you choose to download it, consider keeping a
-            backup copy on another device or storage location.
-            Multiple independent copies make the research less
-            dependent on any single website or server.
-        </p>
-
-    </div>
-
+    <!-- DOWNLOAD ENTIRE ARCHIVE -->
 
     <div class="card download-section">
 
         <h2>Download Entire Archive</h2>
 
         <p>
-            Create an offline copy of Lanthano Research.
+            Create an offline copy of the available Lanthano
+            Research papers, supporting images, and video.
+        </p>
+
+        <p>
+            The files will be organized automatically so that
+            the research can be preserved and accessed without
+            needing to visit the website.
         </p>
 
 
@@ -217,6 +220,30 @@ p{
         >
             Download Archive
         </button>
+
+
+        <div
+            id="downloadWarning"
+            class="download-warning"
+        >
+
+            <strong>
+                Do not leave this page while the archive is being created.
+            </strong>
+
+            <br><br>
+
+            The archive must finish downloading and
+            compressing before the ZIP file can be
+            downloaded. Closing, refreshing, or leaving
+            this page may interrupt the process.
+
+            <br><br>
+
+            You may leave this page once the browser has
+            started downloading the ZIP file.
+
+        </div>
 
 
         <div
@@ -252,6 +279,8 @@ p{
     </div>
 
 
+    <!-- WHY KEEP A COPY -->
+
     <div class="card">
 
         <h2>Why Keep a Copy?</h2>
@@ -286,8 +315,6 @@ p{
 </section>
 
 
-
-<!-- JSZip -->
 
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 
@@ -453,11 +480,26 @@ async function downloadArchive(){
         );
 
 
+    const warning =
+        document.getElementById(
+            "downloadWarning"
+        );
+
+
     button.disabled = true;
 
-    progress.style.display = "block";
+    button.textContent =
+        "Creating Archive...";
 
-    status.textContent = "";
+    progress.style.display =
+        "block";
+
+    warning.style.display =
+        "block";
+
+    status.textContent =
+        "";
+
 
 
     try{
@@ -576,7 +618,7 @@ ${new Date().toLocaleString()}
 
         /*
         --------------------------------------------------
-        Get all papers
+        Count files
         --------------------------------------------------
         */
 
@@ -680,7 +722,6 @@ ${new Date().toLocaleString()}
 
                 try{
 
-
                     setProgress(
                         (
                             completedFiles /
@@ -713,11 +754,9 @@ ${new Date().toLocaleString()}
 
                 }catch(error){
 
-
                     console.error(
                         error
                     );
-
 
                     failedFiles.push(
                         paper.url
@@ -763,13 +802,11 @@ ${new Date().toLocaleString()}
                     j++
                 ){
 
-
                     const image =
                         images[j];
 
 
                     try{
-
 
                         setProgress(
                             (
@@ -803,11 +840,9 @@ ${new Date().toLocaleString()}
 
                     }catch(error){
 
-
                         console.error(
                             error
                         );
-
 
                         failedFiles.push(
                             image
@@ -835,13 +870,11 @@ ${new Date().toLocaleString()}
             i++
         ){
 
-
             const video =
                 VIDEO_FILES[i];
 
 
             try{
-
 
                 setProgress(
                     (
@@ -875,11 +908,9 @@ ${new Date().toLocaleString()}
 
             }catch(error){
 
-
                 console.error(
                     error
                 );
-
 
                 failedFiles.push(
                     video
@@ -922,7 +953,7 @@ ${failedFiles.join("\n")}
 
         setProgress(
             94,
-            "Creating archive..."
+            "Creating ZIP file..."
         );
 
 
@@ -945,7 +976,7 @@ ${failedFiles.join("\n")}
                             0.06
                         ),
 
-                        "Creating archive..."
+                        "Creating ZIP file..."
                     );
 
                 }
@@ -955,9 +986,15 @@ ${failedFiles.join("\n")}
 
         /*
         ==================================================
-        DOWNLOAD
+        START DOWNLOAD
         ==================================================
         */
+
+        setProgress(
+            100,
+            "Starting download..."
+        );
+
 
         const url =
             URL.createObjectURL(
@@ -999,25 +1036,16 @@ ${failedFiles.join("\n")}
         );
 
 
-        setProgress(
-            100,
-            "Archive ready."
-        );
+        status.textContent =
+            "The ZIP file has been created and the download has started.";
 
 
-        if(
-            failedFiles.length
-        ){
+        warning.innerHTML =
+            "<strong>Download started.</strong><br><br>You may now leave this page.";
 
-            status.textContent =
-                `${failedFiles.length} file(s) could not be included.`;
 
-        }else{
-
-            status.textContent =
-                "Archive downloaded successfully.";
-
-        }
+        button.textContent =
+            "Archive Downloaded";
 
 
     }catch(error){
@@ -1039,11 +1067,16 @@ ${failedFiles.join("\n")}
             "The archive could not be created.";
 
 
-    }finally{
+        warning.innerHTML =
+            "<strong>The archive could not be completed.</strong><br><br>You can try again by pressing the Download Archive button.";
 
 
-        button.disabled = false;
+        button.disabled =
+            false;
 
+
+        button.textContent =
+            "Download Archive";
 
     }
 
@@ -1057,7 +1090,9 @@ LATEST RESEARCH DATE
 ==========================================================
 */
 
-fetch("descriptions.json")
+fetch(
+    "descriptions.json"
+)
 
 .then(
     response =>
