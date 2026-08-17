@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <link
+        rel="icon"
+        type="image/png"
+        href="file_000000000c40722f92b1fe6758cb4855.png"
+    >
+
+    <meta charset="utf-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width,initial-scale=1"
+    >
+
+    <title>Video Viewer</title>
+
+    <style>
+
+        *{
+            box-sizing:border-box;
+        }
+
+        html,
+        body{
+            margin:0;
+            height:100%;
+            background:#111;
+            color:#eee;
+            font-family:Arial,sans-serif;
+            overflow:hidden;
+        }
+
+        body{
+            display:flex;
+            flex-direction:column;
+        }
+
+
+        /* ---------- Header ---------- */
+
+        header{
+            background:#1b1b1b;
+            border-bottom:1px solid #333;
+            padding:8px;
+        }
+
+        .top{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:8px;
+        }
+
+
+        /* ---------- Buttons ---------- */
+
+        .controls{
+            display:flex;
+            gap:6px;
+            flex-wrap:wrap;
+        }
+
+        .btn{
+            background:#333;
+            color:#fff;
+            border:none;
+            border-radius:7px;
+            padding:9px 12px;
+            text-decoration:none;
+            cursor:pointer;
+            font-size:14px;
+        }
+
+        .btn:hover{
+            background:#444;
+        }
+
+
+        /* ---------- Menu ---------- */
+
+        #menu{
+
+            position:absolute;
+
+            right:10px;
+            top:58px;
+
+            background:#222;
+
+            border:1px solid #333;
+
+            border-radius:10px;
+
+            padding:8px;
+
+            display:none;
+
+            min-width:220px;
+
+            z-index:1000;
+        }
+
+        #menu button{
+
+            width:100%;
+
+            text-align:left;
+
+            margin:3px 0;
+
+            background:#333;
+
+            color:#fff;
+
+            border:none;
+
+            border-radius:7px;
+
+            padding:9px 12px;
+
+            cursor:pointer;
+
+            font-size:14px;
+        }
+
+        #menu button:hover{
+            background:#444;
+        }
+
+
+        /* ---------- Video Area ---------- */
+
+        #viewer{
+
+            flex:1;
+
+            position:relative;
+
+            overflow:hidden;
+
+            display:flex;
+
+            align-items:center;
+
+            justify-content:center;
+
+            background:#111;
+
+            padding:15px;
+        }
+
+        #video{
+
+            display:block;
+
+            width:auto;
+
+            height:auto;
+
+            max-width:100%;
+
+            max-height:100%;
+
+            background:#000;
+
+            object-fit:contain;
+        }
+
+
+        /* ---------- Title ---------- */
+
+        .title{
+
+            padding:8px 15px;
+
+            text-align:center;
+
+            font-weight:bold;
+
+            font-size:1rem;
+
+            white-space:nowrap;
+
+            overflow:hidden;
+
+            text-overflow:ellipsis;
+
+            background:#181818;
+
+            border-top:1px solid #2b2b2b;
+        }
+
+
+        /* ---------- Bottom Controls ---------- */
+
+        #videoControls{
+
+            display:flex;
+
+            justify-content:center;
+
+            align-items:center;
+
+            gap:8px;
+
+            padding:8px;
+
+            background:#181818;
+
+        }
+
+
+        /* ---------- Speed ---------- */
+
+        #speed{
+
+            background:#333;
+
+            color:#fff;
+
+            border:none;
+
+            border-radius:7px;
+
+            padding:9px 12px;
+
+            cursor:pointer;
+
+            font-size:14px;
+        }
+
+        #speed:hover{
+            background:#444;
+        }
+
+
+        /* ---------- Status ---------- */
+
+        #status{
+
+            position:absolute;
+
+            left:50%;
+
+            top:50%;
+
+            transform:translate(-50%,-50%);
+
+            color:#888;
+
+            font-size:.95rem;
+
+            text-align:center;
+
+            pointer-events:none;
+
+            display:none;
+        }
+
+
+        /* ---------- Mobile ---------- */
+
+        @media(max-width:700px){
+
+            .top{
+                align-items:flex-start;
+            }
+
+            .controls .btn{
+                padding:8px 10px;
+                font-size:.9rem;
+            }
+
+            .title{
+                font-size:.95rem;
+            }
+
+            #viewer{
+                padding:5px;
+            }
+
+            #videoControls{
+                gap:6px;
+                padding:7px;
+            }
+
+            #speed{
+                padding:8px 10px;
+                font-size:.9rem;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<header>
+
+    <div class="top">
+
+        <a
+            class="btn"
+            id="homeButton"
+            href="index.html"
+        >
+            ◀ Back
+        </a>
+
+
+        <div class="controls">
+
+            <button
+                class="btn"
+                id="menuBtn"
+            >
+                ☰
+            </button>
+
+        </div>
+
+    </div>
+
+</header>
+
+
+<!-- ---------- Menu ---------- -->
+
+<div id="menu">
+
+    <button id="downloadBtn">
+        Download Video
+    </button>
+
+    <button id="newTabBtn">
+        Open in New Tab
+    </button>
+
+    <button id="shareBtn">
+        Share
+    </button>
+
+    <button id="fullscreenBtn">
+        Fullscreen
+    </button>
+
+</div>
+
+
+<!-- ---------- Video Viewer ---------- -->
+
+<div id="viewer">
+
+    <video
+        id="video"
+        controls
+        playsinline
+        preload="metadata"
+    >
+
+        Your browser does not support HTML5 video.
+
+    </video>
+
+    <div id="status">
+        Loading video...
+    </div>
+
+</div>
+
+
+<!-- ---------- File Name ---------- -->
+
+<div
+    class="title"
+    id="title"
+>
+    Loading...
+</div>
+
+
+<!-- ---------- Speed Controls ---------- -->
+
+<div id="videoControls">
+
+    <select id="speed">
+
+        <option value="0.1">
+            0.1×
+        </option>
+
+        <option value="0.25">
+            0.25×
+        </option>
+
+        <option value="0.5">
+            0.5×
+        </option>
+
+        <option value="1" selected>
+            1×
+        </option>
+
+        <option value="1.5">
+            1.5×
+        </option>
+
+        <option value="2">
+            2×
+        </option>
+
+        <option value="2.5">
+            2.5×
+        </option>
+
+        <option value="3">
+            3×
+        </option>
+
+    </select>
+
+</div>
+
+
+<script>
+
+
+/* =========================================================
+   VIDEO VIEWER
+   ========================================================= */
+
+
+/* ---------- URL Parameters ---------- */
+
+const p =
+    new URLSearchParams(location.search);
+
+
+/*
+    Example:
+
+    video.html?video=prediction.mp4
+
+    Or:
+
+    video.html?video=videos/prediction.mp4
+*/
+
+const src =
+    decodeURIComponent(
+        p.get("video") || ""
+    );
+
+
+const returnPage =
+    decodeURIComponent(
+        p.get("return") || "index.html"
+    );
+
+
+/* ---------- Elements ---------- */
+
+const video =
+    document.getElementById("video");
+
+const viewer =
+    document.getElementById("viewer");
+
+const title =
+    document.getElementById("title");
+
+const status =
+    document.getElementById("status");
+
+const menu =
+    document.getElementById("menu");
+
+const menuButton =
+    document.getElementById("menuBtn");
+
+const homeButton =
+    document.getElementById("homeButton");
+
+const downloadButton =
+    document.getElementById("downloadBtn");
+
+const newTabButton =
+    document.getElementById("newTabBtn");
+
+const shareButton =
+    document.getElementById("shareBtn");
+
+const fullscreenButton =
+    document.getElementById("fullscreenBtn");
+
+const speed =
+    document.getElementById("speed");
+
+
+/* ---------- Back Button ---------- */
+
+homeButton.href =
+    returnPage;
+
+
+homeButton.addEventListener(
+    "click",
+    function(e){
+
+        e.preventDefault();
+
+        sessionStorage.setItem(
+            "restoreSearch",
+            "yes"
+        );
+
+        location.href =
+            returnPage;
+
+    }
+);
+
+
+/* ---------- Validate Video ---------- */
+
+if(!src){
+
+    status.textContent =
+        "No video specified.";
+
+    status.style.display =
+        "block";
+
+}else{
+
+    video.src =
+        src;
+
+}
+
+
+/* ---------- File Name ---------- */
+
+if(src){
+
+    const filename =
+        src.split("/").pop();
+
+    title.textContent =
+        decodeURIComponent(filename)
+            .replace(/\.[^/.]+$/, "");
+
+}
+
+
+/* ---------- Loading ---------- */
+
+video.addEventListener(
+    "loadstart",
+    function(){
+
+        status.textContent =
+            "Loading video...";
+
+        status.style.display =
+            "block";
+
+    }
+);
+
+
+video.addEventListener(
+    "loadedmetadata",
+    function(){
+
+        status.style.display =
+            "none";
+
+    }
+);
+
+
+video.addEventListener(
+    "canplay",
+    function(){
+
+        status.style.display =
+            "none";
+
+    }
+);
+
+
+video.addEventListener(
+    "error",
+    function(){
+
+        status.textContent =
+            "Unable to load video.";
+
+        status.style.display =
+            "block";
+
+    }
+);
+
+
+/* ---------- Playback Speed ---------- */
+
+speed.addEventListener(
+    "change",
+    function(){
+
+        video.playbackRate =
+            parseFloat(
+                speed.value
+            );
+
+    }
+);
+
+
+/* ---------- Menu ---------- */
+
+menuButton.addEventListener(
+    "click",
+    function(e){
+
+        e.stopPropagation();
+
+        menu.style.display =
+            menu.style.display === "block"
+                ? "none"
+                : "block";
+
+    }
+);
+
+
+menu.addEventListener(
+    "click",
+    function(e){
+
+        e.stopPropagation();
+
+    }
+);
+
+
+document.addEventListener(
+    "click",
+    function(){
+
+        menu.style.display =
+            "none";
+
+    }
+);
+
+
+/* ---------- Download ---------- */
+
+downloadButton.addEventListener(
+    "click",
+    function(){
+
+        menu.style.display =
+            "none";
+
+        if(!src){
+            return;
+        }
+
+        const a =
+            document.createElement("a");
+
+        a.href =
+            src;
+
+        a.download =
+            src.split("/").pop();
+
+        document.body.appendChild(a);
+
+        a.click();
+
+        a.remove();
+
+    }
+);
+
+
+/* ---------- Open in New Tab ---------- */
+
+newTabButton.addEventListener(
+    "click",
+    function(){
+
+        menu.style.display =
+            "none";
+
+        if(!src){
+            return;
+        }
+
+        window.open(
+            src,
+            "_blank"
+        );
+
+    }
+);
+
+
+/* ---------- Share ---------- */
+
+shareButton.addEventListener(
+    "click",
+    async function(){
+
+        const url =
+            window.location.href;
+
+        menu.style.display =
+            "none";
+
+
+        /* Native share sheet */
+
+        if(navigator.share){
+
+            try{
+
+                await navigator.share({
+
+                    title:
+                        title.textContent,
+
+                    text:
+                        title.textContent,
+
+                    url:
+                        url
+
+                });
+
+                return;
+
+            }catch(err){
+
+                /*
+                    User cancelled sharing.
+                */
+
+            }
+
+        }
+
+
+        /* Clipboard fallback */
+
+        try{
+
+            await navigator.clipboard.writeText(
+                url
+            );
+
+            alert(
+                "Link copied to clipboard!"
+            );
+
+        }catch(err){
+
+            window.prompt(
+                "Copy this link:",
+                url
+            );
+
+        }
+
+    }
+);
+
+
+/* ---------- Fullscreen ---------- */
+
+fullscreenButton.addEventListener(
+    "click",
+    function(){
+
+        menu.style.display =
+            "none";
+
+
+        if(document.fullscreenElement){
+
+            document.exitFullscreen();
+
+        }else{
+
+            if(video.requestFullscreen){
+
+                video.requestFullscreen();
+
+            }else if(
+                document.documentElement
+                    .requestFullscreen
+            ){
+
+                document.documentElement
+                    .requestFullscreen();
+
+            }
+
+        }
+
+    }
+);
+
+
+/* ---------- Keyboard Shortcuts ---------- */
+
+document.addEventListener(
+    "keydown",
+    function(e){
+
+        /*
+            Space = play/pause
+        */
+
+        if(
+            e.code === "Space" &&
+            document.activeElement.tagName !== "SELECT"
+        ){
+
+            e.preventDefault();
+
+            if(video.paused){
+
+                video.play();
+
+            }else{
+
+                video.pause();
+
+            }
+
+        }
+
+
+        /*
+            Escape = close fullscreen
+        */
+
+        if(
+            e.key === "Escape" &&
+            document.fullscreenElement
+        ){
+
+            document.exitFullscreen();
+
+        }
+
+    }
+);
+
+
+/* ---------- Initialize ---------- */
+
+video.playbackRate = 1;
+
+</script>
+
+
+</body>
+
+</html>
