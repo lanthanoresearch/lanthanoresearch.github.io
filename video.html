@@ -733,9 +733,19 @@ shareButton.addEventListener(
             "none";
 
 
-        /* Native share sheet */
+        /*
+            FIRST:
+            Try the device/browser's native
+            sharing system.
 
-        if(navigator.share){
+            If this works, STOP completely.
+            Nothing else happens.
+        */
+
+        if(
+            navigator.share &&
+            typeof navigator.share === "function"
+        ){
 
             try{
 
@@ -754,10 +764,54 @@ shareButton.addEventListener(
 
                 return;
 
-            }catch(err){
+            }catch(error){
 
                 /*
-                    User cancelled sharing.
+                    Only continue if the native
+                    share system actually failed.
+
+                    If the user simply cancelled
+                    the share dialog, do nothing.
+                */
+
+                if(
+                    error &&
+                    error.name === "AbortError"
+                ){
+
+                    return;
+
+                }
+
+            }
+
+        }
+
+
+        /*
+            SECOND:
+            Native sharing isn't available or failed.
+            Try copying automatically.
+        */
+
+        if(
+            navigator.clipboard &&
+            typeof navigator.clipboard.writeText === "function"
+        ){
+
+            try{
+
+                await navigator.clipboard.writeText(
+                    url
+                );
+
+                return;
+
+            }catch(error){
+
+                /*
+                    Automatic clipboard copying
+                    failed. Continue to final fallback.
                 */
 
             }
@@ -765,26 +819,18 @@ shareButton.addEventListener(
         }
 
 
-        /* Clipboard fallback */
+        /*
+            THIRD:
+            Nothing else worked.
 
-        try{
+            Show the URL and let the user
+            manually copy it.
+        */
 
-            await navigator.clipboard.writeText(
-                url
-            );
-
-            alert(
-                "Link copied to clipboard!"
-            );
-
-        }catch(err){
-
-            window.prompt(
-                "Copy this link:",
-                url
-            );
-
-        }
+        window.prompt(
+            "Copy this link:",
+            url
+        );
 
     }
 );
