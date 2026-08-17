@@ -29,20 +29,26 @@ body{
 }
 
 section{
-    max-width:900px;
+    max-width:850px;
     margin:auto;
-    padding:40px 20px;
+    padding:25px 20px;
 }
 
 h1{
     text-align:center;
-    margin-bottom:40px;
+    margin:0 0 25px;
+    font-size:28px;
+}
+
+h2{
+    margin-top:0;
+    margin-bottom:12px;
 }
 
 .card{
     background:#1d1d1d;
-    padding:25px;
-    margin:20px 0;
+    padding:20px;
+    margin:15px 0;
     border-radius:10px;
 }
 
@@ -50,7 +56,7 @@ h1{
     color:white;
     text-decoration:none;
     display:inline-block;
-    margin-bottom:20px;
+    margin-bottom:15px;
 }
 
 .back:hover{
@@ -58,7 +64,8 @@ h1{
 }
 
 p{
-    line-height:1.7;
+    line-height:1.55;
+    margin:8px 0;
 }
 
 .download-section{
@@ -67,8 +74,8 @@ p{
 
 .download-button{
     display:inline-block;
-    margin-top:10px;
-    padding:13px 25px;
+    margin-top:12px;
+    padding:12px 24px;
     background:#333;
     color:#fff;
     border:none;
@@ -88,20 +95,20 @@ p{
 
 .progress{
     display:none;
-    margin:20px auto 0;
+    margin:18px auto 0;
     max-width:650px;
 }
 
 .progress-percent{
     text-align:center;
     color:#aaa;
-    font-size:1.05em;
-    margin-bottom:8px;
+    font-size:1em;
+    margin-bottom:6px;
 }
 
 .progress-bar{
     width:100%;
-    height:9px;
+    height:8px;
     background:#333;
     border-radius:10px;
     overflow:hidden;
@@ -115,23 +122,23 @@ p{
 }
 
 .progress-text{
-    margin-top:10px;
+    margin-top:8px;
     color:#aaa;
-    font-size:0.95em;
-    line-height:1.5;
+    font-size:0.9em;
+    line-height:1.4;
 }
 
 .download-warning{
     display:none;
-    margin:20px auto 0;
-    padding:15px;
+    margin:15px auto 0;
+    padding:12px;
     background:#211515;
     border:1px solid #5a2525;
     border-radius:8px;
-    color:#ddd;
-    font-size:0.9em;
-    line-height:1.6;
-    max-width:650px;
+    color:#ccc;
+    font-size:0.85em;
+    line-height:1.45;
+    max-width:600px;
 }
 
 .download-warning strong{
@@ -139,10 +146,10 @@ p{
 }
 
 .status{
-    margin-top:15px;
+    margin-top:10px;
     color:#888;
-    font-size:0.9em;
-    line-height:1.5;
+    font-size:0.85em;
+    line-height:1.4;
 }
 
 
@@ -163,22 +170,22 @@ p{
 
 .leave-popup-box{
     width:100%;
-    max-width:500px;
+    max-width:450px;
     background:#1d1d1d;
     border:1px solid #444;
     border-radius:10px;
-    padding:25px;
+    padding:22px;
     box-shadow:0 10px 40px rgba(0,0,0,0.5);
 }
 
 .leave-popup-box h2{
     margin-top:0;
-    margin-bottom:15px;
+    margin-bottom:12px;
 }
 
 .leave-popup-box p{
     color:#ccc;
-    line-height:1.6;
+    line-height:1.5;
 }
 
 .leave-popup-warning{
@@ -189,12 +196,12 @@ p{
 .leave-popup-buttons{
     display:flex;
     gap:10px;
-    margin-top:25px;
+    margin-top:20px;
 }
 
 .leave-popup-button{
     flex:1;
-    padding:12px 15px;
+    padding:11px 15px;
     border:none;
     border-radius:7px;
     font-size:15px;
@@ -222,6 +229,20 @@ p{
 
 @media(max-width:600px){
 
+    section{
+        padding:20px 15px;
+    }
+
+    h1{
+        font-size:24px;
+        margin-bottom:20px;
+    }
+
+    .card{
+        padding:17px;
+        margin:12px 0;
+    }
+
     .leave-popup-buttons{
         flex-direction:column;
     }
@@ -239,9 +260,7 @@ p{
 <section>
 
 
-    <!-- =================================================
-         LEAVE PAGE POPUP
-         ================================================= -->
+    <!-- LEAVE PAGE POPUP -->
 
     <div
         id="leavePopup"
@@ -259,8 +278,7 @@ p{
 
             <p>
                 The archive has not finished yet. If you
-                leave now, you will need to start the
-                process again.
+                leave now, you will need to start again.
             </p>
 
             <div class="leave-popup-buttons">
@@ -286,9 +304,7 @@ p{
     </div>
 
 
-    <!-- =================================================
-         BACK BUTTON
-         ================================================= -->
+    <!-- HOME -->
 
     <a
         class="back"
@@ -302,9 +318,9 @@ p{
     <h1>Support Lanthano Research</h1>
 
 
-    <!-- =================================================
+    <!-- ==================================================
          PRESERVE THE RESEARCH
-         ================================================= -->
+         ================================================== -->
 
     <div class="card">
 
@@ -317,28 +333,23 @@ p{
         </p>
 
         <p>
-            A website is not permanent. Websites can be taken
-            down, hosting can change, files can disappear, and
-            information can become inaccessible.
+            Websites are not permanent. Hosting can change,
+            files can disappear, and information can become
+            inaccessible.
         </p>
 
         <p>
-            The research should not depend entirely on this
-            website remaining online.
-        </p>
-
-        <p>
-            One of the simplest ways to help ensure that
-            Lanthano Research continues to exist is to keep
-            an offline copy of it.
+            Keeping an offline copy helps ensure that the
+            research continues to exist independently of
+            this website.
         </p>
 
     </div>
 
 
-    <!-- =================================================
+    <!-- ==================================================
          DOWNLOAD ENTIRE ARCHIVE
-         ================================================= -->
+         ================================================== -->
 
     <div class="card download-section">
 
@@ -348,13 +359,6 @@ p{
             Create an offline copy of the available Lanthano
             Research papers, supporting images, and video.
         </p>
-
-        <p>
-            The files will be organized automatically so that
-            the research can be preserved and accessed without
-            needing to visit the website.
-        </p>
-
 
         <button
             id="downloadButton"
@@ -379,9 +383,7 @@ p{
             <br><br>
 
             The archive is being prepared on your device.
-            Closing, refreshing, or leaving this page may
-            interrupt the process before the ZIP file is
-            created.
+            Leaving this page may interrupt the process.
 
         </div>
 
@@ -431,40 +433,11 @@ p{
     </div>
 
 
-    <!-- =================================================
-         WHY KEEP A COPY
-         ================================================= -->
-
-    <div class="card">
-
-        <h2>Why Keep a Copy?</h2>
-
-        <p>
-            Downloading the archive gives you a copy of the
-            research that exists independently of Lanthano
-            Research's website.
-        </p>
-
-        <p>
-            You can keep the archive on your computer, an
-            external drive, or another storage device.
-        </p>
-
-        <p>
-            The purpose is simple: the information should
-            continue to exist even if the website does not.
-        </p>
-
-    </div>
-
-
 </section>
 
 
 
-<!-- ======================================================
-     JSZIP
-     ====================================================== -->
+<!-- JSZIP -->
 
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 
@@ -696,30 +669,16 @@ function leavePage(){
     allowNavigation =
         true;
 
-
     archiveCompiling =
         false;
-
 
     document
         .getElementById("leavePopup")
         .style.display =
         "none";
 
-
-    if(
-        pendingNavigation
-    ){
-
-        window.location.href =
-            pendingNavigation;
-
-        return;
-
-    }
-
-
-    window.history.back();
+    window.location.href =
+        "index.html";
 
 }
 
@@ -727,7 +686,7 @@ function leavePage(){
 
 /*
 ==========================================================
-PROTECT NORMAL PAGE NAVIGATION
+PROTECT NORMAL NAVIGATION
 ==========================================================
 */
 
@@ -745,13 +704,10 @@ function handleNavigation(
 
     event.preventDefault();
 
-
     pendingNavigation =
         destination;
 
-
     showLeavePopup();
-
 
     return false;
 
@@ -820,7 +776,7 @@ async function downloadArchive(){
 
     /*
     ------------------------------------------------------
-    START STATE
+    START
     ------------------------------------------------------
     */
 
@@ -1003,7 +959,6 @@ ${new Date().toLocaleString()}
         entries.forEach(
             ([key, paper]) => {
 
-
                 if(
                     paper.url
                 ){
@@ -1059,7 +1014,6 @@ ${new Date().toLocaleString()}
             i++
         ){
 
-
             const [
                 key,
                 paper
@@ -1104,7 +1058,6 @@ ${new Date().toLocaleString()}
 
                 try{
 
-
                     setProgress(
                         (
                             completedFiles /
@@ -1142,16 +1095,13 @@ ${new Date().toLocaleString()}
 
                 }catch(error){
 
-
                     console.error(
                         error
                     );
 
-
                     failedFiles.push(
                         paper.url
                     );
-
 
                     completedFiles++;
 
@@ -1187,7 +1137,6 @@ ${new Date().toLocaleString()}
                 images.length
             ){
 
-
                 const imageFolder =
                     paperFolder.folder(
                         "Images"
@@ -1200,7 +1149,6 @@ ${new Date().toLocaleString()}
                     j++
                 ){
 
-
                     const image =
                         images[j];
 
@@ -1212,7 +1160,6 @@ ${new Date().toLocaleString()}
 
 
                     try{
-
 
                         setProgress(
                             (
@@ -1251,16 +1198,13 @@ ${new Date().toLocaleString()}
 
                     }catch(error){
 
-
                         console.error(
                             error
                         );
 
-
                         failedFiles.push(
                             image
                         );
-
 
                         completedFiles++;
 
@@ -1286,7 +1230,6 @@ ${new Date().toLocaleString()}
             i++
         ){
 
-
             const video =
                 VIDEO_FILES[i];
 
@@ -1298,7 +1241,6 @@ ${new Date().toLocaleString()}
 
 
             try{
-
 
                 setProgress(
                     (
@@ -1337,16 +1279,13 @@ ${new Date().toLocaleString()}
 
             }catch(error){
 
-
                 console.error(
                     error
                 );
 
-
                 failedFiles.push(
                     video
                 );
-
 
                 completedFiles++;
 
@@ -1406,7 +1345,6 @@ ${failedFiles.join("\n")}
 
                 metadata => {
 
-
                     const overallPercent =
                         90 +
                         (
@@ -1428,7 +1366,7 @@ ${failedFiles.join("\n")}
 
         /*
         ==================================================
-        ZIP COMPLETELY CREATED
+        ZIP COMPLETE
         ==================================================
         */
 
@@ -1445,7 +1383,7 @@ ${failedFiles.join("\n")}
 
         /*
         ==================================================
-        CREATE DOWNLOAD
+        START DOWNLOAD
         ==================================================
         */
 
@@ -1480,7 +1418,6 @@ ${failedFiles.join("\n")}
         link.remove();
 
 
-
         setTimeout(
             () => {
 
@@ -1496,7 +1433,7 @@ ${failedFiles.join("\n")}
 
         /*
         ==================================================
-        DOWNLOAD HAS STARTED
+        DOWNLOAD STARTED
         ==================================================
         */
 
