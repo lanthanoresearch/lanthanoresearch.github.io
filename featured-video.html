@@ -6,9 +6,10 @@
 
     <div class="featured-video-card" id="featuredVideoCard">
 
-        <div
+        <a
             class="featured-video-preview"
-            onclick="openFeaturedVideo()"
+            href="video.html?video=prediction.mp4&return=index.html"
+            onclick="saveVideoPosition()"
         >
 
             <div class="featured-video-thumbnail">
@@ -19,9 +20,9 @@
                     alt="Predictive Programming"
                 >
 
-               <div class="featured-video-play">
-    <span>▶</span>
-</div>
+                <div class="featured-video-play">
+                    <span>▶</span>
+                </div>
 
             </div>
 
@@ -32,7 +33,7 @@
                 </div>
 
                 <div class="featured-video-description">
-                 A documented prediction made in 2022 accurately predicting the assassination attempted on Donald Trump in 2024.
+                    A documented prediction made in 2022 accurately predicting the assassination attempted on Donald Trump in 2024.
                 </div>
 
                 <div class="featured-video-meta">
@@ -41,45 +42,26 @@
 
             </div>
 
-        </div>
-
-
-        <div
-            class="featured-video-expanded"
-            id="featuredVideoExpanded"
-        >
-
-            <div class="featured-video-expanded-inner">
-
-                <button
-                    class="featured-video-close"
-                    onclick="closeFeaturedVideo(event)"
-                    aria-label="Close video"
-                >
-                    ×
-                </button>
-
-                <div class="featured-video-player">
-
-                    <video
-                        id="featuredVideoPlayer"
-                        controls
-                        playsinline
-                    >
-                        <source
-                            src="prediction.mp4"
-                            type="video/mp4"
-                        >
-
-                        Your browser does not support HTML5 video.
-                    </video>
-
-                </div>
-
-            </div>
-
-        </div>
+        </a>
 
     </div>
 
 </div>
+
+<script>
+
+function saveVideoPosition(){
+
+    sessionStorage.setItem(
+        "videoScrollPosition",
+        window.scrollY
+    );
+
+    sessionStorage.setItem(
+        "videoReturnToIndex",
+        "yes"
+    );
+
+}
+
+</script>
