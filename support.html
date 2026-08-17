@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <link
+        rel="icon"
+        type="image/png"
+        href="file_000000000c40722f92b1fe6758cb4855.png"
+    >
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Support — Lanthano Research</title>
+
+
+    <style>
+
+body{
+    margin:0;
+    background:#111;
+    color:#eee;
+    font-family:Arial,sans-serif;
+}
+
+section{
+    max-width:900px;
+    margin:auto;
+    padding:40px 20px;
+}
+
+.update-note{
+    text-align:center;
+    color:#777;
+    font-size:0.9em;
+    margin-top:40px;
+}
+
+h1{
+    text-align:center;
+    margin-bottom:40px;
+}
+
+.card{
+    background:#1d1d1d;
+    padding:25px;
+    margin:20px 0;
+    border-radius:10px;
+}
+
+.back{
+    color:white;
+    text-decoration:none;
+    display:inline-block;
+    margin-bottom:20px;
+}
+
+.back:hover{
+    text-decoration:underline;
+}
+
+p{
+    line-height:1.7;
+}
+
+.download-section{
+    text-align:center;
+}
+
+.download-button{
+    display:inline-block;
+    margin-top:10px;
+    padding:13px 25px;
+    background:#333;
+    color:#fff;
+    border:none;
+    border-radius:7px;
+    font-size:16px;
+    cursor:pointer;
+}
+
+.download-button:hover{
+    background:#444;
+}
+
+.download-button:disabled{
+    opacity:0.5;
+    cursor:wait;
+}
+
+.progress{
+    display:none;
+    margin:20px auto 0;
+    max-width:600px;
+}
+
+.progress-bar{
+    width:100%;
+    height:8px;
+    background:#333;
+    border-radius:10px;
+    overflow:hidden;
+}
+
+.progress-fill{
+    width:0%;
+    height:100%;
+    background:#aaa;
+    transition:width .2s;
+}
+
+.progress-text{
+    margin-top:8px;
+    color:#777;
+    font-size:0.9em;
+}
+
+.status{
+    margin-top:15px;
+    color:#777;
+    font-size:0.9em;
+}
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<section>
+
+
+    <a class="back" href="index.html">
+        ◀ Home
+    </a>
+
+
+    <h1>Support Lanthano Research</h1>
+
+
+    <div class="card">
+
+        <h2>Preserve the Research</h2>
+
+        <p>
+            Lanthano Research exists to document, investigate,
+            and preserve information that may otherwise become
+            difficult to find or access.
+        </p>
+
+        <p>
+            However, a website is not permanent. Websites can be
+            taken down, hosting can change, files can disappear,
+            and information can become inaccessible.
+        </p>
+
+        <p>
+            The research should not depend entirely on this
+            website remaining online.
+        </p>
+
+        <p>
+            One of the simplest ways to help ensure that Lanthano
+            Research continues to exist is to keep an offline
+            copy of it.
+        </p>
+
+    </div>
+
+
+    <div class="card">
+
+        <h2>Download the Archive</h2>
+
+        <p>
+            You can download the available Lanthano Research
+            papers, supporting images, and video as a single
+            archive.
+        </p>
+
+        <p>
+            The files will be organized automatically so that
+            the research can be preserved and accessed without
+            needing to visit the website.
+        </p>
+
+        <p>
+            If you choose to download it, consider keeping a
+            backup copy on another device or storage location.
+            Multiple independent copies make the research less
+            dependent on any single website or server.
+        </p>
+
+    </div>
+
+
+    <div class="card download-section">
+
+        <h2>Download Entire Archive</h2>
+
+        <p>
+            Create an offline copy of Lanthano Research.
+        </p>
+
+
+        <button
+            id="downloadButton"
+            class="download-button"
+            onclick="downloadArchive()"
+        >
+            Download Archive
+        </button>
+
+
+        <div
+            id="progress"
+            class="progress"
+        >
+
+            <div class="progress-bar">
+
+                <div
+                    id="progressFill"
+                    class="progress-fill"
+                ></div>
+
+            </div>
+
+
+            <div
+                id="progressText"
+                class="progress-text"
+            >
+                Preparing archive...
+            </div>
+
+        </div>
+
+
+        <div
+            id="status"
+            class="status"
+        ></div>
+
+    </div>
+
+
+    <div class="card">
+
+        <h2>Why Keep a Copy?</h2>
+
+        <p>
+            Downloading the archive gives you a copy of the
+            research that exists independently of Lanthano
+            Research's website.
+        </p>
+
+        <p>
+            You can keep the archive on your computer, an
+            external drive, or another storage device.
+        </p>
+
+        <p>
+            The purpose is simple: the information should
+            continue to exist even if the website does not.
+        </p>
+
+    </div>
+
+
+    <div
+        class="update-note"
+        id="lastUpdate"
+    >
+        Loading research date...
+    </div>
+
+
+</section>
+
+
+
+<!-- JSZip -->
+
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+
+
+<script>
+
+
+/*
+==========================================================
+MANUALLY SPECIFIED VIDEO
+==========================================================
+*/
+
+const VIDEO_FILES = [
+
+    "predictive programming.mp4"
+
+];
+
+
+
+/*
+==========================================================
+GET FILE NAME
+==========================================================
+*/
+
+function getFileName(path){
+
+    try{
+
+        return decodeURIComponent(
+            path.split("?")[0]
+        )
+        .split("/")
+        .pop();
+
+    }catch(error){
+
+        return path
+            .split("/")
+            .pop();
+
+    }
+
+}
+
+
+
+/*
+==========================================================
+CLEAN PAPER FOLDER NAME
+==========================================================
+*/
+
+function cleanFolderName(name){
+
+    return String(name || "Untitled Paper")
+
+        .replace(
+            /[<>:"/\\|?*\x00-\x1F]/g,
+            "_"
+        )
+
+        .replace(
+            /\s+/g,
+            " "
+        )
+
+        .trim()
+
+        .replace(
+            /\.+$/,
+            ""
+        );
+
+}
+
+
+
+/*
+==========================================================
+FETCH FILE
+==========================================================
+*/
+
+async function fetchFile(url){
+
+    const response =
+        await fetch(
+            url,
+            {
+                cache:"no-cache"
+            }
+        );
+
+
+    if(!response.ok){
+
+        throw new Error(
+            `${url} (${response.status})`
+        );
+
+    }
+
+
+    return await response.blob();
+
+}
+
+
+
+/*
+==========================================================
+UPDATE PROGRESS
+==========================================================
+*/
+
+function setProgress(
+    percent,
+    text
+){
+
+    document
+        .getElementById("progressFill")
+        .style.width =
+        percent + "%";
+
+
+    document
+        .getElementById("progressText")
+        .textContent =
+        text;
+
+}
+
+
+
+/*
+==========================================================
+CREATE ARCHIVE
+==========================================================
+*/
+
+async function downloadArchive(){
+
+
+    const button =
+        document.getElementById(
+            "downloadButton"
+        );
+
+
+    const progress =
+        document.getElementById(
+            "progress"
+        );
+
+
+    const status =
+        document.getElementById(
+            "status"
+        );
+
+
+    button.disabled = true;
+
+    progress.style.display = "block";
+
+    status.textContent = "";
+
+
+    try{
+
+
+        /*
+        --------------------------------------------------
+        Check JSZip
+        --------------------------------------------------
+        */
+
+        if(typeof JSZip === "undefined"){
+
+            throw new Error(
+                "The ZIP library could not be loaded."
+            );
+
+        }
+
+
+
+        /*
+        --------------------------------------------------
+        Load descriptions.json
+        --------------------------------------------------
+        */
+
+        setProgress(
+            2,
+            "Loading research..."
+        );
+
+
+        const response =
+            await fetch(
+                "descriptions.json",
+                {
+                    cache:"no-cache"
+                }
+            );
+
+
+        if(!response.ok){
+
+            throw new Error(
+                "Could not load descriptions.json."
+            );
+
+        }
+
+
+        const descriptions =
+            await response.json();
+
+
+
+        /*
+        --------------------------------------------------
+        Create ZIP
+        --------------------------------------------------
+        */
+
+        const zip =
+            new JSZip();
+
+
+        const root =
+            zip.folder(
+                "Lanthano Research"
+            );
+
+
+        const papersFolder =
+            root.folder(
+                "Papers"
+            );
+
+
+        const videosFolder =
+            root.folder(
+                "Videos"
+            );
+
+
+
+        /*
+        --------------------------------------------------
+        README
+        --------------------------------------------------
+        */
+
+        root.file(
+            "README.txt",
+
+`LANTHANO RESEARCH
+OFFLINE ARCHIVE
+
+This is an offline preservation copy of material available
+through Lanthano Research.
+
+Website:
+https://lanthanoresearch.com
+
+The purpose of this archive is to help preserve the research
+independently of the continued availability of the website.
+
+The archive contains research papers, supporting images,
+and designated video material.
+
+Created:
+${new Date().toLocaleString()}
+`
+        );
+
+
+
+        /*
+        --------------------------------------------------
+        Get all papers
+        --------------------------------------------------
+        */
+
+        const entries =
+            Object.entries(
+                descriptions
+            );
+
+
+        let totalFiles = 0;
+
+
+        entries.forEach(
+            ([key, paper]) => {
+
+                if(paper.url){
+
+                    totalFiles++;
+
+                }
+
+
+                if(
+                    Array.isArray(
+                        paper.images
+                    )
+                ){
+
+                    totalFiles +=
+                        paper.images.filter(
+                            image =>
+                                typeof image === "string" &&
+                                !image
+                                    .trim()
+                                    .startsWith("#$")
+                        ).length;
+
+                }
+
+            }
+        );
+
+
+        totalFiles +=
+            VIDEO_FILES.length;
+
+
+        let completedFiles = 0;
+
+
+        const failedFiles = [];
+
+
+
+        /*
+        ==================================================
+        PAPERS
+        ==================================================
+        */
+
+        for(
+            let i = 0;
+            i < entries.length;
+            i++
+        ){
+
+
+            const [
+                key,
+                paper
+            ] =
+                entries[i];
+
+
+            const title =
+                paper.title ||
+                key ||
+                `Paper ${i + 1}`;
+
+
+            const folderName =
+                cleanFolderName(
+                    title
+                );
+
+
+            const paperFolder =
+                papersFolder.folder(
+                    folderName
+                );
+
+
+
+            /*
+            ------------------------------------------------
+            PDF
+            ------------------------------------------------
+            */
+
+            if(paper.url){
+
+                try{
+
+
+                    setProgress(
+                        (
+                            completedFiles /
+                            Math.max(
+                                totalFiles,
+                                1
+                            )
+                        ) * 90,
+
+                        `Downloading ${title}...`
+                    );
+
+
+                    const pdf =
+                        await fetchFile(
+                            paper.url
+                        );
+
+
+                    paperFolder.file(
+                        getFileName(
+                            paper.url
+                        ),
+                        pdf
+                    );
+
+
+                    completedFiles++;
+
+
+                }catch(error){
+
+
+                    console.error(
+                        error
+                    );
+
+
+                    failedFiles.push(
+                        paper.url
+                    );
+
+                }
+
+            }
+
+
+
+            /*
+            ------------------------------------------------
+            IMAGES
+            ------------------------------------------------
+            */
+
+            const images =
+                Array.isArray(
+                    paper.images
+                )
+                    ? paper.images.filter(
+                        image =>
+                            typeof image === "string" &&
+                            !image
+                                .trim()
+                                .startsWith("#$")
+                    )
+                    : [];
+
+
+            if(images.length){
+
+                const imageFolder =
+                    paperFolder.folder(
+                        "Images"
+                    );
+
+
+                for(
+                    let j = 0;
+                    j < images.length;
+                    j++
+                ){
+
+
+                    const image =
+                        images[j];
+
+
+                    try{
+
+
+                        setProgress(
+                            (
+                                completedFiles /
+                                Math.max(
+                                    totalFiles,
+                                    1
+                                )
+                            ) * 90,
+
+                            `Downloading ${title} — image ${j + 1} of ${images.length}...`
+                        );
+
+
+                        const imageBlob =
+                            await fetchFile(
+                                image
+                            );
+
+
+                        imageFolder.file(
+                            getFileName(
+                                image
+                            ),
+                            imageBlob
+                        );
+
+
+                        completedFiles++;
+
+
+                    }catch(error){
+
+
+                        console.error(
+                            error
+                        );
+
+
+                        failedFiles.push(
+                            image
+                        );
+
+                    }
+
+                }
+
+            }
+
+        }
+
+
+
+        /*
+        ==================================================
+        VIDEO
+        ==================================================
+        */
+
+        for(
+            let i = 0;
+            i < VIDEO_FILES.length;
+            i++
+        ){
+
+
+            const video =
+                VIDEO_FILES[i];
+
+
+            try{
+
+
+                setProgress(
+                    (
+                        completedFiles /
+                        Math.max(
+                            totalFiles,
+                            1
+                        )
+                    ) * 90,
+
+                    "Downloading video..."
+                );
+
+
+                const videoBlob =
+                    await fetchFile(
+                        video
+                    );
+
+
+                videosFolder.file(
+                    getFileName(
+                        video
+                    ),
+                    videoBlob
+                );
+
+
+                completedFiles++;
+
+
+            }catch(error){
+
+
+                console.error(
+                    error
+                );
+
+
+                failedFiles.push(
+                    video
+                );
+
+            }
+
+        }
+
+
+
+        /*
+        ==================================================
+        ERROR REPORT
+        ==================================================
+        */
+
+        if(
+            failedFiles.length
+        ){
+
+            root.file(
+                "DOWNLOAD-ERRORS.txt",
+
+`Some files could not be downloaded.
+
+${failedFiles.join("\n")}
+`
+            );
+
+        }
+
+
+
+        /*
+        ==================================================
+        CREATE ZIP
+        ==================================================
+        */
+
+        setProgress(
+            94,
+            "Creating archive..."
+        );
+
+
+        const blob =
+            await zip.generateAsync(
+                {
+                    type:"blob",
+                    compression:"DEFLATE",
+                    compressionOptions:{
+                        level:6
+                    }
+                },
+
+                metadata => {
+
+                    setProgress(
+                        94 +
+                        (
+                            metadata.percent *
+                            0.06
+                        ),
+
+                        "Creating archive..."
+                    );
+
+                }
+            );
+
+
+
+        /*
+        ==================================================
+        DOWNLOAD
+        ==================================================
+        */
+
+        const url =
+            URL.createObjectURL(
+                blob
+            );
+
+
+        const link =
+            document.createElement(
+                "a"
+            );
+
+
+        link.href =
+            url;
+
+
+        link.download =
+            "Lanthano-Research-Archive.zip";
+
+
+        document.body.appendChild(
+            link
+        );
+
+
+        link.click();
+
+
+        link.remove();
+
+
+        setTimeout(
+            () =>
+                URL.revokeObjectURL(
+                    url
+                ),
+            10000
+        );
+
+
+        setProgress(
+            100,
+            "Archive ready."
+        );
+
+
+        if(
+            failedFiles.length
+        ){
+
+            status.textContent =
+                `${failedFiles.length} file(s) could not be included.`;
+
+        }else{
+
+            status.textContent =
+                "Archive downloaded successfully.";
+
+        }
+
+
+    }catch(error){
+
+
+        console.error(
+            error
+        );
+
+
+        setProgress(
+            0,
+            "Download failed."
+        );
+
+
+        status.textContent =
+            error.message ||
+            "The archive could not be created.";
+
+
+    }finally{
+
+
+        button.disabled = false;
+
+
+    }
+
+}
+
+
+
+/*
+==========================================================
+LATEST RESEARCH DATE
+==========================================================
+*/
+
+fetch("descriptions.json")
+
+.then(
+    response =>
+        response.json()
+)
+
+.then(
+    data => {
+
+
+        let newestDate = "";
+
+
+        Object.values(data).forEach(
+            paper => {
+
+
+                if(
+                    paper.updated &&
+                    paper.updated > newestDate
+                ){
+
+                    newestDate =
+                        paper.updated;
+
+                }
+
+            }
+        );
+
+
+        let formattedDate =
+            newestDate;
+
+
+        if(newestDate){
+
+            const parts =
+                newestDate.split("-");
+
+
+            formattedDate =
+                parts[1] +
+                "/" +
+                parts[2] +
+                "/" +
+                parts[0];
+
+        }
+
+
+        document
+            .getElementById(
+                "lastUpdate"
+            )
+            .textContent =
+            "Latest research paper: " +
+            formattedDate +
+            ".";
+
+    }
+)
+
+.catch(
+    () => {
+
+        document
+            .getElementById(
+                "lastUpdate"
+            )
+            .textContent =
+            "";
+
+    }
+);
+
+</script>
+
+
+</body>
+
+</html>
