@@ -139,6 +139,10 @@
             cursor:pointer;
         }
 
+        .btn:hover{
+            background:#444;
+        }
+
 
         /* ---------- Viewer ---------- */
 
@@ -335,7 +339,7 @@
         class="btn"
         id="lock"
     >
-        🔓 Free
+        ✣ Free
     </button>
 
 </div>
@@ -515,7 +519,16 @@ let offsetX = 0;
 
 let offsetY = 0;
 
-let verticalLock = false;
+
+/*
+    Movement modes:
+
+    free       = left/right + up/down
+    vertical   = up/down only
+    horizontal = left/right only
+*/
+
+let movementMode = "free";
 
 
 const zoomLabel =
@@ -530,6 +543,8 @@ let pinchDistance = 0;
 
 let pinchZoom = 1;
 
+
+/* ---------- Zoom Limits ---------- */
 
 function clampZoom(){
 
@@ -548,6 +563,8 @@ function clampZoom(){
 
 }
 
+
+/* ---------- Draw ---------- */
 
 function draw(){
 
@@ -568,6 +585,8 @@ function draw(){
 
 }
 
+
+/* ---------- Fit / Reset ---------- */
 
 function fit(){
 
@@ -649,24 +668,36 @@ fitButton.onclick =
     fit;
 
 
-/* ---------- Vertical Lock ---------- */
+/* =========================================================
+   MOVEMENT MODE
+   ========================================================= */
 
-lockButton.onclick =
-    () => {
+lockButton.onclick = () => {
 
-        verticalLock =
-            !verticalLock;
+    if(movementMode === "free"){
 
+        movementMode = "vertical";
 
         lockButton.textContent =
+            "↕ Vertical";
 
-            verticalLock
+    }else if(movementMode === "vertical"){
 
-            ? "🔒 Vertical"
+        movementMode = "horizontal";
 
-            : "🔓 Free";
+        lockButton.textContent =
+            "↔ Horizontal";
 
-    };
+    }else{
+
+        movementMode = "free";
+
+        lockButton.textContent =
+            "✣ Free";
+
+    }
+
+};
 
 
 /* =========================================================
@@ -749,7 +780,7 @@ viewer.onpointermove =
         );
 
 
-        /* One finger */
+        /* ---------- One Finger ---------- */
 
         if(pointers.size === 1){
 
@@ -763,14 +794,32 @@ viewer.onpointermove =
                 previous.y;
 
 
-            if(!verticalLock){
+            /*
+                Free:
+                move both directions.
+
+                Vertical:
+                only up/down.
+
+                Horizontal:
+                only left/right.
+            */
+
+            if(movementMode === "free"){
+
+                offsetX += dx;
+
+                offsetY += dy;
+
+            }else if(movementMode === "vertical"){
+
+                offsetY += dy;
+
+            }else if(movementMode === "horizontal"){
 
                 offsetX += dx;
 
             }
-
-
-            offsetY += dy;
 
 
             draw();
@@ -781,7 +830,7 @@ viewer.onpointermove =
         }
 
 
-        /* Two fingers */
+        /* ---------- Two Finger Pinch ---------- */
 
         const pts =
             [...pointers.values()];
