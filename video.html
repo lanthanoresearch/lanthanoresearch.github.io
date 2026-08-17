@@ -195,7 +195,7 @@
         }
 
 
-        /* ---------- Bottom Controls ---------- */
+        /* ---------- Playback Speed ---------- */
 
         #videoControls{
 
@@ -205,15 +205,23 @@
 
             align-items:center;
 
-            gap:8px;
+            gap:10px;
 
             padding:8px;
 
             background:#181818;
         }
 
+        .speed-label{
 
-        /* ---------- Speed ---------- */
+            color:#ccc;
+
+            font-size:14px;
+
+            font-weight:500;
+
+            white-space:nowrap;
+        }
 
         #speed{
 
@@ -221,19 +229,27 @@
 
             color:#fff;
 
-            border:none;
+            border:1px solid #444;
 
             border-radius:7px;
 
-            padding:9px 12px;
+            padding:8px 11px;
 
             cursor:pointer;
 
             font-size:14px;
+
+            font-family:Arial,sans-serif;
+
+            outline:none;
         }
 
         #speed:hover{
-            background:#444;
+            background:#3b3b3b;
+        }
+
+        #speed:focus{
+            border-color:#555;
         }
 
 
@@ -283,8 +299,12 @@
             }
 
             #videoControls{
-                gap:6px;
+                gap:8px;
                 padding:7px;
+            }
+
+            .speed-label{
+                font-size:.9rem;
             }
 
             #speed{
@@ -386,9 +406,16 @@
 </div>
 
 
-<!-- ---------- Speed Controls ---------- -->
+<!-- ---------- Playback Speed ---------- -->
 
 <div id="videoControls">
+
+    <label
+        for="speed"
+        class="speed-label"
+    >
+        Playback Speed
+    </label>
 
     <select id="speed">
 
@@ -404,9 +431,6 @@
             0.5×
         </option>
 
-        <option value="0.75">
-            0.75×
-        </option>
         <option value="1" selected>
             1×
         </option>
@@ -746,11 +770,7 @@ shareButton.addEventListener(
             "none";
 
 
-        /*
-            FIRST:
-            Use the device/browser's native
-            sharing system.
-        */
+        /* Native device/browser sharing */
 
         if(
             navigator.share &&
@@ -795,10 +815,7 @@ shareButton.addEventListener(
         }
 
 
-        /*
-            SECOND:
-            Try automatic clipboard copying.
-        */
+        /* Automatic clipboard fallback */
 
         if(
             navigator.clipboard &&
@@ -824,10 +841,7 @@ shareButton.addEventListener(
         }
 
 
-        /*
-            THIRD:
-            Let the user manually copy the URL.
-        */
+        /* Manual fallback */
 
         window.prompt(
             "Copy this link:",
@@ -881,9 +895,7 @@ document.addEventListener(
     "keydown",
     function(event){
 
-        /*
-            Space = play/pause
-        */
+        /* Space = play/pause */
 
         if(
             event.code === "Space" &&
@@ -906,9 +918,7 @@ document.addEventListener(
         }
 
 
-        /*
-            Escape = exit fullscreen
-        */
+        /* Escape = exit fullscreen */
 
         if(
             event.key === "Escape" &&
