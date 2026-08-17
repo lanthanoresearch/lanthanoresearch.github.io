@@ -210,7 +210,6 @@
             padding:8px;
 
             background:#181818;
-
         }
 
 
@@ -315,7 +314,6 @@
             ◀ Back
         </a>
 
-
         <div class="controls">
 
             <button
@@ -364,6 +362,7 @@
         controls
         playsinline
         preload="metadata"
+        poster="prediction.jpg"
     >
 
         Your browser does not support HTML5 video.
@@ -440,39 +439,24 @@
 
 /* ---------- URL Parameters ---------- */
 
-const p =
-    new URLSearchParams(location.search);
+const params =
+    new URLSearchParams(
+        window.location.search
+    );
 
-
-/*
-    Example:
-
-    video.html?video=prediction.mp4
-
-    Or:
-
-    video.html?video=videos/prediction.mp4
-*/
 
 const src =
-    decodeURIComponent(
-        p.get("video") || ""
-    );
+    params.get("video") || "";
 
 
 const returnPage =
-    decodeURIComponent(
-        p.get("return") || "index.html"
-    );
+    params.get("return") || "index.html";
 
 
 /* ---------- Elements ---------- */
 
 const video =
     document.getElementById("video");
-
-const viewer =
-    document.getElementById("viewer");
 
 const title =
     document.getElementById("title");
@@ -513,14 +497,9 @@ homeButton.href =
 
 homeButton.addEventListener(
     "click",
-    function(e){
+    function(event){
 
-        e.preventDefault();
-
-        sessionStorage.setItem(
-            "restoreSearch",
-            "yes"
-        );
+        event.preventDefault();
 
         location.href =
             returnPage;
@@ -529,7 +508,7 @@ homeButton.addEventListener(
 );
 
 
-/* ---------- Validate Video ---------- */
+/* ---------- Video Source ---------- */
 
 if(!src){
 
@@ -544,6 +523,8 @@ if(!src){
     video.src =
         src;
 
+    video.load();
+
 }
 
 
@@ -551,17 +532,29 @@ if(!src){
 
 if(src){
 
-   const filename =
-    src.split("/").pop();
+    const filename =
+        src
+            .split("/")
+            .pop();
 
-const displayName =
-    decodeURIComponent(filename)
-        .replace(/\.[^/.]+$/, "")
-        .replace(/[-_]+/g, " ")
-        .replace(/\b\w/g, char => char.toUpperCase());
 
-title.textContent =
-    displayName;
+    const displayName =
+        decodeURIComponent(filename)
+            .replace(/\.[^/.]+$/, "")
+            .replace(/[-_]+/g, " ")
+            .replace(/\b\w/g, function(char){
+
+                return char.toUpperCase();
+
+            });
+
+
+    title.textContent =
+        displayName;
+
+
+    document.title =
+        displayName;
 
 }
 
@@ -637,9 +630,9 @@ speed.addEventListener(
 
 menuButton.addEventListener(
     "click",
-    function(e){
+    function(event){
 
-        e.stopPropagation();
+        event.stopPropagation();
 
         menu.style.display =
             menu.style.display === "block"
@@ -652,9 +645,9 @@ menuButton.addEventListener(
 
 menu.addEventListener(
     "click",
-    function(e){
+    function(event){
 
-        e.stopPropagation();
+        event.stopPropagation();
 
     }
 );
@@ -684,20 +677,30 @@ downloadButton.addEventListener(
             return;
         }
 
-        const a =
+
+        const link =
             document.createElement("a");
 
-        a.href =
+
+        link.href =
             src;
 
-        a.download =
-            src.split("/").pop();
 
-        document.body.appendChild(a);
+        link.download =
+            decodeURIComponent(
+                src.split("/").pop()
+            );
 
-        a.click();
 
-        a.remove();
+        document.body.appendChild(
+            link
+        );
+
+
+        link.click();
+
+
+        link.remove();
 
     }
 );
@@ -715,6 +718,7 @@ newTabButton.addEventListener(
         if(!src){
             return;
         }
+
 
         window.open(
             src,
@@ -734,17 +738,15 @@ shareButton.addEventListener(
         const url =
             window.location.href;
 
+
         menu.style.display =
             "none";
 
 
         /*
             FIRST:
-            Try the device/browser's native
+            Use the device/browser's native
             sharing system.
-
-            If this works, STOP completely.
-            Nothing else happens.
         */
 
         if(
@@ -772,11 +774,8 @@ shareButton.addEventListener(
             }catch(error){
 
                 /*
-                    Only continue if the native
-                    share system actually failed.
-
-                    If the user simply cancelled
-                    the share dialog, do nothing.
+                    If the user cancelled the
+                    native share dialog, stop.
                 */
 
                 if(
@@ -795,8 +794,7 @@ shareButton.addEventListener(
 
         /*
             SECOND:
-            Native sharing isn't available or failed.
-            Try copying automatically.
+            Try automatic clipboard copying.
         */
 
         if(
@@ -815,8 +813,7 @@ shareButton.addEventListener(
             }catch(error){
 
                 /*
-                    Automatic clipboard copying
-                    failed. Continue to final fallback.
+                    Continue to manual fallback.
                 */
 
             }
@@ -826,10 +823,7 @@ shareButton.addEventListener(
 
         /*
             THIRD:
-            Nothing else worked.
-
-            Show the URL and let the user
-            manually copy it.
+            Let the user manually copy the URL.
         */
 
         window.prompt(
@@ -855,21 +849,22 @@ fullscreenButton.addEventListener(
 
             document.exitFullscreen();
 
-        }else{
+            return;
 
-            if(video.requestFullscreen){
+        }
 
-                video.requestFullscreen();
 
-            }else if(
-                document.documentElement
-                    .requestFullscreen
-            ){
+        if(
+            video.requestFullscreen
+        ){
 
-                document.documentElement
-                    .requestFullscreen();
+            video.requestFullscreen();
 
-            }
+        }else if(
+            document.documentElement.requestFullscreen
+        ){
+
+            document.documentElement.requestFullscreen();
 
         }
 
@@ -881,18 +876,19 @@ fullscreenButton.addEventListener(
 
 document.addEventListener(
     "keydown",
-    function(e){
+    function(event){
 
         /*
             Space = play/pause
         */
 
         if(
-            e.code === "Space" &&
+            event.code === "Space" &&
             document.activeElement.tagName !== "SELECT"
         ){
 
-            e.preventDefault();
+            event.preventDefault();
+
 
             if(video.paused){
 
@@ -908,11 +904,11 @@ document.addEventListener(
 
 
         /*
-            Escape = close fullscreen
+            Escape = exit fullscreen
         */
 
         if(
-            e.key === "Escape" &&
+            event.key === "Escape" &&
             document.fullscreenElement
         ){
 
@@ -927,6 +923,7 @@ document.addEventListener(
 /* ---------- Initialize ---------- */
 
 video.playbackRate = 1;
+
 
 </script>
 
