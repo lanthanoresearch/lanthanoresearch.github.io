@@ -175,13 +175,13 @@
 
         .title{
 
-            padding:8px 15px;
+            padding:12px 18px;
 
             text-align:center;
 
             font-weight:bold;
 
-            font-size:1rem;
+            font-size:1.2rem;
 
             white-space:nowrap;
 
@@ -189,9 +189,11 @@
 
             text-overflow:ellipsis;
 
-            background:#181818;
+            background:rgba(24,24,24,.92);
 
-            border-top:1px solid #2b2b2b;
+            border-top:1px solid #333;
+
+            backdrop-filter:blur(6px);
         }
 
 
@@ -287,11 +289,13 @@
 
             .controls .btn{
                 padding:8px 10px;
+
                 font-size:.9rem;
             }
 
             .title{
-                font-size:.95rem;
+                font-size:1.2rem;
+                padding:10px 14px;
             }
 
             #viewer{
@@ -300,6 +304,7 @@
 
             #videoControls{
                 gap:8px;
+
                 padding:7px;
             }
 
@@ -309,6 +314,7 @@
 
             #speed{
                 padding:8px 10px;
+
                 font-size:.9rem;
             }
 
@@ -431,12 +437,24 @@
             0.5×
         </option>
 
+        <option value="0.75">
+            0.75×
+        </option>
+
         <option value="1" selected>
             1×
         </option>
 
+        <option value="1.25">
+            1.25×
+        </option>
+
         <option value="1.5">
             1.5×
+        </option>
+
+        <option value="1.75">
+            1.75×
         </option>
 
         <option value="2">
@@ -449,6 +467,10 @@
 
         <option value="3">
             3×
+        </option>
+
+        <option value="4">
+            4×
         </option>
 
     </select>
