@@ -34,12 +34,6 @@ section{
     padding:40px 20px;
 }
 
-.update-note{
-    text-align:center;
-    color:#777;
-    font-size:0.9em;
-    margin-top:40px;
-}
 
 h1{
     text-align:center;
@@ -1079,90 +1073,6 @@ ${failedFiles.join("\n")}
 
 
 
-/*
-==========================================================
-LATEST RESEARCH DATE
-==========================================================
-*/
-
-fetch(
-    "descriptions.json"
-)
-
-.then(
-    response =>
-        response.json()
-)
-
-.then(
-    data => {
-
-
-        let newestDate = "";
-
-
-        Object.values(data).forEach(
-            paper => {
-
-
-                if(
-                    paper.updated &&
-                    paper.updated > newestDate
-                ){
-
-                    newestDate =
-                        paper.updated;
-
-                }
-
-            }
-        );
-
-
-        let formattedDate =
-            newestDate;
-
-
-        if(newestDate){
-
-            const parts =
-                newestDate.split("-");
-
-
-            formattedDate =
-                parts[1] +
-                "/" +
-                parts[2] +
-                "/" +
-                parts[0];
-
-        }
-
-
-        document
-            .getElementById(
-                "lastUpdate"
-            )
-            .textContent =
-            "Latest research paper: " +
-            formattedDate +
-            ".";
-
-    }
-)
-
-.catch(
-    () => {
-
-        document
-            .getElementById(
-                "lastUpdate"
-            )
-            .textContent =
-            "";
-
-    }
-);
 
 </script>
 
