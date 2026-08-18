@@ -1876,10 +1876,13 @@ document.getElementById("searchBox");
 const searchResults =
 document.getElementById("searchResults");
 Promise.all([
-fetch("search-index.json").then(r => r.json()),
-fetch("descriptions.json").then(r => r.json())
+    fetch("search-index.json").then(r => r.json()),
+    fetch("descriptions.json").then(r => r.json()),
+    fetch("page-counts.json").then(r => r.json())
 ])
-.then(([searchIndex, descriptions]) => {
+.then(([searchIndex, descriptions, pageCounts]) => {
+
+    
 papersByUrl = {};
 
 Object.entries(descriptions).forEach(([key, paper]) => {
@@ -1894,8 +1897,8 @@ paperKeysByUrl[paper.url] = key;
 
 const paperCount = Object.keys(descriptions).length;
 
-const pageCount = Object.values(descriptions).reduce((total, paper) => {
-return total + (Number(paper.pages) || 0);
+const pageCount = Object.keys(descriptions).reduce((total, key) => {
+return total + (Number(pageCounts[key]) || 0);
 }, 0);
 
 const imageCount = Object.values(descriptions).reduce((total, paper) => {
