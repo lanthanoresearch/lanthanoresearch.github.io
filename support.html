@@ -138,11 +138,23 @@ p{
     transition:width .2s ease;
 }
 
+.progress-fill.finished{
+    background:#39b54a;
+}
+
+.progress-percent.finished{
+    color:#39b54a;
+}
+
 .progress-text{
     margin-top:8px;
     color:#aaa;
     font-size:0.9em;
     line-height:1.4;
+}
+
+.progress-text.finished{
+    color:#39b54a;
 }
 
 .download-warning{
@@ -162,11 +174,24 @@ p{
     color:#ff5555;
 }
 
+.download-warning.finished{
+    background:#142116;
+    border-color:#285c32;
+}
+
+.download-warning.finished strong{
+    color:#39b54a;
+}
+
 .status{
     margin-top:10px;
     color:#888;
     font-size:0.85em;
     line-height:1.4;
+}
+
+.status.finished{
+    color:#39b54a;
 }
 
 
@@ -539,32 +564,57 @@ function getFileName(path){
 
 /*
 ==========================================================
-CLEAN PAPER FOLDER NAME
+CLEAN FOLDER NAME
 ==========================================================
 */
 
 function cleanFolderName(name){
 
-    return String(
-        name || "Untitled Paper"
-    )
+    let cleaned =
+        String(
+            name || "Untitled Paper"
+        );
 
-    .replace(
-        /[<>:"/\\|?*\x00-\x1F]/g,
-        "_"
-    )
 
-    .replace(
-        /\s+/g,
-        " "
-    )
+    /*
+    ------------------------------------------------------
+    9_11 → 911
+    ------------------------------------------------------
+    */
 
-    .trim()
+    cleaned =
+        cleaned.replace(
+            /^9_11$/i,
+            "911"
+        );
 
-    .replace(
-        /\.+$/,
-        ""
-    );
+
+    cleaned =
+        cleaned.replace(
+            /[<>:"/\\|?*\x00-\x1F]/g,
+            "_"
+        );
+
+
+    cleaned =
+        cleaned.replace(
+            /\s+/g,
+            " "
+        );
+
+
+    cleaned =
+        cleaned.trim();
+
+
+    cleaned =
+        cleaned.replace(
+            /\.+$/,
+            ""
+        );
+
+
+    return cleaned;
 
 }
 
@@ -917,12 +967,6 @@ CREATE ARCHIVE
 async function downloadArchive(){
 
 
-    /*
-    ------------------------------------------------------
-    PREVENT DOUBLE START
-    ------------------------------------------------------
-    */
-
     if(archiveCompiling){
 
         return;
@@ -960,9 +1004,10 @@ async function downloadArchive(){
         );
 
 
+
     /*
     ------------------------------------------------------
-    START STATE
+    START
     ------------------------------------------------------
     */
 
@@ -997,6 +1042,37 @@ async function downloadArchive(){
 
     warning.style.display =
         "block";
+
+
+    warning.classList.remove(
+        "finished"
+    );
+
+
+    status.classList.remove(
+        "finished"
+    );
+
+
+    document
+        .getElementById("progressFill")
+        .classList.remove(
+            "finished"
+        );
+
+
+    document
+        .getElementById("progressPercent")
+        .classList.remove(
+            "finished"
+        );
+
+
+    document
+        .getElementById("progressText")
+        .classList.remove(
+            "finished"
+        );
 
 
     status.textContent =
@@ -1082,17 +1158,19 @@ async function downloadArchive(){
             new JSZip();
 
 
+        /*
+        Main archive folder
+        */
+
         const root =
             zip.folder(
                 "Lanthano Research"
             );
 
 
-        const papersFolder =
-            root.folder(
-                "Papers"
-            );
-
+        /*
+        Videos directly inside main folder
+        */
 
         const videosFolder =
             root.folder(
@@ -1203,7 +1281,7 @@ ${new Date().toLocaleString()}
 
         /*
         ==================================================
-        PROCESS PAPERS
+        PROCESS ARTICLES
         ==================================================
         */
 
@@ -1229,6 +1307,11 @@ ${new Date().toLocaleString()}
                 `Paper ${i + 1}`;
 
 
+            /*
+            Article folder goes DIRECTLY
+            inside "Lanthano Research"
+            */
+
             const folderName =
                 cleanFolderName(
                     title
@@ -1236,8 +1319,19 @@ ${new Date().toLocaleString()}
 
 
             const paperFolder =
-                papersFolder.folder(
+                root.folder(
                     folderName
+                );
+
+
+            /*
+            PDF stays directly inside
+            the article folder.
+            */
+
+            const photoFolder =
+                paperFolder.folder(
+                    "Photo"
                 );
 
 
@@ -1357,12 +1451,6 @@ ${new Date().toLocaleString()}
                 images.length
             ){
 
-                const imageFolder =
-                    paperFolder.folder(
-                        "Images"
-                    );
-
-
                 for(
                     let j = 0;
                     j < images.length;
@@ -1403,7 +1491,7 @@ ${new Date().toLocaleString()}
                         checkCancelled();
 
 
-                        imageFolder.file(
+                        photoFolder.file(
                             imageName,
                             imageBlob
                         );
@@ -1458,7 +1546,7 @@ ${new Date().toLocaleString()}
 
         /*
         ==================================================
-        VIDEO
+        VIDEOS
         ==================================================
         */
 
@@ -1646,7 +1734,7 @@ ${failedFiles.join("\n")}
 
         setProgress(
             100,
-            "Compiling: ZIP archive complete"
+            "Done"
         );
 
 
@@ -1707,7 +1795,7 @@ ${failedFiles.join("\n")}
 
         /*
         ==================================================
-        DONE
+        FINISHED
         ==================================================
         */
 
@@ -1731,8 +1819,34 @@ ${failedFiles.join("\n")}
         );
 
 
+        document
+            .getElementById("progressFill")
+            .classList.add(
+                "finished"
+            );
+
+
+        document
+            .getElementById("progressPercent")
+            .classList.add(
+                "finished"
+            );
+
+
+        document
+            .getElementById("progressText")
+            .classList.add(
+                "finished"
+            );
+
+
         button.textContent =
             "Done";
+
+
+        warning.classList.add(
+            "finished"
+        );
 
 
         warning.innerHTML =
@@ -1741,16 +1855,21 @@ ${failedFiles.join("\n")}
 
             "<br><br>" +
 
-            "The archive has been created and the download " +
-            "has been sent to your browser." +
+            "The archive has been created and the " +
+            "download has been sent to your browser." +
 
             "<br><br>" +
 
             "You may now leave this page.";
 
 
+        status.classList.add(
+            "finished"
+        );
+
+
         status.textContent =
-            "Lanthano-Research-Archive.zip is ready for download.";
+            "Download finished.";
 
 
     }catch(error){
