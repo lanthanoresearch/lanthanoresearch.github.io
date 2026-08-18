@@ -93,6 +93,23 @@ p{
     cursor:wait;
 }
 
+.cancel-button{
+    display:none;
+    margin:14px auto 0;
+    padding:10px 22px;
+    background:#333;
+    color:#bbb;
+    border:1px solid #444;
+    border-radius:7px;
+    font-size:14px;
+    cursor:pointer;
+}
+
+.cancel-button:hover{
+    background:#444;
+    color:#fff;
+}
+
 .progress{
     display:none;
     margin:18px auto 0;
@@ -260,7 +277,9 @@ p{
 <section>
 
 
-    <!-- LEAVE PAGE POPUP -->
+    <!-- =================================================
+         LEAVE PAGE POPUP
+         ================================================= -->
 
     <div
         id="leavePopup"
@@ -304,7 +323,9 @@ p{
     </div>
 
 
-    <!-- HOME -->
+    <!-- =================================================
+         HOME
+         ================================================= -->
 
     <a
         class="back"
@@ -318,9 +339,9 @@ p{
     <h1>Support Lanthano Research</h1>
 
 
-    <!-- ==================================================
+    <!-- =================================================
          PRESERVE THE RESEARCH
-         ================================================== -->
+         ================================================= -->
 
     <div class="card">
 
@@ -347,9 +368,9 @@ p{
     </div>
 
 
-    <!-- ==================================================
+    <!-- =================================================
          DOWNLOAD ENTIRE ARCHIVE
-         ================================================== -->
+         ================================================= -->
 
     <div class="card download-section">
 
@@ -423,6 +444,17 @@ p{
         </div>
 
 
+        <!-- CANCEL -->
+
+        <button
+            id="cancelButton"
+            class="cancel-button"
+            onclick="cancelArchive()"
+        >
+            Cancel
+        </button>
+
+
         <!-- STATUS -->
 
         <div
@@ -437,7 +469,9 @@ p{
 
 
 
-<!-- JSZIP -->
+<!-- ======================================================
+     JSZIP
+     ====================================================== -->
 
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 
@@ -456,6 +490,8 @@ let archiveCompiling = false;
 let pendingNavigation = null;
 
 let allowNavigation = false;
+
+let cancelRequested = false;
 
 
 
@@ -536,11 +572,34 @@ function cleanFolderName(name){
 
 /*
 ==========================================================
+CHECK FOR CANCELLATION
+==========================================================
+*/
+
+function checkCancelled(){
+
+    if(cancelRequested){
+
+        throw new Error(
+            "__ARCHIVE_CANCELLED__"
+        );
+
+    }
+
+}
+
+
+
+/*
+==========================================================
 FETCH FILE
 ==========================================================
 */
 
 async function fetchFile(url){
+
+    checkCancelled();
+
 
     const response =
         await fetch(
@@ -549,6 +608,9 @@ async function fetchFile(url){
                 cache:"no-cache"
             }
         );
+
+
+    checkCancelled();
 
 
     if(!response.ok){
@@ -560,7 +622,14 @@ async function fetchFile(url){
     }
 
 
-    return await response.blob();
+    const blob =
+        await response.blob();
+
+
+    checkCancelled();
+
+
+    return blob;
 
 }
 
@@ -672,10 +741,15 @@ function leavePage(){
     archiveCompiling =
         false;
 
+    cancelRequested =
+        true;
+
+
     document
         .getElementById("leavePopup")
         .style.display =
         "none";
+
 
     window.location.href =
         "index.html";
@@ -743,11 +817,117 @@ window.addEventListener(
 
 /*
 ==========================================================
+CANCEL ARCHIVE
+==========================================================
+*/
+
+function cancelArchive(){
+
+    if(!archiveCompiling){
+
+        return;
+
+    }
+
+
+    cancelRequested =
+        true;
+
+    archiveCompiling =
+        false;
+
+    allowNavigation =
+        true;
+
+    pendingNavigation =
+        null;
+
+
+    document
+        .getElementById("leavePopup")
+        .style.display =
+        "none";
+
+
+    const button =
+        document.getElementById(
+            "downloadButton"
+        );
+
+
+    const cancelButton =
+        document.getElementById(
+            "cancelButton"
+        );
+
+
+    const warning =
+        document.getElementById(
+            "downloadWarning"
+        );
+
+
+    const status =
+        document.getElementById(
+            "status"
+        );
+
+
+    button.disabled =
+        false;
+
+
+    button.textContent =
+        "Download Archive";
+
+
+    cancelButton.style.display =
+        "none";
+
+
+    warning.style.display =
+        "none";
+
+
+    status.textContent =
+        "Archive creation cancelled.";
+
+
+    setProgress(
+        0,
+        "Preparing: Cancelled"
+    );
+
+
+    document
+        .getElementById("progress")
+        .style.display =
+        "none";
+
+}
+
+
+
+/*
+==========================================================
 CREATE ARCHIVE
 ==========================================================
 */
 
 async function downloadArchive(){
+
+
+    /*
+    ------------------------------------------------------
+    PREVENT DOUBLE START
+    ------------------------------------------------------
+    */
+
+    if(archiveCompiling){
+
+        return;
+
+    }
 
 
     const button =
@@ -774,9 +954,15 @@ async function downloadArchive(){
         );
 
 
+    const cancelButton =
+        document.getElementById(
+            "cancelButton"
+        );
+
+
     /*
     ------------------------------------------------------
-    START
+    START STATE
     ------------------------------------------------------
     */
 
@@ -789,6 +975,9 @@ async function downloadArchive(){
     pendingNavigation =
         null;
 
+    cancelRequested =
+        false;
+
 
     button.disabled =
         true;
@@ -796,6 +985,10 @@ async function downloadArchive(){
 
     button.textContent =
         "Preparing Archive...";
+
+
+    cancelButton.style.display =
+        "inline-block";
 
 
     progress.style.display =
@@ -853,6 +1046,9 @@ async function downloadArchive(){
             );
 
 
+        checkCancelled();
+
+
         if(!response.ok){
 
             throw new Error(
@@ -864,6 +1060,9 @@ async function downloadArchive(){
 
         const descriptions =
             await response.json();
+
+
+        checkCancelled();
 
 
         setProgress(
@@ -1014,6 +1213,9 @@ ${new Date().toLocaleString()}
             i++
         ){
 
+            checkCancelled();
+
+
             const [
                 key,
                 paper
@@ -1050,6 +1252,9 @@ ${new Date().toLocaleString()}
                 paper.url
             ){
 
+                checkCancelled();
+
+
                 const pdfName =
                     getFileName(
                         paper.url
@@ -1074,6 +1279,9 @@ ${new Date().toLocaleString()}
                         );
 
 
+                    checkCancelled();
+
+
                     paperFolder.file(
                         pdfName,
                         pdf
@@ -1095,13 +1303,25 @@ ${new Date().toLocaleString()}
 
                 }catch(error){
 
+                    if(
+                        error.message ===
+                        "__ARCHIVE_CANCELLED__"
+                    ){
+
+                        throw error;
+
+                    }
+
+
                     console.error(
                         error
                     );
 
+
                     failedFiles.push(
                         paper.url
                     );
+
 
                     completedFiles++;
 
@@ -1149,6 +1369,9 @@ ${new Date().toLocaleString()}
                     j++
                 ){
 
+                    checkCancelled();
+
+
                     const image =
                         images[j];
 
@@ -1177,6 +1400,9 @@ ${new Date().toLocaleString()}
                             );
 
 
+                        checkCancelled();
+
+
                         imageFolder.file(
                             imageName,
                             imageBlob
@@ -1198,13 +1424,25 @@ ${new Date().toLocaleString()}
 
                     }catch(error){
 
+                        if(
+                            error.message ===
+                            "__ARCHIVE_CANCELLED__"
+                        ){
+
+                            throw error;
+
+                        }
+
+
                         console.error(
                             error
                         );
 
+
                         failedFiles.push(
                             image
                         );
+
 
                         completedFiles++;
 
@@ -1229,6 +1467,9 @@ ${new Date().toLocaleString()}
             i < VIDEO_FILES.length;
             i++
         ){
+
+            checkCancelled();
+
 
             const video =
                 VIDEO_FILES[i];
@@ -1258,6 +1499,9 @@ ${new Date().toLocaleString()}
                     );
 
 
+                checkCancelled();
+
+
                 videosFolder.file(
                     videoName,
                     videoBlob
@@ -1279,13 +1523,25 @@ ${new Date().toLocaleString()}
 
             }catch(error){
 
+                if(
+                    error.message ===
+                    "__ARCHIVE_CANCELLED__"
+                ){
+
+                    throw error;
+
+                }
+
+
                 console.error(
                     error
                 );
 
+
                 failedFiles.push(
                     video
                 );
+
 
                 completedFiles++;
 
@@ -1300,6 +1556,9 @@ ${new Date().toLocaleString()}
         ERROR REPORT
         ==================================================
         */
+
+        checkCancelled();
+
 
         if(
             failedFiles.length
@@ -1324,6 +1583,9 @@ ${failedFiles.join("\n")}
         ==================================================
         */
 
+        checkCancelled();
+
+
         setProgress(
             90,
             "Compiling: ZIP archive"
@@ -1345,6 +1607,16 @@ ${failedFiles.join("\n")}
 
                 metadata => {
 
+
+                    if(
+                        cancelRequested
+                    ){
+
+                        return;
+
+                    }
+
+
                     const overallPercent =
                         90 +
                         (
@@ -1361,6 +1633,9 @@ ${failedFiles.join("\n")}
                 }
 
             );
+
+
+        checkCancelled();
 
 
 
@@ -1443,6 +1718,13 @@ ${failedFiles.join("\n")}
         allowNavigation =
             true;
 
+        cancelRequested =
+            false;
+
+
+        cancelButton.style.display =
+            "none";
+
 
         setProgress(
             100,
@@ -1477,6 +1759,23 @@ ${failedFiles.join("\n")}
 
         /*
         ==================================================
+        CANCELLATION
+        ==================================================
+        */
+
+        if(
+            error.message ===
+            "__ARCHIVE_CANCELLED__"
+        ){
+
+            return;
+
+        }
+
+
+
+        /*
+        ==================================================
         ERROR
         ==================================================
         */
@@ -1489,6 +1788,16 @@ ${failedFiles.join("\n")}
 
         archiveCompiling =
             false;
+
+        allowNavigation =
+            true;
+
+        cancelRequested =
+            false;
+
+
+        cancelButton.style.display =
+            "none";
 
 
         setProgress(
