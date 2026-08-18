@@ -93,13 +93,10 @@ p{
     cursor:wait;
 }
 
-.download-button.finished{
-    background:#286b35;
-}
-
-.download-button.finished:hover{
-    background:#347f42;
-}
+/*
+   The finished button intentionally stays gray.
+   It does NOT turn green.
+*/
 
 .cancel-button{
     display:none;
@@ -747,11 +744,13 @@ function setProgress(
 
 /*
 ==========================================================
-SET FINISHED UI
+SET FINISHED STATE
 ==========================================================
 */
 
-function setFinishedState(){
+function setFinishedState(
+    returningToPage = false
+){
 
     const button =
         document.getElementById(
@@ -796,16 +795,14 @@ function setFinishedState(){
 
 
     /*
-    Show progress
+    ------------------------------------------------------
+    PROGRESS
+    ------------------------------------------------------
     */
 
     progress.style.display =
         "block";
 
-
-    /*
-    100%
-    */
 
     progressFill.style.width =
         "100%";
@@ -835,24 +832,32 @@ function setFinishedState(){
 
 
     /*
-    Button
+    ------------------------------------------------------
+    BUTTON
+    ------------------------------------------------------
     */
 
     button.disabled =
         false;
 
 
-    button.textContent =
-        "Download Again";
+    /*
+    Keep this gray.
+    */
 
-
-    button.classList.add(
+    button.classList.remove(
         "finished"
     );
 
 
+    button.textContent =
+        "Download Again";
+
+
     /*
-    Warning
+    ------------------------------------------------------
+    WARNING / FINISHED MESSAGE
+    ------------------------------------------------------
     */
 
     warning.style.display =
@@ -864,31 +869,50 @@ function setFinishedState(){
     );
 
 
-    warning.innerHTML =
+    if(returningToPage){
 
-        "<strong>DONE</strong>" +
+        warning.innerHTML =
 
-        "<br><br>" +
+            "<strong>ALREADY DOWNLOADED</strong>" +
 
-        "The archive has been created and the " +
-        "download has been sent to your browser." +
+            "<br><br>" +
 
-        "<br><br>" +
+            "The Lanthano Research archive has already " +
+            "been downloaded on this device." +
 
-        "You may now leave this page.";
+            "<br><br>" +
+
+            "You may download it again if needed.";
 
 
-    /*
-    Status
-    */
+        status.textContent =
+            "Archive already downloaded.";
+
+    }else{
+
+        warning.innerHTML =
+
+            "<strong>DONE</strong>" +
+
+            "<br><br>" +
+
+            "The archive has been created and the " +
+            "download has been sent to your browser." +
+
+            "<br><br>" +
+
+            "You may now leave this page.";
+
+
+        status.textContent =
+            "Download finished.";
+
+    }
+
 
     status.classList.add(
         "finished"
     );
-
-
-    status.textContent =
-        "Download finished.";
 
 }
 
@@ -941,26 +965,6 @@ function hasRememberedDownload(){
     }catch(error){
 
         return false;
-
-    }
-
-}
-
-
-
-/*
-==========================================================
-RESTORE FINISHED STATE
-==========================================================
-*/
-
-function restoreFinishedState(){
-
-    if(
-        hasRememberedDownload()
-    ){
-
-        setFinishedState();
 
     }
 
@@ -1163,30 +1167,33 @@ function cancelArchive(){
 
 
     /*
-    Reset active compilation controls.
+    ------------------------------------------------------
+    CANCEL BUTTON
+    ------------------------------------------------------
     */
-
-    button.disabled =
-        false;
-
 
     cancelButton.style.display =
         "none";
 
 
+    button.disabled =
+        false;
+
+
     /*
-    If the archive was downloaded previously,
-    restore the remembered finished state.
+    ------------------------------------------------------
+    IF PREVIOUS DOWNLOAD EXISTS
+    ------------------------------------------------------
     */
 
     if(
         hasRememberedDownload()
     ){
 
-        setFinishedState();
+        setFinishedState(true);
 
         status.textContent =
-            "Download finished. Previous download remembered.";
+            "Archive already downloaded.";
 
         return;
 
@@ -1194,7 +1201,9 @@ function cancelArchive(){
 
 
     /*
-    Otherwise return to the initial state.
+    ------------------------------------------------------
+    NO PREVIOUS DOWNLOAD
+    ------------------------------------------------------
     */
 
     button.textContent =
@@ -1314,7 +1323,7 @@ async function downloadArchive(){
 
     /*
     ------------------------------------------------------
-    START
+    START PROCESS
     ------------------------------------------------------
     */
 
@@ -1332,13 +1341,14 @@ async function downloadArchive(){
 
 
     /*
-    Reset the active process.
-
     IMPORTANT:
-    We do NOT remove the localStorage flag here.
-    The browser should continue remembering that
-    a previous archive was downloaded.
+    Do NOT clear localStorage here.
+
+    If this is a second attempt and the user cancels,
+    the browser should still remember the first successful
+    download.
     */
+
 
     button.disabled =
         true;
@@ -1492,7 +1502,7 @@ async function downloadArchive(){
 
 
         /*
-        Main archive folder
+        Main archive folder.
         */
 
         const root =
@@ -1502,7 +1512,7 @@ async function downloadArchive(){
 
 
         /*
-        Videos directly inside main folder
+        Videos directly inside main folder.
         */
 
         const videosFolder =
@@ -1545,7 +1555,7 @@ ${new Date().toLocaleString()}
 
         /*
         ==================================================
-        GET PAPERS
+        GET ARTICLES
         ==================================================
         */
 
@@ -2064,7 +2074,7 @@ ${failedFiles.join("\n")}
 
         /*
         ==================================================
-        ZIP COMPLETE
+        ZIP CREATED
         ==================================================
         */
 
@@ -2081,7 +2091,7 @@ ${failedFiles.join("\n")}
 
         /*
         ==================================================
-        START DOWNLOAD
+        START BROWSER DOWNLOAD
         ==================================================
         */
 
@@ -2141,7 +2151,7 @@ ${failedFiles.join("\n")}
 
         /*
         ==================================================
-        FINISHED STATE
+        FINISHED
         ==================================================
         */
 
@@ -2159,7 +2169,7 @@ ${failedFiles.join("\n")}
             "none";
 
 
-        setFinishedState();
+        setFinishedState(false);
 
 
     }catch(error){
@@ -2208,6 +2218,29 @@ ${failedFiles.join("\n")}
             "none";
 
 
+        /*
+        If a previous successful download exists,
+        restore the remembered state.
+        */
+
+        if(
+            hasRememberedDownload()
+        ){
+
+            setFinishedState(true);
+
+            status.textContent =
+                "Archive already downloaded.";
+
+            return;
+
+        }
+
+
+        /*
+        Otherwise show the actual failure.
+        */
+
         setProgress(
             0,
             "Preparing: Archive creation failed"
@@ -2217,6 +2250,11 @@ ${failedFiles.join("\n")}
         status.textContent =
             error.message ||
             "The archive could not be created.";
+
+
+        warning.classList.remove(
+            "finished"
+        );
 
 
         warning.innerHTML =
@@ -2233,26 +2271,8 @@ ${failedFiles.join("\n")}
             false;
 
 
-        /*
-        If a previous download existed,
-        restore the green state.
-        */
-
-        if(
-            hasRememberedDownload()
-        ){
-
-            setFinishedState();
-
-            status.textContent =
-                "Download finished. Previous download remembered.";
-
-        }else{
-
-            button.textContent =
-                "Download Archive";
-
-        }
+        button.textContent =
+            "Download Archive";
 
     }
 
@@ -2270,7 +2290,13 @@ document.addEventListener(
     "DOMContentLoaded",
     function(){
 
-        restoreFinishedState();
+        if(
+            hasRememberedDownload()
+        ){
+
+            setFinishedState(true);
+
+        }
 
     }
 );
