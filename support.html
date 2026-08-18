@@ -1607,7 +1607,6 @@ ${failedFiles.join("\n")}
 
                 metadata => {
 
-
                     if(
                         cancelRequested
                     ){
@@ -1708,7 +1707,7 @@ ${failedFiles.join("\n")}
 
         /*
         ==================================================
-        DOWNLOAD STARTED
+        DONE
         ==================================================
         */
 
@@ -1728,22 +1727,22 @@ ${failedFiles.join("\n")}
 
         setProgress(
             100,
-            "Download Started"
+            "Done"
         );
 
 
         button.textContent =
-            "Download Started";
+            "Done";
 
 
         warning.innerHTML =
 
-            "<strong>DOWNLOAD STARTED</strong>" +
+            "<strong>DONE</strong>" +
 
             "<br><br>" +
 
-            "The ZIP file has been created and your " +
-            "browser has started downloading it." +
+            "The archive has been created and the download " +
+            "has been sent to your browser." +
 
             "<br><br>" +
 
@@ -1751,7 +1750,7 @@ ${failedFiles.join("\n")}
 
 
         status.textContent =
-            "Lanthano-Research-Archive.zip is now downloading.";
+            "Lanthano-Research-Archive.zip is ready for download.";
 
 
     }catch(error){
