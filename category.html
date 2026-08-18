@@ -351,10 +351,14 @@ document.title = `Lanthano Research - ${pageTitle}`;
 
 
     
-fetch("descriptions.json")
-.then(response => response.json())
-.then(data => {
+Promise.all([
+    fetch("descriptions.json").then(response => response.json()),
+    fetch("page-counts.json").then(response => response.json())
+])
+.then(([data, pageCounts]) => {
 
+
+    
     const container =
         document.getElementById("research-container");
 
@@ -622,7 +626,7 @@ paper.updated.split("-")[0]}
 </p>
 
 <p class="card-pages">
-    ${Number(paper.pages) || 0} ${(Number(paper.pages) || 0) === 1 ? "page" : "pages"}
+    ${Number(pageCounts[key]) || 0} ${(Number(pageCounts[key]) || 0) === 1 ? "page" : "pages"}
 </p>
 
                 <div id="warning-${key}">
@@ -710,7 +714,7 @@ paper.updated.split("-")[0]}
 </p>
 
 <p class="card-pages">
-    ${Number(paper.pages) || 0} ${(Number(paper.pages) || 0) === 1 ? "page" : "pages"}
+    ${Number(pageCounts[key]) || 0} ${(Number(pageCounts[key]) || 0) === 1 ? "page" : "pages"}
 </p>
 
               <a class="button pdf-link"
