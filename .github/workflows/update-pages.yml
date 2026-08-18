@@ -1,0 +1,45 @@
+name: Update PDF Page Counts
+
+on:
+  schedule:
+    # Every Saturday at 12:30 AM UTC
+    - cron: "30 0 * * 6"
+
+  # Also allows you to run it manually whenever you want
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-pages:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install PDF library
+        run: npm install pdf-lib
+
+      - name: Build page counts
+        run: node scripts/build-page-counts.js
+
+      - name: Save page counts
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add page-counts.json
+
+          if git diff --cached --quiet; then
+            echo "No page count changes."
+          else
+            git commit -m "Automatic PDF page count update"
+            git push
+          fi
