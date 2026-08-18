@@ -93,6 +93,14 @@ p{
     cursor:wait;
 }
 
+.download-button.finished{
+    background:#286b35;
+}
+
+.download-button.finished:hover{
+    background:#347f42;
+}
+
 .cancel-button{
     display:none;
     margin:14px auto 0;
@@ -123,6 +131,10 @@ p{
     margin-bottom:6px;
 }
 
+.progress-percent.finished{
+    color:#39b54a;
+}
+
 .progress-bar{
     width:100%;
     height:8px;
@@ -140,10 +152,6 @@ p{
 
 .progress-fill.finished{
     background:#39b54a;
-}
-
-.progress-percent.finished{
-    color:#39b54a;
 }
 
 .progress-text{
@@ -406,6 +414,7 @@ p{
             Research papers, supporting images, and video.
         </p>
 
+
         <button
             id="downloadButton"
             class="download-button"
@@ -519,6 +528,15 @@ let allowNavigation = false;
 let cancelRequested = false;
 
 
+/*
+==========================================================
+BROWSER STORAGE
+==========================================================
+*/
+
+const ARCHIVE_STORAGE_KEY =
+    "lanthanoArchiveDownloaded";
+
 
 /*
 ==========================================================
@@ -577,9 +595,7 @@ function cleanFolderName(name){
 
 
     /*
-    ------------------------------------------------------
     9_11 → 911
-    ------------------------------------------------------
     */
 
     cleaned =
@@ -724,6 +740,229 @@ function setProgress(
         .getElementById("progressText")
         .textContent =
         text;
+
+}
+
+
+
+/*
+==========================================================
+SET FINISHED UI
+==========================================================
+*/
+
+function setFinishedState(){
+
+    const button =
+        document.getElementById(
+            "downloadButton"
+        );
+
+
+    const warning =
+        document.getElementById(
+            "downloadWarning"
+        );
+
+
+    const status =
+        document.getElementById(
+            "status"
+        );
+
+
+    const progress =
+        document.getElementById(
+            "progress"
+        );
+
+
+    const progressFill =
+        document.getElementById(
+            "progressFill"
+        );
+
+
+    const progressPercent =
+        document.getElementById(
+            "progressPercent"
+        );
+
+
+    const progressText =
+        document.getElementById(
+            "progressText"
+        );
+
+
+    /*
+    Show progress
+    */
+
+    progress.style.display =
+        "block";
+
+
+    /*
+    100%
+    */
+
+    progressFill.style.width =
+        "100%";
+
+
+    progressPercent.textContent =
+        "100%";
+
+
+    progressPercent.classList.add(
+        "finished"
+    );
+
+
+    progressFill.classList.add(
+        "finished"
+    );
+
+
+    progressText.classList.add(
+        "finished"
+    );
+
+
+    progressText.textContent =
+        "Done";
+
+
+    /*
+    Button
+    */
+
+    button.disabled =
+        false;
+
+
+    button.textContent =
+        "Download Again";
+
+
+    button.classList.add(
+        "finished"
+    );
+
+
+    /*
+    Warning
+    */
+
+    warning.style.display =
+        "block";
+
+
+    warning.classList.add(
+        "finished"
+    );
+
+
+    warning.innerHTML =
+
+        "<strong>DONE</strong>" +
+
+        "<br><br>" +
+
+        "The archive has been created and the " +
+        "download has been sent to your browser." +
+
+        "<br><br>" +
+
+        "You may now leave this page.";
+
+
+    /*
+    Status
+    */
+
+    status.classList.add(
+        "finished"
+    );
+
+
+    status.textContent =
+        "Download finished.";
+
+}
+
+
+
+/*
+==========================================================
+REMEMBER DOWNLOAD
+==========================================================
+*/
+
+function rememberDownload(){
+
+    try{
+
+        localStorage.setItem(
+            ARCHIVE_STORAGE_KEY,
+            "true"
+        );
+
+    }catch(error){
+
+        console.warn(
+            "Could not save archive state:",
+            error
+        );
+
+    }
+
+}
+
+
+
+/*
+==========================================================
+CHECK REMEMBERED DOWNLOAD
+==========================================================
+*/
+
+function hasRememberedDownload(){
+
+    try{
+
+        return (
+            localStorage.getItem(
+                ARCHIVE_STORAGE_KEY
+            ) === "true"
+        );
+
+    }catch(error){
+
+        return false;
+
+    }
+
+}
+
+
+
+/*
+==========================================================
+RESTORE FINISHED STATE
+==========================================================
+*/
+
+function restoreFinishedState(){
+
+    if(
+        hasRememberedDownload()
+    ){
+
+        setFinishedState();
+
+    }
 
 }
 
@@ -923,36 +1162,99 @@ function cancelArchive(){
         );
 
 
+    /*
+    Reset active compilation controls.
+    */
+
     button.disabled =
         false;
-
-
-    button.textContent =
-        "Download Archive";
 
 
     cancelButton.style.display =
         "none";
 
 
+    /*
+    If the archive was downloaded previously,
+    restore the remembered finished state.
+    */
+
+    if(
+        hasRememberedDownload()
+    ){
+
+        setFinishedState();
+
+        status.textContent =
+            "Download finished. Previous download remembered.";
+
+        return;
+
+    }
+
+
+    /*
+    Otherwise return to the initial state.
+    */
+
+    button.textContent =
+        "Download Archive";
+
+
+    button.classList.remove(
+        "finished"
+    );
+
+
     warning.style.display =
         "none";
+
+
+    warning.classList.remove(
+        "finished"
+    );
+
+
+    status.classList.remove(
+        "finished"
+    );
 
 
     status.textContent =
         "Archive creation cancelled.";
 
 
-    setProgress(
-        0,
-        "Preparing: Cancelled"
-    );
-
-
     document
         .getElementById("progress")
         .style.display =
         "none";
+
+
+    document
+        .getElementById("progressFill")
+        .classList.remove(
+            "finished"
+        );
+
+
+    document
+        .getElementById("progressPercent")
+        .classList.remove(
+            "finished"
+        );
+
+
+    document
+        .getElementById("progressText")
+        .classList.remove(
+            "finished"
+        );
+
+
+    setProgress(
+        0,
+        "Preparing: Cancelled"
+    );
 
 }
 
@@ -966,6 +1268,12 @@ CREATE ARCHIVE
 
 async function downloadArchive(){
 
+
+    /*
+    ------------------------------------------------------
+    PREVENT DOUBLE START
+    ------------------------------------------------------
+    */
 
     if(archiveCompiling){
 
@@ -1004,7 +1312,6 @@ async function downloadArchive(){
         );
 
 
-
     /*
     ------------------------------------------------------
     START
@@ -1024,8 +1331,22 @@ async function downloadArchive(){
         false;
 
 
+    /*
+    Reset the active process.
+
+    IMPORTANT:
+    We do NOT remove the localStorage flag here.
+    The browser should continue remembering that
+    a previous archive was downloaded.
+    */
+
     button.disabled =
         true;
+
+
+    button.classList.remove(
+        "finished"
+    );
 
 
     button.textContent =
@@ -1049,9 +1370,25 @@ async function downloadArchive(){
     );
 
 
+    warning.innerHTML =
+
+        "<strong>" +
+        "DO NOT CLOSE OR LEAVE THIS PAGE" +
+        "</strong>" +
+
+        "<br><br>" +
+
+        "The archive is being prepared on your device. " +
+        "Leaving this page may interrupt the process.";
+
+
     status.classList.remove(
         "finished"
     );
+
+
+    status.textContent =
+        "";
 
 
     document
@@ -1073,10 +1410,6 @@ async function downloadArchive(){
         .classList.remove(
             "finished"
         );
-
-
-    status.textContent =
-        "";
 
 
     setProgress(
@@ -1308,8 +1641,8 @@ ${new Date().toLocaleString()}
 
 
             /*
-            Article folder goes DIRECTLY
-            inside "Lanthano Research"
+            Article folder directly inside
+            Lanthano Research.
             */
 
             const folderName =
@@ -1325,8 +1658,7 @@ ${new Date().toLocaleString()}
 
 
             /*
-            PDF stays directly inside
-            the article folder.
+            Photos folder inside article.
             */
 
             const photoFolder =
@@ -1375,6 +1707,10 @@ ${new Date().toLocaleString()}
 
                     checkCancelled();
 
+
+                    /*
+                    PDF directly inside article folder.
+                    */
 
                     paperFolder.file(
                         pdfName,
@@ -1795,7 +2131,17 @@ ${failedFiles.join("\n")}
 
         /*
         ==================================================
-        FINISHED
+        REMEMBER SUCCESS
+        ==================================================
+        */
+
+        rememberDownload();
+
+
+
+        /*
+        ==================================================
+        FINISHED STATE
         ==================================================
         */
 
@@ -1813,63 +2159,7 @@ ${failedFiles.join("\n")}
             "none";
 
 
-        setProgress(
-            100,
-            "Done"
-        );
-
-
-        document
-            .getElementById("progressFill")
-            .classList.add(
-                "finished"
-            );
-
-
-        document
-            .getElementById("progressPercent")
-            .classList.add(
-                "finished"
-            );
-
-
-        document
-            .getElementById("progressText")
-            .classList.add(
-                "finished"
-            );
-
-
-        button.textContent =
-            "Done";
-
-
-        warning.classList.add(
-            "finished"
-        );
-
-
-        warning.innerHTML =
-
-            "<strong>DONE</strong>" +
-
-            "<br><br>" +
-
-            "The archive has been created and the " +
-            "download has been sent to your browser." +
-
-            "<br><br>" +
-
-            "You may now leave this page.";
-
-
-        status.classList.add(
-            "finished"
-        );
-
-
-        status.textContent =
-            "Download finished.";
+        setFinishedState();
 
 
     }catch(error){
@@ -1943,12 +2233,47 @@ ${failedFiles.join("\n")}
             false;
 
 
-        button.textContent =
-            "Download Archive";
+        /*
+        If a previous download existed,
+        restore the green state.
+        */
+
+        if(
+            hasRememberedDownload()
+        ){
+
+            setFinishedState();
+
+            status.textContent =
+                "Download finished. Previous download remembered.";
+
+        }else{
+
+            button.textContent =
+                "Download Archive";
+
+        }
 
     }
 
 }
+
+
+
+/*
+==========================================================
+RESTORE STATE WHEN PAGE LOADS
+==========================================================
+*/
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function(){
+
+        restoreFinishedState();
+
+    }
+);
 
 </script>
 
