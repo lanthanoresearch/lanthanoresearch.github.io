@@ -1455,27 +1455,42 @@ await renderAllPages();
 });
 
 
+/* ---------- PDF Reading Mode ---------- */
 
+let suppressReadingModeClick = false;
 
-  /* ---------- PDF Reading Mode ---------- */
+viewer.addEventListener("mousedown", () => {
+
+    const selection = window.getSelection();
+
+    if (selection && selection.toString().length > 0) {
+        suppressReadingModeClick = true;
+    }
+
+});
 
 viewer.addEventListener("click", (e) => {
 
-    // Only activate when the actual PDF page is tapped.
     const page = e.target.closest(".page");
 
     if (!page) return;
 
-    // Don't activate when selecting text.
     const selection = window.getSelection();
 
+    // Do not toggle while text is selected.
     if (selection && selection.toString().length > 0) {
+        suppressReadingModeClick = true;
+        return;
+    }
+
+    // Suppress the click immediately following text selection.
+    if (suppressReadingModeClick) {
+        suppressReadingModeClick = false;
         return;
     }
 
     document.body.classList.toggle("reading-mode");
 
-    // Close any open menus/popups when entering reading mode.
     if (document.body.classList.contains("reading-mode")) {
 
         menu.style.display = "none";
@@ -1484,9 +1499,6 @@ viewer.addEventListener("click", (e) => {
     }
 
 });
-
-
-
 
   
 </script>
