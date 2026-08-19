@@ -77,6 +77,13 @@ h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
   transition:transform .16s ease,background .16s ease,border-color .16s ease;
   min-height:76px;
 }
+.paper-card.has-two-badges{
+  min-height:88px;
+}
+.paper-card.has-two-badges .paper-badge{
+  font-size:.5rem;
+  padding:3px 5px;
+}
 .paper-card:hover,.paper-card:focus-within{
   background:#252525;transform:translateY(-3px);
   border-color:#4a4a4a;
@@ -97,6 +104,7 @@ h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
   gap:6px;
   min-height:28px;
   padding-right:31px;
+  min-width:0;
 }
 .paper-badges{
   display:flex;
@@ -120,11 +128,6 @@ h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
 }
 .paper-badge.featured{background:#2f7cff}
 .paper-badge.newest{background:#00b050}
-.paper-badge.combined{
-  background:linear-gradient(90deg,#00b050 0 50%,#2f7cff 50% 100%);
-  padding-left:6px;
-  padding-right:6px;
-}
 
 .favorite-star{
   position:absolute;
@@ -243,7 +246,8 @@ h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
 
   .paper,.paper:nth-child(n){
     position:relative;left:auto!important;top:auto!important;
-    transform:none;width:auto;margin:0 0 7px 24px;
+    transform:none;
+    margin:0 0 7px 24px;
   }
 
   .connector{display:none}
@@ -253,6 +257,13 @@ h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
     min-height:0;
     padding:7px 9px;
     border-radius:8px;
+  }
+  .paper-card.has-two-badges{
+    min-height:0;
+  }
+  .paper-card.has-two-badges .paper-badge{
+    font-size:.46rem;
+    padding:2px 5px;
   }
 
   .paper-topline{
@@ -281,22 +292,62 @@ h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
     font-size:.46rem;
     padding:2px 5px;
   }
-  .paper-badge.combined{
-    padding-left:5px;
-    padding-right:5px;
+
+  html,body{
+    max-width:100%;
+    overflow-x:hidden;
+  }
+
+  .paper,.paper:nth-child(n){
+    width:calc(100% - 24px);
+    max-width:calc(100% - 24px);
+    margin-left:24px;
+    margin-right:0;
+  }
+
+  .paper-card{
+    width:100%;
+    max-width:100%;
+    overflow:visible;
+  }
+
+  .paper-description{
+    width:100% !important;
+    max-width:100%;
+    box-sizing:border-box;
+    overflow-wrap:anywhere;
+    word-break:normal;
+  }
+
+  .paper-description > div{
+    max-width:100%;
+  }
+
+  .paper-link{
+    width:100%;
+    max-width:100%;
+    box-sizing:border-box;
   }
 
   /* Mobile is tap-to-expand rather than hover-to-expand. */
   .paper .paper-description{
     position:static;
-    width:auto;
-    margin-top:0;
+    left:auto;
+    right:auto;
+    top:auto;
+    bottom:auto;
+    width:100% !important;
+    max-width:100%;
+    margin:0;
+    padding:11px 11px 11px 12px;
+    box-sizing:border-box;
     transform:none;
     opacity:0;
     visibility:hidden;
     pointer-events:none;
     box-shadow:none;
     display:none;
+    overflow:hidden;
   }
 
   .paper-card.expanded .paper-description{
@@ -443,29 +494,18 @@ function positionFor(date,min,max){
 
 function getPaperBadges(paper){
   const isNewest = showNewestBadge && paper.key === newestKey;
-
-  // A single compact badge is used when both states apply. This prevents
-  // NEW and FEATURED from colliding with each other or the favorite star
-  // on the narrower desktop cards.
-  if(isNewest && paper.featured){
-    return `<div class="paper-badges both">
-      <span class="paper-badge combined">NEW • FEATURED</span>
-    </div>`;
-  }
+  const badges=[];
 
   if(isNewest){
-    return `<div class="paper-badges">
-      <span class="paper-badge newest">NEW</span>
-    </div>`;
+    badges.push('<span class="paper-badge newest">NEW</span>');
   }
-
   if(paper.featured){
-    return `<div class="paper-badges">
-      <span class="paper-badge featured">FEATURED</span>
-    </div>`;
+    badges.push('<span class="paper-badge featured">FEATURED</span>');
   }
 
-  return "";
+  return badges.length
+    ? `<div class="paper-badges">${badges.join("")}</div>`
+    : "";
 }
 
 function buildLanes(items){
@@ -554,7 +594,7 @@ function render(){
     el.innerHTML=`
       <div class="connector" aria-hidden="true"></div>
       <div class="dot" aria-hidden="true"></div>
-      <div class="paper-card" tabindex="0">
+      <div class="paper-card ${((showNewestBadge && p.key === newestKey) && p.featured) ? "has-two-badges" : ""}" tabindex="0">
         <div class="paper-topline">
           <div class="paper-date">${escapeHtml(formatDate(p))}</div>
           ${getPaperBadges(p)}
@@ -601,24 +641,28 @@ document.addEventListener("click", e=>{
   if(willExpand){
     // Let the description render first, then keep the whole expanded card
     // inside the viewport instead of leaving its lower half off-screen.
-    requestAnimationFrame(()=>{
-      requestAnimationFrame(()=>{
-        const rect = card.getBoundingClientRect();
-        const bottomClearance = 82; // fixed legend + breathing room
-        const topClearance = 12;
+    const keepExpandedVisible = ()=>{
+      const rect = card.getBoundingClientRect();
+      const bottomClearance = 86;
+      const topClearance = 12;
+      const targetBottom = window.innerHeight - bottomClearance;
 
-        if(rect.bottom > window.innerHeight - bottomClearance){
-          window.scrollBy({
-            top: rect.bottom - (window.innerHeight - bottomClearance),
-            behavior:"smooth"
-          });
-        }else if(rect.top < topClearance){
-          window.scrollBy({
-            top: rect.top - topClearance,
-            behavior:"smooth"
-          });
-        }
-      });
+      if(rect.bottom > targetBottom){
+        window.scrollBy({
+          top: rect.bottom - targetBottom,
+          behavior:"smooth"
+        });
+      }else if(rect.top < topClearance){
+        window.scrollBy({
+          top: rect.top - topClearance,
+          behavior:"smooth"
+        });
+      }
+    };
+
+    requestAnimationFrame(()=>{
+      requestAnimationFrame(keepExpandedVisible);
+      setTimeout(keepExpandedVisible,120);
     });
   }
 });
