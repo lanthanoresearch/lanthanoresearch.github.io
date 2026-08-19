@@ -518,6 +518,9 @@
     "updated": "2026-07-25",
     "images": [
       "Drug Comparision.png"
-    ]
+    ],
+    "featured": true,
+    "featuredOrder": 1,
+    "featuredImage": 4
   }
 }
