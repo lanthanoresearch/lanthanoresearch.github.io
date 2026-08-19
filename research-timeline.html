@@ -290,6 +290,8 @@ h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
     justify-content:flex-start;
     align-items:center;
     gap:3px;
+    margin-left:0;
+    margin-right:auto;
     width:calc(100% - 30px);
     max-width:none;
     margin-top:2px;
@@ -364,8 +366,17 @@ h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
   }
   .paper-card{min-height:76px}
   .paper-card.has-two-badges{min-height:88px}
-  .paper.edge-left{margin-left:8px}
-  .paper.edge-right{margin-left:-8px}
+  .paper.edge-left{
+    transform:translateX(104px);
+  }
+  .paper.edge-right{
+    transform:translateX(-104px);
+  }
+
+  .paper.edge-left:hover,
+  .paper.edge-right:hover{
+    transform:translateX(var(--edge-shift, 0px)) translateY(-3px);
+  }
   .paper .dot{left:50%;top:-9px}
   .paper .connector{display:block}
 
@@ -412,6 +423,18 @@ h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
 /* Short landscape: same horizontal timeline, smaller cards and a dedicated
    badge row under the date so NEW/FEATURED can never collide with titles. */
 @media (orientation:landscape) and (max-height:600px){
+  .paper.edge-left{
+    transform:translateX(60px);
+  }
+  .paper.edge-right{
+    transform:translateX(-60px);
+  }
+  .paper.edge-left:hover,
+  .paper.edge-right:hover{
+    transform:translateX(var(--edge-shift, 0px)) translateY(-2px);
+  }
+
+
   main{padding:16px 10px 70px}
   h1{font-size:1.7rem;margin-bottom:4px}
   .subtitle{font-size:.72rem;margin-bottom:10px}
@@ -676,8 +699,15 @@ function render(){
     el.style.top=(topPadding + p._lane*laneHeight)+"px";
 
     if(isLandscape){
-      if(p._x < 7) el.classList.add("edge-left");
-      else if(p._x > 93) el.classList.add("edge-right");
+      if(p._x < 7){
+        el.classList.add("edge-left");
+        el.style.setProperty("--edge-shift",
+          isShortLandscape ? "60px" : "104px");
+      }else if(p._x > 93){
+        el.classList.add("edge-right");
+        el.style.setProperty("--edge-shift",
+          isShortLandscape ? "-60px" : "-104px");
+      }
     }
     el.style.setProperty("--paper-color",colorForCategory(p.category[0]));
 
