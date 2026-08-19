@@ -1,6 +1,7 @@
 /* ---------- Featured Video ---------- */
 
 .featured-video-section{
+    width:100%;
     max-width:900px;
     margin:60px auto 70px;
     text-align:center;
@@ -14,6 +15,7 @@
 }
 
 .featured-video-card{
+    width:100%;
     background:#1d1d1d;
     border:1px solid #333;
     border-radius:16px;
@@ -23,6 +25,7 @@
 
 .featured-video-preview{
     cursor:pointer;
+    display:block;
 }
 
 .featured-video-preview:hover{
@@ -32,14 +35,18 @@
 .featured-video-thumbnail{
     position:relative;
     width:100%;
+    aspect-ratio:16 / 8.5;
     background:#111;
     overflow:hidden;
 }
 
 .featured-video-preview-image{
     width:100%;
-    height:auto;
+    height:100%;
     display:block;
+
+    /* Intentionally allows stretching */
+    object-fit:fill;
 }
 
 .featured-video-play{
@@ -67,12 +74,13 @@
 
     transition:.2s ease;
 }
+
 .featured-video-play span{
     position:relative;
     top:-1px;
 }
-.featured-video-preview:hover
-.featured-video-play{
+
+.featured-video-preview:hover .featured-video-play{
     transform:translate(-50%,-50%) scale(1.08);
     background:rgba(0,0,0,.9);
 }
@@ -125,8 +133,7 @@
     box-sizing:border-box;
 }
 
-.featured-video-card.expanded
-.featured-video-expanded{
+.featured-video-card.expanded .featured-video-expanded{
     display:flex;
 }
 
@@ -177,9 +184,7 @@
 .featured-video-expanded-description{
     color:#bbb;
     line-height:1.5;
-
     max-width:800px;
-
     margin:0 auto;
 }
 
@@ -234,6 +239,7 @@
 
     .featured-video-section{
         margin:45px auto 50px;
+        width:100%;
     }
 
     .featured-video-info{
@@ -290,6 +296,66 @@
         height:38px;
 
         font-size:22px;
+    }
+}
+
+
+/* ---------- Phone Landscape ---------- */
+
+@media (max-width:950px) and (orientation:landscape){
+
+    .featured-video-section{
+        max-width:850px;
+        margin:18px auto 24px;
+        padding:0 16px;
+        box-sizing:border-box;
+    }
+
+    .featured-video-label{
+        font-size:.85em;
+        margin-bottom:7px;
+    }
+
+    .featured-video-card{
+        border-radius:12px;
+    }
+
+    .featured-video-thumbnail{
+        height:calc(100dvh - 190px);
+        min-height:110px;
+        max-height:270px;
+        aspect-ratio:auto;
+    }
+
+    .featured-video-preview-image{
+        width:100%;
+        height:100%;
+        object-fit:fill;
+    }
+
+    .featured-video-play{
+        width:52px;
+        height:52px;
+        font-size:24px;
+    }
+
+    .featured-video-info{
+        padding:9px 15px 11px;
+    }
+
+    .featured-video-title{
+        font-size:1.15rem;
+        margin-bottom:3px;
+    }
+
+    .featured-video-description{
+        font-size:.82rem;
+        line-height:1.3;
+    }
+
+    .featured-video-meta{
+        margin-top:5px;
+        font-size:.78rem;
     }
 
 }
