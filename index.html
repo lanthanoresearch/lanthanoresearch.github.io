@@ -457,8 +457,65 @@ flex-shrink:0;
 }
 
 
+
+
+
+    .research-tools {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 18px auto 50px;
+}
+
+.research-tools .favorites-button,
+.research-tools .timeline-button {
+  display: inline-block;
+  width: auto;
+  margin: 0;
+  padding: 10px 22px;
+  background: #222;
+  border: 1px solid #444;
+  border-radius: 999px;
+  color: #ddd;
+  font-size: 1rem;
+  font-weight: bold;
+  text-decoration: none;
+  transition: 0.2s;
+}
+
+.research-tools .favorites-button:hover {
+  background: #2c2c2c;
+  border-color: #666;
+  color: #FFD700;
+}
+
+.research-tools .timeline-button:hover {
+  background: #2c2c2c;
+  border-color: #666;
+  color: #6fa8ff;
+}
+
+
+
+    
 @media (orientation:portrait){
 
+
+
+    .research-tools {
+  margin: 12px auto 26px;
+  gap: 8px;
+}
+
+.research-tools .favorites-button,
+.research-tools .timeline-button {
+  padding: 9px 18px;
+  font-size: 0.95rem;
+}
+
+    
 .featured-card{
 
 flex-direction:column;
@@ -969,6 +1026,10 @@ border:1px solid #2b2b2b;
 border-radius:14px;
 }
 
+
+
+
+    
 .archive-stat{
 display:flex;
 flex-direction:column;
@@ -1247,13 +1308,7 @@ display:flex;
 .all-research h2{
     font-size:1.36rem;
 }
-    /* tighten favorites button spacing too */
-    .favorites-button{
-        margin:12px auto 26px;
-        padding:9px 18px;
-        font-size:.95rem;
-    }
-
+    
     /* reduce spacing before "More from Lanthano" */
     .more-section{
         margin-top:48px;
@@ -1455,12 +1510,23 @@ disabled
 </a>
 
 
-<a
-href="category.html?category=favorites"
-class="favorites-button"
->
-⭐ Favorites
-</a>
+<div class="research-tools">
+
+  <a
+    href="category.html?category=favorites"
+    class="favorites-button"
+  >
+    ⭐ Favorites
+  </a>
+
+  <a
+    href="timeline.html"
+    class="timeline-button"
+  >
+    ⏳ Timeline
+  </a>
+
+</div>
 
 
 <p class="category-note">
