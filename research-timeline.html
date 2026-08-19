@@ -86,16 +86,33 @@ h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
 .favorite-star{
   position:absolute;
   top:7px;
-  right:10px;
-  font-size:1.45rem;
+  right:7px;
+  width:30px;
+  height:30px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:1.35rem;
   line-height:1;
-  color:#666;
+  color:#777;
+  background:transparent;
+  border:0;
+  padding:0;
+  margin:0;
   cursor:pointer;
   user-select:none;
-  z-index:6;
-  transition:.2s;
+  z-index:20;
+  transition:transform .12s ease,color .12s ease;
 }
-.favorite-star:hover{transform:scale(1.15)}
+.favorite-star:hover{
+  transform:scale(1.12);
+  color:#aaa;
+}
+.favorite-star:focus-visible{
+  outline:2px solid #6fa8ff;
+  outline-offset:2px;
+  border-radius:6px;
+}
 .favorite-star.active{
   color:#FFD700;
   text-shadow:0 0 10px rgba(255,215,0,.55);
@@ -210,7 +227,7 @@ A chronologically scaled timeline of the research archive. Hover over a paper to
 </main>
 
 <script>
-const DATA_FILE = "descriptions.json";
+const DATA_FILE = "./descriptions.json";
 const timeline = document.getElementById("timeline");
 const controls = document.getElementById("controls");
 const legend = document.getElementById("legend");
@@ -388,12 +405,11 @@ function render(){
       <div class="connector" aria-hidden="true"></div>
       <div class="dot" aria-hidden="true"></div>
       <div class="paper-card" tabindex="0">
-        <span class="favorite-star ${isFavorite(p.key) ? "active" : ""}"
-              data-favorite-key="${escapeHtml(p.key)}"
-              role="button"
-              tabindex="0"
-              aria-label="${isFavorite(p.key) ? "Remove from favorites" : "Add to favorites"}"
-              title="${isFavorite(p.key) ? "Remove from favorites" : "Add to favorites"}">${isFavorite(p.key) ? "★" : "☆"}</span>
+        <button type="button"
+                class="favorite-star ${isFavorite(p.key) ? "active" : ""}"
+                data-favorite-key="${escapeHtml(p.key)}"
+                aria-label="${isFavorite(p.key) ? "Remove from favorites" : "Add to favorites"}"
+                title="${isFavorite(p.key) ? "Remove from favorites" : "Add to favorites"}">${isFavorite(p.key) ? "★" : "☆"}</button>
         <div class="paper-date">${escapeHtml(formatDate(p))}</div>
         <div class="paper-title">${escapeHtml(p.title)}</div>
         <div class="paper-category">${escapeHtml(cats)}</div>
@@ -413,6 +429,11 @@ function render(){
   `;
 }
 
+document.addEventListener("pointerdown", e=>{
+  const star=e.target.closest(".favorite-star");
+  if(star) e.stopPropagation();
+});
+
 document.addEventListener("click", e=>{
   const star=e.target.closest(".favorite-star");
   if(!star) return;
@@ -420,18 +441,19 @@ document.addEventListener("click", e=>{
   e.preventDefault();
   e.stopPropagation();
 
-  toggleFavorite(star.dataset.favoriteKey);
-});
-
-document.addEventListener("keydown", e=>{
-  const star=e.target.closest(".favorite-star");
-  if(!star) return;
-
-  if(e.key==="Enter" || e.key===" "){
-    e.preventDefault();
-    e.stopPropagation();
-    toggleFavorite(star.dataset.favoriteKey);
+  const key = star.dataset.favoriteKey;
+  if(isFavorite(key)){
+    favoritePapers = favoritePapers.filter(item => item !== key);
+  }else{
+    favoritePapers.push(key);
   }
+  localStorage.setItem("favoritePapers", JSON.stringify(favoritePapers));
+
+  const active = isFavorite(key);
+  star.classList.toggle("active", active);
+  star.textContent = active ? "★" : "☆";
+  star.setAttribute("aria-label", active ? "Remove from favorites" : "Add to favorites");
+  star.title = active ? "Remove from favorites" : "Add to favorites";
 });
 
 document.addEventListener("click", e=>{
@@ -471,8 +493,12 @@ async function load(){
     if(!response.ok) throw new Error(`HTTP ${response.status}`);
     const data=await response.json();
 
-    papers=Object.entries(data)
-      .filter(p=>p && p.title && p.updated && Array.isArray(p.category))
+    const entries = Array.isArray(data)
+      ? data.map((paper, index) => [String(index), paper])
+      : Object.entries(data);
+
+    papers=entries
+      .filter(([key,p])=>p && p.title && p.updated && Array.isArray(p.category))
       .map(([key,p])=>({
         key,
         title:p.title,
@@ -489,7 +515,7 @@ async function load(){
     render();
   }catch(error){
     console.error("Timeline error:",error);
-    timeline.innerHTML='<div class="status">Unable to load descriptions.json.</div>';
+    timeline.innerHTML='<div class="status">Unable to load descriptions.json. Check that timeline.html and descriptions.json are in the same directory.</div>';
   }
 }
 
