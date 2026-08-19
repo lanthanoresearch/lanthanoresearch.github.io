@@ -11,35 +11,25 @@ html{scroll-behavior:smooth}
 body{
   margin:0;background:#111;color:#eee;font-family:Arial,sans-serif;
 }
-main{max-width:1200px;margin:auto;padding:45px 20px 80px}
+main{max-width:1200px;margin:auto;padding:28px 18px 85px}
 
 .top-nav{
-  display:flex;
-  justify-content:flex-start;
-  margin-bottom:24px;
+  margin-bottom:14px;
 }
 
 .home-button{
-  display:inline-block;
-  padding:9px 16px;
-  border:1px solid #444;
-  border-radius:8px;
-  background:#1d1d1d;
-  color:#ccc;
+  color:white;
   text-decoration:none;
+  display:inline-block;
   font-size:.9rem;
-  font-weight:600;
-  transition:.2s;
 }
 
 .home-button:hover{
-  background:#292929;
-  border-color:#666;
-  color:#fff;
+  text-decoration:underline;
 }
-h1{text-align:center;margin:0 0 10px;font-size:clamp(2rem,5vw,3.2rem)}
+h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
 .subtitle{text-align:center;color:#999;max-width:760px;margin:0 auto 30px;line-height:1.6}
-.controls{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;margin:25px 0 35px}
+.controls{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;margin:16px 0 24px}
 .controls button{
   padding:9px 14px;border:1px solid #333;border-radius:999px;
   background:#1d1d1d;color:#bbb;cursor:pointer;font-size:.9rem
@@ -48,7 +38,7 @@ h1{text-align:center;margin:0 0 10px;font-size:clamp(2rem,5vw,3.2rem)}
 .timeline-wrap{position:relative}
 .axis-labels{display:flex;justify-content:space-between;color:#777;font-size:.8rem;margin:0 4% 8px}
 .timeline{
-  position:relative;min-height:760px;margin:0 2%;
+  position:relative;min-height:560px;margin:0 2%;
   border-top:1px solid #353535;
   background:
     linear-gradient(to bottom, transparent 0, transparent 100%);
@@ -83,15 +73,15 @@ h1{text-align:center;margin:0 0 10px;font-size:clamp(2rem,5vw,3.2rem)}
 .paper-card{
   position:relative;background:linear-gradient(145deg,#202020,#1a1a1a);
   border:1px solid #353535;border-left:3px solid var(--paper-color);
-  border-radius:10px;padding:13px 14px;cursor:pointer;
+  border-radius:10px;padding:10px 12px;cursor:pointer;
   transition:transform .16s ease,background .16s ease,border-color .16s ease;
-  min-height:92px;
+  min-height:78px;
 }
 .paper-card:hover,.paper-card:focus-within{
   background:#252525;transform:translateY(-3px);
   border-color:#4a4a4a;
 }
-.paper-title{font-weight:700;line-height:1.28;margin:6px 0 8px;color:#f5f5f5;font-size:.98rem}
+.paper-title{font-weight:700;line-height:1.28;margin:6px 0 8px;color:#f5f5f5;font-size:.9rem}
 
 .paper-date{color:var(--paper-color);font-size:.75rem;font-weight:bold}
 .paper-category{color:#888;font-size:.7rem;line-height:1.4}
@@ -126,23 +116,36 @@ h1{text-align:center;margin:0 0 10px;font-size:clamp(2rem,5vw,3.2rem)}
 }
 .stats{
   display:flex;justify-content:center;gap:14px;flex-wrap:wrap;
-  margin:0 0 30px
+  margin:0 0 18px
 }
 .stat{
   min-width:100px;text-align:center;background:#181818;
-  border:1px solid #2b2b2b;border-radius:10px;padding:12px 18px
+  border:1px solid #2b2b2b;border-radius:10px;padding:9px 14px
 }
 .stat-number{display:block;font-size:1.35rem;font-weight:bold}
 .stat-label{display:block;color:#888;font-size:.72rem;margin-top:3px;text-transform:uppercase}
 .status{text-align:center;color:#888;padding:40px}
 .legend{
-  max-width:900px;margin:25px auto 0;display:flex;justify-content:center;
-  gap:10px;flex-wrap:wrap;color:#aaa;font-size:.75rem
+  position:fixed;
+  left:0;right:0;bottom:0;
+  z-index:5000;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+  padding:7px 12px;
+  color:#aaa;
+  font-size:.7rem;
+  background:rgba(17,17,17,.82);
+  border-top:1px solid rgba(255,255,255,.08);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
 }
-.legend span{display:inline-flex;align-items:center;gap:5px}
-.legend i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.legend span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.legend i{width:8px;height:8px;border-radius:50%;display:inline-block}
 @media(max-width:900px){
-  .timeline{border-top:0;border-left:1px solid #333;margin:0 0 0 20px;min-height:0;padding:10px 0}
+  .timeline{border-top:0;border-left:1px solid #333;margin:0 0 0 18px;min-height:0;padding:6px 0}
   .axis-labels,.year{display:none}
   .paper,.paper:nth-child(n){
     position:relative;left:auto!important;top:auto!important;
@@ -157,7 +160,7 @@ h1{text-align:center;margin:0 0 10px;font-size:clamp(2rem,5vw,3.2rem)}
   }
   .paper-link{margin-top:12px}
   .paper-card:hover,.paper-card:focus-within{transform:none}
-  main{padding:30px 14px 60px}
+  main{padding:22px 12px 72px}
 }
 </style>
 </head>
@@ -300,9 +303,9 @@ function render(){
   timeline.style.minHeight = "760px";
   const laneCount = buildLanes(visible);
 
-  const laneHeight = 152;
-  const topPadding = 54;
-  timeline.style.minHeight = Math.max(760, topPadding + laneCount * laneHeight + 70) + "px";
+  const laneHeight = 112;
+  const topPadding = 40;
+  timeline.style.minHeight = Math.max(560, topPadding + laneCount * laneHeight + 55) + "px";
   timeline.innerHTML="";
 
   // Year guide lines.
