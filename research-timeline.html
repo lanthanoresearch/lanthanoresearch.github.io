@@ -36,14 +36,14 @@ main{
 }
 h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
 .subtitle{text-align:center;color:#999;max-width:760px;margin:0 auto 30px;line-height:1.6}
-.controls{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;margin:16px 0 24px}
+.controls{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;margin:16px 0 30px}
 .controls button{
   padding:9px 14px;border:1px solid #333;border-radius:999px;
   background:#1d1d1d;color:#bbb;cursor:pointer;font-size:.9rem
 }
 .controls button:hover,.controls button.active{background:#2a2a2a;color:#fff;border-color:#666}
 .timeline-wrap{position:relative}
-.axis-labels{display:none}
+.axis-labels{display:none;height:0;margin:0}
 .timeline{
   position:relative;min-height:560px;margin:0 2%;
   border-top:1px solid rgba(255,255,255,.18);
@@ -685,12 +685,12 @@ function render(){
   // papers are normal-flow elements, so the timeline must not retain an
   // inline min-height from the landscape layout.
   const laneCount = buildLanes(visible);
-  const laneHeight = isShortLandscape ? 145 : 112;
-  const topPadding = isShortLandscape ? 34 : 40;
+  const laneHeight = isShortLandscape ? 105 : 112;
+  const topPadding = isShortLandscape ? 26 : 40;
 
   if(isLandscape){
     timeline.style.minHeight =
-      Math.max(560, topPadding + laneCount * laneHeight + 55) + "px";
+      Math.max(360, topPadding + laneCount * laneHeight + 35) + "px";
   }else{
     timeline.style.removeProperty("min-height");
   }
@@ -782,30 +782,28 @@ function handleOrientationChange(){
 function positionLandscapePopup(paperEl){
   if(!window.matchMedia("(orientation: landscape)").matches) return;
 
-  paperEl.classList.remove("popup-left","popup-right");
-
   const popup=paperEl.querySelector(".paper-description");
   if(!popup) return;
 
   const paperRect=paperEl.getBoundingClientRect();
+  const timelineRect=timeline.getBoundingClientRect();
   const popupWidth=Math.min(310, window.innerWidth - 20);
-  const sideClearance=10;
+  const edgeGap=8;
 
-  // Desired position: centered over the paper.
-  // Actual position: clamped to the viewport.
+  // Center the popup over the selected paper.
   const desiredLeft =
     paperRect.left + (paperRect.width / 2) - (popupWidth / 2);
 
-  const minLeft=sideClearance;
+  // Keep it inside the visible gray timeline area, not merely inside the
+  // physical viewport.
+  const minLeft=timelineRect.left + edgeGap;
   const maxLeft=Math.max(
     minLeft,
-    window.innerWidth - popupWidth - sideClearance
+    timelineRect.right - popupWidth - edgeGap
   );
 
   const viewportLeft=Math.max(minLeft, Math.min(maxLeft, desiredLeft));
 
-  // The popup is positioned relative to .paper, so convert the clamped
-  // viewport coordinate into a local offset.
   paperEl.style.setProperty(
     "--popup-left",
     (viewportLeft - paperRect.left) + "px"
@@ -814,12 +812,27 @@ function positionLandscapePopup(paperEl){
 
 document.addEventListener("click", e=>{
   const paper=e.target.closest(".paper");
-  if(!paper || e.target.closest(".favorite-star") || e.target.closest(".paper-link")) return;
 
   if(window.matchMedia("(orientation: landscape)").matches){
-    document.querySelectorAll(".paper.popup-open").forEach(x=>x!==paper && x.classList.remove("popup-open"));
+    const openPapers=document.querySelectorAll(".paper.popup-open");
+
+    // Clicking outside the open paper closes its popup.
+    if(!paper){
+      openPapers.forEach(x=>x.classList.remove("popup-open"));
+      return;
+    }
+
+    if(e.target.closest(".favorite-star") || e.target.closest(".paper-link")) return;
+
+    openPapers.forEach(x=>{
+      if(x!==paper) x.classList.remove("popup-open");
+    });
+
     paper.classList.toggle("popup-open");
-    positionLandscapePopup(paper);
+
+    if(paper.classList.contains("popup-open")){
+      positionLandscapePopup(paper);
+    }
   }
 });
 
@@ -830,7 +843,7 @@ document.addEventListener("mouseenter", e=>{
 
 window.addEventListener("resize",()=>{
   handleOrientationChange();
-  document.querySelectorAll(".paper").forEach(positionLandscapePopup);
+  document.querySelectorAll(".paper.popup-open, .paper:hover").forEach(positionLandscapePopup);
 });
 
 const orientationQuery = window.matchMedia("(orientation: landscape)");
