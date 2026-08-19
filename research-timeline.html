@@ -21,7 +21,7 @@ main{max-width:1200px;margin:auto;padding:28px 18px 85px}
   color:white;
   text-decoration:none;
   display:inline-block;
-  font-size:.9rem;
+  margin-bottom:20px;
 }
 
 .home-button:hover{
@@ -39,7 +39,7 @@ h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
 .axis-labels{display:flex;justify-content:space-between;color:#777;font-size:.8rem;margin:0 4% 8px}
 .timeline{
   position:relative;min-height:560px;margin:0 2%;
-  border-top:1px solid #353535;
+  border-top:1px solid rgba(255,255,255,.18);
   background:
     linear-gradient(to bottom, transparent 0, transparent 100%);
 }
@@ -50,7 +50,7 @@ h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
 }
 .year:after{
   content:"";position:absolute;top:29px;left:50%;width:1px;height:1000px;
-  background:linear-gradient(to bottom,#292929,rgba(41,41,41,.15));
+  background:linear-gradient(to bottom,rgba(255,255,255,.14),rgba(255,255,255,.025));
   z-index:0
 }
 .paper{
@@ -122,7 +122,7 @@ h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
   min-width:100px;text-align:center;background:#181818;
   border:1px solid #2b2b2b;border-radius:10px;padding:9px 14px
 }
-.stat-number{display:block;font-size:1.35rem;font-weight:bold}
+.stat-number{display:block;font-size:1.05rem;font-weight:bold;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .stat-label{display:block;color:#888;font-size:.72rem;margin-top:3px;text-transform:uppercase}
 .status{text-align:center;color:#888;padding:40px}
 .legend{
@@ -167,7 +167,7 @@ h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
 <body>
 <main>
 <div class="top-nav">
-  <a href="index.html" class="home-button">⌂ Home</a>
+  <a class="home-button" href="index.html">◀ Home</a>
 </div>
 <h1>Research Timeline</h1>
 <p class="subtitle">
@@ -175,9 +175,9 @@ A chronologically scaled timeline of the research archive. Hover over a paper to
 </p>
 
 <div class="stats" id="stats">
-  <div class="stat"><span class="stat-number">—</span><span class="stat-label">Papers</span></div>
-  <div class="stat"><span class="stat-number">—</span><span class="stat-label">First</span></div>
-  <div class="stat"><span class="stat-number">—</span><span class="stat-label">Latest</span></div>
+  <div class="stat"><span class="stat-number" id="paperCount">—</span><span class="stat-label">Papers</span></div>
+  <div class="stat"><span class="stat-number" id="earliestPaper">—</span><span class="stat-label">Earliest</span></div>
+  <div class="stat"><span class="stat-number" id="latestPaper">—</span><span class="stat-label">Latest</span></div>
 </div>
 
 <div class="controls" id="controls"></div>
@@ -290,12 +290,19 @@ function render(){
     .sort((a,b)=>dateValue(a)-dateValue(b) || a.title.localeCompare(b.title));
 
   if(!visible.length){
+    document.getElementById("paperCount").textContent = "0";
+    document.getElementById("earliestPaper").textContent = "—";
+    document.getElementById("latestPaper").textContent = "—";
     timeline.innerHTML='<div class="status">No papers in this category.</div>';
     return;
   }
 
   const min = dateValue(visible[0]);
   const max = dateValue(visible[visible.length-1]);
+
+  document.getElementById("paperCount").textContent = visible.length;
+  document.getElementById("earliestPaper").textContent = formatDate(visible[0]);
+  document.getElementById("latestPaper").textContent = formatDate(visible[visible.length-1]);
 
   visible.forEach(p=>p._x=positionFor(p.updated,min,max));
 
@@ -400,13 +407,6 @@ async function load(){
       }));
 
     if(!papers.length) throw new Error("No timeline records found.");
-
-    const dates=papers.map(dateValue).sort((a,b)=>a-b);
-    stats.innerHTML=`
-      <div class="stat"><span class="stat-number">${papers.length}</span><span class="stat-label">Papers</span></div>
-      <div class="stat"><span class="stat-number">${dates[0].getFullYear()}</span><span class="stat-label">First</span></div>
-      <div class="stat"><span class="stat-number">${dates.at(-1).getFullYear()}</span><span class="stat-label">Latest</span></div>
-    `;
 
     buildControls();
     render();
