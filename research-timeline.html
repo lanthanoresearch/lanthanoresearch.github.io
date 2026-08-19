@@ -71,7 +71,7 @@ h1{text-align:center;margin:0 0 10px;font-size:clamp(2rem,5vw,3.2rem)}
 .paper-date{color:var(--paper-color);font-size:.75rem;font-weight:bold}
 .paper-category{color:#888;font-size:.7rem;line-height:1.4}
 .paper-description::after{
-  content:"";position:absolute;left:0;right:0;bottom:-13px;height:14px;
+  content:"";position:absolute;left:0;right:0;bottom:-18px;height:20px;
 }
 .description-label{
   color:#888;text-transform:uppercase;letter-spacing:.08em;font-size:.64rem;font-weight:700;margin-bottom:7px;
@@ -84,7 +84,7 @@ h1{text-align:center;margin:0 0 10px;font-size:clamp(2rem,5vw,3.2rem)}
 .paper-link:hover,.paper-link:focus{background:#303030;border-color:var(--paper-color);transform:translateX(1px);outline:none}
 .paper-link span{color:var(--paper-color);font-size:1rem}
 .paper-description{
-  position:absolute;left:50%;bottom:calc(100% + 18px);width:310px;
+  position:absolute;left:50%;bottom:calc(100% - 1px);width:310px;
   transform:translateX(-50%) translateY(6px);
   padding:15px 16px;background:#151515;border:1px solid #444;
   border-left:3px solid var(--paper-color);border-radius:10px;
@@ -93,8 +93,9 @@ h1{text-align:center;margin:0 0 10px;font-size:clamp(2rem,5vw,3.2rem)}
   box-shadow:0 12px 30px rgba(0,0,0,.65);
   transition:.15s ease;
 }
-.paper:hover{z-index:1000}
-.paper:hover .paper-description{
+.paper:hover{z-index:10000}
+.paper:hover .paper-description,
+.paper-description:hover{
   opacity:1;visibility:visible;pointer-events:auto;
   transform:translateX(-50%) translateY(0);
 }
@@ -326,7 +327,8 @@ document.addEventListener("click", e=>{
   e.preventDefault();
   const paperUrl=link.getAttribute("href");
   const paperTitle=link.dataset.paperTitle || "PDF";
-  const viewerUrl="pdf.html?file="+encodeURIComponent(paperUrl)+"&paper="+encodeURIComponent(paperTitle)+"&return="+encodeURIComponent("timeline.html");
+  const returnUrl=window.location.href;
+  const viewerUrl="pdf.html?file="+encodeURIComponent(paperUrl)+"&paper="+encodeURIComponent(paperTitle)+"&return="+encodeURIComponent(returnUrl);
   window.location.href=viewerUrl;
 });
 
