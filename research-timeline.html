@@ -806,8 +806,7 @@ h1{
 
 /* =========================================================
    SHORT LANDSCAPE
-   Text sizes intentionally remain identical to base styles.
-   Only layout dimensions are reduced.
+   Text sizes remain identical to the normal landscape mode.
    ========================================================= */
 
 @media (orientation:landscape) and (max-height:600px){
@@ -1243,6 +1242,118 @@ function buildLanes(items){
 }
 
 
+/*
+ * Only correct genuine vertical collisions.
+ *
+ * The normal lane positions are left alone. After the cards have
+ * rendered, their actual heights are measured. If two cards occupy
+ * overlapping horizontal space and their vertical rectangles overlap,
+ * only the lower card is moved down far enough to clear the card above.
+ *
+ * This prevents the larger text from causing selective overlaps without
+ * globally increasing the spacing between every lane.
+ */
+function resolveVerticalOverlaps(){
+
+  if(
+    !window.matchMedia(
+      "(orientation: landscape)"
+    ).matches
+  ){
+    return;
+  }
+
+  const papersOnTimeline =
+    [...timeline.querySelectorAll(".paper")];
+
+  if(!papersOnTimeline.length){
+    return;
+  }
+
+  const gap = 8;
+  const maxPasses = papersOnTimeline.length + 2;
+
+  for(let pass = 0; pass < maxPasses; pass++){
+
+    let changed = false;
+
+    const ordered =
+      [...papersOnTimeline].sort(
+        (a,b) =>
+          a.getBoundingClientRect().top -
+          b.getBoundingClientRect().top
+      );
+
+    for(let i = 0; i < ordered.length; i++){
+
+      const current = ordered[i];
+      const currentRect =
+        current.getBoundingClientRect();
+
+      let requiredTop =
+        currentRect.top;
+
+      for(let j = 0; j < i; j++){
+
+        const previous = ordered[j];
+        const previousRect =
+          previous.getBoundingClientRect();
+
+        const horizontalOverlap =
+          currentRect.left <
+            previousRect.right &&
+          currentRect.right >
+            previousRect.left;
+
+        if(!horizontalOverlap){
+          continue;
+        }
+
+        const verticalOverlap =
+          currentRect.top <
+            previousRect.bottom + gap &&
+          currentRect.bottom >
+            previousRect.top;
+
+        if(!verticalOverlap){
+          continue;
+        }
+
+        requiredTop =
+          Math.max(
+            requiredTop,
+            previousRect.bottom + gap
+          );
+      }
+
+      if(
+        requiredTop >
+        currentRect.top + 0.5
+      ){
+
+        const delta =
+          requiredTop -
+          currentRect.top;
+
+        const currentTop =
+          parseFloat(
+            current.style.top
+          ) || 0;
+
+        current.style.top =
+          (currentTop + delta) + "px";
+
+        changed = true;
+      }
+    }
+
+    if(!changed){
+      break;
+    }
+  }
+}
+
+
 function render(){
 
   resetTimelineInteraction();
@@ -1329,6 +1440,11 @@ function render(){
   const laneCount =
     buildLanes(visible);
 
+  /*
+   * Keep the original lane spacing.
+   * Actual overlaps are corrected afterward by
+   * resolveVerticalOverlaps().
+   */
   const laneHeight =
     isShortLandscape ? 82 : 112;
 
@@ -1553,6 +1669,19 @@ function render(){
   });
 
   axisLabels.innerHTML = "";
+
+  /*
+   * Wait until the browser has calculated the actual card heights,
+   * then correct only real collisions.
+   */
+  if(isLandscape){
+
+    requestAnimationFrame(() => {
+
+      resolveVerticalOverlaps();
+
+    });
+  }
 }
 
 
