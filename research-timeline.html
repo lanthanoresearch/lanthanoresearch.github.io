@@ -11,7 +11,14 @@ html{scroll-behavior:smooth}
 body{
   margin:0;background:#111;color:#eee;font-family:Arial,sans-serif;
 }
-main{max-width:1200px;margin:auto;padding:28px 18px 85px}
+main{
+  width:100%;
+  max-width:1200px;
+  margin:auto;
+  padding:28px 18px 85px;
+  box-sizing:border-box;
+  overflow-x:clip;
+}
 
 .top-nav{
   margin-bottom:14px;
@@ -379,6 +386,10 @@ h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
     pointer-events:auto;
   }
 
+  .paper-card.expanded .paper-description{
+    z-index:100;
+  }
+
   .stats{
     gap:14px;
     margin-bottom:14px;
@@ -405,9 +416,13 @@ h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
   .timeline{
     border-top:1px solid rgba(255,255,255,.18);
     border-left:0;
-    margin:0 2%;
+    margin:0;
+    width:100%;
+    max-width:100%;
     min-height:560px;
     padding:0;
+    box-sizing:border-box;
+    overflow:visible;
   }
 
   .year{display:block}
@@ -441,16 +456,81 @@ h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
   }
 
   .paper:hover .paper-description,
-  .paper-description:hover{
+  .paper-description:hover,
+  .paper-card.expanded .paper-description{
     opacity:1;
     visibility:visible;
     pointer-events:auto;
     transform:translateX(-50%) translateY(0);
   }
+
+  /* Keep the popup inside the viewport when a landscape device is tapped. */
+  .paper-card.expanded .paper-description{
+    max-width:calc(100vw - 20px);
+    box-sizing:border-box;
+  }
 }
 
 /* Short landscape description: keep the hover panel inside the viewport. */
 @media (orientation: landscape) and (max-height: 600px){
+  .paper-topline{
+    display:block;
+    min-height:34px;
+    padding-right:23px;
+    overflow:visible;
+  }
+
+  .paper-date{
+    display:block;
+    line-height:14px;
+  }
+
+  .paper-badges{
+    display:flex;
+    justify-content:flex-start;
+    align-items:center;
+    gap:2px;
+    width:100%;
+    max-width:calc(100% - 23px);
+    margin-top:2px;
+    overflow:visible;
+    min-height:11px;
+  }
+
+  .paper-badge{
+    flex-shrink:0;
+  }
+
+  .paper-title{
+    margin-top:4px;
+  }
+
+  .paper-card.has-two-badges{
+    min-height:72px;
+  }
+
+  /* Compact popup for landscape phones. */
+  .paper .paper-description{
+    width:190px;
+    max-width:calc(100vw - 20px);
+    padding:9px 10px;
+    font-size:.68rem;
+    line-height:1.35;
+    box-sizing:border-box;
+  }
+
+  .paper .description-label{
+    font-size:.54rem;
+    margin-bottom:4px;
+  }
+
+  .paper .paper-link{
+    margin-top:7px;
+    padding:7px 9px;
+    font-size:.66rem;
+  }
+
+
   .paper .paper-description{
     width:190px;
     max-width:calc(100vw - 20px);
