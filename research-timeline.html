@@ -123,7 +123,7 @@ h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
   white-space:nowrap;
   overflow:visible;
 }
-.paper-badges.has-badges{display:flex}
+.paper-badges.has-badges{display:flex !important}
 .paper-badge{
   color:#fff;
   font-size:.55rem;
@@ -457,7 +457,7 @@ h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
     gap:2px;width:calc(100% - 23px);max-width:none;
     margin-top:2px;min-height:10px;overflow:visible;
   }
-  .paper-badges.has-badges{display:flex}
+  .paper-badges.has-badges{display:flex !important}
   .paper-badge{font-size:.31rem;padding:2px 3px;flex-shrink:0}
   .paper-title{
     font-size:.6rem;line-height:1.16;margin:3px 0 3px;
@@ -588,6 +588,11 @@ function escapeHtml(value){
 
 function dateValue(p){
   return new Date(`${p.updated}T00:00:00`);
+}
+
+function formatYear(value){
+  const d = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(d.getTime()) ? "" : String(d.getFullYear());
 }
 
 function formatDate(p){
