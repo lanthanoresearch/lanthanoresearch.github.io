@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Research Timeline</title>
+<style>
+:root {
+  --bg:#080b10; --panel:#10151d; --panel2:#151b24; --text:#edf2f7;
+  --muted:#8d99a8; --line:#28313d; --accent:#75b7ff; --accent2:#b58cff;
+}
+* { box-sizing:border-box; }
+body {
+  margin:0; background:radial-gradient(circle at 50% -10%,#172338 0,#080b10 42%);
+  color:var(--text); font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+}
+.wrap { max-width:1500px; margin:auto; padding:52px 28px 80px; }
+header { display:flex; justify-content:space-between; gap:25px; align-items:end; margin-bottom:28px; }
+h1 { margin:0; font-size:clamp(32px,5vw,62px); letter-spacing:-.045em; }
+.sub { color:var(--muted); margin-top:10px; max-width:700px; line-height:1.55; }
+.stats { display:flex; gap:10px; flex-wrap:wrap; }
+.stat { background:rgba(255,255,255,.045); border:1px solid var(--line); border-radius:14px; padding:12px 15px; min-width:100px; }
+.stat b { display:block; font-size:22px; }
+.stat span { color:var(--muted); font-size:12px; }
+.controls { display:flex; gap:9px; flex-wrap:wrap; margin:25px 0 35px; }
+button {
+  color:var(--text); background:var(--panel); border:1px solid var(--line);
+  border-radius:999px; padding:9px 14px; cursor:pointer; transition:.2s;
+}
+button:hover, button.active { background:#1b2736; border-color:#507aa4; }
+.timeline { position:relative; padding:40px 0 20px; }
+.axis {
+  height:3px; background:linear-gradient(90deg,transparent,var(--line) 4%,var(--accent) 50%,var(--line) 96%,transparent);
+  position:absolute; left:0; right:0; top:55px;
+}
+.axis-labels { display:flex; justify-content:space-between; color:var(--muted); font-size:12px; margin-bottom:18px; }
+.track {
+  position:relative; min-height:580px; margin:0 2%;
+}
+.item {
+  position:absolute; width:190px; transform:translateX(-50%);
+  top:70px; transition:transform .2s, opacity .2s;
+}
+
+.item::before {
+  content:""; position:absolute; left:50%; top:-17px; width:12px; height:12px;
+  border-radius:50%; background:var(--paper-color); border:3px solid #0a0e14;
+  box-shadow:0 0 0 2px var(--paper-color);
+  transform:translateX(-50%);
+}
+
+.card {
+  background:rgba(16,21,29,.98);
+  border:1px solid var(--paper-color); border-radius:16px; padding:14px;
+  box-shadow:0 12px 35px rgba(0,0,0,.25);
+}
+
+.description {
+  position:absolute; left:50%; bottom:calc(100% + 14px); width:270px;
+  transform:translateX(-50%) translateY(6px);
+  padding:12px 14px; border:1px solid var(--paper-color); border-radius:12px;
+  background:#0b1017; color:#dce4ed; font-size:12px; line-height:1.5;
+  opacity:0; visibility:hidden; pointer-events:none;
+  transition:opacity .15s ease, transform .15s ease;
+  box-shadow:0 12px 28px rgba(0,0,0,.45); z-index:50;
+}
+.item:hover { z-index:100; }
+.item:hover .description, .item:focus-within .description {
+  opacity:1; visibility:visible; transform:translateX(-50%) translateY(0);
+}
+.card { position:relative; }
+.date { color:var(--accent); font-size:12px; font-weight:700; letter-spacing:.05em; }
+.title { font-weight:700; margin:7px 0 8px; line-height:1.25; }
+.cats { color:var(--muted); font-size:11px; line-height:1.4; }
+.empty { color:var(--muted); text-align:center; padding:70px 20px; }
+.note {
+  margin-top:25px; color:#7f8b9a; font-size:12px; line-height:1.5;
+  border-top:1px solid var(--line); padding-top:18px;
+}
+@media (max-width:1000px) {
+  .track { min-height:auto; margin:0; padding-left:28px; }
+  .axis { top:0; bottom:0; left:8px; right:auto; width:2px; height:auto; background:var(--line); }
+  .axis-labels { display:none; }
+  .item { position:relative; top:auto !important; left:auto !important; width:auto; transform:none; margin:0 0 16px 20px; }
+  .item::before { top:24px; left:-28px; width:10px; height:10px; }
+  .description {
+    position:static; width:auto; transform:none; margin-top:10px;
+    opacity:1; visibility:visible; pointer-events:auto;
+    box-shadow:none;
+  }
+  .item:hover .description, .item:focus-within .description { transform:none; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div>
+    <h1>Research Timeline</h1>
+    <div class="sub">A chronologically scaled view of the research papers in the archive. Larger gaps represent longer periods between recorded dates.</div>
+  </div>
+  <div class="stats" id="stats"></div>
+</header>
+
+<div class="controls" id="controls"></div>
+
+<div class="timeline">
+  <div class="axis"></div>
+  <div class="axis-labels" id="axisLabels"></div>
+  <div class="track" id="track"></div>
+</div>
+
+<div class="note">
+  The supplied <code>descriptions.json</code> records an <code>updated</code> date rather than a separate
+  “started” date. This timeline therefore uses the recorded dates as the available chronology.
+</div>
+</div>
+
+<script>
+
+let papers = [];
+
+const colors = {
+  biblical:"#b58cff", historical:"#75b7ff", astronomy:"#64d6b2",
+  scientific:"#ffb86b", medical:"#ff7f9c", political:"#e4e7ec", technology:"#67a9ff",
+  philosophy:"#d7a7ff"
+};
+
+const track = document.getElementById("track");
+const controls = document.getElementById("controls");
+const stats = document.getElementById("stats");
+const labels = document.getElementById("axisLabels");
+
+const years = [...new Set(papers.map(p => p.date.slice(0,4)))];
+const minDate = new Date(papers[0].date + "T00:00:00");
+const maxDate = new Date(papers[papers.length-1].date + "T00:00:00");
+const range = maxDate - minDate;
+
+function pct(date) {
+  const d = new Date(date + "T00:00:00");
+  return 3 + ((d-minDate)/range)*94;
+}
+
+
+function render(filter="all") {
+  track.innerHTML="";
+  const visible=papers
+    .filter(p=>filter==="all" || p.categories.includes(filter))
+    .sort((a,b)=>a.date.localeCompare(b.date) || a.title.localeCompare(b.title));
+
+  if (!visible.length) {
+    track.innerHTML='<div class="empty">No papers in this category.</div>';
+    return;
+  }
+
+  // Collision-safe lane assignment. Each item gets the first lane whose
+  // previous item is far enough away horizontally.
+  const lanes = [];
+  const gap = 15;
+  visible.forEach(p => {
+    const x = pct(p.date);
+    let lane = 0;
+    while (lanes[lane] !== undefined && x - lanes[lane] < gap) lane++;
+    lanes[lane] = x;
+
+    const el=document.createElement("div");
+    el.className="item";
+    el.style.left=x+"%";
+    el.style.top=(70 + lane*145)+"px";
+
+    const hue = (Math.abs(hashCode(p.title)) % 360);
+    el.style.setProperty("--paper-color", `hsl(${hue} 72% 62%)`);
+
+    const date = new Date(p.date+"T00:00:00")
+      .toLocaleDateString(undefined,{year:"numeric",month:"short",day:"numeric"});
+
+    el.innerHTML=`<div class="card">
+      <div class="date">${date}</div>
+      <div class="title">${escapeHtml(p.title)}</div>
+      <div class="cats">${p.categories.map(escapeHtml).join(" · ")}</div>
+      <div class="description">${escapeHtml(p.description || "No description available.")}</div>
+    </div>`;
+    track.appendChild(el);
+  });
+
+  track.style.minHeight = Math.max(580, 100 + lanes.length * 145) + "px";
+}
+
+function hashCode(str) {
+  let h=0;
+  for(let i=0;i<str.length;i++) h=((h<<5)-h)+str.charCodeAt(i)|0;
+  return h;
+}
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, c => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+  }[c]));
+}
+
+function updateStats() {
+  if (!papers.length) return;
+  const dates=papers.map(p=>p.date).sort();
+  const first=new Date(dates[0]+"T00:00:00");
+  const last=new Date(dates.at(-1)+"T00:00:00");
+  const fmt=d=>d.toLocaleDateString(undefined,{year:"numeric",month:"short"});
+  stats.innerHTML=`
+    <div class="stat"><b>${papers.length}</b><span>papers</span></div>
+    <div class="stat"><b>${first.getFullYear()}</b><span>first recorded</span></div>
+    <div class="stat"><b>${last.getFullYear()}</b><span>latest recorded</span></div>`;
+  labels.innerHTML=`<span>${fmt(first)}</span><span>${fmt(last)}</span>`;
+}
+
+async function loadTimeline() {
+  try {
+    const response = await fetch("descriptions.json", {cache:"no-store"});
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+
+    papers = Object.values(data)
+      .filter(p => p && p.title && p.updated)
+      .map(p => ({
+        title: p.title,
+        date: p.updated,
+        categories: Array.isArray(p.category) ? p.category : [],
+        description: p.description || "",
+        url: p.url || ""
+      }));
+
+    updateStats();
+
+    const cats=[...new Set(papers.flatMap(p=>p.categories))].sort();
+    controls.innerHTML='<button class="active" data-filter="all">All</button>'+
+      cats.map(c=>`<button data-filter="${escapeHtml(c)}">${escapeHtml(c)}</button>`).join("");
+
+    render();
+  } catch (error) {
+    track.innerHTML=`<div class="empty">Unable to load descriptions.json.</div>`;
+    console.error("Timeline data error:", error);
+  }
+}
+
+controls.addEventListener("click",e=>{
+  if(!e.target.matches("button")) return;
+  document.querySelectorAll("#controls button").forEach(b=>b.classList.remove("active"));
+  e.target.classList.add("active");
+  render(e.target.dataset.filter);
+});
+
+loadTimeline();
+const cats=[...new Set(papers.flatMap(p=>p.categories))].sort();
+controls.innerHTML='<button class="active" data-filter="all">All</button>'+cats.map(c=>`<button data-filter="${c}">${c}</button>`).join("");
+controls.addEventListener("click",e=>{
+  if(!e.target.matches("button")) return;
+  document.querySelectorAll("#controls button").forEach(b=>b.classList.remove("active"));
+  e.target.classList.add("active");
+  render(e.target.dataset.filter);
+});
+
+</script>
+</body>
+</html>
