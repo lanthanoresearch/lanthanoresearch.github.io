@@ -42,6 +42,33 @@ html,body{
     display:block;
 }
 
+
+  /* ---------- Reading Mode ---------- */
+
+body.reading-mode header,
+body.reading-mode #toolbar,
+body.reading-mode #titleBar,
+body.reading-mode #searchPopup,
+body.reading-mode #menu{
+    display:none !important;
+}
+
+body.reading-mode #layout{
+    height:100%;
+}
+
+body.reading-mode #viewer{
+    height:100%;
+    padding-top:20px;
+    padding-bottom:20px;
+}
+
+body.reading-mode #loadingOverlay{
+    inset:0;
+}
+
+
+  
 .title-badge{
 
     display:inline-block;
@@ -1426,6 +1453,42 @@ await renderAllPages();
     }, 150);
 
 });
+
+
+
+
+  /* ---------- PDF Reading Mode ---------- */
+
+viewer.addEventListener("click", (e) => {
+
+    // Only activate when the actual PDF page is tapped.
+    const page = e.target.closest(".page");
+
+    if (!page) return;
+
+    // Don't activate when selecting text.
+    const selection = window.getSelection();
+
+    if (selection && selection.toString().length > 0) {
+        return;
+    }
+
+    document.body.classList.toggle("reading-mode");
+
+    // Close any open menus/popups when entering reading mode.
+    if (document.body.classList.contains("reading-mode")) {
+
+        menu.style.display = "none";
+        searchPopup.classList.add("hidden");
+
+    }
+
+});
+
+
+
+
+  
 </script>
 
 
