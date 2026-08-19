@@ -301,14 +301,55 @@
 @media screen and (orientation:landscape) and (max-width:1200px){
 
     .featured-video-section{
-        max-width:900px;
+        max-width:1000px;
         margin:20px auto 30px;
     }
 
     .featured-video-card{
-        transform:scale(.65);
-        transform-origin:top center;
-        margin-bottom:-35%;
+        width:100%;
+    }
+
+    .featured-video-preview{
+        display:flex;
+        align-items:stretch;
+        width:100%;
+    }
+
+    .featured-video-thumbnail{
+        flex:0 0 auto;
+        width:auto;
+    }
+
+    .featured-video-preview-image{
+        width:auto;
+        height:auto;
+        max-width:none;
+        display:block;
+    }
+
+    .featured-video-info{
+        flex:1 1 auto;
+        display:flex;
+        flex-direction:column;
+        justify-content:center;
+
+        padding:20px 25px 22px;
+
+        text-align:left;
+    }
+
+    .featured-video-title{
+        font-size:1.7rem;
+        margin-bottom:8px;
+    }
+
+    .featured-video-description{
+        max-width:700px;
+        margin:0;
+    }
+
+    .featured-video-meta{
+        margin-top:12px;
     }
 
 }
