@@ -255,389 +255,200 @@ h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
    taller-than-wide screens use the compact vertical archive;
    wider-than-tall screens use the horizontal chronological timeline. */
 
+
 @media (orientation: portrait){
   main{padding:22px 12px 72px}
   .timeline{
-    border-top:0;
-    border-left:1px solid #333;
-    margin:0 0 0 18px;
-    min-height:0;
-    padding:6px 0;
+    border-top:0;border-left:1px solid #333;
+    margin:0 0 0 12px;padding:6px 0;min-height:0;
   }
   .year{display:none}
-
   .paper,.paper:nth-child(n){
-    position:relative;
-    left:auto!important;
-    top:auto!important;
-    transform:none!important;
-    width:calc(100% - 24px);
-    max-width:calc(100% - 24px);
-    min-width:0;
-    box-sizing:border-box;
-    margin:0 0 7px 24px;
-    overflow:visible;
+    position:relative!important;left:auto!important;top:auto!important;
+    width:calc(100% - 18px)!important;max-width:calc(100% - 18px)!important;
+    min-width:0;margin:0 0 7px 18px!important;
+    transform:none!important;box-sizing:border-box;
   }
-
   .paper-card{
-    width:100%;
-    min-width:0;
-    box-sizing:border-box;
-    overflow:visible;
-  }
-
-  .paper-card{
-    min-height:0;
-    padding:7px 9px;
-    border-radius:8px;
+    width:100%;min-width:0;box-sizing:border-box;
+    min-height:0;padding:7px 9px;border-radius:8px;
   }
   .paper-card.has-two-badges{min-height:0}
-
   .paper-topline{
-    min-height:25px;
+    display:block;
+    min-height:32px;
     padding-right:30px;
-    gap:4px;
-  }
-  .paper-date{font-size:.61rem}
-  .paper-title{font-size:.78rem;margin:2px 0 4px}
-  .paper-category{font-size:.6rem}
-
-  .favorite-star{
-    top:5px;
-    right:4px;
-    width:27px;
-    height:27px;
-    font-size:1.18rem;
-  }
-
-  .paper-badges{gap:3px}
-  .paper-badge{font-size:.46rem;padding:2px 5px}
-
-  .paper .dot{left:-38px;top:20px}
-  .paper .connector{display:none}
-
-  .paper .paper-description{
-    position:relative!important;
-    left:auto!important;
-    right:auto!important;
-    top:auto!important;
-    bottom:auto!important;
-    width:100%!important;
-    max-width:100%!important;
-    box-sizing:border-box!important;
-    margin:0!important;
-    transform:none!important;
-    opacity:0;
-    visibility:hidden;
-    pointer-events:none;
-    display:none;
-    overflow-wrap:anywhere;
-  }
-
-  .paper-card.expanded .paper-description{
-    position:relative!important;
-    left:auto!important;
-    right:auto!important;
-    top:auto!important;
-    bottom:auto!important;
-    width:100%!important;
-    max-width:100%!important;
-    box-sizing:border-box!important;
-    margin-top:6px!important;
-    padding:8px 9px!important;
-    border-radius:7px!important;
-    font-size:.68rem!important;
-    line-height:1.35!important;
-    transform:none!important;
-    opacity:1;
-    visibility:visible;
-    pointer-events:auto;
-    display:block;
-    overflow-wrap:anywhere;
-  }
-
-  .paper-card.expanded .paper-description .description-label{
-    font-size:.54rem!important;
-    margin-bottom:4px!important;
-  }
-
-  .paper-card.expanded .paper-description .paper-link{
-    margin-top:7px!important;
-    padding:7px 9px!important;
-    font-size:.66rem!important;
-  }
-
-  .paper-card.expanded .paper-description .paper-link{
-    width:100%;
-    max-width:100%;
-    box-sizing:border-box;
-  }
-
-  .paper:hover .paper-description,
-  .paper-description:hover{
-    opacity:0;
-    visibility:hidden;
-    pointer-events:none;
-  }
-
-  .paper-card.expanded:hover .paper-description{
-    opacity:1;
-    visibility:visible;
-    pointer-events:auto;
-  }
-
-  .paper-card.expanded .paper-description{
-    z-index:100;
-  }
-
-  .stats{
-    gap:14px;
-    margin-bottom:14px;
-  }
-  .stat{
-    background:none;
-    border:0;
-    padding:0;
-    min-width:0;
-  }
-  .stat-number{font-size:.9rem}
-  .stat-label{font-size:.62rem}
-  .legend{
-    padding:6px 8px;
-    gap:8px;
-    font-size:.62rem;
-  }
-}
-
-/* Landscape is always the horizontally scaled PC timeline. */
-@media (orientation: landscape){
-  main{padding:24px 14px 82px}
-
-  .timeline{
-    border-top:1px solid rgba(255,255,255,.18);
-    border-left:0;
-    margin:0;
-    width:100%;
-    max-width:100%;
-    min-height:560px;
-    padding:0;
-    box-sizing:border-box;
     overflow:visible;
   }
-
-  .year{display:block}
-
-  .paper,.paper:nth-child(n){
-    position:absolute;
-    width:206px;
-    max-width:none;
-    margin:0;
-    box-sizing:border-box;
-  }
-
-  .paper-card{min-height:76px}
-  .paper-card.has-two-badges{min-height:88px}
-
-  .paper .dot{left:50%;top:-9px}
-  .paper .connector{display:block}
-
-  .paper .paper-description{
-    position:absolute;
-    left:50%;
-    bottom:calc(100% - 1px);
-    width:310px;
-    max-width:none;
-    transform:translateX(-50%) translateY(8px);
-    margin:0;
-    opacity:0;
-    visibility:hidden;
-    pointer-events:none;
-    display:block;
-  }
-
-  .paper:hover .paper-description,
-  .paper-description:hover,
-  .paper-card.expanded .paper-description{
-    opacity:1;
-    visibility:visible;
-    pointer-events:auto;
-    transform:translateX(-50%) translateY(0);
-  }
-
-  /* Keep the popup inside the viewport when a landscape device is tapped. */
-  .paper-card.expanded .paper-description{
-    max-width:calc(100vw - 20px);
-    box-sizing:border-box;
-  }
-}
-
-/* Short landscape description: keep the hover panel inside the viewport. */
-@media (orientation: landscape) and (max-height: 600px){
-  .paper-topline{
-    display:block;
-    min-height:34px;
-    padding-right:23px;
-    overflow:visible;
-  }
-
   .paper-date{
     display:block;
-    line-height:14px;
+    font-size:.61rem;
+    line-height:13px;
   }
-
   .paper-badges{
     display:flex;
     justify-content:flex-start;
     align-items:center;
-    gap:2px;
-    width:100%;
-    max-width:calc(100% - 23px);
+    gap:3px;
+    width:calc(100% - 30px);
+    max-width:none;
     margin-top:2px;
-    overflow:visible;
     min-height:11px;
+    overflow:visible;
   }
-
   .paper-badge{
+    font-size:.46rem;
+    padding:2px 5px;
     flex-shrink:0;
   }
-
   .paper-title{
-    margin-top:4px;
-  }
-
-  .paper-card.has-two-badges{
-    min-height:72px;
-  }
-
-  /* Compact popup for landscape phones. */
-  .paper .paper-description{
-    width:190px;
-    max-width:calc(100vw - 20px);
-    padding:9px 10px;
-    font-size:.68rem;
-    line-height:1.35;
-    box-sizing:border-box;
-  }
-
-  .paper .description-label{
-    font-size:.54rem;
-    margin-bottom:4px;
-  }
-
-  .paper .paper-link{
-    margin-top:7px;
-    padding:7px 9px;
-    font-size:.66rem;
-  }
-
-
-  .paper .paper-description{
-    width:190px;
-    max-width:calc(100vw - 20px);
-    padding:9px 10px;
-    font-size:.68rem;
-    line-height:1.35;
-  }
-
-  .paper .description-label{
-    font-size:.54rem;
-    margin-bottom:4px;
-  }
-
-  .paper .paper-link{
-    margin-top:7px;
-    padding:7px 9px;
-    font-size:.66rem;
-  }
-
-  .paper .paper-description{
-    width:230px;
-    max-width:calc(100vw - 20px);
-    box-sizing:border-box;
-    padding:10px 11px;
-    font-size:.68rem;
-    line-height:1.35;
-  }
-
-  .paper .paper-description .paper-link{
-    margin-top:8px;
-    padding:7px 9px;
-    font-size:.68rem;
-  }
-}
-
-/* Very short landscape screens keep the same PC geometry but use smaller
-   cards and extra lane separation so papers cannot clash. */
-@media (orientation: landscape) and (max-height: 600px){
-  main{padding:16px 10px 70px}
-
-  h1{font-size:1.7rem;margin-bottom:4px}
-  .subtitle{font-size:.72rem;margin-bottom:10px}
-
-  .stats{
-    margin-bottom:10px;
-    gap:12px;
-  }
-  .stat{padding:4px 8px}
-  .stat-number{font-size:.78rem}
-  .stat-label{font-size:.55rem}
-
-  .timeline{min-height:620px}
-
-  .paper,.paper:nth-child(n){width:118px}
-
-  .paper-card{
-    min-height:52px;
-    padding:6px 7px;
-    border-radius:7px;
-  }
-  .paper-card.has-two-badges{min-height:62px}
-
-  .paper-topline{
-    min-height:19px;
-    padding-right:23px;
-    gap:2px;
-    overflow:hidden;
-  }
-
-  .paper-date{font-size:.48rem}
-  .paper-title{
-    font-size:.6rem;
-    line-height:1.16;
-    margin:2px 0 3px;
+    font-size:.78rem;
+    margin:4px 0 4px;
     overflow-wrap:anywhere;
   }
-  .paper-category{
-    font-size:.48rem;
-    line-height:1.15;
+  .paper-category{font-size:.6rem}
+  .favorite-star{top:5px;right:4px;width:27px;height:27px;font-size:1.18rem}
+  .paper-badges{gap:3px;max-width:calc(100% - 30px)}
+  .paper-badge{font-size:.46rem;padding:2px 5px;flex-shrink:0}
+  .paper .dot{left:-30px;top:20px}
+  .paper .connector{display:none}
+
+  .paper .paper-description,
+  .paper-card.expanded .paper-description{
+    position:relative!important;left:auto!important;right:auto!important;
+    top:auto!important;bottom:auto!important;
+    width:100%!important;max-width:100%!important;
+    margin:0!important;box-sizing:border-box!important;
+    transform:none!important;box-shadow:none;
+  }
+  .paper .paper-description{
+    display:none;opacity:0;visibility:hidden;pointer-events:none;
+  }
+  .paper-card.expanded .paper-description{
+    display:block;opacity:1;visibility:visible;pointer-events:auto;
+    margin-top:6px!important;padding:8px 9px!important;
+    border-radius:7px!important;font-size:.68rem!important;
+    line-height:1.35!important;overflow-wrap:anywhere;
+  }
+  .paper-card.expanded .description-label{
+    font-size:.54rem!important;margin-bottom:4px!important;
+  }
+  .paper-card.expanded .paper-link{
+    width:100%;box-sizing:border-box;margin-top:7px!important;
+    padding:7px 9px!important;font-size:.66rem!important;
+  }
+  .paper:hover .paper-description{display:none}
+  .paper-card.expanded:hover .paper-description{
+    display:block;opacity:1;visibility:visible;pointer-events:auto;
   }
 
-  .favorite-star{
-    top:3px;
-    right:2px;
-    width:21px;
-    height:21px;
-    font-size:.9rem;
-  }
-
-  .paper-badges{
-    gap:2px;
-    max-width:78%;
-    overflow:hidden;
-  }
-  .paper-badge{
-    font-size:.31rem;
-    padding:2px 3px;
-    flex-shrink:0;
-  }
-
-  .legend{
-    padding:5px 7px;
-    gap:7px;
-    font-size:.58rem;
-  }
+  .stats{gap:14px;margin-bottom:14px}
+  .stat{background:none;border:0;padding:0;min-width:0}
+  .stat-number{font-size:.9rem}.stat-label{font-size:.62rem}
+  .legend{padding:6px 8px;gap:8px;font-size:.62rem}
 }
 
+@media (orientation:landscape){
+  main{padding:24px 14px 82px}
+  .timeline{
+    position:relative;
+    border-top:1px solid rgba(255,255,255,.18);
+    border-left:0;margin:0;width:100%;max-width:100%;
+    min-height:560px;padding:0;box-sizing:border-box;
+    overflow:visible;
+  }
+  .year{display:block}
+  .paper,.paper:nth-child(n){
+    position:absolute;width:206px;max-width:206px;margin:0;
+    box-sizing:border-box;
+  }
+  .paper-card{min-height:76px}
+  .paper-card.has-two-badges{min-height:88px}
+  .paper.edge-left{margin-left:8px}
+  .paper.edge-right{margin-left:-8px}
+  .paper .dot{left:50%;top:-9px}
+  .paper .connector{display:block}
+
+  /* Default landscape popup. It is centered on the card, but JS clamps it
+     horizontally when the card is near an edge. */
+  .paper .paper-description{
+    position:absolute;left:50%;bottom:calc(100% - 1px);
+    width:310px;max-width:none;
+    transform:translateX(-50%) translateY(8px);
+    margin:0;display:block;opacity:0;visibility:hidden;
+    pointer-events:none;z-index:200;
+  }
+  .paper.popup-open .paper-description,
+  .paper:hover .paper-description,
+  .paper-description:hover{
+    display:block!important;
+    opacity:1!important;
+    visibility:visible!important;
+    pointer-events:auto!important;
+    transform:translateX(var(--popup-x, -50%)) translateY(0);
+  }
+  .paper.popup-right .paper-description{
+    left:auto;right:0;
+    transform:translateY(8px);
+  }
+  .paper.popup-right:hover .paper-description,
+  .paper.popup-right.popup-open .paper-description,
+  .paper.popup-right .paper-description:hover{
+    transform:translateY(0);
+  }
+  .paper.popup-left .paper-description{
+    left:0;right:auto;
+    transform:translateY(8px);
+  }
+  .paper.popup-left:hover .paper-description,
+  .paper.popup-left.popup-open .paper-description,
+  .paper.popup-left .paper-description:hover{
+    transform:translateY(0);
+  }
+
+  .stats{margin-bottom:14px}
+}
+
+/* Short landscape: same horizontal timeline, smaller cards and a dedicated
+   badge row under the date so NEW/FEATURED can never collide with titles. */
+@media (orientation:landscape) and (max-height:600px){
+  main{padding:16px 10px 70px}
+  h1{font-size:1.7rem;margin-bottom:4px}
+  .subtitle{font-size:.72rem;margin-bottom:10px}
+  .stats{margin-bottom:10px;gap:12px}
+  .stat{padding:4px 8px}.stat-number{font-size:.78rem}.stat-label{font-size:.55rem}
+  .timeline{min-height:620px}
+
+  .paper,.paper:nth-child(n){width:118px;max-width:118px}
+  .paper-card{min-height:58px;padding:6px 7px;border-radius:7px}
+  .paper-card.has-two-badges{min-height:76px}
+  .paper-topline{
+    display:block;min-height:32px;padding-right:23px;
+    overflow:visible;
+  }
+  .paper-date{display:block;font-size:.48rem;line-height:13px}
+  .paper-badges{
+    display:flex;justify-content:flex-start;align-items:center;
+    gap:2px;width:calc(100% - 23px);max-width:none;
+    margin-top:2px;min-height:10px;overflow:visible;
+  }
+  .paper-badge{font-size:.31rem;padding:2px 3px;flex-shrink:0}
+  .paper-title{
+    font-size:.6rem;line-height:1.16;margin:3px 0 3px;
+    overflow-wrap:anywhere;
+  }
+  .paper-category{font-size:.48rem;line-height:1.15}
+  .favorite-star{top:3px;right:2px;width:21px;height:21px;font-size:.9rem}
+
+  .paper .paper-description{
+    width:190px;max-width:calc(100vw - 20px);
+    padding:9px 10px;font-size:.68rem;line-height:1.35;
+    box-sizing:border-box;
+  }
+  .paper .description-label{font-size:.54rem;margin-bottom:4px}
+  .paper .paper-link{margin-top:7px;padding:7px 9px;font-size:.66rem}
+  .legend{padding:5px 7px;gap:7px;font-size:.58rem}
+}
 
 </style>
 </head>
@@ -782,37 +593,38 @@ function getPaperBadges(paper){
 }
 
 function buildLanes(items){
-  /*
-    Collision-safe placement uses the actual timeline width and card width,
-    rather than a percentage approximation. Each card is treated as an
-    interval on the horizontal axis; it is placed in the first lane whose
-    previous card does not intersect it.
-  */
-  const cardWidth = window.innerWidth <= 900 ? 0 : 206;
-  const gap = 18;
+  const landscape = window.matchMedia("(orientation: landscape)").matches;
+  if(!landscape){
+    items.forEach((paper,i)=>paper._lane=i);
+    return items.length;
+  }
+
+  const shortLandscape = window.innerHeight <= 600;
+  const cardWidth = shortLandscape ? 118 : 206;
+  const gap = shortLandscape ? 10 : 14;
   const timelineWidth = Math.max(timeline.clientWidth, 1);
-  const lanes = [];
+  const lanes=[];
 
   for(const paper of items){
-    const x = (paper._x / 100) * timelineWidth;
-    let lane = 0;
+    const x=(paper._x/100)*timelineWidth;
+    let lane=0;
 
     while(lanes[lane] !== undefined){
-      const previousRight = lanes[lane] + cardWidth / 2;
-      const currentLeft = x - cardWidth / 2;
-
+      const previousRight=lanes[lane] + cardWidth/2;
+      const currentLeft=x - cardWidth/2;
       if(currentLeft >= previousRight + gap) break;
       lane++;
     }
 
-    lanes[lane] = x;
-    paper._lane = lane;
+    lanes[lane]=x;
+    paper._lane=lane;
   }
 
-  return lanes.length;
+  return Math.max(lanes.length,1);
 }
 
 function render(){
+  resetTimelineInteraction();
   const visible = papers
     .filter(p=>activeFilter==="all" || p.category.includes(activeFilter))
     .sort((a,b)=>dateValue(a)-dateValue(b) || a.title.localeCompare(b.title));
@@ -862,6 +674,11 @@ function render(){
     el.className="paper";
     el.style.left=p._x+"%";
     el.style.top=(topPadding + p._lane*laneHeight)+"px";
+
+    if(isLandscape){
+      if(p._x < 7) el.classList.add("edge-left");
+      else if(p._x > 93) el.classList.add("edge-right");
+    }
     el.style.setProperty("--paper-color",colorForCategory(p.category[0]));
 
     const cats=p.category.map(categoryLabel).join(" • ");
@@ -897,8 +714,76 @@ function render(){
   `;
 }
 
+
+function resetTimelineInteraction(){
+  document.querySelectorAll(".paper.popup-open").forEach(p=>p.classList.remove("popup-open"));
+  document.querySelectorAll(".paper-card.expanded").forEach(c=>c.classList.remove("expanded"));
+  document.querySelectorAll(".paper.popup-left,.paper.popup-right").forEach(p=>{
+    p.classList.remove("popup-left","popup-right");
+  });
+  document.querySelectorAll(".paper").forEach(p=>{
+    p.style.removeProperty("--popup-x");
+  });
+}
+
+let lastOrientation = window.matchMedia("(orientation: landscape)").matches
+  ? "landscape"
+  : "portrait";
+
+function handleOrientationChange(){
+  const current = window.matchMedia("(orientation: landscape)").matches
+    ? "landscape"
+    : "portrait";
+
+  if(current !== lastOrientation){
+    lastOrientation = current;
+    resetTimelineInteraction();
+    render();
+  }
+}
+
+function positionLandscapePopup(paperEl){
+  if(!window.matchMedia("(orientation: landscape)").matches) return;
+  paperEl.classList.remove("popup-left","popup-right");
+  const popup=paperEl.querySelector(".paper-description");
+  if(!popup) return;
+
+  const paperRect=paperEl.getBoundingClientRect();
+  const popupWidth=Math.min(310, window.innerWidth-20);
+  const center=paperRect.left + paperRect.width/2;
+  if(center - popupWidth/2 < 10) paperEl.classList.add("popup-left");
+  else if(center + popupWidth/2 > window.innerWidth-10) paperEl.classList.add("popup-right");
+}
+
 document.addEventListener("click", e=>{
-  if(window.innerWidth > 900) return;
+  const paper=e.target.closest(".paper");
+  if(!paper || e.target.closest(".favorite-star") || e.target.closest(".paper-link")) return;
+
+  if(window.matchMedia("(orientation: landscape)").matches){
+    document.querySelectorAll(".paper.popup-open").forEach(x=>x!==paper && x.classList.remove("popup-open"));
+    paper.classList.toggle("popup-open");
+    positionLandscapePopup(paper);
+  }
+});
+
+document.addEventListener("mouseenter", e=>{
+  const paper=e.target.closest(".paper");
+  if(paper) positionLandscapePopup(paper);
+}, true);
+
+window.addEventListener("resize",()=>{
+  handleOrientationChange();
+  document.querySelectorAll(".paper").forEach(positionLandscapePopup);
+});
+
+const orientationQuery = window.matchMedia("(orientation: landscape)");
+if(orientationQuery.addEventListener){
+  orientationQuery.addEventListener("change", handleOrientationChange);
+}else if(orientationQuery.addListener){
+  orientationQuery.addListener(handleOrientationChange);
+}
+document.addEventListener("click", e=>{
+  if(!window.matchMedia("(orientation: portrait)").matches && !(window.matchMedia("(orientation: landscape)").matches && window.innerHeight <= 600)) return;
 
   const card = e.target.closest(".paper-card");
   if(!card) return;
