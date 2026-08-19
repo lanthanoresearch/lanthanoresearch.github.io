@@ -70,6 +70,9 @@ h1{text-align:center;margin:0 0 10px;font-size:clamp(2rem,5vw,3.2rem)}
 
 .paper-date{color:var(--paper-color);font-size:.75rem;font-weight:bold}
 .paper-category{color:#888;font-size:.7rem;line-height:1.4}
+.paper-description::after{
+  content:"";position:absolute;left:0;right:0;bottom:-13px;height:14px;
+}
 .description-label{
   color:#888;text-transform:uppercase;letter-spacing:.08em;font-size:.64rem;font-weight:700;margin-bottom:7px;
 }
@@ -91,8 +94,9 @@ h1{text-align:center;margin:0 0 10px;font-size:clamp(2rem,5vw,3.2rem)}
   transition:.15s ease;
 }
 .paper:hover{z-index:1000}
-.paper:hover .paper-description,.paper:focus-within .paper-description{
-  opacity:1;visibility:visible;transform:translateX(-50%) translateY(0)
+.paper:hover .paper-description{
+  opacity:1;visibility:visible;pointer-events:auto;
+  transform:translateX(-50%) translateY(0);
 }
 .stats{
   display:flex;justify-content:center;gap:14px;flex-wrap:wrap;
@@ -303,7 +307,7 @@ function render(){
         <div class="paper-description">
           <div class="description-label">About this paper</div>
           <div>${escapeHtml(p.description || "No description available.")}</div>
-          ${p.url ? `<a class="paper-link" href="${escapeHtml(p.url)}" data-paper-title="${escapeHtml(p.title)}">Open Paper <span>→</span></a>` : ""}
+          ${p.url ? `<a class="paper-link" href="${escapeHtml(p.url)}" data-paper-title="${escapeHtml(p.title)}">Read Research <span>→</span></a>` : ""}
         </div>
       </div>
     `;
