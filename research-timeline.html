@@ -70,6 +70,16 @@ h1{text-align:center;margin:0 0 10px;font-size:clamp(2rem,5vw,3.2rem)}
 
 .paper-date{color:var(--paper-color);font-size:.75rem;font-weight:bold}
 .paper-category{color:#888;font-size:.7rem;line-height:1.4}
+.description-label{
+  color:#888;text-transform:uppercase;letter-spacing:.08em;font-size:.64rem;font-weight:700;margin-bottom:7px;
+}
+.paper-link{
+  display:flex;align-items:center;justify-content:space-between;margin-top:13px;padding:9px 11px;border-radius:7px;
+  background:#242424;border:1px solid #3c3c3c;color:#fff;text-decoration:none;font-size:.76rem;font-weight:700;
+  transition:background .15s,border-color .15s,transform .15s;
+}
+.paper-link:hover,.paper-link:focus{background:#303030;border-color:var(--paper-color);transform:translateX(1px);outline:none}
+.paper-link span{color:var(--paper-color);font-size:1rem}
 .paper-description{
   position:absolute;left:50%;bottom:calc(100% + 18px);width:310px;
   transform:translateX(-50%) translateY(6px);
@@ -115,6 +125,7 @@ h1{text-align:center;margin:0 0 10px;font-size:clamp(2rem,5vw,3.2rem)}
     transform:none;opacity:1;visibility:visible;
     box-shadow:none;display:block
   }
+  .paper-link{margin-top:12px}
   .paper-card:hover,.paper-card:focus-within{transform:none}
   main{padding:30px 14px 60px}
 }
@@ -290,7 +301,9 @@ function render(){
         <div class="paper-title">${escapeHtml(p.title)}</div>
         <div class="paper-category">${escapeHtml(cats)}</div>
         <div class="paper-description">
-          ${escapeHtml(p.description || "No description available.")}
+          <div class="description-label">About this paper</div>
+          <div>${escapeHtml(p.description || "No description available.")}</div>
+          ${p.url ? `<a class="paper-link" href="${escapeHtml(p.url)}" data-paper-title="${escapeHtml(p.title)}">Open Paper <span>→</span></a>` : ""}
         </div>
       </div>
     `;
@@ -302,6 +315,16 @@ function render(){
     <span>${max.toLocaleDateString(undefined,{year:"numeric",month:"short"})}</span>
   `;
 }
+
+document.addEventListener("click", e=>{
+  const link=e.target.closest(".paper-link");
+  if(!link) return;
+  e.preventDefault();
+  const paperUrl=link.getAttribute("href");
+  const paperTitle=link.dataset.paperTitle || "PDF";
+  const viewerUrl="pdf.html?file="+encodeURIComponent(paperUrl)+"&paper="+encodeURIComponent(paperTitle)+"&return="+encodeURIComponent("timeline.html");
+  window.location.href=viewerUrl;
+});
 
 function buildControls(){
   const categories=[...new Set(papers.flatMap(p=>p.category))].sort();
