@@ -24,42 +24,58 @@ h1{text-align:center;margin:0 0 10px;font-size:clamp(2rem,5vw,3.2rem)}
 .axis-labels{display:flex;justify-content:space-between;color:#777;font-size:.8rem;margin:0 4% 8px}
 .timeline{
   position:relative;min-height:760px;margin:0 2%;
-  border-top:2px solid #333;
+  border-top:1px solid #353535;
+  background:
+    linear-gradient(to bottom, transparent 0, transparent 100%);
 }
 .year{
-  position:absolute;top:-27px;transform:translateX(-50%);
-  color:#666;font-size:.75rem;white-space:nowrap
+  position:absolute;top:-29px;transform:translateX(-50%);
+  color:#777;font-size:.72rem;font-weight:600;letter-spacing:.04em;
+  white-space:nowrap;z-index:1
 }
 .year:after{
-  content:"";position:absolute;top:27px;left:50%;width:1px;height:760px;
-  background:#222;z-index:0
+  content:"";position:absolute;top:29px;left:50%;width:1px;height:1000px;
+  background:linear-gradient(to bottom,#292929,rgba(41,41,41,.15));
+  z-index:0
 }
 .paper{
-  position:absolute;width:190px;transform:translateX(-50%);
+  position:absolute;width:206px;transform:translateX(-50%);
   z-index:2;
 }
+.connector{
+  position:absolute;left:50%;bottom:100%;width:1px;height:16px;
+  transform:translateX(-50%);
+  background:linear-gradient(to top,var(--paper-color),transparent);
+  opacity:.65;
+}
 .dot{
-  position:absolute;left:50%;top:-8px;width:16px;height:16px;
+  position:absolute;left:50%;top:-9px;width:14px;height:14px;
   transform:translateX(-50%);border-radius:50%;
-  background:var(--paper-color);border:3px solid #111;
-  box-shadow:0 0 0 2px var(--paper-color);
+  background:#111;border:3px solid var(--paper-color);
+  box-shadow:0 0 0 3px #111,0 0 0 4px rgba(255,255,255,.05);
+  z-index:4;
 }
 .paper-card{
-  position:relative;background:#1d1d1d;border:1px solid #333;
-  border-top:3px solid var(--paper-color);border-radius:10px;
-  padding:12px;cursor:pointer;transition:.15s ease;
+  position:relative;background:linear-gradient(145deg,#202020,#1a1a1a);
+  border:1px solid #353535;border-left:3px solid var(--paper-color);
+  border-radius:10px;padding:13px 14px;cursor:pointer;
+  transition:transform .16s ease,background .16s ease,border-color .16s ease;
+  min-height:92px;
 }
 .paper-card:hover,.paper-card:focus-within{
-  background:#262626;transform:translateY(-2px);
+  background:#252525;transform:translateY(-3px);
+  border-color:#4a4a4a;
 }
-.paper-title{font-weight:bold;line-height:1.25;margin:5px 0 7px;color:#fff}
+.paper-title{font-weight:700;line-height:1.28;margin:6px 0 8px;color:#f5f5f5;font-size:.98rem}
+
 .paper-date{color:var(--paper-color);font-size:.75rem;font-weight:bold}
-.paper-category{color:#999;font-size:.72rem;line-height:1.35}
+.paper-category{color:#888;font-size:.7rem;line-height:1.4}
 .paper-description{
-  position:absolute;left:50%;bottom:calc(100% + 14px);width:280px;
+  position:absolute;left:50%;bottom:calc(100% + 18px);width:310px;
   transform:translateX(-50%) translateY(6px);
-  padding:14px;background:#181818;border:1px solid var(--paper-color);
-  border-radius:10px;color:#ccc;font-size:.8rem;line-height:1.5;
+  padding:15px 16px;background:#151515;border:1px solid #444;
+  border-left:3px solid var(--paper-color);border-radius:10px;
+  color:#ccc;font-size:.8rem;line-height:1.55;
   opacity:0;visibility:hidden;pointer-events:none;z-index:100;
   box-shadow:0 12px 30px rgba(0,0,0,.65);
   transition:.15s ease;
@@ -86,12 +102,13 @@ h1{text-align:center;margin:0 0 10px;font-size:clamp(2rem,5vw,3.2rem)}
 .legend span{display:inline-flex;align-items:center;gap:5px}
 .legend i{width:10px;height:10px;border-radius:50%;display:inline-block}
 @media(max-width:900px){
-  .timeline{border-top:0;border-left:2px solid #333;margin:0 0 0 20px;min-height:0;padding:10px 0}
+  .timeline{border-top:0;border-left:1px solid #333;margin:0 0 0 20px;min-height:0;padding:10px 0}
   .axis-labels,.year{display:none}
   .paper,.paper:nth-child(n){
     position:relative;left:auto!important;top:auto!important;
     transform:none;width:auto;margin:0 0 18px 30px;
   }
+  .connector{display:none}
   .dot{left:-38px;top:23px}
   .paper-description{
     position:static;width:auto;margin-top:10px;
@@ -190,23 +207,34 @@ function positionFor(date,min,max){
 }
 
 function buildLanes(items){
-  // Cards are assigned to the lowest available lane. A lane cannot contain
-  // two cards whose timeline positions are too close to each other.
+  /*
+    Collision-safe placement uses the actual timeline width and card width,
+    rather than a percentage approximation. Each card is treated as an
+    interval on the horizontal axis; it is placed in the first lane whose
+    previous card does not intersect it.
+  */
+  const cardWidth = window.innerWidth <= 900 ? 0 : 206;
+  const gap = 18;
+  const timelineWidth = Math.max(timeline.clientWidth, 1);
   const lanes = [];
-  const minimumGap = 12;
 
-  return items.map(paper=>{
-    const x = paper._x;
+  for(const paper of items){
+    const x = (paper._x / 100) * timelineWidth;
     let lane = 0;
 
-    while(lanes[lane] !== undefined && x - lanes[lane] < minimumGap){
+    while(lanes[lane] !== undefined){
+      const previousRight = lanes[lane] + cardWidth / 2;
+      const currentLeft = x - cardWidth / 2;
+
+      if(currentLeft >= previousRight + gap) break;
       lane++;
     }
 
     lanes[lane] = x;
     paper._lane = lane;
-    return paper;
-  });
+  }
+
+  return lanes.length;
 }
 
 function render(){
@@ -223,10 +251,14 @@ function render(){
   const max = dateValue(visible[visible.length-1]);
 
   visible.forEach(p=>p._x=positionFor(p.updated,min,max));
-  buildLanes(visible);
 
-  const laneHeight=150;
-  timeline.style.minHeight=Math.max(760,visible.reduce((m,p)=>Math.max(m,p._lane),0)*laneHeight+220)+"px";
+  // Let the browser calculate the timeline width before assigning lanes.
+  timeline.style.minHeight = "760px";
+  const laneCount = buildLanes(visible);
+
+  const laneHeight = 152;
+  const topPadding = 54;
+  timeline.style.minHeight = Math.max(760, topPadding + laneCount * laneHeight + 70) + "px";
   timeline.innerHTML="";
 
   // Year guide lines.
@@ -245,12 +277,13 @@ function render(){
     const el=document.createElement("article");
     el.className="paper";
     el.style.left=p._x+"%";
-    el.style.top=(35+p._lane*laneHeight)+"px";
+    el.style.top=(topPadding + p._lane*laneHeight)+"px";
     el.style.setProperty("--paper-color",colorForCategory(p.category[0]));
 
     const cats=p.category.map(categoryLabel).join(" • ");
 
     el.innerHTML=`
+      <div class="connector" aria-hidden="true"></div>
       <div class="dot" aria-hidden="true"></div>
       <div class="paper-card" tabindex="0">
         <div class="paper-date">${escapeHtml(formatDate(p))}</div>
@@ -324,6 +357,10 @@ async function load(){
 }
 
 load();
+
+window.addEventListener("resize",()=>{
+  if(papers.length && window.innerWidth > 900) render();
+});
 </script>
 </body>
 </html>
