@@ -42,7 +42,7 @@ h1{text-align:center;margin:0 0 40px;font-size:clamp(1.8rem,4vw,2.7rem)}
   align-items:center;
   margin:0 0 30px;
 }
-.timeline-filter-label{margin:0;color:#777;font-size:.9rem}
+.paper-count{margin:0;color:#777;font-size:.9rem}
 #categoryFilter{
   background:#222;
   color:#eee;
@@ -56,7 +56,7 @@ h1{text-align:center;margin:0 0 40px;font-size:clamp(1.8rem,4vw,2.7rem)}
 #categoryFilter:focus{outline:none}
 @media (max-width:600px){
   .controls{gap:12px}
-  .timeline-filter-label{font-size:.8rem}
+  .paper-count{font-size:.8rem}
   #categoryFilter{font-size:.85rem;padding:9px 13px}
 }
 .timeline-wrap{position:relative}
@@ -237,7 +237,7 @@ h1{text-align:center;margin:0 0 40px;font-size:clamp(1.8rem,4vw,2.7rem)}
   align-items:center;
   gap:13px;
   flex-wrap:wrap;
-  margin:0 auto 16px;
+  margin:0 auto 20px;
   color:#777;
   font-size:.75rem;
   line-height:1.4;
@@ -514,15 +514,13 @@ A chronologically timeline of the research archive. Hover over a paper to read i
 </p>
 
 <div class="timeline-meta" id="stats" aria-live="polite">
-  <span><strong id="paperCount">—</strong> papers</span>
-  <span class="meta-divider"></span>
   <span>Earliest <strong id="earliestPaper">—</strong></span>
   <span class="meta-divider"></span>
   <span>Latest <strong id="latestPaper">—</strong></span>
 </div>
 
 <div class="controls">
-  <p class="timeline-filter-label">Filter by category</p>
+  <p id="paperCount" class="paper-count">—</p>
   <select id="categoryFilter" aria-label="Filter research by category"></select>
 </div>
 
@@ -1119,4 +1117,3 @@ window.addEventListener("resize",()=>{
   display:none !important;
 }
 </style>
-
