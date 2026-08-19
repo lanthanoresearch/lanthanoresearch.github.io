@@ -279,14 +279,14 @@
 
 /* =========================================================
    PC LANDSCAPE
-   Compact stacked card
+   Compact stacked card — advertisement width
    ========================================================= */
 
 @media screen and (min-width:951px) and (orientation:landscape){
 
     .featured-video-section{
-        width:650px;
-        max-width:72vw;
+        width:500px;
+        max-width:500px;
 
         margin:40px auto 50px;
     }
