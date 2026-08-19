@@ -243,108 +243,252 @@ h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
 .legend i{width:8px;height:8px;border-radius:50%;display:inline-block}
 
 /* Upright / portrait: compact vertical archive */
-@media (orientation:portrait){
+
+/* Layout is primarily orientation-driven:
+   taller-than-wide screens use the compact vertical archive;
+   wider-than-tall screens use the horizontal chronological timeline. */
+
+@media (orientation: portrait){
   main{padding:22px 12px 72px}
   .timeline{
-    border-top:0;border-left:1px solid #333;margin:0 0 0 18px;
-    min-height:0;padding:6px 0
+    border-top:0;
+    border-left:1px solid #333;
+    margin:0 0 0 18px;
+    min-height:0;
+    padding:6px 0;
   }
   .year{display:none}
+
   .paper,.paper:nth-child(n){
-    position:relative;left:auto!important;top:auto!important;
-    transform:none!important;width:calc(100% - 24px);max-width:calc(100% - 24px);
-    box-sizing:border-box;margin:0 0 7px 24px
+    position:relative;
+    left:auto!important;
+    top:auto!important;
+    transform:none!important;
+    width:calc(100% - 24px);
+    max-width:calc(100% - 24px);
+    box-sizing:border-box;
+    margin:0 0 7px 24px;
   }
-  .paper-card{min-height:0;padding:7px 9px;border-radius:8px}
+
+  .paper-card{
+    min-height:0;
+    padding:7px 9px;
+    border-radius:8px;
+  }
   .paper-card.has-two-badges{min-height:0}
-  .paper-topline{min-height:25px;padding-right:30px;gap:4px}
+
+  .paper-topline{
+    min-height:25px;
+    padding-right:30px;
+    gap:4px;
+  }
   .paper-date{font-size:.61rem}
   .paper-title{font-size:.78rem;margin:2px 0 4px}
   .paper-category{font-size:.6rem}
-  .favorite-star{top:5px;right:4px;width:27px;height:27px;font-size:1.18rem}
+
+  .favorite-star{
+    top:5px;
+    right:4px;
+    width:27px;
+    height:27px;
+    font-size:1.18rem;
+  }
+
   .paper-badges{gap:3px}
   .paper-badge{font-size:.46rem;padding:2px 5px}
+
   .paper .dot{left:-38px;top:20px}
   .paper .connector{display:none}
 
   .paper .paper-description{
-    position:relative!important;left:auto!important;right:auto!important;
-    top:auto!important;bottom:auto!important;width:100%!important;
-    max-width:100%!important;box-sizing:border-box!important;margin:0!important;
-    transform:none!important;opacity:0;visibility:hidden;pointer-events:none;
-    display:none;overflow-wrap:anywhere
+    position:relative!important;
+    left:auto!important;
+    right:auto!important;
+    top:auto!important;
+    bottom:auto!important;
+    width:100%!important;
+    max-width:100%!important;
+    box-sizing:border-box!important;
+    margin:0!important;
+    transform:none!important;
+    opacity:0;
+    visibility:hidden;
+    pointer-events:none;
+    display:none;
+    overflow-wrap:anywhere;
   }
+
   .paper-card.expanded .paper-description{
-    position:relative!important;left:auto!important;right:auto!important;
-    top:auto!important;bottom:auto!important;width:100%!important;
-    max-width:100%!important;box-sizing:border-box!important;margin-top:8px!important;
-    transform:none!important;opacity:1;visibility:visible;pointer-events:auto;
-    display:block;overflow-wrap:anywhere
+    position:relative!important;
+    left:auto!important;
+    right:auto!important;
+    top:auto!important;
+    bottom:auto!important;
+    width:100%!important;
+    max-width:100%!important;
+    box-sizing:border-box!important;
+    margin-top:8px!important;
+    transform:none!important;
+    opacity:1;
+    visibility:visible;
+    pointer-events:auto;
+    display:block;
+    overflow-wrap:anywhere;
   }
+
   .paper-card.expanded .paper-description .paper-link{
-    width:100%;max-width:100%;box-sizing:border-box
+    width:100%;
+    max-width:100%;
+    box-sizing:border-box;
   }
-  .paper:hover .paper-description,.paper-description:hover{
-    opacity:0;visibility:hidden;pointer-events:none
+
+  .paper:hover .paper-description,
+  .paper-description:hover{
+    opacity:0;
+    visibility:hidden;
+    pointer-events:none;
   }
+
   .paper-card.expanded:hover .paper-description{
-    opacity:1;visibility:visible;pointer-events:auto
+    opacity:1;
+    visibility:visible;
+    pointer-events:auto;
   }
-  .stats{gap:14px;margin-bottom:14px}
-  .stat{background:none;border:0;padding:0;min-width:0}
+
+  .stats{
+    gap:14px;
+    margin-bottom:14px;
+  }
+  .stat{
+    background:none;
+    border:0;
+    padding:0;
+    min-width:0;
+  }
   .stat-number{font-size:.9rem}
   .stat-label{font-size:.62rem}
-  .legend{padding:6px 8px;gap:8px;font-size:.62rem}
+  .legend{
+    padding:6px 8px;
+    gap:8px;
+    font-size:.62rem;
+  }
 }
 
-/* Sideways / landscape: chronological horizontal timeline */
-@media (orientation:landscape){
+/* Landscape is always the horizontally scaled PC timeline. */
+@media (orientation: landscape){
   main{padding:24px 14px 82px}
+
   .timeline{
-    border-top:1px solid rgba(255,255,255,.18);border-left:0;
-    margin:0 2%;min-height:560px;padding:0
+    border-top:1px solid rgba(255,255,255,.18);
+    border-left:0;
+    margin:0 2%;
+    min-height:560px;
+    padding:0;
   }
+
   .year{display:block}
+
   .paper,.paper:nth-child(n){
-    position:absolute;width:206px;max-width:none;margin:0
+    position:absolute;
+    width:206px;
+    max-width:none;
+    margin:0;
   }
+
   .paper-card{min-height:76px}
   .paper-card.has-two-badges{min-height:88px}
+
   .paper .dot{left:50%;top:-9px}
   .paper .connector{display:block}
+
   .paper .paper-description{
-    position:absolute;left:50%;bottom:calc(100% - 1px);width:310px;max-width:none;
-    transform:translateX(-50%) translateY(8px);margin:0;
-    opacity:0;visibility:hidden;pointer-events:none;display:block
+    position:absolute;
+    left:50%;
+    bottom:calc(100% - 1px);
+    width:310px;
+    max-width:none;
+    transform:translateX(-50%) translateY(8px);
+    margin:0;
+    opacity:0;
+    visibility:hidden;
+    pointer-events:none;
+    display:block;
   }
-  .paper:hover .paper-description,.paper-description:hover{
-    opacity:1;visibility:visible;pointer-events:auto;
-    transform:translateX(-50%) translateY(0)
+
+  .paper:hover .paper-description,
+  .paper-description:hover{
+    opacity:1;
+    visibility:visible;
+    pointer-events:auto;
+    transform:translateX(-50%) translateY(0);
   }
 }
 
-/* Short landscape screens: same horizontal layout, smaller cards */
-@media (orientation:landscape) and (max-height:600px){
+/* Very short landscape screens keep the same PC geometry but use smaller
+   cards and extra lane separation so papers cannot clash. */
+@media (orientation: landscape) and (max-height: 600px){
   main{padding:16px 10px 70px}
+
   h1{font-size:1.7rem;margin-bottom:4px}
   .subtitle{font-size:.72rem;margin-bottom:10px}
-  .stats{margin-bottom:10px;gap:12px}
+
+  .stats{
+    margin-bottom:10px;
+    gap:12px;
+  }
   .stat{padding:4px 8px}
   .stat-number{font-size:.78rem}
   .stat-label{font-size:.55rem}
+
   .timeline{min-height:500px}
+
   .paper,.paper:nth-child(n){width:132px}
-  .paper-card{min-height:52px;padding:6px 7px;border-radius:7px}
+
+  .paper-card{
+    min-height:52px;
+    padding:6px 7px;
+    border-radius:7px;
+  }
   .paper-card.has-two-badges{min-height:62px}
-  .paper-topline{min-height:19px;padding-right:22px;gap:2px}
+
+  .paper-topline{
+    min-height:19px;
+    padding-right:22px;
+    gap:2px;
+  }
+
   .paper-date{font-size:.48rem}
-  .paper-title{font-size:.62rem;line-height:1.18;margin:2px 0 3px}
-  .paper-category{font-size:.48rem;line-height:1.15}
-  .favorite-star{top:3px;right:2px;width:21px;height:21px;font-size:.9rem}
+  .paper-title{
+    font-size:.62rem;
+    line-height:1.18;
+    margin:2px 0 3px;
+  }
+  .paper-category{
+    font-size:.48rem;
+    line-height:1.15;
+  }
+
+  .favorite-star{
+    top:3px;
+    right:2px;
+    width:21px;
+    height:21px;
+    font-size:.9rem;
+  }
+
   .paper-badges{gap:2px}
-  .paper-badge{font-size:.34rem;padding:2px 3px}
-  .legend{padding:5px 7px;gap:7px;font-size:.58rem}
+  .paper-badge{
+    font-size:.34rem;
+    padding:2px 3px;
+  }
+
+  .legend{
+    padding:5px 7px;
+    gap:7px;
+    font-size:.58rem;
+  }
 }
+
 
 </style>
 </head>
