@@ -12,6 +12,31 @@ body{
   margin:0;background:#111;color:#eee;font-family:Arial,sans-serif;
 }
 main{max-width:1200px;margin:auto;padding:45px 20px 80px}
+
+.top-nav{
+  display:flex;
+  justify-content:flex-start;
+  margin-bottom:24px;
+}
+
+.home-button{
+  display:inline-block;
+  padding:9px 16px;
+  border:1px solid #444;
+  border-radius:8px;
+  background:#1d1d1d;
+  color:#ccc;
+  text-decoration:none;
+  font-size:.9rem;
+  font-weight:600;
+  transition:.2s;
+}
+
+.home-button:hover{
+  background:#292929;
+  border-color:#666;
+  color:#fff;
+}
 h1{text-align:center;margin:0 0 10px;font-size:clamp(2rem,5vw,3.2rem)}
 .subtitle{text-align:center;color:#999;max-width:760px;margin:0 auto 30px;line-height:1.6}
 .controls{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;margin:25px 0 35px}
@@ -138,6 +163,9 @@ h1{text-align:center;margin:0 0 10px;font-size:clamp(2rem,5vw,3.2rem)}
 </head>
 <body>
 <main>
+<div class="top-nav">
+  <a href="index.html" class="home-button">⌂ Home</a>
+</div>
 <h1>Research Timeline</h1>
 <p class="subtitle">
 A chronologically scaled timeline of the research archive. Hover over a paper to read its description.
