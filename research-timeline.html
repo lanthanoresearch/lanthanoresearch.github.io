@@ -43,7 +43,7 @@ h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
 }
 .controls button:hover,.controls button.active{background:#2a2a2a;color:#fff;border-color:#666}
 .timeline-wrap{position:relative}
-.axis-labels{display:flex;justify-content:space-between;color:#777;font-size:.8rem;margin:0 4% 8px}
+.axis-labels{display:none}
 .timeline{
   position:relative;min-height:560px;margin:0 2%;
   border-top:1px solid rgba(255,255,255,.18);
@@ -282,10 +282,8 @@ h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
   }
   .paper-card.has-two-badges{min-height:0}
   .paper-topline{
-    display:grid;
-    grid-template-rows:auto auto;
-    gap:2px;
-    min-height:32px;
+    display:block;
+    min-height:0;
     padding-right:30px;
     overflow:visible;
   }
@@ -397,14 +395,21 @@ h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
   .paper .dot{left:50%;top:-9px}
   .paper .connector{display:block}
 
-  /* Default landscape popup. It is centered on the card, but JS clamps it
-     horizontally when the card is near an edge. */
+  /* Landscape popup: JS gives this an exact left offset relative to
+     the paper, clamped to the viewport so it cannot be cut off. */
   .paper .paper-description{
-    position:absolute;left:50%;bottom:calc(100% - 1px);
-    width:310px;max-width:none;
-    transform:translateX(-50%) translateY(8px);
-    margin:0;display:block;opacity:0;visibility:hidden;
-    pointer-events:none;z-index:50;
+    position:absolute;
+    left:0;
+    bottom:calc(100% - 1px);
+    width:310px;
+    max-width:none;
+    transform:translateX(var(--popup-left, 0px)) translateY(8px);
+    margin:0;
+    display:block;
+    opacity:0;
+    visibility:hidden;
+    pointer-events:none;
+    z-index:50;
   }
   .paper.popup-open .paper-description,
   .paper:hover .paper-description,
@@ -413,25 +418,7 @@ h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
     opacity:1!important;
     visibility:visible!important;
     pointer-events:auto!important;
-    transform:translateX(var(--popup-x, -50%)) translateY(0);
-  }
-  .paper.popup-right .paper-description{
-    left:auto;right:0;
-    transform:translateY(8px);
-  }
-  .paper.popup-right:hover .paper-description,
-  .paper.popup-right.popup-open .paper-description,
-  .paper.popup-right .paper-description:hover{
-    transform:translateY(0);
-  }
-  .paper.popup-left .paper-description{
-    left:0;right:auto;
-    transform:translateY(8px);
-  }
-  .paper.popup-left:hover .paper-description,
-  .paper.popup-left.popup-open .paper-description,
-  .paper.popup-left .paper-description:hover{
-    transform:translateY(0);
+    transform:translateX(var(--popup-left, 0px)) translateY(0);
   }
 
   .stats{margin-bottom:14px}
@@ -453,7 +440,7 @@ h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
   .paper-card.has-two-badges{min-height:76px}
   .paper-topline{
     display:block;
-    min-height:34px;
+    min-height:0;
     padding-right:23px;
     overflow:visible;
   }
@@ -691,15 +678,23 @@ function render(){
 
   visible.forEach(p=>p._x=positionFor(p.updated,min,max));
 
-  // Let the browser calculate the timeline width before assigning lanes.
-  timeline.style.minHeight = "760px";
-  const laneCount = buildLanes(visible);
-
   const isLandscape = window.matchMedia("(orientation: landscape)").matches;
   const isShortLandscape = isLandscape && window.innerHeight <= 600;
+
+  // Build lanes only for the horizontal timeline. On portrait/mobile the
+  // papers are normal-flow elements, so the timeline must not retain an
+  // inline min-height from the landscape layout.
+  const laneCount = buildLanes(visible);
   const laneHeight = isShortLandscape ? 145 : 112;
   const topPadding = isShortLandscape ? 34 : 40;
-  timeline.style.minHeight = Math.max(560, topPadding + laneCount * laneHeight + 55) + "px";
+
+  if(isLandscape){
+    timeline.style.minHeight =
+      Math.max(560, topPadding + laneCount * laneHeight + 55) + "px";
+  }else{
+    timeline.style.removeProperty("min-height");
+  }
+
   timeline.innerHTML="";
 
   // Year guide lines.
@@ -752,10 +747,7 @@ function render(){
     timeline.appendChild(el);
   });
 
-  axisLabels.innerHTML=`
-    <span>${min.toLocaleDateString(undefined,{year:"numeric",month:"short"})}</span>
-    <span>${max.toLocaleDateString(undefined,{year:"numeric",month:"short"})}</span>
-  `;
+  axisLabels.innerHTML="";
 }
 
 
@@ -767,6 +759,7 @@ function resetTimelineInteraction(){
   });
   document.querySelectorAll(".paper").forEach(p=>{
     p.style.removeProperty("--popup-x");
+    p.style.removeProperty("--popup-left");
   });
 }
 
@@ -788,15 +781,35 @@ function handleOrientationChange(){
 
 function positionLandscapePopup(paperEl){
   if(!window.matchMedia("(orientation: landscape)").matches) return;
+
   paperEl.classList.remove("popup-left","popup-right");
+
   const popup=paperEl.querySelector(".paper-description");
   if(!popup) return;
 
   const paperRect=paperEl.getBoundingClientRect();
-  const popupWidth=Math.min(310, window.innerWidth-20);
-  const center=paperRect.left + paperRect.width/2;
-  if(center - popupWidth/2 < 10) paperEl.classList.add("popup-left");
-  else if(center + popupWidth/2 > window.innerWidth-10) paperEl.classList.add("popup-right");
+  const popupWidth=Math.min(310, window.innerWidth - 20);
+  const sideClearance=10;
+
+  // Desired position: centered over the paper.
+  // Actual position: clamped to the viewport.
+  const desiredLeft =
+    paperRect.left + (paperRect.width / 2) - (popupWidth / 2);
+
+  const minLeft=sideClearance;
+  const maxLeft=Math.max(
+    minLeft,
+    window.innerWidth - popupWidth - sideClearance
+  );
+
+  const viewportLeft=Math.max(minLeft, Math.min(maxLeft, desiredLeft));
+
+  // The popup is positioned relative to .paper, so convert the clamped
+  // viewport coordinate into a local offset.
+  paperEl.style.setProperty(
+    "--popup-left",
+    (viewportLeft - paperRect.left) + "px"
+  );
 }
 
 document.addEventListener("click", e=>{
