@@ -333,6 +333,20 @@ h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
   .paper .dot{left:-30px;top:20px}
   .paper .connector{display:none}
 
+  .list-year{
+    position:relative;
+    margin:14px 0 7px 18px;
+    padding:3px 0 3px 10px;
+    color:#777;
+    font-size:.72rem;
+    font-weight:700;
+    letter-spacing:.08em;
+    line-height:1;
+    border-left:2px solid #444;
+  }
+  .list-year:first-child{margin-top:2px}
+
+
   .paper .paper-description,
   .paper-card.expanded .paper-description{
     position:relative!important;left:auto!important;right:auto!important;
@@ -713,14 +727,26 @@ function render(){
     timeline.appendChild(guide);
   });
 
+  let lastListYear = "";
+
   visible.forEach(p=>{
+    const year = String(p.updated).slice(0,4);
+
+    // Portrait/list mode gets a small year marker whenever the year changes.
+    if(!isLandscape && year !== lastListYear){
+      const yearMarker=document.createElement("div");
+      yearMarker.className="list-year";
+      yearMarker.textContent=year;
+      timeline.appendChild(yearMarker);
+      lastListYear=year;
+    }
+
     const el=document.createElement("article");
     el.className="paper";
     el.style.left=(isLandscape && p._visualX != null)
       ? ((p._visualX / Math.max(1,timeline.clientWidth))*100) + "%"
       : p._x + "%";
     el.style.top=(topPadding + p._lane*laneHeight)+"px";
-
 
     el.style.setProperty("--paper-color",colorForCategory(p.category[0]));
 
@@ -861,10 +887,20 @@ if(orientationQuery.addEventListener){
   orientationQuery.addListener(handleOrientationChange);
 }
 document.addEventListener("click", e=>{
-  if(!window.matchMedia("(orientation: portrait)").matches && !(window.matchMedia("(orientation: landscape)").matches && window.innerHeight <= 600)) return;
+  const listMode =
+    window.matchMedia("(orientation: portrait)").matches ||
+    (window.matchMedia("(orientation: landscape)").matches && window.innerHeight <= 600);
+
+  if(!listMode) return;
 
   const card = e.target.closest(".paper-card");
-  if(!card) return;
+
+  // Clicking anywhere outside an open list card closes its description.
+  if(!card){
+    document.querySelectorAll(".paper-card.expanded")
+      .forEach(other=>other.classList.remove("expanded"));
+    return;
+  }
 
   if(e.target.closest(".favorite-star, .paper-link")) return;
 
