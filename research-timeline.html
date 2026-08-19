@@ -705,7 +705,8 @@ function render(){
   const min = dateValue(visible[0]);
   const max = dateValue(visible[visible.length-1]);
 
-  document.getElementById("paperCount").textContent = visible.length;
+  document.getElementById("paperCount").textContent =
+    visible.length + (visible.length === 1 ? " Paper" : " Papers");
   document.getElementById("earliestPaper").textContent = formatDate(visible[0]);
   document.getElementById("latestPaper").textContent = formatDate(visible[visible.length-1]);
 
