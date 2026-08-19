@@ -296,14 +296,27 @@
 }
 
 
-/* ---------- Phone Landscape ---------- */
+/* ---------- Landscape ---------- */
 
-@media (max-width:950px) and (orientation:landscape){
+/*
+   In landscape, the entire featured-video-section becomes
+   exactly one-third of the viewport width.
+
+   Nothing inside the tile is independently resized.
+   The image keeps width:100% and height:auto, so the
+   original image aspect ratio is preserved.
+*/
+
+@media screen and (orientation:landscape) and (max-width:1200px){
 
     .featured-video-section{
-        width:33.333%;
+        width:33.333333vw;
         max-width:none;
         margin:20px auto 30px;
+    }
+
+    .featured-video-card{
+        width:100%;
     }
 
 }
