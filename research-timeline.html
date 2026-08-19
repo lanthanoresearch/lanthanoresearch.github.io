@@ -3,260 +3,327 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Research Timeline</title>
+<meta name="theme-color" content="#111111">
+<title>Lanthano Research — Timeline</title>
 <style>
-:root {
-  --bg:#080b10; --panel:#10151d; --panel2:#151b24; --text:#edf2f7;
-  --muted:#8d99a8; --line:#28313d; --accent:#75b7ff; --accent2:#b58cff;
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;background:#111;color:#eee;font-family:Arial,sans-serif;
 }
-* { box-sizing:border-box; }
-body {
-  margin:0; background:radial-gradient(circle at 50% -10%,#172338 0,#080b10 42%);
-  color:var(--text); font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+main{max-width:1200px;margin:auto;padding:45px 20px 80px}
+h1{text-align:center;margin:0 0 10px;font-size:clamp(2rem,5vw,3.2rem)}
+.subtitle{text-align:center;color:#999;max-width:760px;margin:0 auto 30px;line-height:1.6}
+.controls{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;margin:25px 0 35px}
+.controls button{
+  padding:9px 14px;border:1px solid #333;border-radius:999px;
+  background:#1d1d1d;color:#bbb;cursor:pointer;font-size:.9rem
 }
-.wrap { max-width:1500px; margin:auto; padding:52px 28px 80px; }
-header { display:flex; justify-content:space-between; gap:25px; align-items:end; margin-bottom:28px; }
-h1 { margin:0; font-size:clamp(32px,5vw,62px); letter-spacing:-.045em; }
-.sub { color:var(--muted); margin-top:10px; max-width:700px; line-height:1.55; }
-.stats { display:flex; gap:10px; flex-wrap:wrap; }
-.stat { background:rgba(255,255,255,.045); border:1px solid var(--line); border-radius:14px; padding:12px 15px; min-width:100px; }
-.stat b { display:block; font-size:22px; }
-.stat span { color:var(--muted); font-size:12px; }
-.controls { display:flex; gap:9px; flex-wrap:wrap; margin:25px 0 35px; }
-button {
-  color:var(--text); background:var(--panel); border:1px solid var(--line);
-  border-radius:999px; padding:9px 14px; cursor:pointer; transition:.2s;
+.controls button:hover,.controls button.active{background:#2a2a2a;color:#fff;border-color:#666}
+.timeline-wrap{position:relative}
+.axis-labels{display:flex;justify-content:space-between;color:#777;font-size:.8rem;margin:0 4% 8px}
+.timeline{
+  position:relative;min-height:760px;margin:0 2%;
+  border-top:2px solid #333;
 }
-button:hover, button.active { background:#1b2736; border-color:#507aa4; }
-.timeline { position:relative; padding:40px 0 20px; }
-.axis {
-  height:3px; background:linear-gradient(90deg,transparent,var(--line) 4%,var(--accent) 50%,var(--line) 96%,transparent);
-  position:absolute; left:0; right:0; top:55px;
+.year{
+  position:absolute;top:-27px;transform:translateX(-50%);
+  color:#666;font-size:.75rem;white-space:nowrap
 }
-.axis-labels { display:flex; justify-content:space-between; color:var(--muted); font-size:12px; margin-bottom:18px; }
-.track {
-  position:relative; min-height:580px; margin:0 2%;
+.year:after{
+  content:"";position:absolute;top:27px;left:50%;width:1px;height:760px;
+  background:#222;z-index:0
 }
-.item {
-  position:absolute; width:190px; transform:translateX(-50%);
-  top:70px; transition:transform .2s, opacity .2s;
+.paper{
+  position:absolute;width:190px;transform:translateX(-50%);
+  z-index:2;
 }
-
-.item::before {
-  content:""; position:absolute; left:50%; top:-17px; width:12px; height:12px;
-  border-radius:50%; background:var(--paper-color); border:3px solid #0a0e14;
+.dot{
+  position:absolute;left:50%;top:-8px;width:16px;height:16px;
+  transform:translateX(-50%);border-radius:50%;
+  background:var(--paper-color);border:3px solid #111;
   box-shadow:0 0 0 2px var(--paper-color);
-  transform:translateX(-50%);
 }
-
-.card {
-  background:rgba(16,21,29,.98);
-  border:1px solid var(--paper-color); border-radius:16px; padding:14px;
-  box-shadow:0 12px 35px rgba(0,0,0,.25);
+.paper-card{
+  position:relative;background:#1d1d1d;border:1px solid #333;
+  border-top:3px solid var(--paper-color);border-radius:10px;
+  padding:12px;cursor:pointer;transition:.15s ease;
 }
-
-.description {
-  position:absolute; left:50%; bottom:calc(100% + 14px); width:270px;
+.paper-card:hover,.paper-card:focus-within{
+  background:#262626;transform:translateY(-2px);
+}
+.paper-title{font-weight:bold;line-height:1.25;margin:5px 0 7px;color:#fff}
+.paper-date{color:var(--paper-color);font-size:.75rem;font-weight:bold}
+.paper-category{color:#999;font-size:.72rem;line-height:1.35}
+.paper-description{
+  position:absolute;left:50%;bottom:calc(100% + 14px);width:280px;
   transform:translateX(-50%) translateY(6px);
-  padding:12px 14px; border:1px solid var(--paper-color); border-radius:12px;
-  background:#0b1017; color:#dce4ed; font-size:12px; line-height:1.5;
-  opacity:0; visibility:hidden; pointer-events:none;
-  transition:opacity .15s ease, transform .15s ease;
-  box-shadow:0 12px 28px rgba(0,0,0,.45); z-index:50;
+  padding:14px;background:#181818;border:1px solid var(--paper-color);
+  border-radius:10px;color:#ccc;font-size:.8rem;line-height:1.5;
+  opacity:0;visibility:hidden;pointer-events:none;z-index:100;
+  box-shadow:0 12px 30px rgba(0,0,0,.65);
+  transition:.15s ease;
 }
-.item:hover { z-index:100; }
-.item:hover .description, .item:focus-within .description {
-  opacity:1; visibility:visible; transform:translateX(-50%) translateY(0);
+.paper:hover{z-index:1000}
+.paper:hover .paper-description,.paper:focus-within .paper-description{
+  opacity:1;visibility:visible;transform:translateX(-50%) translateY(0)
 }
-.card { position:relative; }
-.date { color:var(--accent); font-size:12px; font-weight:700; letter-spacing:.05em; }
-.title { font-weight:700; margin:7px 0 8px; line-height:1.25; }
-.cats { color:var(--muted); font-size:11px; line-height:1.4; }
-.empty { color:var(--muted); text-align:center; padding:70px 20px; }
-.note {
-  margin-top:25px; color:#7f8b9a; font-size:12px; line-height:1.5;
-  border-top:1px solid var(--line); padding-top:18px;
+.stats{
+  display:flex;justify-content:center;gap:14px;flex-wrap:wrap;
+  margin:0 0 30px
 }
-@media (max-width:1000px) {
-  .track { min-height:auto; margin:0; padding-left:28px; }
-  .axis { top:0; bottom:0; left:8px; right:auto; width:2px; height:auto; background:var(--line); }
-  .axis-labels { display:none; }
-  .item { position:relative; top:auto !important; left:auto !important; width:auto; transform:none; margin:0 0 16px 20px; }
-  .item::before { top:24px; left:-28px; width:10px; height:10px; }
-  .description {
-    position:static; width:auto; transform:none; margin-top:10px;
-    opacity:1; visibility:visible; pointer-events:auto;
-    box-shadow:none;
+.stat{
+  min-width:100px;text-align:center;background:#181818;
+  border:1px solid #2b2b2b;border-radius:10px;padding:12px 18px
+}
+.stat-number{display:block;font-size:1.35rem;font-weight:bold}
+.stat-label{display:block;color:#888;font-size:.72rem;margin-top:3px;text-transform:uppercase}
+.status{text-align:center;color:#888;padding:40px}
+.legend{
+  max-width:900px;margin:25px auto 0;display:flex;justify-content:center;
+  gap:10px;flex-wrap:wrap;color:#aaa;font-size:.75rem
+}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend i{width:10px;height:10px;border-radius:50%;display:inline-block}
+@media(max-width:900px){
+  .timeline{border-top:0;border-left:2px solid #333;margin:0 0 0 20px;min-height:0;padding:10px 0}
+  .axis-labels,.year{display:none}
+  .paper,.paper:nth-child(n){
+    position:relative;left:auto!important;top:auto!important;
+    transform:none;width:auto;margin:0 0 18px 30px;
   }
-  .item:hover .description, .item:focus-within .description { transform:none; }
+  .dot{left:-38px;top:23px}
+  .paper-description{
+    position:static;width:auto;margin-top:10px;
+    transform:none;opacity:1;visibility:visible;
+    box-shadow:none;display:block
+  }
+  .paper-card:hover,.paper-card:focus-within{transform:none}
+  main{padding:30px 14px 60px}
 }
 </style>
 </head>
 <body>
-<div class="wrap">
-<header>
-  <div>
-    <h1>Research Timeline</h1>
-    <div class="sub">A chronologically scaled view of the research papers in the archive. Larger gaps represent longer periods between recorded dates.</div>
-  </div>
-  <div class="stats" id="stats"></div>
-</header>
+<main>
+<h1>Research Timeline</h1>
+<p class="subtitle">
+A chronologically scaled timeline of the research archive. Hover over a paper to read its description.
+</p>
+
+<div class="stats" id="stats">
+  <div class="stat"><span class="stat-number">—</span><span class="stat-label">Papers</span></div>
+  <div class="stat"><span class="stat-number">—</span><span class="stat-label">First</span></div>
+  <div class="stat"><span class="stat-number">—</span><span class="stat-label">Latest</span></div>
+</div>
 
 <div class="controls" id="controls"></div>
 
-<div class="timeline">
-  <div class="axis"></div>
+<div class="timeline-wrap">
   <div class="axis-labels" id="axisLabels"></div>
-  <div class="track" id="track"></div>
+  <div class="timeline" id="timeline">
+    <div class="status">Loading research timeline...</div>
+  </div>
 </div>
 
-<div class="note">
-  The supplied <code>descriptions.json</code> records an <code>updated</code> date rather than a separate
-  “started” date. This timeline therefore uses the recorded dates as the available chronology.
-</div>
-</div>
+<div class="legend" id="legend"></div>
+</main>
 
 <script>
+const DATA_FILE = "descriptions.json";
+const timeline = document.getElementById("timeline");
+const controls = document.getElementById("controls");
+const legend = document.getElementById("legend");
+const stats = document.getElementById("stats");
+const axisLabels = document.getElementById("axisLabels");
 
 let papers = [];
+let activeFilter = "all";
 
-const colors = {
-  biblical:"#b58cff", historical:"#75b7ff", astronomy:"#64d6b2",
-  scientific:"#ffb86b", medical:"#ff7f9c", political:"#e4e7ec", technology:"#67a9ff",
-  philosophy:"#d7a7ff"
+const categoryColors = {
+  biblical: "#b58cff",
+  historical: "#d7a85b",
+  scientific: "#55c7a0",
+  medical: "#e77b91",
+  political: "#d66a6a",
+  astronomy: "#6fa8ff",
+  technology: "#58b6d9",
+  philosophy: "#c48bd8",
+  geographic: "#78b85a",
+  economic: "#d9b44a"
 };
 
-const track = document.getElementById("track");
-const controls = document.getElementById("controls");
-const stats = document.getElementById("stats");
-const labels = document.getElementById("axisLabels");
-
-const years = [...new Set(papers.map(p => p.date.slice(0,4)))];
-const minDate = new Date(papers[0].date + "T00:00:00");
-const maxDate = new Date(papers[papers.length-1].date + "T00:00:00");
-const range = maxDate - minDate;
-
-function pct(date) {
-  const d = new Date(date + "T00:00:00");
-  return 3 + ((d-minDate)/range)*94;
+function categoryLabel(category){
+  return String(category || "")
+    .charAt(0).toUpperCase() + String(category || "").slice(1);
 }
 
+function colorForCategory(category){
+  const key = String(category || "").toLowerCase();
+  if(categoryColors[key]) return categoryColors[key];
 
-function render(filter="all") {
-  track.innerHTML="";
-  const visible=papers
-    .filter(p=>filter==="all" || p.categories.includes(filter))
-    .sort((a,b)=>a.date.localeCompare(b.date) || a.title.localeCompare(b.title));
-
-  if (!visible.length) {
-    track.innerHTML='<div class="empty">No papers in this category.</div>';
-    return;
-  }
-
-  // Collision-safe lane assignment. Each item gets the first lane whose
-  // previous item is far enough away horizontally.
-  const lanes = [];
-  const gap = 15;
-  visible.forEach(p => {
-    const x = pct(p.date);
-    let lane = 0;
-    while (lanes[lane] !== undefined && x - lanes[lane] < gap) lane++;
-    lanes[lane] = x;
-
-    const el=document.createElement("div");
-    el.className="item";
-    el.style.left=x+"%";
-    el.style.top=(70 + lane*145)+"px";
-
-    const hue = (Math.abs(hashCode(p.title)) % 360);
-    el.style.setProperty("--paper-color", `hsl(${hue} 72% 62%)`);
-
-    const date = new Date(p.date+"T00:00:00")
-      .toLocaleDateString(undefined,{year:"numeric",month:"short",day:"numeric"});
-
-    el.innerHTML=`<div class="card">
-      <div class="date">${date}</div>
-      <div class="title">${escapeHtml(p.title)}</div>
-      <div class="cats">${p.categories.map(escapeHtml).join(" · ")}</div>
-      <div class="description">${escapeHtml(p.description || "No description available.")}</div>
-    </div>`;
-    track.appendChild(el);
-  });
-
-  track.style.minHeight = Math.max(580, 100 + lanes.length * 145) + "px";
+  // Stable fallback color for categories not explicitly mapped.
+  let hash = 0;
+  for(const c of key) hash = ((hash << 5) - hash) + c.charCodeAt(0) | 0;
+  return `hsl(${Math.abs(hash) % 360} 58% 62%)`;
 }
 
-function hashCode(str) {
-  let h=0;
-  for(let i=0;i<str.length;i++) h=((h<<5)-h)+str.charCodeAt(i)|0;
-  return h;
-}
-
-function escapeHtml(value) {
-  return String(value).replace(/[&<>"']/g, c => ({
+function escapeHtml(value){
+  return String(value ?? "").replace(/[&<>"']/g,c=>({
     "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
   }[c]));
 }
 
-function updateStats() {
-  if (!papers.length) return;
-  const dates=papers.map(p=>p.date).sort();
-  const first=new Date(dates[0]+"T00:00:00");
-  const last=new Date(dates.at(-1)+"T00:00:00");
-  const fmt=d=>d.toLocaleDateString(undefined,{year:"numeric",month:"short"});
-  stats.innerHTML=`
-    <div class="stat"><b>${papers.length}</b><span>papers</span></div>
-    <div class="stat"><b>${first.getFullYear()}</b><span>first recorded</span></div>
-    <div class="stat"><b>${last.getFullYear()}</b><span>latest recorded</span></div>`;
-  labels.innerHTML=`<span>${fmt(first)}</span><span>${fmt(last)}</span>`;
+function dateValue(p){
+  return new Date(`${p.updated}T00:00:00`);
 }
 
-async function loadTimeline() {
-  try {
-    const response = await fetch("descriptions.json", {cache:"no-store"});
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const data = await response.json();
+function formatDate(p){
+  return dateValue(p).toLocaleDateString(undefined,{
+    year:"numeric",month:"short",day:"numeric"
+  });
+}
 
-    papers = Object.values(data)
-      .filter(p => p && p.title && p.updated)
-      .map(p => ({
-        title: p.title,
-        date: p.updated,
-        categories: Array.isArray(p.category) ? p.category : [],
-        description: p.description || "",
-        url: p.url || ""
+function positionFor(date,min,max){
+  const value = dateValue({updated:date}).getTime();
+  const a = min.getTime(), b = max.getTime();
+  return 3 + ((value-a)/(b-a || 1))*94;
+}
+
+function buildLanes(items){
+  // Cards are assigned to the lowest available lane. A lane cannot contain
+  // two cards whose timeline positions are too close to each other.
+  const lanes = [];
+  const minimumGap = 12;
+
+  return items.map(paper=>{
+    const x = paper._x;
+    let lane = 0;
+
+    while(lanes[lane] !== undefined && x - lanes[lane] < minimumGap){
+      lane++;
+    }
+
+    lanes[lane] = x;
+    paper._lane = lane;
+    return paper;
+  });
+}
+
+function render(){
+  const visible = papers
+    .filter(p=>activeFilter==="all" || p.category.includes(activeFilter))
+    .sort((a,b)=>dateValue(a)-dateValue(b) || a.title.localeCompare(b.title));
+
+  if(!visible.length){
+    timeline.innerHTML='<div class="status">No papers in this category.</div>';
+    return;
+  }
+
+  const min = dateValue(visible[0]);
+  const max = dateValue(visible[visible.length-1]);
+
+  visible.forEach(p=>p._x=positionFor(p.updated,min,max));
+  buildLanes(visible);
+
+  const laneHeight=150;
+  timeline.style.minHeight=Math.max(760,visible.reduce((m,p)=>Math.max(m,p._lane),0)*laneHeight+220)+"px";
+  timeline.innerHTML="";
+
+  // Year guide lines.
+  const years=[...new Set(visible.map(p=>p.updated.slice(0,4)))];
+  years.forEach(year=>{
+    const yearDate = `${year}-01-01`;
+    const y = positionFor(yearDate,min,max);
+    const guide=document.createElement("div");
+    guide.className="year";
+    guide.style.left=y+"%";
+    guide.textContent=year;
+    timeline.appendChild(guide);
+  });
+
+  visible.forEach(p=>{
+    const el=document.createElement("article");
+    el.className="paper";
+    el.style.left=p._x+"%";
+    el.style.top=(35+p._lane*laneHeight)+"px";
+    el.style.setProperty("--paper-color",colorForCategory(p.category[0]));
+
+    const cats=p.category.map(categoryLabel).join(" • ");
+
+    el.innerHTML=`
+      <div class="dot" aria-hidden="true"></div>
+      <div class="paper-card" tabindex="0">
+        <div class="paper-date">${escapeHtml(formatDate(p))}</div>
+        <div class="paper-title">${escapeHtml(p.title)}</div>
+        <div class="paper-category">${escapeHtml(cats)}</div>
+        <div class="paper-description">
+          ${escapeHtml(p.description || "No description available.")}
+        </div>
+      </div>
+    `;
+    timeline.appendChild(el);
+  });
+
+  axisLabels.innerHTML=`
+    <span>${min.toLocaleDateString(undefined,{year:"numeric",month:"short"})}</span>
+    <span>${max.toLocaleDateString(undefined,{year:"numeric",month:"short"})}</span>
+  `;
+}
+
+function buildControls(){
+  const categories=[...new Set(papers.flatMap(p=>p.category))].sort();
+  controls.innerHTML =
+    `<button class="active" data-filter="all">All</button>` +
+    categories.map(c=>`<button data-filter="${escapeHtml(c)}">${escapeHtml(categoryLabel(c))}</button>`).join("");
+
+  controls.addEventListener("click",e=>{
+    if(!e.target.matches("button")) return;
+    activeFilter=e.target.dataset.filter;
+    document.querySelectorAll("#controls button").forEach(b=>b.classList.remove("active"));
+    e.target.classList.add("active");
+    render();
+  });
+
+  legend.innerHTML=categories.map(c=>`
+    <span><i style="background:${colorForCategory(c)}"></i>${escapeHtml(categoryLabel(c))}</span>
+  `).join("");
+}
+
+async function load(){
+  try{
+    // descriptions.json is in the website's main tree, alongside this page.
+    const response=await fetch(DATA_FILE,{cache:"no-store"});
+    if(!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data=await response.json();
+
+    papers=Object.values(data)
+      .filter(p=>p && p.title && p.updated && Array.isArray(p.category))
+      .map(p=>({
+        title:p.title,
+        updated:p.updated,
+        category:p.category,
+        description:p.description || "",
+        url:p.url || ""
       }));
 
-    updateStats();
+    if(!papers.length) throw new Error("No timeline records found.");
 
-    const cats=[...new Set(papers.flatMap(p=>p.categories))].sort();
-    controls.innerHTML='<button class="active" data-filter="all">All</button>'+
-      cats.map(c=>`<button data-filter="${escapeHtml(c)}">${escapeHtml(c)}</button>`).join("");
+    const dates=papers.map(dateValue).sort((a,b)=>a-b);
+    stats.innerHTML=`
+      <div class="stat"><span class="stat-number">${papers.length}</span><span class="stat-label">Papers</span></div>
+      <div class="stat"><span class="stat-number">${dates[0].getFullYear()}</span><span class="stat-label">First</span></div>
+      <div class="stat"><span class="stat-number">${dates.at(-1).getFullYear()}</span><span class="stat-label">Latest</span></div>
+    `;
 
+    buildControls();
     render();
-  } catch (error) {
-    track.innerHTML=`<div class="empty">Unable to load descriptions.json.</div>`;
-    console.error("Timeline data error:", error);
+  }catch(error){
+    console.error("Timeline error:",error);
+    timeline.innerHTML='<div class="status">Unable to load descriptions.json.</div>';
   }
 }
 
-controls.addEventListener("click",e=>{
-  if(!e.target.matches("button")) return;
-  document.querySelectorAll("#controls button").forEach(b=>b.classList.remove("active"));
-  e.target.classList.add("active");
-  render(e.target.dataset.filter);
-});
-
-loadTimeline();
-const cats=[...new Set(papers.flatMap(p=>p.categories))].sort();
-controls.innerHTML='<button class="active" data-filter="all">All</button>'+cats.map(c=>`<button data-filter="${c}">${c}</button>`).join("");
-controls.addEventListener("click",e=>{
-  if(!e.target.matches("button")) return;
-  document.querySelectorAll("#controls button").forEach(b=>b.classList.remove("active"));
-  e.target.classList.add("active");
-  render(e.target.dataset.filter);
-});
-
+load();
 </script>
 </body>
 </html>
