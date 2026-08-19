@@ -332,17 +332,17 @@ h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
   .stat{padding:4px 8px}
   .stat-number{font-size:.78rem}
   .stat-label{font-size:.55rem}
-  .timeline{min-height:430px}
-  .paper,.paper:nth-child(n){width:158px}
-  .paper-card{min-height:60px;padding:7px 8px;border-radius:8px}
-  .paper-card.has-two-badges{min-height:70px}
-  .paper-topline{min-height:21px;padding-right:25px;gap:3px}
-  .paper-date{font-size:.55rem}
-  .paper-title{font-size:.7rem;margin:2px 0 3px}
-  .paper-category{font-size:.54rem}
-  .favorite-star{top:4px;right:3px;width:23px;height:23px;font-size:1rem}
+  .timeline{min-height:500px}
+  .paper,.paper:nth-child(n){width:132px}
+  .paper-card{min-height:52px;padding:6px 7px;border-radius:7px}
+  .paper-card.has-two-badges{min-height:62px}
+  .paper-topline{min-height:19px;padding-right:22px;gap:2px}
+  .paper-date{font-size:.48rem}
+  .paper-title{font-size:.62rem;line-height:1.18;margin:2px 0 3px}
+  .paper-category{font-size:.48rem;line-height:1.15}
+  .favorite-star{top:3px;right:2px;width:21px;height:21px;font-size:.9rem}
   .paper-badges{gap:2px}
-  .paper-badge{font-size:.4rem;padding:2px 4px}
+  .paper-badge{font-size:.34rem;padding:2px 3px}
   .legend{padding:5px 7px;gap:7px;font-size:.58rem}
 }
 
@@ -545,8 +545,10 @@ function render(){
   timeline.style.minHeight = "760px";
   const laneCount = buildLanes(visible);
 
-  const laneHeight = 112;
-  const topPadding = 40;
+  const isLandscape = window.matchMedia("(orientation: landscape)").matches;
+  const isShortLandscape = isLandscape && window.innerHeight <= 600;
+  const laneHeight = isShortLandscape ? 128 : 112;
+  const topPadding = isShortLandscape ? 34 : 40;
   timeline.style.minHeight = Math.max(560, topPadding + laneCount * laneHeight + 55) + "px";
   timeline.innerHTML="";
 
