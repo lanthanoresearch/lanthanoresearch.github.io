@@ -43,13 +43,13 @@
 .featured-video-thumbnail{
     position:relative;
 
-    flex:0 0 50%;
+    flex:0 0 auto;
 
     background:#111;
     overflow:hidden;
 
     display:flex;
-    align-items:flex-start;
+    align-items:center;
     justify-content:center;
 }
 
@@ -58,12 +58,6 @@
 
     width:100%;
     height:auto;
-
-    /*
-       Keep the complete image.
-       Its natural aspect ratio determines
-       the height of the image section.
-    */
 }
 
 
@@ -285,25 +279,30 @@
 
 /* =========================================================
    PC LANDSCAPE
-   Side-by-side — main desktop layout
+   Compact stacked card
    ========================================================= */
 
 @media screen and (min-width:951px) and (orientation:landscape){
 
     .featured-video-section{
-        max-width:900px;
+        width:650px;
+        max-width:72vw;
+
         margin:40px auto 50px;
     }
 
     .featured-video-preview{
-        flex-direction:row;
-        align-items:stretch;
+        display:flex;
+        flex-direction:column;
+
+        width:100%;
     }
 
     .featured-video-thumbnail{
-        flex:0 0 50%;
-        width:50%;
+        width:100%;
         height:auto;
+
+        flex:none;
     }
 
     .featured-video-preview-image{
@@ -312,9 +311,24 @@
     }
 
     .featured-video-info{
-        flex:1;
-        min-width:0;
-        padding:25px;
+        width:100%;
+        flex:none;
+
+        padding:20px 25px 22px;
+    }
+
+    .featured-video-title{
+        font-size:1.7rem;
+        margin-bottom:8px;
+    }
+
+    .featured-video-description{
+        line-height:1.55;
+    }
+
+    .featured-video-meta{
+        margin-top:12px;
+        padding-top:0;
     }
 
 }
@@ -330,6 +344,7 @@
     .featured-video-section{
         width:86%;
         max-width:900px;
+
         margin:40px auto 50px;
     }
 
@@ -352,6 +367,7 @@
     .featured-video-info{
         flex:1;
         min-width:0;
+
         padding:25px;
     }
 
@@ -368,6 +384,7 @@
     .featured-video-section{
         width:92%;
         max-width:900px;
+
         margin:28px auto 34px;
     }
 
@@ -378,7 +395,7 @@
 
     .featured-video-thumbnail{
         width:100%;
-        flex:0 0 auto;
+        flex:none;
         height:auto;
     }
 
@@ -390,6 +407,7 @@
     .featured-video-info{
         width:100%;
         flex:none;
+
         padding:16px 18px 18px;
     }
 
@@ -427,6 +445,7 @@
     .featured-video-section{
         width:96%;
         max-width:900px;
+
         margin:20px auto 30px;
     }
 
@@ -449,6 +468,7 @@
     .featured-video-info{
         flex:1;
         min-width:0;
+
         padding:20px;
     }
 
