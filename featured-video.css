@@ -42,10 +42,7 @@
 .featured-video-thumbnail{
     position:relative;
 
-    width:320px;
-    height:100%;
-
-    flex-shrink:0;
+    flex:0 0 auto;
 
     background:#111;
     overflow:hidden;
@@ -58,15 +55,11 @@
 .featured-video-preview-image{
     display:block;
 
-    width:100%;
-    height:100%;
+    width:auto;
+    height:auto;
 
-    /*
-       Preserve the entire image.
-       No side cropping.
-       No stretching.
-    */
-    object-fit:contain;
+    max-width:100%;
+    max-height:100%;
 }
 
 
@@ -244,7 +237,9 @@
 .featured-video-expanded-description{
     color:#bbb;
     line-height:1.5;
+
     max-width:800px;
+
     margin:0 auto;
 }
 
@@ -294,8 +289,8 @@
 
 
 /* =========================================================
-   DEFAULT DESKTOP LANDSCAPE
-   Vertical / normal card
+   DESKTOP LANDSCAPE
+   Default vertical layout
    ========================================================= */
 
 @media screen and (min-width:951px) and (orientation:landscape){
@@ -307,17 +302,17 @@
 
     .featured-video-thumbnail{
         width:100%;
-        height:400px;
+        height:auto;
 
-        display:flex;
-        align-items:center;
-        justify-content:center;
+        aspect-ratio:auto;
     }
 
     .featured-video-preview-image{
         width:100%;
-        height:100%;
-        object-fit:contain;
+        height:auto;
+
+        max-width:none;
+        max-height:none;
     }
 
     .featured-video-info{
@@ -344,29 +339,36 @@
 
 /* =========================================================
    DESKTOP PORTRAIT
-   Side-by-side card
+   Side-by-side layout
    ========================================================= */
 
 @media screen and (min-width:951px) and (orientation:portrait){
 
     .featured-video-preview{
         display:flex;
+        flex-direction:row;
         height:260px;
     }
 
     .featured-video-thumbnail{
-        width:320px;
+        flex:0 0 auto;
+
+        width:auto;
         height:260px;
-        flex-shrink:0;
+
+        aspect-ratio:auto;
     }
 
     .featured-video-preview-image{
-        width:100%;
-        height:100%;
-        object-fit:contain;
+        width:auto;
+        height:260px;
+
+        max-width:none;
+        max-height:260px;
     }
 
     .featured-video-info{
+        flex:1;
         padding:25px;
     }
 
@@ -390,7 +392,7 @@
 
 /* =========================================================
    MOBILE PORTRAIT
-   Default vertical card
+   Default vertical layout
    ========================================================= */
 
 @media screen and (max-width:950px) and (orientation:portrait){
@@ -402,19 +404,22 @@
     .featured-video-preview{
         display:flex;
         flex-direction:column;
-        height:400px;
+        height:auto;
     }
 
     .featured-video-thumbnail{
         width:100%;
-        height:220px;
-        flex-shrink:0;
+        height:auto;
+
+        aspect-ratio:auto;
     }
 
     .featured-video-preview-image{
         width:100%;
-        height:100%;
-        object-fit:contain;
+        height:auto;
+
+        max-width:none;
+        max-height:none;
     }
 
     .featured-video-info{
@@ -448,7 +453,7 @@
 
 /* =========================================================
    MOBILE LANDSCAPE
-   Side-by-side card
+   Side-by-side layout
    ========================================================= */
 
 @media screen and (max-width:950px) and (orientation:landscape){
@@ -460,19 +465,22 @@
     .featured-video-preview{
         display:flex;
         flex-direction:row;
-        height:260px;
+        height:auto;
     }
 
     .featured-video-thumbnail{
-        width:320px;
+        flex:0 0 auto;
+
+        width:auto;
         height:260px;
-        flex-shrink:0;
     }
 
     .featured-video-preview-image{
-        width:100%;
-        height:100%;
-        object-fit:contain;
+        width:auto;
+        height:260px;
+
+        max-width:none;
+        max-height:260px;
     }
 
     .featured-video-info{
