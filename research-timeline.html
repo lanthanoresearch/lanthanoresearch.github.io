@@ -137,6 +137,11 @@ h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
 .paper-badge.featured{background:#2f7cff}
 .paper-badge.newest{background:#00b050}
 
+.paper-card{
+  position:relative;
+  z-index:1;
+}
+
 .favorite-star{
   position:absolute;
   top:8px;
@@ -155,7 +160,8 @@ h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
   margin:0;
   cursor:pointer;
   user-select:none;
-  z-index:20;
+  z-index:1000;
+  pointer-events:auto;
   transition:transform .12s ease,color .12s ease;
 }
 .favorite-star:hover{
@@ -398,7 +404,7 @@ h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
     width:310px;max-width:none;
     transform:translateX(-50%) translateY(8px);
     margin:0;display:block;opacity:0;visibility:hidden;
-    pointer-events:none;z-index:200;
+    pointer-events:none;z-index:50;
   }
   .paper.popup-open .paper-description,
   .paper:hover .paper-description,
@@ -895,6 +901,9 @@ document.addEventListener("pointerdown", e=>{
 
 document.addEventListener("click", e=>{
   const star=e.target.closest(".favorite-star");
+  if(star){
+    e.stopPropagation();
+  }
   if(!star) return;
 
   e.preventDefault();
