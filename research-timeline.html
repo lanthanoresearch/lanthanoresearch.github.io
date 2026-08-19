@@ -266,8 +266,17 @@ h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
     transform:none!important;
     width:calc(100% - 24px);
     max-width:calc(100% - 24px);
+    min-width:0;
     box-sizing:border-box;
     margin:0 0 7px 24px;
+    overflow:visible;
+  }
+
+  .paper-card{
+    width:100%;
+    min-width:0;
+    box-sizing:border-box;
+    overflow:visible;
   }
 
   .paper-card{
@@ -327,13 +336,28 @@ h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
     width:100%!important;
     max-width:100%!important;
     box-sizing:border-box!important;
-    margin-top:8px!important;
+    margin-top:6px!important;
+    padding:8px 9px!important;
+    border-radius:7px!important;
+    font-size:.68rem!important;
+    line-height:1.35!important;
     transform:none!important;
     opacity:1;
     visibility:visible;
     pointer-events:auto;
     display:block;
     overflow-wrap:anywhere;
+  }
+
+  .paper-card.expanded .paper-description .description-label{
+    font-size:.54rem!important;
+    margin-bottom:4px!important;
+  }
+
+  .paper-card.expanded .paper-description .paper-link{
+    margin-top:7px!important;
+    padding:7px 9px!important;
+    font-size:.66rem!important;
   }
 
   .paper-card.expanded .paper-description .paper-link{
@@ -393,6 +417,7 @@ h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
     width:206px;
     max-width:none;
     margin:0;
+    box-sizing:border-box;
   }
 
   .paper-card{min-height:76px}
@@ -424,6 +449,43 @@ h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
   }
 }
 
+/* Short landscape description: keep the hover panel inside the viewport. */
+@media (orientation: landscape) and (max-height: 600px){
+  .paper .paper-description{
+    width:190px;
+    max-width:calc(100vw - 20px);
+    padding:9px 10px;
+    font-size:.68rem;
+    line-height:1.35;
+  }
+
+  .paper .description-label{
+    font-size:.54rem;
+    margin-bottom:4px;
+  }
+
+  .paper .paper-link{
+    margin-top:7px;
+    padding:7px 9px;
+    font-size:.66rem;
+  }
+
+  .paper .paper-description{
+    width:230px;
+    max-width:calc(100vw - 20px);
+    box-sizing:border-box;
+    padding:10px 11px;
+    font-size:.68rem;
+    line-height:1.35;
+  }
+
+  .paper .paper-description .paper-link{
+    margin-top:8px;
+    padding:7px 9px;
+    font-size:.68rem;
+  }
+}
+
 /* Very short landscape screens keep the same PC geometry but use smaller
    cards and extra lane separation so papers cannot clash. */
 @media (orientation: landscape) and (max-height: 600px){
@@ -440,9 +502,9 @@ h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
   .stat-number{font-size:.78rem}
   .stat-label{font-size:.55rem}
 
-  .timeline{min-height:500px}
+  .timeline{min-height:620px}
 
-  .paper,.paper:nth-child(n){width:132px}
+  .paper,.paper:nth-child(n){width:118px}
 
   .paper-card{
     min-height:52px;
@@ -453,15 +515,17 @@ h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
 
   .paper-topline{
     min-height:19px;
-    padding-right:22px;
+    padding-right:23px;
     gap:2px;
+    overflow:hidden;
   }
 
   .paper-date{font-size:.48rem}
   .paper-title{
-    font-size:.62rem;
-    line-height:1.18;
+    font-size:.6rem;
+    line-height:1.16;
     margin:2px 0 3px;
+    overflow-wrap:anywhere;
   }
   .paper-category{
     font-size:.48rem;
@@ -476,10 +540,15 @@ h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
     font-size:.9rem;
   }
 
-  .paper-badges{gap:2px}
+  .paper-badges{
+    gap:2px;
+    max-width:78%;
+    overflow:hidden;
+  }
   .paper-badge{
-    font-size:.34rem;
+    font-size:.31rem;
     padding:2px 3px;
+    flex-shrink:0;
   }
 
   .legend{
@@ -691,7 +760,7 @@ function render(){
 
   const isLandscape = window.matchMedia("(orientation: landscape)").matches;
   const isShortLandscape = isLandscape && window.innerHeight <= 600;
-  const laneHeight = isShortLandscape ? 128 : 112;
+  const laneHeight = isShortLandscape ? 145 : 112;
   const topPadding = isShortLandscape ? 34 : 40;
   timeline.style.minHeight = Math.max(560, topPadding + laneCount * laneHeight + 55) + "px";
   timeline.innerHTML="";
@@ -768,7 +837,8 @@ document.addEventListener("click", e=>{
     // Let the description render first, then keep the whole expanded card
     // inside the viewport instead of leaving its lower half off-screen.
     const keepExpandedVisible = ()=>{
-      const rect = card.getBoundingClientRect();
+      const target = card.querySelector(".paper-description") || card;
+      const rect = target.getBoundingClientRect();
       const bottomClearance = 78;
       const sideClearance = 8;
       const topClearance = 10;
@@ -793,10 +863,23 @@ document.addEventListener("click", e=>{
       if(dx || dy){
         window.scrollBy({left:dx, top:dy, behavior:"smooth"});
       }
+
+      /* Re-check after the browser has applied the scroll. */
+      requestAnimationFrame(()=>{
+        const r=card.getBoundingClientRect();
+        let dx2=0,dy2=0;
+        if(r.left<8) dx2=r.left-8;
+        else if(r.right>window.innerWidth-8) dx2=r.right-(window.innerWidth-8);
+        if(r.bottom>window.innerHeight-78) dy2=r.bottom-(window.innerHeight-78);
+        if(r.top<10) dy2=r.top-10;
+        if(dx2 || dy2) window.scrollBy({left:dx2,top:dy2,behavior:"smooth"});
+      });
     };
 
     requestAnimationFrame(()=>{
-      requestAnimationFrame(keepExpandedVisible);
+      requestAnimationFrame(()=>{
+          requestAnimationFrame(keepExpandedVisible);
+        });
       setTimeout(keepExpandedVisible,120);
     });
   }
