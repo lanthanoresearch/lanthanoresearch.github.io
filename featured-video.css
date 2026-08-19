@@ -296,18 +296,19 @@
 }
 
 
-/* ---------- Landscape ---------- */
+/* ---------- Landscape Phone ---------- */
 
 @media screen and (orientation:landscape) and (max-width:1200px){
 
     .featured-video-section{
-        width:100%;
         max-width:900px;
         margin:20px auto 30px;
     }
 
     .featured-video-card{
-        width:100%;
+        transform:scale(.65);
+        transform-origin:top center;
+        margin-bottom:-35%;
     }
 
 }
