@@ -194,7 +194,7 @@ h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
   box-shadow:0 12px 30px rgba(0,0,0,.65);
   transition:.15s ease;
 }
-.paper:hover{z-index:10000}
+.paper:hover{z-index:100}
 .paper:hover .paper-description,
 .paper-description:hover{
   opacity:1;visibility:visible;pointer-events:auto;
@@ -224,7 +224,8 @@ h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
 .legend{
   position:fixed;
   left:0;right:0;bottom:0;
-  z-index:5000;
+  z-index:2147483647;
+  isolation:isolate;
   display:flex;
   justify-content:center;
   align-items:center;
@@ -246,7 +247,10 @@ h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
 
   .paper,.paper:nth-child(n){
     position:relative;left:auto!important;top:auto!important;
-    transform:none;
+    transform:none !important;
+    width:calc(100% - 24px);
+    max-width:calc(100% - 24px);
+    box-sizing:border-box;
     margin:0 0 7px 24px;
   }
 
@@ -350,12 +354,46 @@ h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
     overflow:hidden;
   }
 
+  .paper .paper-description{
+    position:relative !important;
+    left:auto !important;
+    right:auto !important;
+    top:auto !important;
+    bottom:auto !important;
+    width:100% !important;
+    max-width:100% !important;
+    box-sizing:border-box !important;
+    margin:0 !important;
+    transform:none !important;
+    opacity:0;
+    visibility:hidden;
+    pointer-events:none;
+    display:none;
+    overflow-wrap:anywhere;
+  }
+
   .paper-card.expanded .paper-description{
-    margin-top:8px;
+    position:relative !important;
+    left:auto !important;
+    right:auto !important;
+    top:auto !important;
+    bottom:auto !important;
+    width:100% !important;
+    max-width:100% !important;
+    box-sizing:border-box !important;
+    margin-top:8px !important;
+    transform:none !important;
     opacity:1;
     visibility:visible;
     pointer-events:auto;
     display:block;
+    overflow-wrap:anywhere;
+  }
+
+  .paper-card.expanded .paper-description .paper-link{
+    width:100%;
+    max-width:100%;
+    box-sizing:border-box;
   }
 
   .paper-card.expanded .paper-description::after{display:none}
@@ -643,20 +681,29 @@ document.addEventListener("click", e=>{
     // inside the viewport instead of leaving its lower half off-screen.
     const keepExpandedVisible = ()=>{
       const rect = card.getBoundingClientRect();
-      const bottomClearance = 86;
-      const topClearance = 12;
-      const targetBottom = window.innerHeight - bottomClearance;
+      const bottomClearance = 78;
+      const sideClearance = 8;
+      const topClearance = 10;
 
-      if(rect.bottom > targetBottom){
-        window.scrollBy({
-          top: rect.bottom - targetBottom,
-          behavior:"smooth"
-        });
-      }else if(rect.top < topClearance){
-        window.scrollBy({
-          top: rect.top - topClearance,
-          behavior:"smooth"
-        });
+      let left = rect.left;
+      let right = rect.right;
+      let top = rect.top;
+      let bottom = rect.bottom;
+
+      let dx = 0;
+      let dy = 0;
+
+      if(left < sideClearance) dx = left - sideClearance;
+      else if(right > window.innerWidth - sideClearance)
+        dx = right - (window.innerWidth - sideClearance);
+
+      if(bottom > window.innerHeight - bottomClearance)
+        dy = bottom - (window.innerHeight - bottomClearance);
+      else if(top < topClearance)
+        dy = top - topClearance;
+
+      if(dx || dy){
+        window.scrollBy({left:dx, top:dy, behavior:"smooth"});
       }
     };
 
