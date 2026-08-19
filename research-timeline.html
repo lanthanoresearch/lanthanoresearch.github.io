@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#111111">
-<title>Lanthano Research — Timeline</title>
+<title>Lanthano Research - Timeline</title>
 <style>
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
@@ -73,21 +73,59 @@ h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
 .paper-card{
   position:relative;background:linear-gradient(145deg,#202020,#1a1a1a);
   border:1px solid #353535;border-left:3px solid var(--paper-color);
-  border-radius:10px;padding:10px 12px;cursor:pointer;
+  border-radius:10px;padding:10px 11px;cursor:pointer;
   transition:transform .16s ease,background .16s ease,border-color .16s ease;
-  min-height:78px;
+  min-height:76px;
 }
 .paper-card:hover,.paper-card:focus-within{
   background:#252525;transform:translateY(-3px);
   border-color:#4a4a4a;
 }
-.paper-title{font-weight:700;line-height:1.28;margin:6px 0 8px;color:#f5f5f5;font-size:.9rem}
+.paper-title{
+  font-weight:700;
+  line-height:1.25;
+  margin:3px 0 6px;
+  color:#f5f5f5;
+  font-size:.9rem;
+  padding-right:2px;
+}
+
+.paper-topline{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:6px;
+  min-height:28px;
+  padding-right:31px;
+}
+.paper-badges{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:4px;
+  margin-left:auto;
+  pointer-events:none;
+  white-space:nowrap;
+  max-width:100%;
+}
+.paper-badge{
+  color:#fff;
+  font-size:.55rem;
+  font-weight:700;
+  padding:3px 6px;
+  border-radius:999px;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  white-space:nowrap;
+}
+.paper-badge.featured{background:#2f7cff}
+.paper-badge.newest{background:#00b050}
 
 .favorite-star{
   position:absolute;
-  top:7px;
+  top:8px;
   right:7px;
-  width:30px;
+  width:28px;
   height:30px;
   display:flex;
   align-items:center;
@@ -117,7 +155,13 @@ h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
   color:#FFD700;
   text-shadow:0 0 10px rgba(255,215,0,.55);
 }
-.paper-date{color:var(--paper-color);font-size:.75rem;font-weight:bold;padding-right:25px}
+.paper-date{
+  color:var(--paper-color);
+  font-size:.68rem;
+  font-weight:bold;
+  white-space:nowrap;
+  flex-shrink:0;
+}
 .paper-category{color:#888;font-size:.7rem;line-height:1.4}
 .paper-description::after{
   content:"";position:absolute;left:0;right:0;bottom:-18px;height:20px;
@@ -148,16 +192,26 @@ h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
   opacity:1;visibility:visible;pointer-events:auto;
   transform:translateX(-50%) translateY(0);
 }
-.stats{
-  display:flex;justify-content:center;gap:14px;flex-wrap:wrap;
-  margin:0 0 18px
+.timeline-meta{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:13px;
+  flex-wrap:wrap;
+  margin:0 auto 16px;
+  color:#777;
+  font-size:.75rem;
+  line-height:1.4;
 }
-.stat{
-  min-width:100px;text-align:center;background:#181818;
-  border:1px solid #2b2b2b;border-radius:10px;padding:9px 14px
+.timeline-meta strong{
+  color:#ccc;
+  font-weight:600;
 }
-.stat-number{display:block;font-size:1.05rem;font-weight:bold;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.stat-label{display:block;color:#888;font-size:.72rem;margin-top:3px;text-transform:uppercase}
+.meta-divider{
+  width:1px;
+  height:12px;
+  background:rgba(255,255,255,.16);
+}
 .status{text-align:center;color:#888;padding:40px}
 .legend{
   position:fixed;
@@ -179,22 +233,78 @@ h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
 .legend span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
 .legend i{width:8px;height:8px;border-radius:50%;display:inline-block}
 @media(max-width:900px){
-  .timeline{border-top:0;border-left:1px solid #333;margin:0 0 0 18px;min-height:0;padding:6px 0}
+  .timeline{border-top:0;border-left:1px solid #333;margin:0 0 0 16px;min-height:0;padding:3px 0}
   .axis-labels,.year{display:none}
+
   .paper,.paper:nth-child(n){
     position:relative;left:auto!important;top:auto!important;
-    transform:none;width:auto;margin:0 0 18px 30px;
+    transform:none;width:auto;margin:0 0 7px 24px;
   }
+
   .connector{display:none}
-  .dot{left:-38px;top:23px}
-  .paper-description{
-    position:static;width:auto;margin-top:10px;
-    transform:none;opacity:1;visibility:visible;
-    box-shadow:none;display:block
+  .dot{left:-32px;top:20px;width:12px;height:12px}
+
+  .paper-card{
+    min-height:0;
+    padding:7px 9px;
+    border-radius:8px;
   }
-  .paper-link{margin-top:12px}
+
+  .paper-topline{
+    min-height:25px;
+    padding-right:30px;
+    gap:4px;
+  }
+
+  .paper-date{font-size:.61rem}
+  .paper-title{font-size:.78rem;margin:2px 0 4px}
+  .paper-category{font-size:.6rem}
+
+  .favorite-star{
+    top:5px;
+    right:4px;
+    width:27px;
+    height:27px;
+    font-size:1.18rem;
+  }
+
+  .paper-badges{
+    gap:3px;
+  }
+
+  .paper-badge{
+    font-size:.46rem;
+    padding:2px 5px;
+  }
+
+  /* Mobile is tap-to-expand rather than hover-to-expand. */
+  .paper .paper-description{
+    position:static;
+    width:auto;
+    margin-top:0;
+    transform:none;
+    opacity:0;
+    visibility:hidden;
+    pointer-events:none;
+    box-shadow:none;
+    display:none;
+  }
+
+  .paper-card.expanded .paper-description{
+    margin-top:8px;
+    opacity:1;
+    visibility:visible;
+    pointer-events:auto;
+    display:block;
+  }
+
+  .paper-card.expanded .paper-description::after{display:none}
   .paper-card:hover,.paper-card:focus-within{transform:none}
-  main{padding:22px 12px 72px}
+  .timeline-meta{gap:8px;font-size:.68rem;margin-bottom:12px}
+  .meta-divider{height:10px}
+  .controls{margin:10px 0 14px}
+  .controls button{padding:7px 11px;font-size:.78rem}
+  main{padding:18px 10px 68px}
 }
 </style>
 </head>
@@ -208,10 +318,12 @@ h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
 A chronologically scaled timeline of the research archive. Hover over a paper to read its description.
 </p>
 
-<div class="stats" id="stats">
-  <div class="stat"><span class="stat-number" id="paperCount">—</span><span class="stat-label">Papers</span></div>
-  <div class="stat"><span class="stat-number" id="earliestPaper">—</span><span class="stat-label">Earliest</span></div>
-  <div class="stat"><span class="stat-number" id="latestPaper">—</span><span class="stat-label">Latest</span></div>
+<div class="timeline-meta" id="stats" aria-live="polite">
+  <span><strong id="paperCount">—</strong> papers</span>
+  <span class="meta-divider"></span>
+  <span>Earliest <strong id="earliestPaper">—</strong></span>
+  <span class="meta-divider"></span>
+  <span>Latest <strong id="latestPaper">—</strong></span>
 </div>
 
 <div class="controls" id="controls"></div>
@@ -237,6 +349,8 @@ const axisLabels = document.getElementById("axisLabels");
 let papers = [];
 let activeFilter = "all";
 let favoritePapers = [];
+let newestKey = "";
+let showNewestBadge = false;
 
 function loadFavorites(){
   try{
@@ -316,6 +430,21 @@ function positionFor(date,min,max){
   const value = dateValue({updated:date}).getTime();
   const a = min.getTime(), b = max.getTime();
   return 3 + ((value-a)/(b-a || 1))*94;
+}
+
+function getPaperBadges(paper){
+  const isNewest = showNewestBadge && paper.key === newestKey;
+  let html = "";
+
+  if(isNewest){
+    html += `<span class="paper-badge newest${paper.featured ? " with-featured" : ""}">New</span>`;
+  }
+
+  if(paper.featured){
+    html += `<span class="paper-badge featured">Featured</span>`;
+  }
+
+  return html ? `<div class="paper-badges">${html}</div>` : "";
 }
 
 function buildLanes(items){
@@ -405,12 +534,15 @@ function render(){
       <div class="connector" aria-hidden="true"></div>
       <div class="dot" aria-hidden="true"></div>
       <div class="paper-card" tabindex="0">
+        <div class="paper-topline">
+          <div class="paper-date">${escapeHtml(formatDate(p))}</div>
+          ${getPaperBadges(p)}
+        </div>
         <button type="button"
                 class="favorite-star ${isFavorite(p.key) ? "active" : ""}"
                 data-favorite-key="${escapeHtml(p.key)}"
                 aria-label="${isFavorite(p.key) ? "Remove from favorites" : "Add to favorites"}"
                 title="${isFavorite(p.key) ? "Remove from favorites" : "Add to favorites"}">${isFavorite(p.key) ? "★" : "☆"}</button>
-        <div class="paper-date">${escapeHtml(formatDate(p))}</div>
         <div class="paper-title">${escapeHtml(p.title)}</div>
         <div class="paper-category">${escapeHtml(cats)}</div>
         <div class="paper-description">
@@ -428,6 +560,21 @@ function render(){
     <span>${max.toLocaleDateString(undefined,{year:"numeric",month:"short"})}</span>
   `;
 }
+
+document.addEventListener("click", e=>{
+  if(window.innerWidth > 900) return;
+
+  const card = e.target.closest(".paper-card");
+  if(!card) return;
+
+  if(e.target.closest(".favorite-star, .paper-link")) return;
+
+  document.querySelectorAll(".paper-card.expanded").forEach(other=>{
+    if(other !== card) other.classList.remove("expanded");
+  });
+
+  card.classList.toggle("expanded");
+});
 
 document.addEventListener("pointerdown", e=>{
   const star=e.target.closest(".favorite-star");
@@ -505,10 +652,25 @@ async function load(){
         updated:p.updated,
         category:p.category,
         description:p.description || "",
-        url:p.url || ""
+        url:p.url || "",
+        featured:Boolean(p.featured),
+        featuredOrder:Number(p.featuredOrder) || 999999
       }));
 
     if(!papers.length) throw new Error("No timeline records found.");
+
+    const newestPaper = [...papers].sort(
+      (a,b) => dateValue(b) - dateValue(a)
+    )[0];
+
+    newestKey = newestPaper.key;
+
+    const newestDate = dateValue(newestPaper);
+    const today = new Date();
+    const oneYearAgo = new Date(today);
+    oneYearAgo.setFullYear(today.getFullYear() - 1);
+
+    showNewestBadge = newestDate >= oneYearAgo;
 
     loadFavorites();
     buildControls();
