@@ -115,15 +115,14 @@ h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
   align-items:center;
   justify-content:flex-start;
   gap:4px;
-  width:100%;
-  max-width:calc(100% - 31px);
-  min-height:12px;
   margin:2px 0 0;
   pointer-events:none;
   white-space:nowrap;
-  overflow:visible;
+  max-width:calc(100% - 31px);
 }
 .paper-badges.has-badges{display:flex !important}
+
+.paper-badges.has-badges{display:flex}
 .paper-badge{
   color:#fff;
   font-size:.55rem;
@@ -295,8 +294,9 @@ h1{text-align:center;margin:0 0 6px;font-size:clamp(1.8rem,4vw,2.7rem)}
     font-size:.61rem;
     line-height:13px;
   }
-  .paper-badges{
-    display:flex;
+
+  .paper-badges{display:none;}
+  .paper-badges.has-badges{display:flex;
     justify-content:flex-start;
     align-items:center;
     gap:3px;
@@ -1010,3 +1010,10 @@ window.addEventListener("resize",()=>{
 </script>
 </body>
 </html>
+
+<style>
+.timeline-start-date,
+.timeline-end-date{
+  display:none !important;
+}
+</style>
