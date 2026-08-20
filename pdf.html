@@ -390,20 +390,6 @@ input:focus-visible{
 }
 
 /* ============================================================
-   TOOLBAR DIVIDER
-============================================================ */
-
-.toolbarDivider{
-  width:1px;
-
-  height:22px;
-
-  background:#383838;
-
-  margin:0 2px;
-}
-
-/* ============================================================
    TITLE BAR
 ============================================================ */
 
@@ -592,11 +578,10 @@ input:focus-visible{
 }
 
 /* ============================================================
-   LARGE SEARCH NAVIGATION BUTTONS
+   SEARCH NAVIGATION BUTTONS
 ============================================================ */
 
 #searchPopup .searchNavButton{
-
   width:42px;
   min-width:42px;
 
@@ -642,7 +627,7 @@ input:focus-visible{
 #searchResults{
   color:#aaa;
 
-  min-width:70px;
+  min-width:95px;
 
   text-align:center;
 
@@ -824,7 +809,6 @@ input:focus-visible{
 }
 
 .search-highlight{
-
   position:absolute;
 
   background:
@@ -846,11 +830,11 @@ input:focus-visible{
 .search-highlight.search-current{
 
   background:
-    rgba(0,105,255,.48);
+    rgba(0,105,255,.55);
 
   box-shadow:
     0 0 0 1px
-    rgba(0,80,220,.30);
+    rgba(0,80,220,.35);
 }
 
 /* ============================================================
@@ -998,12 +982,6 @@ input:focus-visible{
    READING MODE
 ============================================================ */
 
-/*
-   Reading mode completely removes the normal viewer chrome.
-   The elements are not merely visually hidden; their height,
-   padding, borders, and spacing are also collapsed.
-*/
-
 body.reading-mode header,
 body.reading-mode #toolbar,
 body.reading-mode #titleBar,
@@ -1067,6 +1045,7 @@ body.reading-mode #readingModeFloat{
 @media (max-width:768px){
 
   #toolbar{
+
     justify-content:center;
 
     gap:4px;
@@ -1075,6 +1054,7 @@ body.reading-mode #readingModeFloat{
   }
 
   .toolButton{
+
     height:30px;
 
     padding:0 8px;
@@ -1083,28 +1063,33 @@ body.reading-mode #readingModeFloat{
   }
 
   .zoomControls{
+
     height:30px;
   }
 
   .zoomControls button{
+
     width:27px;
 
     height:26px;
   }
 
   #zoomPercent{
+
     width:53px;
 
     height:25px;
   }
 
   .pageControls{
+
     height:30px;
 
     padding:0 5px;
   }
 
   #pageNumber{
+
     width:40px;
 
     height:25px;
@@ -1113,6 +1098,7 @@ body.reading-mode #readingModeFloat{
   #searchPopup{
 
     left:8px;
+
     right:8px;
 
     top:104px;
@@ -1142,9 +1128,11 @@ body.reading-mode #readingModeFloat{
   #searchPopup .searchNavButton{
 
     width:48px;
+
     min-width:48px;
 
     height:44px;
+
     min-height:44px;
 
     font-size:21px;
@@ -1154,7 +1142,7 @@ body.reading-mode #readingModeFloat{
 
     flex:1;
 
-    min-width:80px;
+    min-width:95px;
   }
 
   #readingModeFloat{
@@ -1164,6 +1152,7 @@ body.reading-mode #readingModeFloat{
     bottom:88px;
 
     width:46px;
+
     height:46px;
 
     font-size:16px;
@@ -1214,6 +1203,7 @@ body.reading-mode #readingModeFloat{
 
     order:1;
   }
+
 }
 
 /* ============================================================
@@ -1623,7 +1613,7 @@ const RENDER_MARGIN =
   "1400px";
 
 /* ============================================================
-   ESCAPE
+   ESCAPE HTML
 ============================================================ */
 
 function escapeHtml(value){
@@ -1924,16 +1914,22 @@ let searchTimer =
 let searchBusy =
   false;
 
-/*
-   currentSearchOperation always resolves once whatever
-   search is currently running (debounced or forced) has
-   finished. Navigation (Enter / arrow buttons) awaits this
-   before acting, so it never silently no-ops just because a
-   search was still in flight.
-*/
-
 let currentSearchOperation =
   Promise.resolve();
+
+/*
+   Position where the current search started.
+
+   These values are captured only when a genuinely new
+   search is started. Zooming/resizing will not overwrite
+   them or restart the result sequence.
+*/
+
+let searchStartPage =
+  1;
+
+let searchStartOffset =
+  0;
 
 /* ============================================================
    SEARCH CANCELLATION
@@ -1962,14 +1958,14 @@ function cancelSearch(){
   searchResults =
     [];
 
-  searchBox.value =
-    "";
+  clearSearchHighlights();
 
   searchBox.classList.remove(
     "searching"
   );
 
-  clearSearchHighlights();
+  currentSearchOperation =
+    Promise.resolve();
 
   updateSearchCounter();
 }
@@ -2174,7 +2170,7 @@ function layoutPage(
 }
 
 /* ============================================================
-   RESET PAGE
+   RESET PAGE RENDER
 ============================================================ */
 
 function resetRenderedPage(
@@ -2757,6 +2753,34 @@ async function renderPage(
     currentScale
   ){
 
+    /*
+       Make sure text exists before returning.
+    */
+
+    if(
+      !view.textLayerDiv.querySelector(
+        "span"
+      )
+    ){
+
+      await paintText(
+        view,
+        generation
+      );
+    }
+
+    if(
+      !view.linkLayerDiv.childElementCount &&
+      Array.isArray(
+        view.annotations
+      )
+    ){
+
+      renderLinkLayer(
+        view
+      );
+    }
+
     return;
   }
 
@@ -3159,19 +3183,9 @@ function setReadingMode(
     menu.style.display =
       "none";
 
-    /*
-       Reading mode closes the search popup,
-       but does not destroy the search data.
-    */
-
     searchPopup.classList.add(
       "hidden"
     );
-
-    /*
-       Explicitly remove the normal chrome
-       space from the viewer.
-    */
 
     layout.style.top =
       "0px";
@@ -3193,11 +3207,6 @@ function setReadingMode(
 
     readingModeFloat.title =
       "Reading Mode";
-
-    /*
-       Let the normal chrome measurement restore
-       the correct viewer position.
-    */
 
     layout.style.height =
       "";
@@ -3234,6 +3243,19 @@ function setReadingMode(
       }
 
       renderNearbyPages();
+
+      /*
+         If search is active, reconstruct the highlight
+         geometry without changing search order.
+      */
+
+      if(
+        lastSearchQuery &&
+        searchResults.length
+      ){
+
+        void refreshCurrentSearchHighlights();
+      }
 
     }
   );
@@ -3471,7 +3493,128 @@ function normalizeSearchText(
       /\s+/g,
       " "
     )
+    .trim()
     .toLowerCase();
+}
+
+/* ============================================================
+   NORMALIZED DOM MAP
+============================================================ */
+
+function buildNormalizedDomMap(
+  view
+){
+
+  const nodes =
+    getTextNodes(
+      view
+    );
+
+  let normalized =
+    "";
+
+  const map =
+    [];
+
+  let pendingSpace =
+    null;
+
+  function appendCharacter(
+    character,
+    node,
+    offset
+  ){
+
+    normalized +=
+      character;
+
+    map.push({
+
+      node,
+
+      offset
+
+    });
+  }
+
+  for(
+    const node
+    of nodes
+  ){
+
+    const text =
+      node.nodeValue || "";
+
+    for(
+      let i = 0;
+      i < text.length;
+      i++
+    ){
+
+      let character =
+        text[i];
+
+      if(
+        character ===
+        "\u00a0"
+      ){
+
+        character = " ";
+      }
+
+      if(
+        /\s/.test(
+          character
+        )
+      ){
+
+        if(
+          normalized.length &&
+          !normalized.endsWith(" ")
+        ){
+
+          pendingSpace = {
+
+            node,
+
+            offset:i
+
+          };
+        }
+
+        continue;
+      }
+
+      if(
+        pendingSpace
+      ){
+
+        appendCharacter(
+          " ",
+          pendingSpace.node,
+          pendingSpace.offset
+        );
+
+        pendingSpace =
+          null;
+      }
+
+      appendCharacter(
+        character.toLowerCase(),
+        node,
+        i
+      );
+    }
+  }
+
+  return {
+
+    text:
+      normalized,
+
+    map
+
+  };
 }
 
 /* ============================================================
@@ -3563,7 +3706,7 @@ function createHighlightForRange(
 }
 
 /* ============================================================
-   SEARCH OCCURRENCES ON PAGE
+   FIND OCCURRENCES ON PAGE
 ============================================================ */
 
 function findOccurrencesOnPage(
@@ -3579,54 +3722,26 @@ function findOccurrencesOnPage(
     return [];
   }
 
-  const nodes =
-    getTextNodes(
+  const {
+    text,
+    map
+  } =
+    buildNormalizedDomMap(
       view
     );
 
+  const normalizedQuery =
+    normalizeSearchText(
+      query
+    );
+
   if(
-    !nodes.length
+    !normalizedQuery ||
+    !text.length
   ){
 
     return [];
   }
-
-  let fullText =
-    "";
-
-  const positions = [];
-
-  for(
-    const node
-    of nodes
-  ){
-
-    const nodeText =
-      node.nodeValue || "";
-
-    const start =
-      fullText.length;
-
-    fullText +=
-      nodeText;
-
-    positions.push({
-
-      node,
-
-      start,
-
-      end:
-        fullText.length
-
-    });
-  }
-
-  const lowerText =
-    fullText.toLowerCase();
-
-  const lowerQuery =
-    query.toLowerCase();
 
   const occurrences =
     [];
@@ -3637,13 +3752,14 @@ function findOccurrencesOnPage(
   while(true){
 
     const matchStart =
-      lowerText.indexOf(
-        lowerQuery,
+      text.indexOf(
+        normalizedQuery,
         searchAt
       );
 
     if(
-      matchStart === -1
+      matchStart ===
+      -1
     ){
 
       break;
@@ -3651,68 +3767,33 @@ function findOccurrencesOnPage(
 
     const matchEnd =
       matchStart +
-      lowerQuery.length;
+      normalizedQuery.length;
 
-    let startInfo =
-      null;
+    const startMap =
+      map[
+        matchStart
+      ];
 
-    let endInfo =
-      null;
-
-    for(
-      const info
-      of positions
-    ){
-
-      if(
-        !startInfo &&
-        matchStart >=
-          info.start &&
-        matchStart <
-          info.end
-      ){
-
-        startInfo =
-          info;
-      }
-
-      if(
-        matchEnd >
-          info.start &&
-        matchEnd <=
-          info.end
-      ){
-
-        endInfo =
-          info;
-
-        break;
-      }
-    }
+    const endMap =
+      map[
+        matchEnd - 1
+      ];
 
     if(
-      startInfo &&
-      endInfo
+      startMap &&
+      endMap
     ){
-
-      const startOffset =
-        matchStart -
-        startInfo.start;
-
-      const endOffset =
-        matchEnd -
-        endInfo.start;
 
       const elements =
         createHighlightForRange(
 
           view,
 
-          startInfo.node,
-          startOffset,
+          startMap.node,
+          startMap.offset,
 
-          endInfo.node,
-          endOffset
+          endMap.node,
+          endMap.offset + 1
 
         );
 
@@ -3720,12 +3801,24 @@ function findOccurrencesOnPage(
         elements.length
       ){
 
+        const firstRect =
+          elements[0]
+            .getBoundingClientRect();
+
+        const layerRect =
+          view.searchLayerDiv
+            .getBoundingClientRect();
+
         occurrences.push({
 
           view,
 
           pageNumber:
             view.pageNumber,
+
+          top:
+            firstRect.top -
+            layerRect.top,
 
           elements
 
@@ -3737,7 +3830,7 @@ function findOccurrencesOnPage(
       matchStart +
       Math.max(
         1,
-        lowerQuery.length
+        normalizedQuery.length
       );
   }
 
@@ -3765,19 +3858,283 @@ function clearSearchHighlights(){
 }
 
 /* ============================================================
+   CURRENT READING POSITION
+============================================================ */
+
+function getCurrentReadingPosition(){
+
+  const viewerRect =
+    viewer.getBoundingClientRect();
+
+  const targetY =
+    viewerRect.top +
+    Math.min(
+      Math.max(
+        40,
+        viewer.clientHeight * 0.25
+      ),
+      180
+    );
+
+  let bestView =
+    null;
+
+  let bestDistance =
+    Infinity;
+
+  for(
+    const view
+    of pageViews
+  ){
+
+    if(!view){
+
+      continue;
+    }
+
+    const rect =
+      view.pageDiv
+        .getBoundingClientRect();
+
+    const pageTop =
+      rect.top;
+
+    const pageBottom =
+      rect.bottom;
+
+    if(
+      pageBottom >=
+        viewerRect.top &&
+
+      pageTop <=
+        viewerRect.bottom
+    ){
+
+      const distance =
+        Math.abs(
+          targetY -
+          Math.min(
+            Math.max(
+              targetY,
+              pageTop
+            ),
+            pageBottom
+          )
+        );
+
+      if(
+        distance <
+        bestDistance
+      ){
+
+        bestDistance =
+          distance;
+
+        bestView =
+          view;
+      }
+    }
+  }
+
+  if(!bestView){
+
+    const scrollTop =
+      viewer.scrollTop;
+
+    for(
+      const view
+      of pageViews
+    ){
+
+      if(!view){
+
+        continue;
+      }
+
+      const top =
+        view.pageDiv.offsetTop;
+
+      const bottom =
+        top +
+        view.pageDiv.offsetHeight;
+
+      if(
+        scrollTop >= top &&
+        scrollTop <= bottom
+      ){
+
+        bestView =
+          view;
+
+        break;
+      }
+    }
+  }
+
+  if(!bestView){
+
+    return {
+
+      pageNumber:1,
+
+      offset:0
+
+    };
+  }
+
+  const pageRect =
+    bestView.pageDiv
+      .getBoundingClientRect();
+
+  const offset =
+    Math.max(
+      0,
+      Math.min(
+        bestView.pageDiv.offsetHeight,
+
+        targetY -
+        pageRect.top
+      )
+    );
+
+  return {
+
+    pageNumber:
+      bestView.pageNumber,
+
+    offset
+
+  };
+}
+
+/* ============================================================
+   ORDER RESULTS FROM CURRENT POSITION
+============================================================ */
+
+function orderResultsFromCurrentPosition(
+  results,
+  startPage,
+  startOffset
+){
+
+  if(
+    !results.length
+  ){
+
+    return [];
+  }
+
+  const sorted =
+    [...results].sort(
+      (a,b) => {
+
+        if(
+          a.pageNumber !==
+          b.pageNumber
+        ){
+
+          return (
+            a.pageNumber -
+            b.pageNumber
+          );
+        }
+
+        if(
+          a.top !==
+          b.top
+        ){
+
+          return (
+            a.top -
+            b.top
+          );
+        }
+
+        return 0;
+      }
+    );
+
+  const startIndex =
+    sorted.findIndex(
+      result => {
+
+        if(
+          result.pageNumber >
+          startPage
+        ){
+
+          return true;
+        }
+
+        if(
+          result.pageNumber <
+          startPage
+        ){
+
+          return false;
+        }
+
+        return (
+          result.top >=
+          startOffset
+        );
+      }
+    );
+
+  if(
+    startIndex ===
+    -1
+  ){
+
+    return sorted;
+  }
+
+  return [
+
+    ...sorted.slice(
+      startIndex
+    ),
+
+    ...sorted.slice(
+      0,
+      startIndex
+    )
+
+  ];
+}
+
+/* ============================================================
    SEARCH COUNTER
 ============================================================ */
 
 function updateSearchCounter(){
 
   if(
+    searchBusy
+  ){
+
+    searchResultsLabel.textContent =
+      "Searching…";
+
+    return;
+  }
+
+  if(
+    !lastSearchQuery
+  ){
+
+    searchResultsLabel.textContent =
+      "0 of 0";
+
+    return;
+  }
+
+  if(
     !searchResults.length
   ){
 
     searchResultsLabel.textContent =
-      lastSearchQuery
-        ? "0 results"
-        : "0 of 0";
+      "No result found";
 
     return;
   }
@@ -3866,7 +4223,10 @@ async function scrollToSearchResult(
   await new Promise(
     resolve =>
       requestAnimationFrame(
-        resolve
+        () =>
+          requestAnimationFrame(
+            resolve
+          )
       )
   );
 
@@ -3941,12 +4301,14 @@ async function scrollToSearchResult(
 }
 
 /* ============================================================
-   REBUILD SEARCH
+   REBUILD SEARCH RESULTS
 ============================================================ */
 
 async function rebuildSearchHighlights(
   query,
-  generation
+  generation,
+  startPage,
+  startOffset
 ){
 
   if(
@@ -3960,12 +4322,26 @@ async function rebuildSearchHighlights(
 
   clearSearchHighlights();
 
-  const results = [];
+  const allResults =
+    [];
 
   const normalizedQuery =
     normalizeSearchText(
       query
     );
+
+  if(!normalizedQuery){
+
+    return;
+  }
+
+  /*
+     Every page is explicitly loaded/rendered here.
+
+     This prevents the old problem where searching would
+     eventually run out of highlights because only pages
+     near the current viewport had text layers.
+  */
 
   for(
     let pageNumber = 1;
@@ -3994,38 +4370,6 @@ async function rebuildSearchHighlights(
       continue;
     }
 
-    const textContent =
-      await ensureTextContent(
-        view
-      );
-
-    if(
-      generation !==
-        searchGeneration
-    ){
-
-      return;
-    }
-
-    const pageText =
-      textContent.items
-        .map(
-          item =>
-            item.str || ""
-        )
-        .join("");
-
-    if(
-      !normalizeSearchText(
-        pageText
-      ).includes(
-        normalizedQuery
-      )
-    ){
-
-      continue;
-    }
-
     await renderPage(
       view
     );
@@ -4041,28 +4385,17 @@ async function rebuildSearchHighlights(
     await new Promise(
       resolve =>
         requestAnimationFrame(
-          () =>
-            requestAnimationFrame(
-              resolve
-            )
+          resolve
         )
     );
-
-    if(
-      generation !==
-        searchGeneration
-    ){
-
-      return;
-    }
 
     const pageResults =
       findOccurrencesOnPage(
         view,
-        query
+        normalizedQuery
       );
 
-    results.push(
+    allResults.push(
       ...pageResults
     );
   }
@@ -4076,13 +4409,21 @@ async function rebuildSearchHighlights(
   }
 
   searchResults =
-    results;
+    orderResultsFromCurrentPosition(
+
+      allResults,
+
+      startPage,
+
+      startOffset
+
+    );
 
   lastSearchQuery =
     query;
 
   currentSearch =
-    results.length
+    searchResults.length
       ? 0
       : -1;
 
@@ -4091,35 +4432,64 @@ async function rebuildSearchHighlights(
   updateSearchCounter();
 
   if(
-    results.length
+    searchResults.length
   ){
 
     await scrollToSearchResult(
-      results[0]
+      searchResults[0]
     );
 
   }
 }
 
 /* ============================================================
-   RUN SEARCH NOW
-   (shared by the debounce timer and by forced/immediate
-   triggers like Enter or the nav arrows, so both paths go
-   through the exact same busy-state bookkeeping and both
-   are captured by currentSearchOperation)
+   RUN NEW SEARCH
 ============================================================ */
 
 function runSearchNow(
   query
 ){
 
+  const trimmedQuery =
+    String(
+      query || ""
+    ).trim();
+
+  if(!trimmedQuery){
+
+    cancelSearch();
+
+    return Promise.resolve();
+  }
+
   searchGeneration++;
 
   const generation =
     searchGeneration;
 
+  /*
+     Capture the user's current reading position
+     exactly once, at the start of this new search.
+  */
+
+  const position =
+    getCurrentReadingPosition();
+
+  searchStartPage =
+    position.pageNumber;
+
+  searchStartOffset =
+    position.offset;
+
   searchBusy =
     true;
+
+  searchResults = [];
+
+  currentSearch =
+    -1;
+
+  clearSearchHighlights();
 
   searchBox.classList.add(
     "searching"
@@ -4134,8 +4504,15 @@ function runSearchNow(
       try{
 
         await rebuildSearchHighlights(
-          query,
-          generation
+
+          trimmedQuery,
+
+          generation,
+
+          searchStartPage,
+
+          searchStartOffset
+
         );
 
       }catch(error){
@@ -4157,12 +4534,12 @@ function runSearchNow(
             -1;
 
           lastSearchQuery =
-            query;
+            trimmedQuery;
 
           clearSearchHighlights();
 
           searchResultsLabel.textContent =
-            "Search error";
+            "No result found";
         }
 
       }finally{
@@ -4181,6 +4558,7 @@ function runSearchNow(
 
           updateSearchCounter();
         }
+
       }
 
     })();
@@ -4206,6 +4584,11 @@ function scheduleSearch(){
 
   searchTimer =
     null;
+
+  /*
+     Changing the query means this is a completely new
+     search. It will restart at the user's current position.
+  */
 
   searchGeneration++;
 
@@ -4256,11 +4639,6 @@ function scheduleSearch(){
 
 /* ============================================================
    ENSURE QUERY SEARCHED
-   Used before any navigation action (Enter key, prev/next
-   arrows). If a debounce is still pending, run it right now
-   instead of waiting. If a search is already in flight, wait
-   for it. Either way, by the time this resolves the current
-   searchBox value has been (or is being) searched.
 ============================================================ */
 
 async function ensureQuerySearched(){
@@ -4274,7 +4652,8 @@ async function ensureQuerySearched(){
   }
 
   if(
-    searchTimer !== null
+    searchTimer !==
+    null
   ){
 
     clearTimeout(
@@ -4293,13 +4672,6 @@ async function ensureQuerySearched(){
       lastSearchQuery &&
     !searchBusy
   ){
-
-    /*
-       Query text doesn't match what's currently
-       highlighted and nothing is in flight — search
-       hasn't run for this text yet (e.g. programmatic
-       value change). Run it now.
-    */
 
     runSearchNow(
       query
@@ -4324,6 +4696,9 @@ async function showSearchResult(
   if(
     !searchResults.length
   ){
+
+    searchResultsLabel.textContent =
+      "No result found";
 
     return;
   }
@@ -4366,6 +4741,9 @@ async function goToSearchResult(
     await ensureQuerySearched();
 
   if(!hasResults){
+
+    searchResultsLabel.textContent =
+      "No result found";
 
     return;
   }
@@ -4413,9 +4791,11 @@ searchBox.addEventListener(
       event.preventDefault();
 
       await goToSearchResult(
+
         event.shiftKey
           ? -1
           : 1
+
       );
     }
   }
@@ -4503,7 +4883,7 @@ searchPopup.addEventListener(
 );
 
 /* ============================================================
-   OUTSIDE SEARCH CLICK = CANCEL SEARCH
+   OUTSIDE SEARCH CLICK
 ============================================================ */
 
 document.addEventListener(
@@ -4541,6 +4921,153 @@ document.addEventListener(
 
   }
 );
+
+/* ============================================================
+   REFRESH SEARCH HIGHLIGHTS ONLY
+============================================================ */
+
+/*
+   Used after zoom, resize, or reading-mode layout changes.
+
+   This does NOT restart the search.
+
+   The current result order and current result number remain
+   unchanged. Only the DOM highlight geometry is reconstructed.
+*/
+
+async function refreshCurrentSearchHighlights(){
+
+  if(
+    !lastSearchQuery ||
+    !searchResults.length
+  ){
+
+    return;
+  }
+
+  const savedIndex =
+    currentSearch;
+
+  const savedQuery =
+    lastSearchQuery;
+
+  const generation =
+    searchGeneration;
+
+  clearSearchHighlights();
+
+  const rebuiltResults =
+    [];
+
+  for(
+    let pageNumber = 1;
+
+    pageNumber <=
+      (pdfDoc?.numPages || 0);
+
+    pageNumber++
+  ){
+
+    if(
+      generation !==
+      searchGeneration ||
+      savedQuery !==
+      lastSearchQuery
+    ){
+
+      return;
+    }
+
+    const view =
+      await ensurePageView(
+        pageNumber
+      );
+
+    if(!view){
+
+      continue;
+    }
+
+    await renderPage(
+      view
+    );
+
+    if(
+      generation !==
+      searchGeneration
+    ){
+
+      return;
+    }
+
+    await new Promise(
+      resolve =>
+        requestAnimationFrame(
+          resolve
+        )
+    );
+
+    const pageResults =
+      findOccurrencesOnPage(
+        view,
+        savedQuery
+      );
+
+    rebuiltResults.push(
+      ...pageResults
+    );
+  }
+
+  if(
+    generation !==
+    searchGeneration
+  ){
+
+    return;
+  }
+
+  /*
+     The previous result list was already rotated relative
+     to the original search starting point. Re-rotate using
+     the same stored start position so indexes remain stable.
+  */
+
+  searchResults =
+    orderResultsFromCurrentPosition(
+
+      rebuiltResults,
+
+      searchStartPage,
+
+      searchStartOffset
+
+    );
+
+  if(
+    !searchResults.length
+  ){
+
+    currentSearch =
+      -1;
+
+    updateSearchCounter();
+
+    return;
+  }
+
+  currentSearch =
+    Math.min(
+      Math.max(
+        0,
+        savedIndex
+      ),
+      searchResults.length - 1
+    );
+
+  markCurrentSearch();
+
+  updateSearchCounter();
+}
 
 /* ============================================================
    ZOOM
@@ -4617,15 +5144,18 @@ async function rescaleAndRender(){
           );
       }
 
+      /*
+         Preserve the current search position.
+
+         Zooming does NOT start a new search.
+      */
+
       if(
-        lastSearchQuery
+        lastSearchQuery &&
+        searchResults.length
       ){
 
-        runSearchNow(
-          lastSearchQuery
-        );
-
-        await currentSearchOperation;
+        await refreshCurrentSearchHighlights();
       }
 
     }
@@ -4893,7 +5423,8 @@ viewer.addEventListener(
       }
 
       const rect =
-        view.pageDiv.getBoundingClientRect();
+        view.pageDiv
+          .getBoundingClientRect();
 
       const distance =
         Math.abs(
@@ -4936,9 +5467,7 @@ menuButton.addEventListener(
 
     menu.style.display =
       menu.style.display === "block"
-
         ? "none"
-
         : "block";
   }
 );
@@ -5296,13 +5825,19 @@ try{
   loadingOverlay.style.display =
     "none";
 
+  /*
+     Initialize the remaining page shells in the
+     background. Search does not depend on this process
+     finishing.
+  */
+
   void (async () => {
 
     for(
       let pageNumber = 2;
 
       pageNumber <=
-        pdfDoc.numPages;
+      pdfDoc.numPages;
 
       pageNumber++
     ){
@@ -5342,11 +5877,12 @@ try{
           viewer.getBoundingClientRect();
 
         const pageRect =
-          view.pageDiv.getBoundingClientRect();
+          view.pageDiv
+            .getBoundingClientRect();
 
         if(
           pageRect.top <=
-            viewerRect.bottom + 1400
+          viewerRect.bottom + 1400
         ){
 
           void renderPage(
