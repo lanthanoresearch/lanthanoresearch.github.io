@@ -2,20 +2,16 @@
 <html lang="en">
 <head>
 
-<link
-    rel="icon"
-    type="image/png"
-    href="file_000000000c40722f92b1fe6758cb4855.png"
->
+<link rel="icon" type="image/png" href="file_000000000c40722f92b1fe6758cb4855.png">
 
 <meta charset="UTF-8">
 
 <meta
-    name="viewport"
-    content="width=device-width,initial-scale=1.0"
+  name="viewport"
+  content="width=device-width,initial-scale=1.0"
 >
 
-<title>Advanced Image Viewer</title>
+<title>Image Viewer</title>
 
 <style>
 
@@ -24,710 +20,620 @@
 ============================================================ */
 
 :root{
-    --bg:#111;
-    --panel:#1b1b1b;
-    --panel2:#242424;
-    --text:#eee;
-    --muted:#aaa;
+  --bg:#111;
+  --panel:#1b1b1b;
+  --panel2:#242424;
+  --text:#eee;
+  --muted:#aaa;
+  --viewer-top:106px;
 }
 
 *{
-    box-sizing:border-box;
+  box-sizing:border-box;
 }
 
 html,
 body{
-    margin:0;
-    width:100%;
-    height:100%;
-
-    background:var(--bg);
-    color:var(--text);
-
-    font-family:Arial,sans-serif;
-
-    overflow:hidden;
+  margin:0;
+  width:100%;
+  height:100%;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Arial,sans-serif;
+  overflow:hidden;
 }
-
-body{
-    display:flex;
-    flex-direction:column;
-}
-
 
 /* ============================================================
    HEADER
-   Modeled after PDF viewer
 ============================================================ */
 
 header{
+  position:fixed;
+  top:0;
+  left:0;
+  right:0;
 
-    min-height:58px;
-    height:58px;
+  min-height:58px;
+  height:58px;
 
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
 
-    padding:0 14px;
+  padding:0 14px;
 
-    background:#181818;
+  background:#181818;
 
-    border-bottom:1px solid #2d2d2d;
+  border-bottom:1px solid #2d2d2d;
 
-    flex-shrink:0;
-
-    z-index:6000;
+  z-index:6000;
 }
-
-.top{
-
-    width:100%;
-
-    display:flex;
-
-    align-items:center;
-
-    justify-content:space-between;
-
-    gap:8px;
-}
-
 
 /* ============================================================
-   BACK BUTTON
+   TOOLBAR
 ============================================================ */
 
-#homeButton{
+#toolbar{
+  position:fixed;
 
-    background:#333;
+  top:58px;
+  left:0;
+  right:0;
 
-    color:#fff;
+  min-height:46px;
 
-    border:none;
+  display:flex;
+  align-items:center;
+  justify-content:center;
 
-    border-radius:7px;
+  gap:6px;
 
-    padding:9px 12px;
+  padding:6px 8px;
 
-    text-decoration:none;
+  background:#1b1b1b;
 
-    cursor:pointer;
+  border-bottom:1px solid #2d2d2d;
 
-    display:inline-flex;
+  flex-wrap:wrap;
 
-    align-items:center;
-
-    justify-content:center;
-
-    white-space:nowrap;
-
-    font-family:Arial,sans-serif;
-
-    font-size:14px;
-
-    line-height:normal;
+  z-index:5500;
 }
-
-#homeButton:hover{
-    background:#353535;
-}
-
-#homeButton:active{
-    background:#414141;
-}
-
 
 /* ============================================================
-   HEADER CONTROLS
+   MAIN LAYOUT
 ============================================================ */
 
-.controls{
+#layout{
+  position:absolute;
 
-    display:flex;
+  top:var(--viewer-top);
 
-    align-items:center;
+  left:0;
+  right:0;
+  bottom:0;
 
-    gap:6px;
-
-    flex-wrap:wrap;
+  height:auto;
 }
-
-
-/* ============================================================
-   STANDARD BUTTON
-   Modeled after PDF .btn
-============================================================ */
-
-.btn{
-
-    background:#333;
-
-    color:#fff;
-
-    border:none;
-
-    border-radius:7px;
-
-    padding:9px 12px;
-
-    text-decoration:none;
-
-    cursor:pointer;
-
-    display:inline-flex;
-
-    align-items:center;
-
-    justify-content:center;
-
-    white-space:nowrap;
-
-    font-family:Arial,sans-serif;
-
-    font-size:14px;
-
-    line-height:normal;
-}
-
-.btn:hover{
-    background:#353535;
-}
-
-.btn:active{
-    background:#414141;
-}
-
-
-/* ============================================================
-   PDF BUTTON
-============================================================ */
-
-#pdfButton{
-    display:none;
-}
-
-
-/* ============================================================
-   MENU BUTTON
-   Same compact size as PDF
-============================================================ */
-
-#menuBtn{
-
-    width:32px;
-    height:32px;
-
-    min-width:32px;
-    min-height:32px;
-
-    padding:0;
-
-    display:inline-flex;
-
-    align-items:center;
-    justify-content:center;
-
-    background:#292929;
-
-    color:#fff;
-
-    border:1px solid #383838;
-
-    border-radius:6px;
-
-    font-family:Arial,sans-serif;
-
-    font-size:16px;
-
-    line-height:1;
-
-    outline:none;
-
-    cursor:pointer;
-}
-
-#menuBtn:hover{
-    background:#353535;
-}
-
-#menuBtn:active{
-    background:#414141;
-}
-
-#menuBtn:focus-visible{
-    border-color:#666;
-
-    outline:1px solid #555;
-}
-
-
-/* ============================================================
-   MENU
-   Modeled after PDF viewer
-============================================================ */
-
-#menu{
-
-    position:fixed;
-
-    right:10px;
-    top:58px;
-
-    background:#222;
-
-    border:1px solid #333;
-
-    border-radius:10px;
-
-    padding:8px;
-
-    display:none;
-
-    min-width:220px;
-
-    z-index:7000;
-
-    box-shadow:
-        0 8px 20px rgba(0,0,0,.35);
-}
-
-#menu button{
-
-    width:100%;
-
-    text-align:left;
-
-    margin:3px 0;
-
-    background:#292929;
-
-    color:#fff;
-
-    border:1px solid #383838;
-
-    border-radius:6px;
-
-    padding:6px 9px;
-
-    font:inherit;
-
-    cursor:pointer;
-
-    outline:none;
-}
-
-#menu button:hover{
-    background:#353535;
-}
-
-#menu button:active{
-    background:#414141;
-}
-
-#menu button:focus-visible{
-
-    border-color:#666;
-
-    outline:1px solid #555;
-}
-
 
 /* ============================================================
    VIEWER
 ============================================================ */
 
 #viewer{
+  position:relative;
 
-    flex:1;
+  width:100%;
+  height:100%;
 
-    position:relative;
+  overflow:hidden;
 
-    overflow:hidden;
+  background:#111;
 
-    touch-action:none;
-
-    background:#111;
+  touch-action:none;
 }
 
 #img{
+  position:absolute;
+  left:50%;
+  top:50%;
 
-    position:absolute;
+  transform-origin:center center;
 
-    left:50%;
-    top:50%;
+  user-select:none;
+  -webkit-user-drag:none;
 
-    transform-origin:center center;
-
-    user-select:none;
-
-    -webkit-user-drag:none;
-
-    max-width:none;
-
-    pointer-events:auto;
+  max-width:none;
 }
 
+/* ============================================================
+   BUTTONS
+============================================================ */
+
+.btn{
+  background:#333;
+
+  color:#fff;
+
+  border:none;
+
+  border-radius:7px;
+
+  padding:9px 12px;
+
+  text-decoration:none;
+
+  cursor:pointer;
+
+  display:inline-flex;
+
+  align-items:center;
+
+  white-space:nowrap;
+}
+
+.btn:hover{
+  background:#3a3a3a;
+}
+
+button,
+input{
+  background:#292929;
+
+  color:#fff;
+
+  border:1px solid #383838;
+
+  border-radius:6px;
+
+  padding:6px 9px;
+
+  font:inherit;
+
+  outline:none;
+}
+
+button:hover{
+  background:#353535;
+
+  cursor:pointer;
+}
+
+button:active{
+  background:#414141;
+}
+
+button:focus-visible,
+input:focus-visible{
+  border-color:#666;
+
+  outline:1px solid #555;
+}
+
+/* ============================================================
+   COMPACT TOOLBAR CONTROLS
+============================================================ */
+
+.toolButton{
+  height:32px;
+
+  padding:0 10px;
+
+  display:inline-flex;
+
+  align-items:center;
+
+  justify-content:center;
+
+  white-space:nowrap;
+
+  font-size:13px;
+
+  border-radius:6px;
+
+  text-decoration:none;
+}
+
+.iconButton{
+  width:32px;
+  height:32px;
+
+  padding:0;
+
+  display:inline-flex;
+
+  align-items:center;
+
+  justify-content:center;
+
+  font-size:16px;
+
+  border-radius:6px;
+}
+
+/* ============================================================
+   ZOOM
+============================================================ */
+
+.zoomControls{
+  display:flex;
+
+  align-items:center;
+
+  gap:3px;
+
+  height:32px;
+
+  padding:0 3px;
+
+  background:#242424;
+
+  border:1px solid #353535;
+
+  border-radius:7px;
+}
+
+.zoomControls button{
+  width:29px;
+  height:28px;
+
+  padding:0;
+
+  border:0;
+
+  background:transparent;
+
+  font-size:17px;
+
+  display:flex;
+
+  align-items:center;
+
+  justify-content:center;
+}
+
+.zoomControls button:hover{
+  background:#353535;
+}
+
+#zoomPercent{
+  width:58px;
+
+  height:27px;
+
+  padding:2px 4px;
+
+  text-align:center;
+
+  background:#1d1d1d;
+
+  border:0;
+
+  border-radius:4px;
+
+  font-size:12px;
+}
+
+/* ============================================================
+   TOOLBAR DIVIDER
+============================================================ */
+
+.toolbarDivider{
+  width:1px;
+
+  height:22px;
+
+  background:#383838;
+
+  margin:0 2px;
+}
 
 /* ============================================================
    TITLE BAR
-   Modeled after PDF title bar
 ============================================================ */
 
-.title{
+#titleBar{
+  position:fixed;
 
-    position:relative;
+  left:0;
+  right:0;
+  bottom:0;
 
-    background:rgba(24,24,24,.92);
+  background:rgba(24,24,24,.92);
 
-    padding:12px 18px;
+  padding:12px 18px;
 
-    text-align:center;
+  text-align:center;
 
-    z-index:3000;
+  z-index:3000;
 
-    border-top:1px solid #333;
+  border-top:1px solid #333;
 
-    backdrop-filter:blur(6px);
+  backdrop-filter:blur(6px);
+}
 
-    font-size:1.2rem;
+#title{
+  width:100%;
 
-    font-weight:bold;
+  text-align:center;
+
+  font-size:1.2rem;
+
+  font-weight:bold;
+
+  overflow:hidden;
+
+  white-space:nowrap;
+
+  text-overflow:ellipsis;
+}
+
+/* ============================================================
+   MENU
+============================================================ */
+
+#menu{
+  position:fixed;
+
+  right:10px;
+  top:58px;
+
+  background:#222;
+
+  border:1px solid #333;
+
+  border-radius:10px;
+
+  padding:8px;
+
+  display:none;
+
+  min-width:220px;
+
+  z-index:7000;
+}
+
+#menu button{
+  width:100%;
+
+  text-align:left;
+
+  margin:3px 0;
+}
+
+/* ============================================================
+   FLOATING READING MODE
+============================================================ */
+
+#readingModeFloat{
+
+  position:fixed;
+
+  right:18px;
+
+  bottom:86px;
+
+  width:48px;
+  height:48px;
+
+  display:flex;
+
+  align-items:center;
+  justify-content:center;
+
+  padding:0;
+
+  border-radius:50%;
+
+  background:
+    rgba(40,40,40,.94);
+
+  border:1px solid #555;
+
+  color:#fff;
+
+  font-size:18px;
+
+  box-shadow:
+    0 5px 18px rgba(0,0,0,.45);
+
+  z-index:9000;
+
+  cursor:pointer;
+
+  backdrop-filter:blur(6px);
+
+  transition:
+    transform .15s ease,
+    background .15s ease;
+}
+
+#readingModeFloat:hover{
+  background:#3a3a3a;
+
+  transform:scale(1.05);
+}
+
+#readingModeFloat:active{
+  transform:scale(.96);
+}
+
+/* ============================================================
+   LOADING
+============================================================ */
+
+#loadingOverlay{
+  position:fixed;
+
+  inset:var(--viewer-top) 0 0 0;
+
+  display:flex;
+
+  flex-direction:column;
+
+  justify-content:center;
+  align-items:center;
+
+  background:#111;
+
+  z-index:8000;
+}
+
+.spinner{
+  width:60px;
+  height:60px;
+
+  border:6px solid #333;
+
+  border-top:6px solid #fff;
+
+  border-radius:50%;
+
+  animation:
+    spin .9s linear infinite;
+}
+
+.loadingText{
+  margin-top:18px;
+
+  color:#ddd;
+
+  font-size:18px;
+}
+
+@keyframes spin{
+
+  from{
+    transform:rotate(0deg);
+  }
+
+  to{
+    transform:rotate(360deg);
+  }
+
+}
+
+/* ============================================================
+   READING MODE
+============================================================ */
+
+body.reading-mode header,
+body.reading-mode #toolbar,
+body.reading-mode #titleBar,
+body.reading-mode #menu{
+
+  display:none !important;
+
+  height:0 !important;
+
+  min-height:0 !important;
+
+  max-height:0 !important;
+
+  margin:0 !important;
+
+  padding:0 !important;
+
+  border:0 !important;
+
+  overflow:hidden !important;
+}
+
+body.reading-mode #layout{
+
+  top:0 !important;
+
+  height:100% !important;
+
+  position:absolute;
+}
+
+body.reading-mode #loadingOverlay{
+
+  inset:0;
+}
+
+body.reading-mode #readingModeFloat{
+
+  right:16px;
+
+  bottom:16px;
+
+  background:
+    rgba(40,40,40,.88);
+}
+
+/* ============================================================
+   MOBILE
+============================================================ */
+
+@media (max-width:768px){
+
+  #toolbar{
+    justify-content:center;
+
+    gap:4px;
+
+    padding:5px;
+  }
+
+  .toolButton{
+    height:30px;
+
+    padding:0 8px;
+
+    font-size:12px;
+  }
+
+  .zoomControls{
+    height:30px;
+  }
+
+  .zoomControls button{
+    width:27px;
+
+    height:26px;
+  }
+
+  #zoomPercent{
+    width:53px;
+
+    height:25px;
+  }
+
+  #readingModeFloat{
+
+    right:14px;
+
+    bottom:88px;
+
+    width:46px;
+    height:46px;
+
+    font-size:16px;
+  }
+
+  body.reading-mode #readingModeFloat{
+
+    right:12px;
+
+    bottom:12px;
+  }
+
+  #title{
 
     white-space:nowrap;
 
     overflow:hidden;
 
     text-overflow:ellipsis;
+  }
 
-    flex-shrink:0;
-}
-
-
-/* ============================================================
-   ZOOM BAR
-============================================================ */
-
-#zoomBar{
-
-    display:flex;
-
-    align-items:center;
-
-    justify-content:center;
-
-    gap:6px;
-
-    min-height:46px;
-
-    padding:6px 8px;
-
-    background:#1b1b1b;
-
-    border-top:1px solid #2d2d2d;
-
-    flex-wrap:wrap;
-
-    z-index:5500;
-}
-
-
-/* ============================================================
-   UNIFIED ZOOM CONTROL
-   Exact visual concept from PDF
-============================================================ */
-
-.zoomControls{
-
-    display:flex;
-
-    align-items:center;
-
-    gap:3px;
-
-    height:32px;
-
-    padding:0 3px;
-
-    background:#242424;
-
-    border:1px solid #353535;
-
-    border-radius:7px;
-}
-
-.zoomControls button{
-
-    width:29px;
-    height:28px;
-
-    padding:0;
-
-    border:0;
-
-    background:transparent;
-
-    color:#fff;
-
-    font-size:17px;
-
-    display:flex;
-
-    align-items:center;
-
-    justify-content:center;
-
-    border-radius:4px;
-
-    cursor:pointer;
-}
-
-.zoomControls button:hover{
-    background:#353535;
-}
-
-.zoomControls button:active{
-    background:#414141;
-}
-
-#zoom{
-
-    width:58px;
-    height:27px;
-
-    padding:2px 4px;
-
-    display:flex;
-
-    align-items:center;
-    justify-content:center;
-
-    background:#1d1d1d;
-
-    border:0;
-
-    border-radius:4px;
-
-    color:#fff;
-
-    font-size:12px;
-
-    line-height:1;
-
-    user-select:none;
-}
-
-
-/* ============================================================
-   READING MODE FLOATING BUTTON
-   Same visual language as PDF
-============================================================ */
-
-#readingModeFloat{
-
-    position:fixed;
-
-    right:18px;
-    bottom:86px;
-
-    width:48px;
-    height:48px;
-
-    display:flex;
-
-    align-items:center;
-    justify-content:center;
-
-    padding:0;
-
-    border-radius:50%;
-
-    background:
-        rgba(40,40,40,.94);
-
-    border:1px solid #555;
-
-    color:#fff;
-
-    font-size:18px;
-
-    box-shadow:
-        0 5px 18px rgba(0,0,0,.45);
-
-    z-index:9000;
-
-    cursor:pointer;
-
-    backdrop-filter:blur(6px);
-
-    transition:
-        transform .15s ease,
-        background .15s ease;
-}
-
-#readingModeFloat:hover{
-
-    background:#3a3a3a;
-
-    transform:scale(1.05);
-}
-
-#readingModeFloat:active{
-
-    transform:scale(.96);
-}
-
-
-/* ============================================================
-   READING MODE
-   Modeled directly after PDF
-============================================================ */
-
-body.reading-mode header,
-body.reading-mode #zoomBar,
-body.reading-mode .title,
-body.reading-mode #menu{
-
-    display:none !important;
-
-    height:0 !important;
-
-    min-height:0 !important;
-
-    max-height:0 !important;
-
-    margin:0 !important;
-
-    padding:0 !important;
-
-    border:0 !important;
-
-    overflow:hidden !important;
-}
-
-body.reading-mode #viewer{
-
-    position:absolute;
-
-    inset:0;
-
-    width:100%;
-    height:100%;
-
-    padding:20px;
-
-    overflow:hidden;
-}
-
-body.reading-mode #readingModeFloat{
-
-    right:16px;
-
-    bottom:16px;
-
-    background:
-        rgba(40,40,40,.88);
-}
-
-
-/* ============================================================
-   MOBILE
-============================================================ */
-
-@media(max-width:768px){
-
-    header{
-
-        padding:0 10px;
-    }
-
-    .controls{
-
-        gap:4px;
-    }
-
-    #homeButton{
-
-        padding:8px 10px;
-
-        font-size:13px;
-    }
-
-    #menuBtn{
-
-        width:30px;
-        height:30px;
-
-        min-width:30px;
-        min-height:30px;
-
-        font-size:15px;
-    }
-
-    #zoomBar{
-
-        gap:4px;
-
-        padding:5px;
-    }
-
-    .zoomControls{
-
-        height:30px;
-    }
-
-    .zoomControls button{
-
-        width:27px;
-        height:26px;
-    }
-
-    #zoom{
-
-        width:53px;
-        height:25px;
-    }
-
-    .btn{
-
-        padding:8px 10px;
-
-        font-size:13px;
-    }
-
-    .title{
-
-        font-size:1.2rem;
-
-        padding:10px 14px;
-    }
-
-    #readingModeFloat{
-
-        right:14px;
-
-        bottom:88px;
-
-        width:46px;
-        height:46px;
-
-        font-size:16px;
-    }
-
-    body.reading-mode #readingModeFloat{
-
-        right:12px;
-
-        bottom:12px;
-    }
 }
 
 </style>
-
 </head>
 
 <body>
-
 
 <!-- ==========================================================
      HEADER
@@ -735,44 +641,119 @@ body.reading-mode #readingModeFloat{
 
 <header>
 
-    <div class="top">
+  <a
+    class="btn"
+    id="homeButton"
+    href="index.html"
+  >
+    ◀ Back
+  </a>
 
-        <a
-            class="btn"
-            id="homeButton"
-            href="index.html"
-        >
-            ◀ Back
-        </a>
+  <div style="flex:1"></div>
 
-
-        <div class="controls">
-
-            <a
-                class="btn"
-                id="pdfButton"
-                target="_blank"
-                rel="noopener"
-            >
-                PDF
-            </a>
-
-
-            <button
-                id="menuBtn"
-                type="button"
-                aria-label="Menu"
-                title="Menu"
-            >
-                ☰
-            </button>
-
-        </div>
-
-    </div>
+  <button id="menuBtn">
+    ☰
+  </button>
 
 </header>
 
+<!-- ==========================================================
+     TOOLBAR
+========================================================== -->
+
+<div id="toolbar">
+
+  <div class="zoomControls">
+
+    <button
+      id="minus"
+      title="Zoom out"
+    >
+      −
+    </button>
+
+    <input
+      id="zoomPercent"
+      value="100%"
+      aria-label="Zoom percentage"
+    >
+
+    <button
+      id="plus"
+      title="Zoom in"
+    >
+      +
+    </button>
+
+  </div>
+
+  <button
+    id="fit"
+    class="toolButton"
+    title="Reset view"
+  >
+    Reset
+  </button>
+
+  <button
+    id="lock"
+    class="toolButton"
+    title="Toggle movement mode"
+  >
+    ✣ Free
+  </button>
+
+  <div class="toolbarDivider"></div>
+
+  <a
+    class="btn toolButton"
+    id="pdfButton"
+    target="_blank"
+    style="display:none"
+  >
+    PDF
+  </a>
+
+</div>
+
+<!-- ==========================================================
+     LAYOUT
+========================================================== -->
+
+<div id="layout">
+
+  <div id="loadingOverlay">
+
+    <div class="spinner"></div>
+
+    <div class="loadingText">
+      Loading image...
+    </div>
+
+  </div>
+
+  <div id="viewer">
+
+    <img
+      id="img"
+      alt=""
+    >
+
+  </div>
+
+</div>
+
+<!-- ==========================================================
+     TITLE BAR
+========================================================== -->
+
+<div id="titleBar">
+
+  <div id="title">
+    Loading...
+  </div>
+
+</div>
 
 <!-- ==========================================================
      MENU
@@ -780,124 +761,45 @@ body.reading-mode #readingModeFloat{
 
 <div id="menu">
 
-    <button id="downloadBtn">
-        Download Image
-    </button>
+  <button id="downloadBtn">
+    Download Image
+  </button>
 
-    <button id="newTabBtn">
-        Open in New Tab
-    </button>
+  <button id="newTabBtn">
+    Open in New Tab
+  </button>
 
-    <button id="shareBtn">
-        Share Image
-    </button>
+  <button id="shareBtn">
+    Share Image
+  </button>
 
-    <button id="fullscreenBtn">
-        Fullscreen
-    </button>
-
-</div>
-
-
-<!-- ==========================================================
-     IMAGE VIEWER
-========================================================== -->
-
-<div id="viewer">
-
-    <img
-        id="img"
-        alt=""
-    >
+  <button id="fullscreenBtn">
+    Fullscreen
+  </button>
 
 </div>
-
-
-<!-- ==========================================================
-     TITLE
-========================================================== -->
-
-<div
-    class="title"
-    id="title"
->
-    Loading...
-</div>
-
-
-<!-- ==========================================================
-     ZOOM CONTROLS
-========================================================== -->
-
-<div id="zoomBar">
-
-    <div class="zoomControls">
-
-        <button
-            id="minus"
-            title="Zoom out"
-            aria-label="Zoom out"
-        >
-            −
-        </button>
-
-
-        <div
-            id="zoom"
-            aria-label="Zoom percentage"
-        >
-            100%
-        </div>
-
-
-        <button
-            id="plus"
-            title="Zoom in"
-            aria-label="Zoom in"
-        >
-            +
-        </button>
-
-    </div>
-
-
-    <button
-        class="btn"
-        id="fit"
-    >
-        Reset
-    </button>
-
-
-    <button
-        class="btn"
-        id="lock"
-    >
-        ✣ Free
-    </button>
-
-</div>
-
 
 <!-- ==========================================================
      FLOATING READING MODE
 ========================================================== -->
 
 <button
-    id="readingModeFloat"
-    type="button"
-    aria-label="Toggle Reading Mode"
-    title="Reading Mode"
+  id="readingModeFloat"
+  aria-label="Toggle Reading Mode"
+  title="Reading Mode"
 >
-    ▣
+  ▣
 </button>
-
 
 <script>
 
-/* ============================================================
-   URL PARAMETERS
-============================================================ */
+
+/* =========================================================
+   IMAGE VIEWER
+   ========================================================= */
+
+
+/* ---------- URL Parameters ---------- */
 
 const p =
     new URLSearchParams(
@@ -906,63 +808,63 @@ const p =
 
 
 const img =
-    document.getElementById(
-        "img"
-    );
+    document.getElementById("img");
 
 
 const viewer =
-    document.getElementById(
-        "viewer"
-    );
+    document.getElementById("viewer");
 
 
 const title =
-    document.getElementById(
-        "title"
-    );
+    document.getElementById("title");
 
 
 const fitButton =
-    document.getElementById(
-        "fit"
-    );
+    document.getElementById("fit");
 
 
 const lockButton =
-    document.getElementById(
-        "lock"
-    );
+    document.getElementById("lock");
 
 
 const minusButton =
-    document.getElementById(
-        "minus"
-    );
+    document.getElementById("minus");
 
 
 const plusButton =
-    document.getElementById(
-        "plus"
-    );
+    document.getElementById("plus");
 
 
 const menu =
-    document.getElementById(
-        "menu"
-    );
+    document.getElementById("menu");
 
 
 const menuButton =
-    document.getElementById(
-        "menuBtn"
-    );
+    document.getElementById("menuBtn");
+
+
+const zoomPercent =
+    document.getElementById("zoomPercent");
+
+
+const loadingOverlay =
+    document.getElementById("loadingOverlay");
+
+
+const header =
+    document.querySelector("header");
+
+
+const toolbar =
+    document.getElementById("toolbar");
+
+
+const layout =
+    document.getElementById("layout");
 
 
 const readingModeFloat =
-    document.getElementById(
-        "readingModeFloat"
-    );
+    document.getElementById("readingModeFloat");
 
 
 const src =
@@ -973,19 +875,56 @@ const src =
 
 const returnPage =
     decodeURIComponent(
-        p.get("return") ||
-        "index.html"
+        p.get("return") || "index.html"
     );
 
 
-/* ============================================================
-   BACK BUTTON
-============================================================ */
+/* ---------- Chrome Height Sync ---------- */
+
+function syncViewerTop(){
+
+    if(
+        document.body.classList.contains(
+            "reading-mode"
+        )
+    ){
+
+        return;
+
+    }
+
+    const headerHeight =
+        header.getBoundingClientRect()
+            .height;
+
+    const toolbarHeight =
+        toolbar.getBoundingClientRect()
+            .height;
+
+    const total =
+        Math.ceil(
+            headerHeight +
+            toolbarHeight
+        );
+
+    document.documentElement.style.setProperty(
+        "--viewer-top",
+        `${total}px`
+    );
+
+    layout.style.top =
+        `${total}px`;
+
+    loadingOverlay.style.top =
+        `${total}px`;
+
+}
+
+
+/* ---------- Back Button ---------- */
 
 const homeButton =
-    document.getElementById(
-        "homeButton"
-    );
+    document.getElementById("homeButton");
 
 
 homeButton.href =
@@ -994,101 +933,85 @@ homeButton.href =
 
 homeButton.addEventListener(
     "click",
-    function(event){
+    function(e){
 
-        event.preventDefault();
+        e.preventDefault();
+
 
         sessionStorage.setItem(
             "restoreSearch",
             "yes"
         );
 
-        sessionStorage.setItem(
-            "returnFromPage",
-            "yes"
-        );
 
         location.href =
             returnPage;
+
     }
 );
 
 
-/* ============================================================
-   FIND PDF
-============================================================ */
+/* ---------- Find PDF ---------- */
 
 fetch("descriptions.json")
-.then(
-    response =>
-        response.json()
-)
-.then(
-    data => {
+.then(r => r.json())
+.then(data => {
 
-        let paper =
-            null;
+    let paper = null;
 
-        Object.values(
-            data
-        ).forEach(
-            item => {
 
-                if(
-                    !item.images
-                ){
+    Object.values(data).forEach(p => {
 
-                    return;
-                }
-
-                if(
-                    item.images.includes(
-                        src
-                    )
-                ){
-
-                    paper =
-                        item;
-                }
-
-            }
-        );
-
-        if(
-            !paper
-        ){
-
+        if(!p.images)
             return;
+
+
+        if(p.images.includes(src)){
+
+            paper = p;
+
         }
 
-        const pdfButton =
-            document.getElementById(
-                "pdfButton"
-            );
-
-        pdfButton.href =
-            paper.url;
-
-        pdfButton.style.display =
-            "inline-flex";
-
-    }
-)
-.catch(
-    error => {
-
-        console.warn(
-            "Could not load descriptions.json:",
-            error
-        );
-
-    }
-);
+    });
 
 
-/* ============================================================
-   IMAGE
-============================================================ */
+    if(!paper)
+        return;
+
+
+    const pdfButton =
+        document.getElementById("pdfButton");
+
+    pdfButton.href =
+        paper.url;
+
+    pdfButton.style.display =
+        "inline-flex";
+
+});
+
+
+/* ---------- Image ---------- */
+
+img.onload =
+    () => {
+
+        loadingOverlay.style.display =
+            "none";
+
+        fit();
+
+    };
+
+
+img.onerror =
+    () => {
+
+        loadingOverlay.style.display =
+            "none";
+
+    };
+
 
 img.src =
     src;
@@ -1102,22 +1025,13 @@ const filename =
 
 const displayName =
     filename
-        .replace(
-            /\.[^/.]+$/,
-            ""
-        )
-        .replace(
-            /[-_]+/g,
-            " "
-        )
-        .replace(
-            /\b\w/g,
-            function(char){
+        .replace(/\.[^/.]+$/, "")
+        .replace(/[-_]+/g, " ")
+        .replace(/\b\w/g, function(char){
 
-                return char.toUpperCase();
+            return char.toUpperCase();
 
-            }
-        );
+        });
 
 
 title.textContent =
@@ -1128,21 +1042,18 @@ document.title =
     displayName;
 
 
-/* ============================================================
+/* =========================================================
    IMAGE MOVEMENT / ZOOM
-============================================================ */
+   ========================================================= */
 
-let base =
-    1;
 
-let zoom =
-    1;
+let base = 1;
 
-let offsetX =
-    0;
+let zoom = 1;
 
-let offsetY =
-    0;
+let offsetX = 0;
+
+let offsetY = 0;
 
 
 /*
@@ -1153,58 +1064,44 @@ let offsetY =
     horizontal = left/right only
 */
 
-let movementMode =
-    "free";
-
-
-const zoomLabel =
-    document.getElementById(
-        "zoom"
-    );
+let movementMode = "free";
 
 
 const pointers =
     new Map();
 
 
-let pinchDistance =
-    0;
+let pinchDistance = 0;
 
-let pinchZoom =
-    1;
+let pinchZoom = 1;
 
 
-/* ============================================================
-   ZOOM LIMITS
-============================================================ */
+/* ---------- Zoom Limits ---------- */
 
 function clampZoom(){
 
-    if(
-        zoom < 0.05
-    ){
+    if(zoom < 0.05){
 
-        zoom =
-            0.05;
+        zoom = 0.05;
+
     }
 
-    if(
-        zoom > 50
-    ){
 
-        zoom =
-            50;
+    if(zoom > 50){
+
+        zoom = 50;
+
     }
+
 }
 
 
-/* ============================================================
-   DRAW
-============================================================ */
+/* ---------- Draw ---------- */
 
 function draw(){
 
     clampZoom();
+
 
     img.style.transform =
 
@@ -1214,82 +1111,77 @@ function draw(){
         )
         scale(${base * zoom})`;
 
-    zoomLabel.textContent =
-        Math.round(
-            zoom * 100
-        ) + "%";
+
+    zoomPercent.value =
+        Math.round(zoom * 100) + "%";
+
 }
 
 
-/* ============================================================
-   FIT / RESET
-============================================================ */
+/* ---------- Fit / Reset ---------- */
 
 function fit(){
 
-    if(
-        !img.naturalWidth
-    ){
-
+    if(!img.naturalWidth)
         return;
-    }
 
-    base =
-        Math.min(
 
-            viewer.clientWidth /
-            img.naturalWidth,
+    base = Math.min(
 
-            viewer.clientHeight /
-            img.naturalHeight
+        viewer.clientWidth /
+        img.naturalWidth,
 
-        );
+        viewer.clientHeight /
+        img.naturalHeight
 
-    zoom =
-        1;
+    );
 
-    offsetX =
-        0;
 
-    offsetY =
-        0;
+    zoom = 1;
+
+
+    offsetX = 0;
+
+    offsetY = 0;
+
 
     img.style.transition =
         "transform .22s";
 
+
     draw();
+
 
     setTimeout(
         () => {
 
-            img.style.transition =
-                "";
+            img.style.transition = "";
 
         },
         220
     );
+
 }
-
-
-img.onload =
-    fit;
 
 
 window.addEventListener(
     "resize",
-    fit
+    () => {
+
+        syncViewerTop();
+
+        fit();
+
+    }
 );
 
 
-/* ============================================================
-   ZOOM BUTTONS
-============================================================ */
+/* ---------- Zoom Buttons ---------- */
 
 minusButton.onclick =
     () => {
 
-        zoom /=
-            1.1;
+        zoom /= 1.1;
 
         draw();
 
@@ -1299,8 +1191,7 @@ minusButton.onclick =
 plusButton.onclick =
     () => {
 
-        zoom *=
-            1.1;
+        zoom *= 1.1;
 
         draw();
 
@@ -1311,124 +1202,164 @@ fitButton.onclick =
     fit;
 
 
-/* ============================================================
-   MOVEMENT MODE
-============================================================ */
+/* ---------- Manual Zoom ---------- */
 
-lockButton.onclick =
-    () => {
-
-        if(
-            movementMode ===
-            "free"
-        ){
-
-            movementMode =
-                "vertical";
-
-            lockButton.textContent =
-                "↕ Vertical";
-
-        }else if(
-            movementMode ===
-            "vertical"
-        ){
-
-            movementMode =
-                "horizontal";
-
-            lockButton.textContent =
-                "↔ Horizontal";
-
-        }else{
-
-            movementMode =
-                "free";
-
-            lockButton.textContent =
-                "✣ Free";
-        }
-
-    };
-
-
-/* ============================================================
-   POINTER DOWN
-============================================================ */
-
-viewer.onpointerdown =
+zoomPercent.addEventListener(
+    "keydown",
     event => {
 
+        if(
+            event.key !==
+            "Enter"
+        ){
+
+            return;
+
+        }
+
+        let value =
+            parseFloat(
+                zoomPercent.value.replace(
+                    "%",
+                    ""
+                )
+            );
+
+        if(
+            Number.isNaN(value)
+        ){
+
+            value =
+                100;
+
+        }
+
+        value =
+            Math.max(
+                5,
+
+                Math.min(
+                    5000,
+                    value
+                )
+            );
+
+        zoom =
+            value / 100;
+
+        draw();
+
+    }
+);
+
+
+/* =========================================================
+   MOVEMENT MODE
+   ========================================================= */
+
+lockButton.onclick = () => {
+
+    if(movementMode === "free"){
+
+        movementMode = "vertical";
+
+        lockButton.textContent =
+            "↕ Vertical";
+
+    }else if(movementMode === "vertical"){
+
+        movementMode = "horizontal";
+
+        lockButton.textContent =
+            "↔ Horizontal";
+
+    }else{
+
+        movementMode = "free";
+
+        lockButton.textContent =
+            "✣ Free";
+
+    }
+
+};
+
+
+/* =========================================================
+   POINTER EVENTS
+   ========================================================= */
+
+
+/* ---------- Pointer Down ---------- */
+
+viewer.onpointerdown =
+    e => {
+
         viewer.setPointerCapture(
-            event.pointerId
+            e.pointerId
         );
+
 
         pointers.set(
 
-            event.pointerId,
+            e.pointerId,
 
             {
-                x:event.clientX,
-                y:event.clientY
+                x:e.clientX,
+                y:e.clientY
             }
 
         );
 
-        if(
-            pointers.size === 2
-        ){
 
-            const points =
-                [
-                    ...pointers.values()
-                ];
+        if(pointers.size === 2){
+
+            const pts =
+                [...pointers.values()];
+
 
             pinchDistance =
                 Math.hypot(
 
-                    points[0].x -
-                    points[1].x,
+                    pts[0].x -
+                    pts[1].x,
 
-                    points[0].y -
-                    points[1].y
+                    pts[0].y -
+                    pts[1].y
 
                 );
 
+
             pinchZoom =
                 zoom;
+
         }
 
     };
 
 
-/* ============================================================
-   POINTER MOVE
-============================================================ */
+/* ---------- Pointer Move ---------- */
 
 viewer.onpointermove =
-    event => {
+    e => {
 
-        if(
-            !pointers.has(
-                event.pointerId
-            )
-        ){
-
+        if(!pointers.has(e.pointerId))
             return;
-        }
+
 
         const previous =
             pointers.get(
-                event.pointerId
+                e.pointerId
             );
+
 
         pointers.set(
 
-            event.pointerId,
+            e.pointerId,
 
             {
-                x:event.clientX,
-                y:event.clientY
+                x:e.clientX,
+                y:e.clientY
             }
 
         );
@@ -1436,80 +1367,75 @@ viewer.onpointermove =
 
         /* ---------- One Finger ---------- */
 
-        if(
-            pointers.size === 1
-        ){
+        if(pointers.size === 1){
 
             const dx =
-                event.clientX -
+                e.clientX -
                 previous.x;
 
+
             const dy =
-                event.clientY -
+                e.clientY -
                 previous.y;
 
 
-            if(
-                movementMode ===
-                "free"
-            ){
+            /*
+                Free:
+                move both directions.
 
-                offsetX +=
-                    dx;
+                Vertical:
+                only up/down.
 
-                offsetY +=
-                    dy;
+                Horizontal:
+                only left/right.
+            */
 
-            }else if(
-                movementMode ===
-                "vertical"
-            ){
+            if(movementMode === "free"){
 
-                offsetY +=
-                    dy;
+                offsetX += dx;
 
-            }else if(
-                movementMode ===
-                "horizontal"
-            ){
+                offsetY += dy;
 
-                offsetX +=
-                    dx;
+            }else if(movementMode === "vertical"){
+
+                offsetY += dy;
+
+            }else if(movementMode === "horizontal"){
+
+                offsetX += dx;
+
             }
+
 
             draw();
 
+
             return;
+
         }
 
 
         /* ---------- Two Finger Pinch ---------- */
 
-        const points =
-            [
-                ...pointers.values()
-            ];
+        const pts =
+            [...pointers.values()];
+
 
         const distance =
             Math.hypot(
 
-                points[0].x -
-                points[1].x,
+                pts[0].x -
+                pts[1].x,
 
-                points[0].y -
-                points[1].y
+                pts[0].y -
+                pts[1].y
 
             );
 
-        if(
-            !pinchDistance
-        ){
-
-            return;
-        }
 
         const oldScale =
             base * zoom;
+
 
         zoom =
             pinchZoom *
@@ -1518,410 +1444,83 @@ viewer.onpointermove =
                 pinchDistance
             );
 
+
         clampZoom();
+
 
         const newScale =
             base * zoom;
+
 
         const ratio =
             newScale /
             oldScale;
 
-        offsetX *=
-            ratio;
 
-        offsetY *=
-            ratio;
+        offsetX *= ratio;
+
+        offsetY *= ratio;
+
 
         pinchDistance =
             distance;
 
+
         pinchZoom =
             zoom;
 
+
         draw();
+
     };
 
 
-/* ============================================================
-   POINTER UP
-============================================================ */
+/* ---------- Pointer Up ---------- */
 
 viewer.onpointerup =
-    event => {
+    e => {
 
         pointers.delete(
-            event.pointerId
+            e.pointerId
         );
 
-        if(
-            pointers.size < 2
-        ){
 
-            pinchDistance =
-                0;
+        if(pointers.size < 2){
+
+            pinchDistance = 0;
+
         }
 
     };
 
 
-/* ============================================================
-   POINTER CANCEL
-============================================================ */
+/* ---------- Pointer Cancel ---------- */
 
 viewer.onpointercancel =
-    event => {
+    e => {
 
         pointers.delete(
-            event.pointerId
+            e.pointerId
         );
 
-        if(
-            pointers.size < 2
-        ){
 
-            pinchDistance =
-                0;
+        if(pointers.size < 2){
+
+            pinchDistance = 0;
+
         }
 
     };
 
 
-/* ============================================================
-   INITIAL DRAW
-============================================================ */
+/* ---------- Initial Draw ---------- */
 
 draw();
 
-fit();
 
-
-/* ============================================================
-   FULLSCREEN
-============================================================ */
-
-document
-    .getElementById(
-        "fullscreenBtn"
-    )
-    .onclick =
-    async () => {
-
-        menu.style.display =
-            "none";
-
-        try{
-
-            if(
-                document.fullscreenElement
-            ){
-
-                await document.exitFullscreen();
-
-            }else{
-
-                await document.documentElement
-                    .requestFullscreen();
-
-            }
-
-        }catch(error){
-
-            console.warn(
-                "Fullscreen failed:",
-                error
-            );
-
-        }
-
-    };
-
-
-/* ============================================================
-   MOUSE WHEEL ZOOM
-============================================================ */
-
-viewer.addEventListener(
-    "wheel",
-    event => {
-
-        event.preventDefault();
-
-        const rect =
-            viewer.getBoundingClientRect();
-
-        const mouseX =
-            event.clientX -
-            rect.left -
-            rect.width / 2;
-
-        const mouseY =
-            event.clientY -
-            rect.top -
-            rect.height / 2;
-
-        const oldScale =
-            base * zoom;
-
-        if(
-            event.deltaY < 0
-        ){
-
-            zoom *=
-                1.12;
-
-        }else{
-
-            zoom /=
-                1.12;
-        }
-
-        clampZoom();
-
-        const newScale =
-            base * zoom;
-
-        const ratio =
-            newScale /
-            oldScale;
-
-        offsetX =
-
-            mouseX -
-            (
-                mouseX -
-                offsetX
-            ) * ratio;
-
-        offsetY =
-
-            mouseY -
-            (
-                mouseY -
-                offsetY
-            ) * ratio;
-
-        draw();
-
-    },
-    {
-        passive:false
-    }
-);
-
-
-/* ============================================================
-   MENU
-============================================================ */
-
-menuButton.addEventListener(
-    "click",
-    event => {
-
-        event.stopPropagation();
-
-        menu.style.display =
-
-            menu.style.display ===
-            "block"
-
-                ? "none"
-                : "block";
-
-    }
-);
-
-
-menu.addEventListener(
-    "click",
-    event => {
-
-        event.stopPropagation();
-
-    }
-);
-
-
-document.addEventListener(
-    "click",
-    event => {
-
-        if(
-            menu.contains(
-                event.target
-            ) ||
-            event.target.closest(
-                "#menuBtn"
-            )
-        ){
-
-            return;
-        }
-
-        menu.style.display =
-            "none";
-
-    }
-);
-
-
-/* ============================================================
-   NEW TAB
-============================================================ */
-
-document
-    .getElementById(
-        "newTabBtn"
-    )
-    .onclick =
-    () => {
-
-        menu.style.display =
-            "none";
-
-        window.open(
-            src,
-            "_blank"
-        );
-
-    };
-
-
-/* ============================================================
-   DOWNLOAD
-============================================================ */
-
-document
-    .getElementById(
-        "downloadBtn"
-    )
-    .onclick =
-    () => {
-
-        const a =
-            document.createElement(
-                "a"
-            );
-
-        a.href =
-            src;
-
-        a.download =
-            src
-                .split("/")
-                .pop();
-
-        document.body.appendChild(
-            a
-        );
-
-        a.click();
-
-        a.remove();
-
-        menu.style.display =
-            "none";
-
-    };
-
-
-/* ============================================================
-   SHARE IMAGE
-============================================================ */
-
-document
-    .getElementById(
-        "shareBtn"
-    )
-    .addEventListener(
-        "click",
-        async () => {
-
-            const url =
-                window.location.href;
-
-            menu.style.display =
-                "none";
-
-
-            /* Native share */
-
-            if(
-                navigator.share
-            ){
-
-                try{
-
-                    await navigator.share({
-
-                        title:
-                            title.textContent,
-
-                        text:
-                            title.textContent,
-
-                        url:
-                            url
-
-                    });
-
-                    return;
-
-                }catch(error){
-
-                    if(
-                        error &&
-                        error.name ===
-                        "AbortError"
-                    ){
-
-                        return;
-                    }
-
-                }
-            }
-
-
-            /* Clipboard fallback */
-
-            if(
-                navigator.clipboard &&
-                typeof
-                navigator.clipboard.writeText ===
-                "function"
-            ){
-
-                try{
-
-                    await navigator.clipboard.writeText(
-                        url
-                    );
-
-                    return;
-
-                }catch(error){
-
-                    /* Continue */
-                }
-
-            }
-
-
-            /* Manual fallback */
-
-            window.prompt(
-                "Copy this link:",
-                url
-            );
-
-        }
-    );
-
-
-/* ============================================================
+/* =========================================================
    READING MODE
-   Modeled directly after PDF
-============================================================ */
+   ========================================================= */
 
 let readingMode =
     false;
@@ -1935,7 +1534,6 @@ function setReadingMode(
         Boolean(
             enabled
         );
-
 
     if(
         readingMode
@@ -1954,6 +1552,12 @@ function setReadingMode(
         menu.style.display =
             "none";
 
+        layout.style.top =
+            "0px";
+
+        loadingOverlay.style.top =
+            "0px";
+
     }else{
 
         document.body.classList.remove(
@@ -1966,7 +1570,17 @@ function setReadingMode(
         readingModeFloat.title =
             "Reading Mode";
 
+        syncViewerTop();
+
     }
+
+    requestAnimationFrame(
+        () => {
+
+            fit();
+
+        }
+    );
 
 }
 
@@ -1985,27 +1599,339 @@ readingModeFloat.addEventListener(
 );
 
 
-/* ============================================================
-   PREVENT MENU FROM OPENING IN READING MODE
-============================================================ */
+/* =========================================================
+   FULLSCREEN
+   ========================================================= */
+
+document
+    .getElementById("fullscreenBtn")
+    .onclick = () => {
+
+        menu.style.display =
+            "none";
+
+
+        if(document.fullscreenElement){
+
+            document.exitFullscreen();
+
+        }else{
+
+            document.documentElement
+                .requestFullscreen();
+
+        }
+
+    };
+
+
+/* =========================================================
+   MOUSE WHEEL ZOOM
+   ========================================================= */
+
+viewer.addEventListener(
+    "wheel",
+    e => {
+
+        e.preventDefault();
+
+
+        const rect =
+            viewer.getBoundingClientRect();
+
+
+        const mouseX =
+            e.clientX -
+            rect.left -
+            rect.width / 2;
+
+
+        const mouseY =
+            e.clientY -
+            rect.top -
+            rect.height / 2;
+
+
+        const oldScale =
+            base * zoom;
+
+
+        if(e.deltaY < 0){
+
+            zoom *= 1.12;
+
+        }else{
+
+            zoom /= 1.12;
+
+        }
+
+
+        clampZoom();
+
+
+        const newScale =
+            base * zoom;
+
+
+        const ratio =
+            newScale /
+            oldScale;
+
+
+        offsetX =
+
+            mouseX -
+            (
+                mouseX -
+                offsetX
+            ) * ratio;
+
+
+        offsetY =
+
+            mouseY -
+            (
+                mouseY -
+                offsetY
+            ) * ratio;
+
+
+        draw();
+
+    },
+    {
+        passive:false
+    }
+);
+
+
+/* =========================================================
+   MENU
+   ========================================================= */
 
 menuButton.addEventListener(
     "click",
-    event => {
+    e => {
 
-        if(
-            readingMode
-        ){
+        e.stopPropagation();
 
-            event.preventDefault();
 
-            return;
-        }
+        menu.style.display =
+
+            menu.style.display === "block"
+
+            ? "none"
+
+            : "block";
 
     }
 );
 
-</script>
 
+menu.addEventListener(
+    "click",
+    e => {
+
+        e.stopPropagation();
+
+    }
+);
+
+
+document.addEventListener(
+    "click",
+    () => {
+
+        menu.style.display =
+            "none";
+
+    }
+);
+
+
+/* =========================================================
+   NEW TAB
+   ========================================================= */
+
+document
+    .getElementById("newTabBtn")
+    .onclick = () => {
+
+        menu.style.display =
+            "none";
+
+
+        window.open(
+            src,
+            "_blank"
+        );
+
+    };
+
+
+/* =========================================================
+   DOWNLOAD
+   ========================================================= */
+
+document
+    .getElementById("downloadBtn")
+    .onclick = () => {
+
+        const a =
+            document.createElement("a");
+
+
+        a.href =
+            src;
+
+
+        a.download =
+            src.split("/").pop();
+
+
+        document.body.appendChild(a);
+
+
+        a.click();
+
+
+        a.remove();
+
+
+        menu.style.display =
+            "none";
+
+    };
+
+
+/* =========================================================
+   SHARE
+   ========================================================= */
+
+document
+    .getElementById("shareBtn")
+    .addEventListener(
+        "click",
+        async () => {
+
+            const url =
+                window.location.href;
+
+
+            menu.style.display =
+                "none";
+
+
+            /* Native share */
+
+            if(navigator.share){
+
+                try{
+
+                    await navigator.share({
+
+                        title:
+                            title.textContent,
+
+                        text:
+                            title.textContent,
+
+                        url:
+                            url
+
+                    });
+
+
+                    return;
+
+                }catch(err){
+
+                    if(
+                        err &&
+                        err.name ===
+                        "AbortError"
+                    ){
+
+                        return;
+
+                    }
+
+                }
+
+            }
+
+
+            /* Clipboard fallback */
+
+            if(
+                navigator.clipboard &&
+                typeof navigator.clipboard.writeText ===
+                "function"
+            ){
+
+                try{
+
+                    await navigator.clipboard.writeText(
+                        url
+                    );
+
+
+                    alert(
+                        "Link copied to clipboard!"
+                    );
+
+
+                    return;
+
+                }catch(err){
+
+                    /* Continue to final fallback */
+
+                }
+
+            }
+
+
+            /* Manual fallback */
+
+            window.prompt(
+                "Copy this link:",
+                url
+            );
+
+        }
+    );
+
+
+/* =========================================================
+   CHROME RESIZE OBSERVER
+   ========================================================= */
+
+if(
+    "ResizeObserver" in window
+){
+
+    const chromeObserver =
+        new ResizeObserver(
+            () =>
+                syncViewerTop()
+        );
+
+    chromeObserver.observe(
+        header
+    );
+
+    chromeObserver.observe(
+        toolbar
+    );
+
+}
+
+
+syncViewerTop();
+
+
+</script>
 </body>
 </html>
