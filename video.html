@@ -1,482 +1,810 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
 
-    <link
-        rel="icon"
-        type="image/png"
-        href="file_000000000c40722f92b1fe6758cb4855.png"
-    >
+<link rel="icon" type="image/png" href="file_000000000c40722f92b1fe6758cb4855.png">
 
-    <meta charset="utf-8">
+<meta charset="UTF-8">
 
-    <meta
-        name="viewport"
-        content="width=device-width,initial-scale=1"
-    >
+<meta
+  name="viewport"
+  content="width=device-width,initial-scale=1.0"
+>
 
-    <title>Video Viewer</title>
+<title>Video Viewer</title>
 
-    <style>
+<style>
 
-        *{
-            box-sizing:border-box;
-        }
+/* ============================================================
+   GLOBAL
+============================================================ */
 
-        html,
-        body{
-            margin:0;
-            height:100%;
-            background:#111;
-            color:#eee;
-            font-family:Arial,sans-serif;
-            overflow:hidden;
-        }
+:root{
+  --bg:#111;
+  --panel:#1b1b1b;
+  --panel2:#242424;
+  --text:#eee;
+  --muted:#aaa;
+  --viewer-top:106px;
+  --titlebar-h:56px;
+  --float-gap:18px;
+}
 
-        body{
-            display:flex;
-            flex-direction:column;
-        }
+*{
+  box-sizing:border-box;
+}
 
+html,
+body{
+  margin:0;
+  width:100%;
+  height:100%;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Arial,sans-serif;
+  overflow:hidden;
+}
 
-        /* ---------- Header ---------- */
+/* ============================================================
+   HEADER
+============================================================ */
 
-        header{
-            background:#1b1b1b;
-            border-bottom:1px solid #333;
-            padding:8px;
-        }
+header{
+  position:fixed;
+  top:0;
+  left:0;
+  right:0;
 
-        .top{
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-            gap:8px;
-        }
+  min-height:58px;
+  height:58px;
 
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
 
-        /* ---------- Buttons ---------- */
+  padding:0 14px;
 
-        .controls{
-            display:flex;
-            gap:6px;
-            flex-wrap:wrap;
-        }
+  background:#181818;
 
-        .btn{
-            background:#333;
-            color:#fff;
-            border:none;
-            border-radius:7px;
-            padding:9px 12px;
-            text-decoration:none;
-            cursor:pointer;
-            font-size:14px;
-        }
+  border-bottom:1px solid #2d2d2d;
 
-        .btn:hover{
-            background:#444;
-        }
+  z-index:6000;
+}
 
+/* ============================================================
+   TOOLBAR
+============================================================ */
 
-        /* ---------- Menu ---------- */
+#toolbar{
+  position:fixed;
 
-        #menu{
+  top:58px;
+  left:0;
+  right:0;
 
-            position:absolute;
+  min-height:46px;
 
-            right:10px;
-            top:58px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
 
-            background:#222;
+  gap:6px;
 
-            border:1px solid #333;
+  padding:6px 8px;
 
-            border-radius:10px;
+  background:#1b1b1b;
 
-            padding:8px;
+  border-bottom:1px solid #2d2d2d;
 
-            display:none;
+  flex-wrap:wrap;
 
-            min-width:220px;
+  z-index:5500;
+}
 
-            z-index:1000;
-        }
+/* ============================================================
+   MAIN LAYOUT
+============================================================ */
 
-        #menu button{
+#layout{
+  position:absolute;
 
-            width:100%;
+  top:var(--viewer-top);
 
-            text-align:left;
+  left:0;
+  right:0;
+  bottom:0;
 
-            margin:3px 0;
+  height:auto;
+}
 
-            background:#333;
+/* ============================================================
+   VIEWER
+============================================================ */
 
-            color:#fff;
+#viewer{
+  position:relative;
 
-            border:none;
+  width:100%;
+  height:100%;
 
-            border-radius:7px;
+  overflow:hidden;
 
-            padding:9px 12px;
+  display:flex;
 
-            cursor:pointer;
+  align-items:center;
 
-            font-size:14px;
-        }
+  justify-content:center;
 
-        #menu button:hover{
-            background:#444;
-        }
+  background:#111;
 
+  padding:15px;
+}
 
-        /* ---------- Video Area ---------- */
+#video{
 
-        #viewer{
+  display:block;
 
-            flex:1;
+  width:auto;
 
-            position:relative;
+  height:auto;
 
-            overflow:hidden;
+  max-width:100%;
 
-            display:flex;
+  max-height:100%;
 
-            align-items:center;
+  background:#000;
 
-            justify-content:center;
+  object-fit:contain;
+}
 
-            background:#111;
+/* ============================================================
+   BUTTONS
+============================================================ */
 
-            padding:15px;
-        }
+.btn{
+  background:#333;
 
-        #video{
+  color:#fff;
 
-            display:block;
+  border:none;
 
-            width:auto;
+  border-radius:7px;
 
-            height:auto;
+  padding:9px 12px;
 
-            max-width:100%;
+  text-decoration:none;
 
-            max-height:100%;
+  cursor:pointer;
 
-            background:#000;
+  display:inline-flex;
 
-            object-fit:contain;
-        }
+  align-items:center;
 
+  white-space:nowrap;
+}
 
-        /* ---------- Title ---------- */
+.btn:hover{
+  background:#3a3a3a;
+}
 
-        .title{
+button,
+input,
+select{
+  background:#292929;
 
-            padding:12px 18px;
+  color:#fff;
 
-            text-align:center;
+  border:1px solid #383838;
 
-            font-weight:bold;
+  border-radius:6px;
 
-            font-size:1.2rem;
+  padding:6px 9px;
 
-            white-space:nowrap;
+  font:inherit;
 
-            overflow:hidden;
+  outline:none;
+}
 
-            text-overflow:ellipsis;
+button:hover,
+select:hover{
+  background:#353535;
 
-            background:rgba(24,24,24,.92);
+  cursor:pointer;
+}
 
-            border-top:1px solid #333;
+button:active{
+  background:#414141;
+}
 
-            backdrop-filter:blur(6px);
-        }
+button:focus-visible,
+input:focus-visible,
+select:focus-visible{
+  border-color:#666;
 
+  outline:1px solid #555;
+}
 
-        /* ---------- Playback Speed ---------- */
+/* ============================================================
+   COMPACT TOOLBAR CONTROLS
+============================================================ */
 
-        #videoControls{
+.toolButton{
+  height:32px;
 
-            display:flex;
+  padding:0 10px;
 
-            justify-content:center;
+  display:inline-flex;
 
-            align-items:center;
+  align-items:center;
 
-            gap:10px;
+  justify-content:center;
 
-            padding:8px;
+  white-space:nowrap;
 
-            background:#181818;
-        }
+  font-size:13px;
 
-        .speed-label{
+  border-radius:6px;
 
-            color:#ccc;
+  text-decoration:none;
+}
 
-            font-size:14px;
+.iconButton{
+  width:32px;
+  height:32px;
 
-            font-weight:500;
+  padding:0;
 
-            white-space:nowrap;
-        }
+  display:inline-flex;
 
-        #speed{
+  align-items:center;
 
-            background:#333;
+  justify-content:center;
 
-            color:#fff;
+  font-size:16px;
 
-            border:1px solid #444;
+  border-radius:6px;
+}
 
-            border-radius:7px;
+/* ============================================================
+   SPEED CONTROL
+============================================================ */
 
-            padding:8px 11px;
+.speedControl{
+  display:flex;
 
-            cursor:pointer;
+  align-items:center;
 
-            font-size:14px;
+  gap:6px;
 
-            font-family:Arial,sans-serif;
+  height:32px;
 
-            outline:none;
-        }
+  padding:0 10px;
 
-        #speed:hover{
-            background:#3b3b3b;
-        }
+  background:#242424;
 
-        #speed:focus{
-            border-color:#555;
-        }
+  border:1px solid #353535;
 
+  border-radius:7px;
+}
 
-        /* ---------- Status ---------- */
+.speedControl label{
+  color:#aaa;
 
-        #status{
+  font-size:12px;
 
-            position:absolute;
+  white-space:nowrap;
+}
 
-            left:50%;
+#speed{
 
-            top:50%;
+  height:26px;
 
-            transform:translate(-50%,-50%);
+  padding:0 6px;
 
-            color:#888;
+  background:#1d1d1d;
 
-            font-size:.95rem;
+  border:0;
 
-            text-align:center;
+  border-radius:4px;
 
-            pointer-events:none;
+  font-size:12px;
+}
 
-            display:none;
-        }
+/* ============================================================
+   TOOLBAR DIVIDER
+============================================================ */
 
+.toolbarDivider{
+  width:1px;
 
-        /* ---------- Mobile ---------- */
+  height:22px;
 
-        @media(max-width:700px){
+  background:#383838;
 
-            .top{
-                align-items:flex-start;
-            }
+  margin:0 2px;
+}
 
-            .controls .btn{
-                padding:8px 10px;
+/* ============================================================
+   TITLE BAR
+============================================================ */
 
-                font-size:.9rem;
-            }
+#titleBar{
+  position:fixed;
 
-            .title{
-                font-size:1.2rem;
-                padding:10px 14px;
-            }
+  left:0;
+  right:0;
+  bottom:0;
 
-            #viewer{
-                padding:5px;
-            }
+  background:rgba(24,24,24,.92);
 
-            #videoControls{
-                gap:8px;
+  padding:12px 18px;
 
-                padding:7px;
-            }
+  text-align:center;
 
-            .speed-label{
-                font-size:.9rem;
-            }
+  z-index:3000;
 
-            #speed{
-                padding:8px 10px;
+  border-top:1px solid #333;
 
-                font-size:.9rem;
-            }
+  backdrop-filter:blur(6px);
+}
 
-        }
+#title{
+  width:100%;
 
-    </style>
+  text-align:center;
 
+  font-size:1.2rem;
+
+  font-weight:bold;
+
+  overflow:hidden;
+
+  white-space:nowrap;
+
+  text-overflow:ellipsis;
+}
+
+/* ============================================================
+   MENU
+============================================================ */
+
+#menu{
+
+  position:fixed;
+
+  right:10px;
+  top:58px;
+
+  background:#222;
+
+  border:1px solid #333;
+
+  border-radius:10px;
+
+  padding:8px;
+
+  display:none;
+
+  min-width:220px;
+
+  z-index:7000;
+}
+
+#menu button{
+
+  width:100%;
+
+  text-align:left;
+
+  margin:3px 0;
+}
+
+/* ============================================================
+   FLOATING READING MODE
+============================================================ */
+
+#readingModeFloat{
+
+  position:fixed;
+
+  right:var(--float-gap);
+
+  bottom:calc(var(--titlebar-h) + var(--float-gap));
+
+  width:48px;
+  height:48px;
+
+  display:flex;
+
+  align-items:center;
+  justify-content:center;
+
+  padding:0;
+
+  border-radius:50%;
+
+  background:
+    rgba(40,40,40,.94);
+
+  border:1px solid #555;
+
+  color:#fff;
+
+  font-size:18px;
+
+  box-shadow:
+    0 5px 18px rgba(0,0,0,.45);
+
+  z-index:9000;
+
+  cursor:pointer;
+
+  backdrop-filter:blur(6px);
+
+  transition:
+    transform .15s ease,
+    background .15s ease;
+}
+
+#readingModeFloat:hover{
+  background:#3a3a3a;
+
+  transform:scale(1.05);
+}
+
+#readingModeFloat:active{
+  transform:scale(.96);
+}
+
+/* ============================================================
+   STATUS / LOADING
+============================================================ */
+
+#loadingOverlay{
+  position:fixed;
+
+  inset:var(--viewer-top) 0 0 0;
+
+  display:flex;
+
+  flex-direction:column;
+
+  justify-content:center;
+  align-items:center;
+
+  background:#111;
+
+  z-index:8000;
+
+  pointer-events:none;
+}
+
+.spinner{
+  width:60px;
+  height:60px;
+
+  border:6px solid #333;
+
+  border-top:6px solid #fff;
+
+  border-radius:50%;
+
+  animation:
+    spin .9s linear infinite;
+}
+
+.loadingText{
+  margin-top:18px;
+
+  color:#ddd;
+
+  font-size:18px;
+}
+
+@keyframes spin{
+
+  from{
+    transform:rotate(0deg);
+  }
+
+  to{
+    transform:rotate(360deg);
+  }
+
+}
+
+/* ============================================================
+   READING MODE
+============================================================ */
+
+body.reading-mode header,
+body.reading-mode #toolbar,
+body.reading-mode #titleBar,
+body.reading-mode #menu{
+
+  display:none !important;
+
+  height:0 !important;
+
+  min-height:0 !important;
+
+  max-height:0 !important;
+
+  margin:0 !important;
+
+  padding:0 !important;
+
+  border:0 !important;
+
+  overflow:hidden !important;
+}
+
+body.reading-mode #layout{
+
+  top:0 !important;
+
+  height:100% !important;
+
+  position:absolute;
+}
+
+body.reading-mode #loadingOverlay{
+
+  inset:0;
+}
+
+body.reading-mode #readingModeFloat{
+
+  right:16px;
+
+  bottom:16px;
+
+  background:
+    rgba(40,40,40,.88);
+}
+
+/* ============================================================
+   MOBILE
+============================================================ */
+
+@media (max-width:768px){
+
+  #toolbar{
+    justify-content:center;
+
+    gap:4px;
+
+    padding:5px;
+  }
+
+  .toolButton{
+    height:30px;
+
+    padding:0 8px;
+
+    font-size:12px;
+  }
+
+  .speedControl{
+    height:30px;
+  }
+
+  .speedControl label{
+    display:none;
+  }
+
+  #speed{
+    height:25px;
+  }
+
+  #readingModeFloat{
+
+    right:14px;
+
+    bottom:calc(var(--titlebar-h) + 14px);
+
+    width:46px;
+    height:46px;
+
+    font-size:16px;
+  }
+
+  body.reading-mode #readingModeFloat{
+
+    right:12px;
+
+    bottom:12px;
+  }
+
+  #title{
+
+    white-space:nowrap;
+
+    overflow:hidden;
+
+    text-overflow:ellipsis;
+  }
+
+}
+
+</style>
 </head>
-
 
 <body>
 
+<!-- ==========================================================
+     HEADER
+========================================================== -->
 
 <header>
 
-    <div class="top">
+  <a
+    class="btn"
+    id="homeButton"
+    href="index.html"
+  >
+    ◀ Back
+  </a>
 
-        <a
-            class="btn"
-            id="homeButton"
-            href="index.html"
-        >
-            ◀ Back
-        </a>
+  <div style="flex:1"></div>
 
-        <div class="controls">
-
-            <button
-                class="btn"
-                id="menuBtn"
-            >
-                ☰
-            </button>
-
-        </div>
-
-    </div>
+  <button id="menuBtn">
+    ☰
+  </button>
 
 </header>
 
+<!-- ==========================================================
+     TOOLBAR
+========================================================== -->
 
-<!-- ---------- Menu ---------- -->
+<div id="toolbar">
 
-<div id="menu">
+  <div class="speedControl">
 
-    <button id="downloadBtn">
-        Download Video
-    </button>
-
-    <button id="newTabBtn">
-        Open in New Tab
-    </button>
-
-    <button id="shareBtn">
-        Share
-    </button>
-
-    <button id="fullscreenBtn">
-        Fullscreen
-    </button>
-
-</div>
-
-
-<!-- ---------- Video Viewer ---------- -->
-
-<div id="viewer">
-
-    <video
-        id="video"
-        controls
-        playsinline
-        preload="metadata"
-        poster="prediction.jpg"
-    >
-
-        Your browser does not support HTML5 video.
-
-    </video>
-
-    <div id="status">
-        Loading video...
-    </div>
-
-</div>
-
-
-<!-- ---------- File Name ---------- -->
-
-<div
-    class="title"
-    id="title"
->
-    Loading...
-</div>
-
-
-<!-- ---------- Playback Speed ---------- -->
-
-<div id="videoControls">
-
-    <label
-        for="speed"
-        class="speed-label"
-    >
-        Playback Speed
+    <label for="speed">
+      Speed
     </label>
 
     <select id="speed">
 
-        <option value="0.1">
-            0.1×
-        </option>
+      <option value="0.1">
+        0.1×
+      </option>
 
-        <option value="0.25">
-            0.25×
-        </option>
+      <option value="0.25">
+        0.25×
+      </option>
 
-        <option value="0.5">
-            0.5×
-        </option>
+      <option value="0.5">
+        0.5×
+      </option>
 
-        <option value="0.75">
-            0.75×
-        </option>
+      <option value="0.75">
+        0.75×
+      </option>
 
-        <option value="1" selected>
-            1×
-        </option>
+      <option value="1" selected>
+        1×
+      </option>
 
-        <option value="1.25">
-            1.25×
-        </option>
+      <option value="1.25">
+        1.25×
+      </option>
 
-        <option value="1.5">
-            1.5×
-        </option>
+      <option value="1.5">
+        1.5×
+      </option>
 
-        <option value="1.75">
-            1.75×
-        </option>
+      <option value="1.75">
+        1.75×
+      </option>
 
-        <option value="2">
-            2×
-        </option>
+      <option value="2">
+        2×
+      </option>
 
-        <option value="2.5">
-            2.5×
-        </option>
+      <option value="2.5">
+        2.5×
+      </option>
 
-        <option value="3">
-            3×
-        </option>
+      <option value="3">
+        3×
+      </option>
 
-        <option value="4">
-            4×
-        </option>
+      <option value="4">
+        4×
+      </option>
 
     </select>
 
+  </div>
+
 </div>
 
+<!-- ==========================================================
+     LAYOUT
+========================================================== -->
+
+<div id="layout">
+
+  <div id="loadingOverlay">
+
+    <div class="spinner"></div>
+
+    <div class="loadingText" id="statusText">
+      Loading video...
+    </div>
+
+  </div>
+
+  <div id="viewer">
+
+    <video
+      id="video"
+      controls
+      playsinline
+      preload="metadata"
+      poster="prediction.jpg"
+    >
+
+      Your browser does not support HTML5 video.
+
+    </video>
+
+  </div>
+
+</div>
+
+<!-- ==========================================================
+     TITLE BAR
+========================================================== -->
+
+<div
+  id="titleBar"
+>
+
+  <div id="title">
+    Loading...
+  </div>
+
+</div>
+
+<!-- ==========================================================
+     MENU
+========================================================== -->
+
+<div id="menu">
+
+  <button id="downloadBtn">
+    Download Video
+  </button>
+
+  <button id="newTabBtn">
+    Open in New Tab
+  </button>
+
+  <button id="shareBtn">
+    Share Video
+  </button>
+
+  <button id="fullscreenBtn">
+    Fullscreen
+  </button>
+
+</div>
+
+<!-- ==========================================================
+     FLOATING READING MODE
+========================================================== -->
+
+<button
+  id="readingModeFloat"
+  aria-label="Toggle Reading Mode"
+  title="Reading Mode"
+>
+  ▣
+</button>
 
 <script>
 
@@ -510,8 +838,11 @@ const video =
 const title =
     document.getElementById("title");
 
-const status =
-    document.getElementById("status");
+const loadingOverlay =
+    document.getElementById("loadingOverlay");
+
+const statusText =
+    document.getElementById("statusText");
 
 const menu =
     document.getElementById("menu");
@@ -537,6 +868,77 @@ const fullscreenButton =
 const speed =
     document.getElementById("speed");
 
+const header =
+    document.querySelector("header");
+
+const toolbar =
+    document.getElementById("toolbar");
+
+const layout =
+    document.getElementById("layout");
+
+const titleBar =
+    document.getElementById("titleBar");
+
+const readingModeFloat =
+    document.getElementById("readingModeFloat");
+
+
+/* ---------- Chrome Height Sync ---------- */
+
+function syncViewerTop(){
+
+    if(
+        document.body.classList.contains(
+            "reading-mode"
+        )
+    ){
+
+        return;
+
+    }
+
+    const headerHeight =
+        header.getBoundingClientRect()
+            .height;
+
+    const toolbarHeight =
+        toolbar.getBoundingClientRect()
+            .height;
+
+    const total =
+        Math.ceil(
+            headerHeight +
+            toolbarHeight
+        );
+
+    document.documentElement.style.setProperty(
+        "--viewer-top",
+        `${total}px`
+    );
+
+    layout.style.top =
+        `${total}px`;
+
+    loadingOverlay.style.top =
+        `${total}px`;
+
+}
+
+
+function syncTitleBarHeight(){
+
+    const height =
+        titleBar.getBoundingClientRect()
+            .height;
+
+    document.documentElement.style.setProperty(
+        "--titlebar-h",
+        `${Math.ceil(height)}px`
+    );
+
+}
+
 
 /* ---------- Back Button ---------- */
 
@@ -561,11 +963,11 @@ homeButton.addEventListener(
 
 if(!src){
 
-    status.textContent =
+    statusText.textContent =
         "No video specified.";
 
-    status.style.display =
-        "block";
+    loadingOverlay.style.display =
+        "flex";
 
 }else{
 
@@ -614,11 +1016,11 @@ video.addEventListener(
     "loadstart",
     function(){
 
-        status.textContent =
+        statusText.textContent =
             "Loading video...";
 
-        status.style.display =
-            "block";
+        loadingOverlay.style.display =
+            "flex";
 
     }
 );
@@ -628,7 +1030,7 @@ video.addEventListener(
     "loadedmetadata",
     function(){
 
-        status.style.display =
+        loadingOverlay.style.display =
             "none";
 
     }
@@ -639,7 +1041,7 @@ video.addEventListener(
     "canplay",
     function(){
 
-        status.style.display =
+        loadingOverlay.style.display =
             "none";
 
     }
@@ -650,11 +1052,11 @@ video.addEventListener(
     "error",
     function(){
 
-        status.textContent =
+        statusText.textContent =
             "Unable to load video.";
 
-        status.style.display =
-            "block";
+        loadingOverlay.style.display =
+            "flex";
 
     }
 );
@@ -850,6 +1252,10 @@ shareButton.addEventListener(
                     url
                 );
 
+                alert(
+                    "Link copied to clipboard!"
+                );
+
                 return;
 
             }catch(error){
@@ -953,6 +1359,124 @@ document.addEventListener(
 
     }
 );
+
+
+/* =========================================================
+   READING MODE
+   ========================================================= */
+
+let readingMode =
+    false;
+
+
+function setReadingMode(
+    enabled
+){
+
+    readingMode =
+        Boolean(
+            enabled
+        );
+
+    if(
+        readingMode
+    ){
+
+        document.body.classList.add(
+            "reading-mode"
+        );
+
+        readingModeFloat.textContent =
+            "×";
+
+        readingModeFloat.title =
+            "Exit Reading Mode";
+
+        menu.style.display =
+            "none";
+
+        layout.style.top =
+            "0px";
+
+        loadingOverlay.style.top =
+            "0px";
+
+    }else{
+
+        document.body.classList.remove(
+            "reading-mode"
+        );
+
+        readingModeFloat.textContent =
+            "▣";
+
+        readingModeFloat.title =
+            "Reading Mode";
+
+        syncViewerTop();
+
+    }
+
+}
+
+
+readingModeFloat.addEventListener(
+    "click",
+    function(event){
+
+        event.stopPropagation();
+
+        setReadingMode(
+            !readingMode
+        );
+
+    }
+);
+
+
+/* =========================================================
+   CHROME RESIZE OBSERVER
+   ========================================================= */
+
+if(
+    "ResizeObserver" in window
+){
+
+    const chromeObserver =
+        new ResizeObserver(
+            function(){
+
+                syncViewerTop();
+
+                syncTitleBarHeight();
+
+            }
+        );
+
+    chromeObserver.observe(
+        header
+    );
+
+    chromeObserver.observe(
+        toolbar
+    );
+
+    chromeObserver.observe(
+        titleBar
+    );
+
+}
+
+
+window.addEventListener(
+    "resize",
+    syncViewerTop
+);
+
+
+syncViewerTop();
+
+syncTitleBarHeight();
 
 
 /* ---------- Initialize ---------- */
