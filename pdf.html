@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
 <link rel="stylesheet" href="./pdfjs/web/text_layer_builder.css">
 <link rel="icon" type="image/png" href="file_000000000c40722f92b1fe6758cb4855.png">
 
@@ -10,6 +11,7 @@
 <title>PDF Viewer</title>
 
 <style>
+
 :root{
     --bg:#111;
     --panel:#1d1d1d;
@@ -26,6 +28,7 @@
 html,
 body{
     margin:0;
+    width:100%;
     height:100%;
     background:var(--bg);
     color:var(--text);
@@ -33,96 +36,195 @@ body{
     overflow:hidden;
 }
 
-.page{
-    position:relative;
-    margin:0 auto 20px;
-    box-shadow:0 0 14px rgba(0,0,0,.4);
-    background:white;
-    flex-shrink:0;
-}
 
-.pageCanvas{
-    display:block;
-    pointer-events:none;
-}
-
-.btn{
-    background:#333;
-    color:#fff;
-    border:none;
-    border-radius:7px;
-    padding:9px 12px;
-    text-decoration:none;
-    cursor:pointer;
-}
-
-button,
-input{
-    background:#2b2b2b;
-    color:#fff;
-    border:none;
-    border-radius:8px;
-    padding:8px 12px;
-}
-
-button:hover{
-    background:#3a3a3a;
-    cursor:pointer;
-}
+/* =========================================================
+   HEADER
+========================================================= */
 
 header{
+    position:fixed;
+
+    top:0;
+    left:0;
+    right:0;
+
     height:58px;
+
     display:flex;
     align-items:center;
     justify-content:space-between;
+
     padding:0 14px;
+
     background:#181818;
+
     border-bottom:1px solid #2d2d2d;
+
+    z-index:6000;
 }
 
+
+/* =========================================================
+   TOOLBAR
+========================================================= */
+
 #toolbar{
+    position:fixed;
+
+    top:58px;
+    left:0;
+    right:0;
+
+    min-height:48px;
+
     display:flex;
     gap:8px;
     align-items:center;
+
     padding:10px;
+
     background:#1b1b1b;
+
     border-bottom:1px solid #2d2d2d;
+
     flex-wrap:wrap;
+
+    z-index:5500;
 }
 
+
+/* =========================================================
+   MAIN LAYOUT
+========================================================= */
+
 #layout{
-    height:calc(100% - 106px);
+    position:absolute;
+
+    top:106px;
+    left:0;
+    right:0;
+    bottom:0;
+
+    height:auto;
 }
+
+
+/* =========================================================
+   VIEWER
+========================================================= */
 
 #viewer{
     width:100%;
     height:100%;
+
     overflow:auto;
+
     padding:30px 30px 90px;
+
     background:#111;
 
     display:flex;
     flex-direction:column;
     align-items:center;
+
+    scroll-behavior:auto;
+
+    overscroll-behavior:contain;
 }
+
+
+/* =========================================================
+   PDF PAGE
+========================================================= */
+
+.page{
+    position:relative;
+
+    margin:0 auto 20px;
+
+    box-shadow:0 0 14px rgba(0,0,0,.4);
+
+    background:#fff;
+
+    flex-shrink:0;
+}
+
+.pageCanvas{
+    display:block;
+
+    pointer-events:none;
+}
+
+
+/* =========================================================
+   GENERAL BUTTONS
+========================================================= */
+
+.btn{
+    background:#333;
+
+    color:#fff;
+
+    border:none;
+
+    border-radius:7px;
+
+    padding:9px 12px;
+
+    text-decoration:none;
+
+    cursor:pointer;
+
+    display:inline-flex;
+
+    align-items:center;
+}
+
+button,
+input{
+    background:#2b2b2b;
+
+    color:#fff;
+
+    border:none;
+
+    border-radius:8px;
+
+    padding:8px 12px;
+}
+
+button:hover{
+    background:#3a3a3a;
+
+    cursor:pointer;
+}
+
+
+/* =========================================================
+   CONTROL GROUPS
+========================================================= */
 
 .zoomControls,
 .pageControls{
     display:flex;
+
     align-items:center;
+
     gap:6px;
+
     white-space:nowrap;
+
     flex-shrink:0;
 }
 
-.hidden{
-    display:none;
-}
 
-/* ---------- Title ---------- */
+/* =========================================================
+   TITLE BAR
+========================================================= */
 
 #titleBar{
     position:fixed;
+
     left:0;
     right:0;
     bottom:0;
@@ -151,6 +253,7 @@ header{
     text-align:center;
 
     font-size:1.2rem;
+
     font-weight:bold;
 
     overflow:hidden;
@@ -191,7 +294,7 @@ header{
 
     padding:4px 10px;
 
-    color:white;
+    color:#fff;
 
     font-size:.72em;
 
@@ -208,20 +311,26 @@ header{
 
 .title-badge.new{
     order:2;
+
     background:#00b050;
 }
 
 .title-badge.featured{
     order:3;
+
     background:#2f7cff;
 }
 
-/* ---------- Menu ---------- */
+
+/* =========================================================
+   MENU
+========================================================= */
 
 #menu{
-    position:absolute;
+    position:fixed;
 
     right:10px;
+
     top:58px;
 
     background:#222;
@@ -236,19 +345,24 @@ header{
 
     min-width:220px;
 
-    z-index:5000;
+    z-index:7000;
 }
 
 #menu button{
     width:100%;
+
     text-align:left;
+
     margin:3px 0;
 }
 
-/* ---------- Search ---------- */
+
+/* =========================================================
+   SEARCH POPUP
+========================================================= */
 
 #searchPopup{
-    position:absolute;
+    position:fixed;
 
     top:108px;
     left:110px;
@@ -269,7 +383,7 @@ header{
 
     box-shadow:0 8px 20px rgba(0,0,0,.45);
 
-    z-index:4500;
+    z-index:6500;
 }
 
 #searchPopup.hidden{
@@ -288,10 +402,20 @@ header{
     text-align:center;
 }
 
-/* ---------- PDF Text Layer ---------- */
+
+/* =========================================================
+   TEXT LAYER
+========================================================= */
+
+/*
+   PDF.js now uses the total scale factor in CSS for
+   text sizing. The page and text layer both receive
+   the exact same scale values.
+*/
 
 .textLayer{
     position:absolute;
+
     inset:0;
 
     overflow:hidden;
@@ -305,15 +429,25 @@ header{
     z-index:2;
 
     user-select:text;
+
     -webkit-user-select:text;
 
     cursor:text;
+
+    /*
+       PDF.js scaling variables.
+    */
+
+    --scale-factor:1;
+
+    --user-unit:1;
+
+    --total-scale-factor:1;
 }
 
 /*
-    Important:
-    PDF.js controls the exact positioning,
-    size and transforms of these elements.
+   Do NOT manually position or transform the spans.
+   PDF.js handles their exact geometry.
 */
 
 .textLayer span,
@@ -325,8 +459,13 @@ header{
     background:rgba(0,120,255,.35);
 }
 
+.textLayer br::selection{
+    background:transparent;
+}
+
 .textLayer .highlight{
     margin:-1px;
+
     padding:1px;
 
     background-color:rgba(180,0,170,.2);
@@ -344,8 +483,11 @@ header{
     position:absolute;
 
     left:0;
+
     top:100%;
+
     right:0;
+
     bottom:0;
 
     z-index:-1;
@@ -359,7 +501,10 @@ header{
     top:0;
 }
 
-/* ---------- Manual PDF Link Layer ---------- */
+
+/* =========================================================
+   LINK LAYER
+========================================================= */
 
 .linkLayer{
     position:absolute;
@@ -397,10 +542,13 @@ header{
     background:rgba(0,120,255,.08);
 }
 
-/* ---------- Loading ---------- */
+
+/* =========================================================
+   LOADING
+========================================================= */
 
 #loadingOverlay{
-    position:absolute;
+    position:fixed;
 
     inset:106px 0 0 0;
 
@@ -414,14 +562,16 @@ header{
 
     background:#111;
 
-    z-index:5000;
+    z-index:8000;
 }
 
 .spinner{
     width:60px;
+
     height:60px;
 
     border:6px solid #333;
+
     border-top:6px solid #fff;
 
     border-radius:50%;
@@ -437,7 +587,10 @@ header{
     font-size:18px;
 }
 
-/* ---------- Reading Mode ---------- */
+
+/* =========================================================
+   READING MODE
+========================================================= */
 
 body.reading-mode header,
 body.reading-mode #toolbar,
@@ -448,6 +601,8 @@ body.reading-mode #menu{
 }
 
 body.reading-mode #layout{
+    top:0;
+
     height:100%;
 }
 
@@ -455,6 +610,7 @@ body.reading-mode #viewer{
     height:100%;
 
     padding-top:20px;
+
     padding-bottom:20px;
 }
 
@@ -462,12 +618,16 @@ body.reading-mode #loadingOverlay{
     inset:0;
 }
 
-/* ---------- Mobile ---------- */
+
+/* =========================================================
+   MOBILE
+========================================================= */
 
 @media (max-width:768px){
 
     #searchPopup{
         left:10px;
+
         right:10px;
 
         top:108px;
@@ -485,7 +645,9 @@ body.reading-mode #loadingOverlay{
 
     #searchPopup input{
         flex:1 1 100%;
+
         width:100%;
+
         min-width:0;
     }
 
@@ -538,7 +700,13 @@ body.reading-mode #loadingOverlay{
     }
 }
 
+
+/* =========================================================
+   ANIMATION
+========================================================= */
+
 @keyframes spin{
+
     from{
         transform:rotate(0deg);
     }
@@ -546,74 +714,130 @@ body.reading-mode #loadingOverlay{
     to{
         transform:rotate(360deg);
     }
+
 }
+
 </style>
 </head>
 
+
 <body>
+
+
+<!-- =======================================================
+     HEADER
+======================================================= -->
 
 <header>
 
-<a class="btn" id="backBtn" href="index.html">◀ Back</a>
+<a
+    class="btn"
+    id="backBtn"
+    href="index.html"
+>
+    ◀ Back
+</a>
 
 <div style="flex:1"></div>
 
-<button id="menuBtn">☰</button>
+<button id="menuBtn">
+    ☰
+</button>
 
 </header>
 
+
+<!-- =======================================================
+     TOOLBAR
+======================================================= -->
+
 <div id="toolbar">
 
-<button id="searchButton">🔍 Search</button>
+<button id="searchButton">
+    🔍 Search
+</button>
+
 
 <div class="zoomControls">
 
-<button id="zoomOut">−</button>
+<button id="zoomOut">
+    −
+</button>
 
 <input
     id="zoomPercent"
     value="150%"
-    style="width:70px;text-align:center">
+    style="width:70px;text-align:center"
+>
 
-<button id="zoomIn">+</button>
+<button id="zoomIn">
+    +
+</button>
 
 </div>
 
-<button id="fitWidth">Fit Width</button>
-<button id="fitPage">Fit Page</button>
+
+<button id="fitWidth">
+    Fit Width
+</button>
+
+<button id="fitPage">
+    Fit Page
+</button>
+
 
 <div class="pageControls">
 
-<label>Page</label>
+<label>
+    Page
+</label>
 
 <input
     id="pageNumber"
     value="1"
     inputmode="numeric"
-    style="width:60px;text-align:center">
+    style="width:60px;text-align:center"
+>
 
-<span id="pageCount">of 0</span>
+<span id="pageCount">
+    of 0
+</span>
 
 </div>
 
 </div>
+
+
+<!-- =======================================================
+     SEARCH
+======================================================= -->
 
 <div id="searchPopup" class="hidden">
 
 <input
     id="searchBox"
     placeholder="Search..."
-    autocomplete="off">
+    autocomplete="off"
+>
 
-<button id="prevResult">▲</button>
+<button id="prevResult">
+    ▲
+</button>
 
-<button id="nextResult">▼</button>
+<button id="nextResult">
+    ▼
+</button>
 
 <span id="searchResults">
-0 of 0
+    0 of 0
 </span>
 
 </div>
+
+
+<!-- =======================================================
+     MAIN
+======================================================= -->
 
 <div id="layout">
 
@@ -622,7 +846,7 @@ body.reading-mode #loadingOverlay{
 <div class="spinner"></div>
 
 <div class="loadingText">
-Loading PDF...
+    Loading PDF...
 </div>
 
 </div>
@@ -631,41 +855,58 @@ Loading PDF...
 
 </div>
 
+
+<!-- =======================================================
+     TITLE
+======================================================= -->
+
 <div id="titleBar">
 
 <div id="title">
-Loading PDF...
+    Loading PDF...
 </div>
 
 </div>
+
+
+<!-- =======================================================
+     MENU
+======================================================= -->
 
 <div id="menu">
 
 <button id="downloadBtn">
-Download PDF
+    Download PDF
 </button>
 
 <button id="newTabBtn">
-Open in New Tab
+    Open in New Tab
 </button>
 
 <button id="copyLinkBtn">
-Share PDF
+    Share PDF
 </button>
 
 <button id="fullscreenBtn">
-Fullscreen
+    Fullscreen
 </button>
 
 </div>
 
+
 <script type="module">
+
+
+/* =========================================================
+   PDF.JS
+========================================================= */
 
 import {
     getDocument,
     GlobalWorkerOptions,
     TextLayer
 } from "./pdfjs/build/pdf.mjs";
+
 
 GlobalWorkerOptions.workerSrc =
     "./pdfjs/build/pdf.worker.mjs";
@@ -675,31 +916,98 @@ GlobalWorkerOptions.workerSrc =
    URL PARAMETERS
 ========================================================= */
 
-const p =
-    new URLSearchParams(location.search);
+const params =
+    new URLSearchParams(
+        location.search
+    );
+
 
 const file =
     decodeURIComponent(
-        p.get("file") || ""
+        params.get("file") || ""
     );
+
 
 const title =
     decodeURIComponent(
-        p.get("paper") || "PDF"
+        params.get("paper") || "PDF"
+    );
+
+
+const returnPage =
+    decodeURIComponent(
+        params.get("return") ||
+        "index.html"
     );
 
 
 /* =========================================================
-   DESCRIPTIONS
+   ELEMENTS
+========================================================= */
+
+const viewer =
+    document.getElementById(
+        "viewer"
+    );
+
+
+const loadingOverlay =
+    document.getElementById(
+        "loadingOverlay"
+    );
+
+
+const pageInput =
+    document.getElementById(
+        "pageNumber"
+    );
+
+
+const zoomBox =
+    document.getElementById(
+        "zoomPercent"
+    );
+
+
+const searchPopup =
+    document.getElementById(
+        "searchPopup"
+    );
+
+
+const searchBox =
+    document.getElementById(
+        "searchBox"
+    );
+
+
+const menu =
+    document.getElementById(
+        "menu"
+    );
+
+
+const menuButton =
+    document.getElementById(
+        "menuBtn"
+    );
+
+
+/* =========================================================
+   DESCRIPTION / BADGES
 ========================================================= */
 
 let descriptions = {};
 
+
 try{
 
     descriptions =
-        await fetch("descriptions.json")
-        .then(r => r.json());
+        await fetch(
+            "descriptions.json"
+        ).then(
+            response => response.json()
+        );
 
 }
 catch(err){
@@ -714,13 +1022,24 @@ catch(err){
 
 let newestEntry = null;
 
-if(Object.keys(descriptions).length){
+
+if(
+    Object.keys(
+        descriptions
+    ).length
+){
 
     newestEntry =
-        Object.entries(descriptions)
-        .sort((a,b) =>
-            new Date(b[1].updated || 0) -
-            new Date(a[1].updated || 0)
+        Object.entries(
+            descriptions
+        ).sort(
+            (a,b) =>
+                new Date(
+                    b[1].updated || 0
+                ) -
+                new Date(
+                    a[1].updated || 0
+                )
         )[0];
 
 }
@@ -734,7 +1053,9 @@ const newestKey =
 
 const newestDate =
     newestEntry
-        ? new Date(newestEntry[1].updated)
+        ? new Date(
+            newestEntry[1].updated
+        )
         : null;
 
 
@@ -745,27 +1066,34 @@ const today =
 const oneYearAgo =
     new Date(today);
 
+
 oneYearAgo.setFullYear(
     today.getFullYear() - 1
 );
 
 
 const showNewestBadge =
-    newestDate &&
-    newestDate >= oneYearAgo;
+    Boolean(
+        newestDate &&
+        newestDate >= oneYearAgo
+    );
 
 
 const paper =
-    Object.values(descriptions)
-    .find(
-        item => item.url === file
+    Object.values(
+        descriptions
+    ).find(
+        item =>
+            item.url === file
     );
 
 
 const paperKey =
-    Object.keys(descriptions)
-    .find(
-        key => descriptions[key].url === file
+    Object.keys(
+        descriptions
+    ).find(
+        key =>
+            descriptions[key].url === file
     );
 
 
@@ -777,72 +1105,56 @@ const isNewest =
 
 
 /* =========================================================
-   RETURN PAGE
-========================================================= */
-
-const returnPage =
-    decodeURIComponent(
-        p.get("return") || "index.html"
-    );
-
-
-/* =========================================================
    TITLE
 ========================================================= */
 
-document.getElementById("title").innerHTML = `
+document.getElementById(
+    "title"
+).innerHTML = `
 
 <div class="title-text">
 
-    ${title}
+    ${escapeHtml(title)}
 
     <span class="title-badges">
 
         ${
             isNewest
-                ? `<span class="title-badge new">NEW</span>`
+                ? `<span class="title-badge new">
+                    NEW
+                   </span>`
                 : ""
         }
 
         ${
             paper?.featured
-                ? `<span class="title-badge featured">FEATURED</span>`
+                ? `<span class="title-badge featured">
+                    FEATURED
+                   </span>`
                 : ""
         }
 
     </span>
 
 </div>
+
 `;
 
 
 /* =========================================================
-   ELEMENTS
+   HTML ESCAPE
 ========================================================= */
 
-const viewer =
-    document.getElementById("viewer");
+function escapeHtml(value){
 
-const loadingOverlay =
-    document.getElementById("loadingOverlay");
+    return String(value)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
 
-const menu =
-    document.getElementById("menu");
-
-const menuButton =
-    document.getElementById("menuBtn");
-
-const searchPopup =
-    document.getElementById("searchPopup");
-
-const searchBox =
-    document.getElementById("searchBox");
-
-const pageInput =
-    document.getElementById("pageNumber");
-
-const zoomBox =
-    document.getElementById("zoomPercent");
+}
 
 
 /* =========================================================
@@ -850,8 +1162,55 @@ const zoomBox =
 ========================================================= */
 
 let baseScale = 1;
+
 let zoomLevel = 1;
+
 let currentScale = 1;
+
+
+function getViewerInnerWidth(){
+
+    const styles =
+        getComputedStyle(
+            viewer
+        );
+
+    return Math.max(
+        1,
+
+        viewer.clientWidth
+        - parseFloat(
+            styles.paddingLeft
+        )
+        - parseFloat(
+            styles.paddingRight
+        )
+    );
+
+}
+
+
+function getViewerInnerHeight(){
+
+    const styles =
+        getComputedStyle(
+            viewer
+        );
+
+    return Math.max(
+        1,
+
+        viewer.clientHeight
+        - parseFloat(
+            styles.paddingTop
+        )
+        - parseFloat(
+            styles.paddingBottom
+        )
+    );
+
+}
+
 
 function getFitWidthScale(page){
 
@@ -860,15 +1219,12 @@ function getFitWidthScale(page){
             scale:1
         });
 
-    const styles =
-        getComputedStyle(viewer);
 
-    const width =
-        viewer.clientWidth
-        - parseFloat(styles.paddingLeft)
-        - parseFloat(styles.paddingRight);
+    return (
+        getViewerInnerWidth() /
+        viewport.width
+    );
 
-    return width / viewport.width;
 }
 
 
@@ -879,39 +1235,37 @@ function getFitPageScale(page){
             scale:1
         });
 
-    const styles =
-        getComputedStyle(viewer);
-
-    const availableWidth =
-        viewer.clientWidth
-        - parseFloat(styles.paddingLeft)
-        - parseFloat(styles.paddingRight);
-
-    const availableHeight =
-        viewer.clientHeight
-        - parseFloat(styles.paddingTop)
-        - parseFloat(styles.paddingBottom);
 
     const widthScale =
-        availableWidth / viewport.width;
+        getViewerInnerWidth() /
+        viewport.width;
+
 
     const heightScale =
-        availableHeight / viewport.height;
+        getViewerInnerHeight() /
+        viewport.height;
+
 
     return Math.min(
         widthScale,
         heightScale
     );
+
 }
 
 
 function updateScale(){
 
     currentScale =
-        baseScale * zoomLevel;
+        baseScale *
+        zoomLevel;
+
 
     zoomBox.value =
-        Math.round(zoomLevel * 100) + "%";
+        Math.round(
+            zoomLevel * 100
+        ) + "%";
+
 }
 
 
@@ -920,6 +1274,7 @@ function updateScale(){
 ========================================================= */
 
 const zoomLevels = [
+
     0.25,
     0.5,
     0.75,
@@ -940,6 +1295,7 @@ const zoomLevels = [
     4.5,
     4.75,
     5
+
 ];
 
 
@@ -947,13 +1303,15 @@ const zoomLevels = [
    PDF STATE
 ========================================================= */
 
+let pdfDoc = null;
+
 const pageViews = [];
 
 let searchResults = [];
-let currentSearch = -1;
-let lastSearchQuery = "";
 
-let pdfDoc = null;
+let currentSearch = -1;
+
+let lastSearchQuery = "";
 
 
 /* =========================================================
@@ -961,16 +1319,20 @@ let pdfDoc = null;
 ========================================================= */
 
 const backButton =
-    document.getElementById("backBtn");
+    document.getElementById(
+        "backBtn"
+    );
+
 
 backButton.href =
     returnPage || "index.html";
 
+
 backButton.addEventListener(
     "click",
-    e => {
+    event => {
 
-        e.preventDefault();
+        event.preventDefault();
 
         sessionStorage.setItem(
             "restoreSearch",
@@ -982,159 +1344,644 @@ backButton.addEventListener(
             "yes"
         );
 
-        location.href =
-            returnPage || "index.html";
+        window.location.assign(
+            returnPage || "index.html"
+        );
+
     }
 );
 
 
 /* =========================================================
-   INTERNAL PDF LINK
+   SET PAGE CSS SCALE
 ========================================================= */
 
-async function openInternalDestination(dest){
+function setPageScaleVariables(
+    element,
+    scale
+){
 
-    try{
+    /*
+        PDF.js current viewer implementations
+        use these CSS values for text-layer scaling.
+    */
 
-        let resolvedDest =
-            dest;
+    element.style.setProperty(
+        "--scale-factor",
+        "1"
+    );
 
-        /*
-            Named destination:
-            pdfDoc.getDestination()
-        */
+    element.style.setProperty(
+        "--user-unit",
+        String(scale)
+    );
 
-        if(typeof resolvedDest === "string"){
+    element.style.setProperty(
+        "--total-scale-factor",
+        String(scale)
+    );
 
-            resolvedDest =
-                await pdfDoc.getDestination(
-                    resolvedDest
-                );
-
-        }
-
-        if(
-            !Array.isArray(resolvedDest) ||
-            !resolvedDest.length
-        ){
-
-            return false;
-
-        }
-
-        const pageRef =
-            resolvedDest[0];
-
-        let pageIndex = -1;
-
-        /*
-            Most PDF destinations use an indirect
-            page reference here.
-        */
-
-        if(pageRef){
-
-            try{
-
-                pageIndex =
-                    await pdfDoc.getPageIndex(
-                        pageRef
-                    );
-
-            }
-            catch(err){
-
-                /*
-                    Some PDFs can provide a page
-                    number directly.
-                */
-
-                if(
-                    typeof pageRef === "number"
-                ){
-
-                    pageIndex =
-                        pageRef;
-
-                }
-
-            }
-
-        }
-
-        /*
-            If a page index was resolved, jump there.
-        */
-
-        if(
-            pageIndex >= 0 &&
-            pageIndex < pageViews.length
-        ){
-
-            pageViews[pageIndex]
-                .pageDiv
-                .scrollIntoView({
-                    behavior:"smooth",
-                    block:"start"
-                });
-
-            pageInput.value =
-                pageIndex + 1;
-
-            return true;
-        }
-
-    }
-    catch(err){
-
-        console.warn(
-            "Could not follow internal PDF link:",
-            err
-        );
-
-    }
-
-    return false;
 }
 
 
 /* =========================================================
-   CREATE LINK LAYER
+   CREATE PAGE CONTAINER
+========================================================= */
+
+async function createPageShell(
+    pageNumber
+){
+
+    const page =
+        await pdfDoc.getPage(
+            pageNumber
+        );
+
+
+    const viewport =
+        page.getViewport({
+            scale:currentScale
+        });
+
+
+    const pageDiv =
+        document.createElement(
+            "div"
+        );
+
+
+    pageDiv.className =
+        "page";
+
+
+    pageDiv.dataset.pageNumber =
+        String(pageNumber);
+
+
+    pageDiv.style.width =
+        viewport.width + "px";
+
+
+    pageDiv.style.height =
+        viewport.height + "px";
+
+
+    /*
+       Give the page the scaling variables too.
+    */
+
+    setPageScaleVariables(
+        pageDiv,
+        viewport.scale
+    );
+
+
+    /* -----------------------------------------
+       Canvas
+    ----------------------------------------- */
+
+    const canvas =
+        document.createElement(
+            "canvas"
+        );
+
+
+    canvas.className =
+        "pageCanvas";
+
+
+    const deviceScale =
+        window.devicePixelRatio || 1;
+
+
+    canvas.width =
+        Math.floor(
+            viewport.width *
+            deviceScale
+        );
+
+
+    canvas.height =
+        Math.floor(
+            viewport.height *
+            deviceScale
+        );
+
+
+    canvas.style.width =
+        viewport.width + "px";
+
+
+    canvas.style.height =
+        viewport.height + "px";
+
+
+    /* -----------------------------------------
+       Text layer
+    ----------------------------------------- */
+
+    const textLayerDiv =
+        document.createElement(
+            "div"
+        );
+
+
+    textLayerDiv.className =
+        "textLayer";
+
+
+    textLayerDiv.style.width =
+        viewport.width + "px";
+
+
+    textLayerDiv.style.height =
+        viewport.height + "px";
+
+
+    setPageScaleVariables(
+        textLayerDiv,
+        viewport.scale
+    );
+
+
+    /* -----------------------------------------
+       Link layer
+    ----------------------------------------- */
+
+    const linkLayerDiv =
+        document.createElement(
+            "div"
+        );
+
+
+    linkLayerDiv.className =
+        "linkLayer";
+
+
+    linkLayerDiv.style.width =
+        viewport.width + "px";
+
+
+    linkLayerDiv.style.height =
+        viewport.height + "px";
+
+
+    /* -----------------------------------------
+       Assemble
+    ----------------------------------------- */
+
+    pageDiv.appendChild(
+        canvas
+    );
+
+    pageDiv.appendChild(
+        textLayerDiv
+    );
+
+    pageDiv.appendChild(
+        linkLayerDiv
+    );
+
+
+    viewer.appendChild(
+        pageDiv
+    );
+
+
+    /* -----------------------------------------
+       View object
+    ----------------------------------------- */
+
+    const view = {
+
+        pageNumber,
+
+        page,
+
+        pageDiv,
+
+        canvas,
+
+        textLayerDiv,
+
+        linkLayerDiv,
+
+        viewport,
+
+        textContent:null,
+
+        annotations:[],
+
+        canvasReady:false,
+
+        textReady:false,
+
+        linksReady:false
+
+    };
+
+
+    pageViews[
+        pageNumber - 1
+    ] =
+        view;
+
+
+    return view;
+
+}
+
+
+/* =========================================================
+   RENDER CANVAS
+========================================================= */
+
+async function renderCanvas(
+    view
+){
+
+    const deviceScale =
+        window.devicePixelRatio || 1;
+
+
+    const viewport =
+        view.page.getViewport({
+            scale:currentScale
+        });
+
+
+    view.viewport =
+        viewport;
+
+
+    view.pageDiv.style.width =
+        viewport.width + "px";
+
+
+    view.pageDiv.style.height =
+        viewport.height + "px";
+
+
+    setPageScaleVariables(
+        view.pageDiv,
+        viewport.scale
+    );
+
+
+    view.canvas.width =
+        Math.floor(
+            viewport.width *
+            deviceScale
+        );
+
+
+    view.canvas.height =
+        Math.floor(
+            viewport.height *
+            deviceScale
+        );
+
+
+    view.canvas.style.width =
+        viewport.width + "px";
+
+
+    view.canvas.style.height =
+        viewport.height + "px";
+
+
+    const context =
+        view.canvas.getContext(
+            "2d"
+        );
+
+
+    context.setTransform(
+        deviceScale,
+        0,
+        0,
+        deviceScale,
+        0,
+        0
+    );
+
+
+    await view.page.render({
+
+        canvasContext:
+            context,
+
+        viewport
+
+    }).promise;
+
+
+    view.canvasReady =
+        true;
+
+}
+
+
+/* =========================================================
+   RENDER TEXT
+========================================================= */
+
+async function renderText(
+    view
+){
+
+    const viewport =
+        view.viewport;
+
+
+    try{
+
+        view.textContent =
+            await view.page.getTextContent();
+
+
+        view.textLayerDiv.innerHTML =
+            "";
+
+
+        view.textLayerDiv.style.width =
+            viewport.width + "px";
+
+
+        view.textLayerDiv.style.height =
+            viewport.height + "px";
+
+
+        /*
+           This is the important PDF.js text
+           scaling setup.
+        */
+
+        setPageScaleVariables(
+            view.textLayerDiv,
+            viewport.scale
+        );
+
+
+        const textLayer =
+            new TextLayer({
+
+                textContentSource:
+                    view.textContent,
+
+                container:
+                    view.textLayerDiv,
+
+                viewport:
+                    viewport.clone({
+                        dontFlip:true
+                    })
+
+            });
+
+
+        await textLayer.render();
+
+
+        view.textLayer =
+            textLayer;
+
+
+        view.textReady =
+            true;
+
+
+    }
+    catch(error){
+
+        console.warn(
+            "Text layer failed on page " +
+            view.pageNumber,
+            error
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   INTERNAL PDF DESTINATION
+========================================================= */
+
+async function resolveDestination(
+    destination
+){
+
+    if(!pdfDoc)
+        return null;
+
+
+    try{
+
+        let dest =
+            destination;
+
+
+        if(
+            typeof dest === "string"
+        ){
+
+            dest =
+                await pdfDoc.getDestination(
+                    dest
+                );
+
+        }
+
+
+        if(
+            !Array.isArray(dest) ||
+            !dest.length
+        ){
+
+            return null;
+
+        }
+
+
+        const pageRef =
+            dest[0];
+
+
+        let pageIndex =
+            -1;
+
+
+        try{
+
+            pageIndex =
+                await pdfDoc.getPageIndex(
+                    pageRef
+                );
+
+        }
+        catch{
+
+            if(
+                typeof pageRef === "number"
+            ){
+
+                pageIndex =
+                    pageRef;
+
+            }
+
+        }
+
+
+        if(
+            pageIndex < 0 ||
+            pageIndex >= pageViews.length
+        ){
+
+            return null;
+
+        }
+
+
+        return pageIndex;
+
+    }
+    catch(error){
+
+        console.warn(
+            "Could not resolve PDF destination:",
+            error
+        );
+
+        return null;
+
+    }
+
+}
+
+
+/* =========================================================
+   OPEN INTERNAL LINK
+========================================================= */
+
+async function openInternalDestination(
+    destination
+){
+
+    const pageIndex =
+        await resolveDestination(
+            destination
+        );
+
+
+    if(
+        pageIndex === null
+    ){
+
+        return;
+
+    }
+
+
+    const target =
+        pageViews[
+            pageIndex
+        ];
+
+
+    if(!target)
+        return;
+
+
+    /*
+       Scroll ONLY the PDF viewer.
+
+       This is important: using scrollIntoView()
+       on the page can also scroll ancestor
+       containers and cause strange positioning.
+    */
+
+    const viewerRect =
+        viewer.getBoundingClientRect();
+
+
+    const pageRect =
+        target.pageDiv.getBoundingClientRect();
+
+
+    const targetOffset =
+        pageRect.top -
+        viewerRect.top +
+        viewer.scrollTop;
+
+
+    viewer.scrollTo({
+
+        top:
+            Math.max(
+                0,
+                targetOffset -
+                8
+            ),
+
+        behavior:"smooth"
+
+    });
+
+
+    pageInput.value =
+        String(
+            pageIndex + 1
+        );
+
+}
+
+
+/* =========================================================
+   RENDER LINKS
 ========================================================= */
 
 function renderLinkLayer(
     view,
-    annotations,
-    viewport
+    annotations
 ){
 
     const layer =
         view.linkLayerDiv;
 
-    layer.innerHTML = "";
+
+    layer.innerHTML =
+        "";
+
 
     if(
-        !annotations ||
-        !annotations.length
+        !Array.isArray(
+            annotations
+        )
     ){
 
         return;
+
     }
+
+
+    const viewport =
+        view.viewport;
 
 
     for(
         const annotation of annotations
     ){
 
-        /*
-            Only create actual link hitboxes.
-        */
-
         if(
-            annotation.subtype !== "Link"
+            annotation.subtype !==
+            "Link"
         ){
 
             continue;
+
         }
 
 
@@ -1144,24 +1991,13 @@ function renderLinkLayer(
         ){
 
             continue;
+
         }
 
 
-        const link =
-            document.createElement("a");
-
-        link.className =
-            "pdf-link";
-
-
-        /*
-            Convert PDF coordinates into the
-            exact viewport coordinates used by
-            the canvas and text layer.
-        */
-
         const rect =
-            viewport.convertToViewportRectangle(
+            viewport
+            .convertToViewportRectangle(
                 annotation.rect
             );
 
@@ -1172,39 +2008,67 @@ function renderLinkLayer(
                 rect[2]
             );
 
+
         const top =
             Math.min(
                 rect[1],
                 rect[3]
             );
 
+
         const width =
             Math.abs(
-                rect[2] - rect[0]
+                rect[2] -
+                rect[0]
             );
+
 
         const height =
             Math.abs(
-                rect[3] - rect[1]
+                rect[3] -
+                rect[1]
             );
+
+
+        if(
+            width <= 0 ||
+            height <= 0
+        ){
+
+            continue;
+
+        }
+
+
+        const link =
+            document.createElement(
+                "a"
+            );
+
+
+        link.className =
+            "pdf-link";
 
 
         link.style.left =
             left + "px";
 
+
         link.style.top =
             top + "px";
 
+
         link.style.width =
             width + "px";
+
 
         link.style.height =
             height + "px";
 
 
-        /*
-            External URL.
-        */
+        /* -----------------------------------------
+           External link
+        ----------------------------------------- */
 
         if(
             annotation.url ||
@@ -1227,13 +2091,16 @@ function renderLinkLayer(
             link.rel =
                 "noopener noreferrer";
 
+
         }
 
-        /*
-            Internal PDF destination.
-        */
+        /* -----------------------------------------
+           Internal link
+        ----------------------------------------- */
 
-        else if(annotation.dest){
+        else if(
+            annotation.dest
+        ){
 
             link.href =
                 "#";
@@ -1247,34 +2114,6 @@ function renderLinkLayer(
 
                     event.stopPropagation();
 
-                    await openInternalDestination(
-                        annotation.dest
-                    );
-
-                }
-            );
-
-        }
-
-        /*
-            Some PDF files represent
-            navigation through actions.
-        */
-
-        else if(
-            annotation.actionType === "GoTo" &&
-            annotation.dest
-        ){
-
-            link.href = "#";
-
-            link.addEventListener(
-                "click",
-                async event => {
-
-                    event.preventDefault();
-
-                    event.stopPropagation();
 
                     await openInternalDestination(
                         annotation.dest
@@ -1282,14 +2121,10 @@ function renderLinkLayer(
 
                 }
             );
+
 
         }
         else{
-
-            /*
-                Unknown annotation type.
-                Do not create a useless hitbox.
-            */
 
             continue;
 
@@ -1301,286 +2136,87 @@ function renderLinkLayer(
         );
 
     }
+
+
+    view.linksReady =
+        true;
+
 }
 
 
 /* =========================================================
-   CREATE ONE PAGE
+   RENDER EVERYTHING FOR ONE PAGE
 ========================================================= */
 
-async function createPage(
-    pdf,
-    pageNumber
+async function renderPageLayers(
+    view
 ){
 
-    const page =
-        await pdf.getPage(
-            pageNumber
-        );
+    if(!view)
+        return;
 
-
-    const viewport =
-        page.getViewport({
-            scale:currentScale
-        });
-
-
-    /* -----------------------------------------
-       Page container
-    ----------------------------------------- */
-
-    const pageDiv =
-        document.createElement("div");
-
-    pageDiv.className =
-        "page";
-
-    pageDiv.style.width =
-        viewport.width + "px";
-
-    pageDiv.style.height =
-        viewport.height + "px";
-
-
-    /*
-        Append immediately.
-
-        This is important because pages now
-        appear progressively rather than making
-        the entire viewer wait until every
-        operation for the page finishes.
-    */
-
-    viewer.appendChild(
-        pageDiv
-    );
-
-
-    /* -----------------------------------------
-       Canvas
-    ----------------------------------------- */
-
-    const canvas =
-        document.createElement("canvas");
-
-    canvas.className =
-        "pageCanvas";
-
-
-    const outputScale =
-        window.devicePixelRatio || 1;
-
-
-    canvas.width =
-        Math.floor(
-            viewport.width *
-            outputScale
-        );
-
-    canvas.height =
-        Math.floor(
-            viewport.height *
-            outputScale
-        );
-
-
-    canvas.style.width =
-        viewport.width + "px";
-
-    canvas.style.height =
-        viewport.height + "px";
-
-
-    const ctx =
-        canvas.getContext("2d");
-
-
-    ctx.setTransform(
-        outputScale,
-        0,
-        0,
-        outputScale,
-        0,
-        0
-    );
-
-
-    pageDiv.appendChild(
-        canvas
-    );
-
-
-    /* -----------------------------------------
-       Text layer
-    ----------------------------------------- */
-
-    const textLayerDiv =
-        document.createElement("div");
-
-    textLayerDiv.className =
-        "textLayer";
-
-    textLayerDiv.style.width =
-        viewport.width + "px";
-
-    textLayerDiv.style.height =
-        viewport.height + "px";
-
-
-    pageDiv.appendChild(
-        textLayerDiv
-    );
-
-
-    /* -----------------------------------------
-       Link layer
-    ----------------------------------------- */
-
-    const linkLayerDiv =
-        document.createElement("div");
-
-    linkLayerDiv.className =
-        "linkLayer";
-
-    linkLayerDiv.style.width =
-        viewport.width + "px";
-
-    linkLayerDiv.style.height =
-        viewport.height + "px";
-
-
-    pageDiv.appendChild(
-        linkLayerDiv
-    );
-
-
-    /* -----------------------------------------
-       Store view immediately
-    ----------------------------------------- */
-
-    const view = {
-
-        page,
-
-        pageDiv,
-
-        canvas,
-
-        textLayerDiv,
-
-        linkLayerDiv,
-
-        textContent:null,
-
-        annotations:[]
-
-    };
-
-
-    pageViews.push(
-        view
-    );
-
-
-    /*
-        Render the canvas.
-    */
-
-    await page.render({
-
-        canvasContext:
-            ctx,
-
-        viewport
-
-    }).promise;
-
-
-    /*
-        Get text.
-    */
-
-    const textContent =
-        await page.getTextContent();
-
-
-    view.textContent =
-        textContent;
-
-
-    /*
-        IMPORTANT:
-        PDF.js TextLayer expects the cloned
-        viewport with dontFlip:true.
-    */
-
-    const textLayer =
-        new TextLayer({
-
-            textContentSource:
-                textContent,
-
-            container:
-                textLayerDiv,
-
-            viewport:
-                viewport.clone({
-                    dontFlip:true
-                })
-
-        });
-
-
-    await textLayer.render();
-
-
-    /*
-        Get PDF annotations.
-
-        Failure here must NOT prevent the page
-        from existing or stop later pages.
-    */
 
     try{
 
-        view.annotations =
-            await page.getAnnotations({
+        await renderText(
+            view
+        );
+
+    }
+    catch(error){
+
+        console.warn(
+            "Text rendering failed:",
+            error
+        );
+
+    }
+
+
+    try{
+
+        const annotations =
+            await view.page.getAnnotations({
                 intent:"display"
             });
 
 
+        view.annotations =
+            annotations;
+
+
         renderLinkLayer(
             view,
-            view.annotations,
-            viewport
+            annotations
         );
 
     }
-    catch(err){
+    catch(error){
 
         console.warn(
-            "Could not load annotations for page " +
-            pageNumber + ":",
-            err
+            "Link rendering failed on page " +
+            view.pageNumber,
+            error
         );
 
     }
 
-
-    return view;
 }
 
 
 /* =========================================================
-   INITIAL PDF LOAD
+   LOAD PDF
 ========================================================= */
 
 try{
 
-    console.log(
-        "Loading PDF:",
-        file
-    );
+    if(!file){
+
+        throw new Error(
+            "No PDF file was supplied."
+        );
+
+    }
 
 
     const loadingTask =
@@ -1591,25 +2227,21 @@ try{
         await loadingTask.promise;
 
 
-    console.log(
-        "PDF loaded:",
-        pdfDoc.numPages,
-        "pages"
-    );
-
-
     document.getElementById(
         "pageCount"
     ).textContent =
-        "of " + pdfDoc.numPages;
+        "of " +
+        pdfDoc.numPages;
 
 
     /*
-        Calculate the initial fit from page 1.
+       Establish initial fit scale from page 1.
     */
 
     const firstPage =
-        await pdfDoc.getPage(1);
+        await pdfDoc.getPage(
+            1
+        );
 
 
     baseScale =
@@ -1618,17 +2250,17 @@ try{
         );
 
 
-    zoomLevel = 1;
+    zoomLevel =
+        1;
+
 
     updateScale();
 
 
     /*
-        Render every page.
-
-        Each page is handled independently.
-        An annotation error cannot stop the rest
-        of the PDF from loading.
+       =====================================================
+       STEP 1: BUILD ALL PAGE CONTAINERS FIRST
+       =====================================================
     */
 
     for(
@@ -1639,53 +2271,116 @@ try{
 
         try{
 
-            console.log(
-                "Rendering page",
-                pageNumber,
-                "of",
-                pdfDoc.numPages
-            );
-
-
-            await createPage(
-                pdfDoc,
+            await createPageShell(
                 pageNumber
             );
 
         }
-        catch(err){
-
-            /*
-                Do not stop the entire PDF because
-                one unusual page failed.
-            */
+        catch(error){
 
             console.error(
-                "Failed to render page " +
-                pageNumber + ":",
-                err
+                "Could not create page " +
+                pageNumber,
+                error
             );
+
+            pageViews[
+                pageNumber - 1
+            ] =
+                null;
 
         }
 
     }
 
 
+    /*
+       =====================================================
+       STEP 2: RENDER CANVASES
+       =====================================================
+
+       Canvases are the actual visible PDF pages.
+       They are rendered separately from the text
+       and links.
+    */
+
+    await Promise.all(
+
+        pageViews.map(
+            async view => {
+
+                if(!view)
+                    return;
+
+
+                try{
+
+                    await renderCanvas(
+                        view
+                    );
+
+                }
+                catch(error){
+
+                    console.error(
+                        "Canvas rendering failed on page " +
+                        view.pageNumber,
+                        error
+                    );
+
+                }
+
+            }
+        )
+
+    );
+
+
+    /*
+       The actual PDF pages now exist.
+       The user does not have to wait for the
+       selectable text layer to finish.
+    */
+
     loadingOverlay.style.display =
         "none";
 
 
-    console.log(
-        "Finished loading pages:",
-        pageViews.length
+    /*
+       =====================================================
+       STEP 3: TEXT + LINKS
+       =====================================================
+
+       These are independent from canvas rendering.
+       A slow text layer on one page does not stop
+       another page's text or links.
+    */
+
+    void Promise.all(
+
+        pageViews.map(
+            async view => {
+
+                if(!view)
+                    return;
+
+
+                await renderPageLayers(
+                    view
+                );
+
+            }
+        )
+
     );
+
 
 }
-catch(err){
+catch(error){
 
     console.error(
-        "PDF LOAD ERROR:",
-        err
+        "PDF loading failed:",
+        error
     );
 
 
@@ -1693,25 +2388,29 @@ catch(err){
         "none";
 
 
-    const message =
-        document.createElement("div");
+    viewer.innerHTML = `
 
-    message.style.color =
-        "#fff";
+        <div style="
+            color:#fff;
+            padding:40px;
+            text-align:center;
+            max-width:600px;
+        ">
 
-    message.style.padding =
-        "30px";
+            <h2>
+                Unable to load PDF
+            </h2>
 
-    message.style.textAlign =
-        "center";
+            <p>
+                ${escapeHtml(
+                    error?.message ||
+                    "Unknown error."
+                )}
+            </p>
 
-    message.textContent =
-        "Unable to load this PDF.";
+        </div>
 
-
-    viewer.appendChild(
-        message
-    );
+    `;
 
 }
 
@@ -1722,13 +2421,28 @@ catch(err){
 
 async function renderAllPages(){
 
-    const outputScale =
-        window.devicePixelRatio || 1;
+    /*
+       Keep the current scroll position as much
+       as practical when changing scale.
+    */
+
+    const currentScrollRatio =
+        viewer.scrollHeight > viewer.clientHeight
+            ? viewer.scrollTop /
+              (
+                  viewer.scrollHeight -
+                  viewer.clientHeight
+              )
+            : 0;
 
 
     for(
         const view of pageViews
     ){
+
+        if(!view)
+            continue;
+
 
         const viewport =
             view.page.getViewport({
@@ -1736,98 +2450,150 @@ async function renderAllPages(){
             });
 
 
-        /* -----------------------------------------
-           Resize page
-        ----------------------------------------- */
+        view.viewport =
+            viewport;
+
 
         view.pageDiv.style.width =
             viewport.width + "px";
 
+
         view.pageDiv.style.height =
             viewport.height + "px";
+
+
+        setPageScaleVariables(
+            view.pageDiv,
+            viewport.scale
+        );
 
 
         /* -----------------------------------------
            Canvas
         ----------------------------------------- */
 
-        view.canvas.width =
-            Math.floor(
-                viewport.width *
-                outputScale
+        try{
+
+            const deviceScale =
+                window.devicePixelRatio || 1;
+
+
+            view.canvas.width =
+                Math.floor(
+                    viewport.width *
+                    deviceScale
+                );
+
+
+            view.canvas.height =
+                Math.floor(
+                    viewport.height *
+                    deviceScale
+                );
+
+
+            view.canvas.style.width =
+                viewport.width + "px";
+
+
+            view.canvas.style.height =
+                viewport.height + "px";
+
+
+            const context =
+                view.canvas.getContext(
+                    "2d"
+                );
+
+
+            context.setTransform(
+                deviceScale,
+                0,
+                0,
+                deviceScale,
+                0,
+                0
             );
 
-        view.canvas.height =
-            Math.floor(
-                viewport.height *
-                outputScale
+
+            await view.page.render({
+
+                canvasContext:
+                    context,
+
+                viewport
+
+            }).promise;
+
+        }
+        catch(error){
+
+            console.warn(
+                "Canvas zoom render failed:",
+                error
             );
 
-        view.canvas.style.width =
-            viewport.width + "px";
-
-        view.canvas.style.height =
-            viewport.height + "px";
-
-
-        const ctx =
-            view.canvas.getContext("2d");
-
-
-        ctx.setTransform(
-            outputScale,
-            0,
-            0,
-            outputScale,
-            0,
-            0
-        );
-
-
-        await view.page.render({
-
-            canvasContext:
-                ctx,
-
-            viewport
-
-        }).promise;
+        }
 
 
         /* -----------------------------------------
-           Text layer
+           Text
         ----------------------------------------- */
 
-        view.textLayerDiv.innerHTML =
-            "";
+        try{
 
-        view.textLayerDiv.style.width =
-            viewport.width + "px";
-
-        view.textLayerDiv.style.height =
-            viewport.height + "px";
+            view.textLayerDiv.innerHTML =
+                "";
 
 
-        if(view.textContent){
-
-            const textLayer =
-                new TextLayer({
-
-                    textContentSource:
-                        view.textContent,
-
-                    container:
-                        view.textLayerDiv,
-
-                    viewport:
-                        viewport.clone({
-                            dontFlip:true
-                        })
-
-                });
+            view.textLayerDiv.style.width =
+                viewport.width + "px";
 
 
-            await textLayer.render();
+            view.textLayerDiv.style.height =
+                viewport.height + "px";
+
+
+            setPageScaleVariables(
+                view.textLayerDiv,
+                viewport.scale
+            );
+
+
+            if(view.textContent){
+
+                const textLayer =
+                    new TextLayer({
+
+                        textContentSource:
+                            view.textContent,
+
+                        container:
+                            view.textLayerDiv,
+
+                        viewport:
+                            viewport.clone({
+                                dontFlip:true
+                            })
+
+                    });
+
+
+                await textLayer.render();
+
+
+                view.textLayer =
+                    textLayer;
+
+            }
+
+        }
+        catch(error){
+
+            console.warn(
+                "Text zoom render failed:",
+                error
+            );
 
         }
 
@@ -1836,13 +2602,51 @@ async function renderAllPages(){
            Links
         ----------------------------------------- */
 
-        renderLinkLayer(
-            view,
-            view.annotations,
-            viewport
-        );
+        try{
+
+            renderLinkLayer(
+                view,
+                view.annotations
+            );
+
+        }
+        catch(error){
+
+            console.warn(
+                "Link zoom render failed:",
+                error
+            );
+
+        }
 
     }
+
+
+    /*
+       Restore approximately the same vertical
+       position after zoom.
+    */
+
+    requestAnimationFrame(
+        () => {
+
+            if(
+                viewer.scrollHeight >
+                viewer.clientHeight
+            ){
+
+                viewer.scrollTop =
+                    currentScrollRatio *
+                    (
+                        viewer.scrollHeight -
+                        viewer.clientHeight
+                    );
+
+            }
+
+        }
+    );
+
 }
 
 
@@ -1856,21 +2660,12 @@ menuButton.addEventListener(
 
         event.stopPropagation();
 
-        if(
-            menu.style.display ===
-            "block"
-        ){
 
-            menu.style.display =
-                "none";
+        menu.style.display =
+            menu.style.display === "block"
+                ? "none"
+                : "block";
 
-        }
-        else{
-
-            menu.style.display =
-                "block";
-
-        }
     }
 );
 
@@ -1906,22 +2701,30 @@ document.getElementById(
     "click",
     () => {
 
-        const a =
-            document.createElement("a");
+        const link =
+            document.createElement(
+                "a"
+            );
 
-        a.href =
+
+        link.href =
             file;
 
-        a.download =
+
+        link.download =
             file.split("/").pop();
 
+
         document.body.appendChild(
-            a
+            link
         );
 
-        a.click();
 
-        a.remove();
+        link.click();
+
+
+        link.remove();
+
 
         menu.style.display =
             "none";
@@ -1931,7 +2734,7 @@ document.getElementById(
 
 
 /* =========================================================
-   NEW TAB
+   OPEN NEW TAB
 ========================================================= */
 
 document.getElementById(
@@ -1952,13 +2755,21 @@ document.getElementById(
 
 document.getElementById(
     "fullscreenBtn"
-).onclick = () => {
+).onclick = async () => {
 
-    if(
-        document.documentElement.requestFullscreen
-    ){
+    try{
 
-        document.documentElement.requestFullscreen();
+        await document
+            .documentElement
+            .requestFullscreen();
+
+    }
+    catch(error){
+
+        console.warn(
+            "Fullscreen failed:",
+            error
+        );
 
     }
 
@@ -1978,11 +2789,14 @@ document.getElementById(
         const url =
             window.location.href;
 
+
         menu.style.display =
             "none";
 
 
-        if(navigator.share){
+        if(
+            navigator.share
+        ){
 
             try{
 
@@ -2001,9 +2815,11 @@ document.getElementById(
                 });
 
             }
-            catch(err){
+            catch{
 
-                // User cancelled sharing.
+                /*
+                   User cancelled share.
+                */
 
             }
 
@@ -2014,8 +2830,12 @@ document.getElementById(
 
         try{
 
-            await navigator.clipboard
-                .writeText(url);
+            await navigator
+                .clipboard
+                .writeText(
+                    url
+                );
+
 
             alert(
                 "Link copied to clipboard!"
@@ -2045,16 +2865,21 @@ document.getElementById(
 
     const next =
         zoomLevels.find(
-            z => z > zoomLevel
+            level =>
+                level > zoomLevel
         );
+
 
     if(!next)
         return;
 
+
     zoomLevel =
         next;
 
+
     updateScale();
+
 
     await renderAllPages();
 
@@ -2073,16 +2898,21 @@ document.getElementById(
         [...zoomLevels]
         .reverse()
         .find(
-            z => z < zoomLevel
+            level =>
+                level < zoomLevel
         );
+
 
     if(!previous)
         return;
 
+
     zoomLevel =
         previous;
 
+
     updateScale();
+
 
     await renderAllPages();
 
@@ -2100,14 +2930,29 @@ document.getElementById(
     if(!pageViews.length)
         return;
 
-    baseScale =
-        getFitWidthScale(
-            pageViews[0].page
+
+    const firstView =
+        pageViews.find(
+            view => Boolean(view)
         );
 
-    zoomLevel = 1;
+
+    if(!firstView)
+        return;
+
+
+    baseScale =
+        getFitWidthScale(
+            firstView.page
+        );
+
+
+    zoomLevel =
+        1;
+
 
     updateScale();
+
 
     await renderAllPages();
 
@@ -2125,14 +2970,29 @@ document.getElementById(
     if(!pageViews.length)
         return;
 
-    baseScale =
-        getFitPageScale(
-            pageViews[0].page
+
+    const firstView =
+        pageViews.find(
+            view => Boolean(view)
         );
 
-    zoomLevel = 1;
+
+    if(!firstView)
+        return;
+
+
+    baseScale =
+        getFitPageScale(
+            firstView.page
+        );
+
+
+    zoomLevel =
+        1;
+
 
     updateScale();
+
 
     await renderAllPages();
 
@@ -2145,55 +3005,85 @@ document.getElementById(
 
 pageInput.addEventListener(
     "keydown",
-    e => {
+    event => {
 
         if(
-            e.key !== "Enter"
-        )
+            event.key !== "Enter"
+        ){
+
             return;
 
-        let page =
+        }
+
+
+        let pageNumber =
             parseInt(
-                pageInput.value
+                pageInput.value,
+                10
             );
 
 
         if(
-            isNaN(page)
+            Number.isNaN(
+                pageNumber
+            )
         ){
 
-            page = 1;
+            pageNumber = 1;
 
         }
 
 
-        if(page < 1)
-            page = 1;
+        pageNumber =
+            Math.max(
+                1,
+                Math.min(
+                    pageViews.length,
+                    pageNumber
+                )
+            );
 
 
-        if(page > pageViews.length){
-
-            page =
-                pageViews.length;
-
-        }
+        const view =
+            pageViews[
+                pageNumber - 1
+            ];
 
 
-        if(!page)
+        if(!view)
             return;
 
 
         pageInput.value =
-            page;
+            String(
+                pageNumber
+            );
 
 
-        pageViews[
-            page - 1
-        ].pageDiv.scrollIntoView({
+        const viewerRect =
+            viewer.getBoundingClientRect();
 
-            behavior:"smooth",
 
-            block:"start"
+        const pageRect =
+            view.pageDiv
+            .getBoundingClientRect();
+
+
+        const targetOffset =
+            pageRect.top -
+            viewerRect.top +
+            viewer.scrollTop;
+
+
+        viewer.scrollTo({
+
+            top:
+                Math.max(
+                    0,
+                    targetOffset - 8
+                ),
+
+            behavior:"smooth"
 
         });
 
@@ -2207,12 +3097,15 @@ pageInput.addEventListener(
 
 zoomBox.addEventListener(
     "keydown",
-    async e => {
+    async event => {
 
         if(
-            e.key !== "Enter"
-        )
+            event.key !== "Enter"
+        ){
+
             return;
+
+        }
 
 
         let value =
@@ -2223,7 +3116,9 @@ zoomBox.addEventListener(
 
 
         if(
-            isNaN(value)
+            Number.isNaN(
+                value
+            )
         ){
 
             value = 100;
@@ -2247,6 +3142,7 @@ zoomBox.addEventListener(
 
         updateScale();
 
+
         await renderAllPages();
 
     }
@@ -2254,34 +3150,71 @@ zoomBox.addEventListener(
 
 
 /* =========================================================
-   CURRENT PAGE TRACKING
+   CURRENT PAGE WHILE SCROLLING
 ========================================================= */
 
 viewer.addEventListener(
     "scroll",
     () => {
 
-        let current = 1;
+        if(
+            !pageViews.length
+        ){
+
+            return;
+
+        }
+
+
+        const viewerRect =
+            viewer.getBoundingClientRect();
+
+
+        let currentPage =
+            1;
+
+
+        let bestDistance =
+            Infinity;
 
 
         for(
-            let i = 0;
-            i < pageViews.length;
-            i++
+            const view of pageViews
         ){
 
+            if(!view)
+                continue;
+
+
             const rect =
-                pageViews[i]
-                .pageDiv
+                view.pageDiv
                 .getBoundingClientRect();
 
 
+            /*
+               Find the page whose top is closest
+               to the viewer's top edge without
+               allowing the page indicator to behave
+               strangely around the scroll boundary.
+            */
+
+            const distance =
+                Math.abs(
+                    rect.top -
+                    viewerRect.top -
+                    8
+                );
+
+
             if(
-                rect.top < 150
+                distance < bestDistance
             ){
 
-                current =
-                    i + 1;
+                bestDistance =
+                    distance;
+
+                currentPage =
+                    view.pageNumber;
 
             }
 
@@ -2289,7 +3222,9 @@ viewer.addEventListener(
 
 
         pageInput.value =
-            current;
+            String(
+                currentPage
+            );
 
     }
 );
@@ -2299,7 +3234,9 @@ viewer.addEventListener(
    SEARCH
 ========================================================= */
 
-async function searchPDF(query){
+async function searchPDF(
+    query
+){
 
     searchResults = [];
 
@@ -2307,15 +3244,20 @@ async function searchPDF(query){
 
 
     query =
-        query.trim().toLowerCase();
+        query
+        .trim()
+        .toLowerCase();
 
 
-    if(query === ""){
+    if(
+        query === ""
+    ){
 
         document.getElementById(
             "searchResults"
         ).textContent =
             "0 of 0";
+
 
         return;
 
@@ -2327,33 +3269,38 @@ async function searchPDF(query){
 
 
     for(
-        let i = 0;
-        i < pageViews.length;
-        i++
+        const view of pageViews
     ){
 
         if(
-            !pageViews[i].textContent
-        )
+            !view ||
+            !view.textContent
+        ){
+
             continue;
+
+        }
 
 
         const pageText =
-            pageViews[i]
-            .textContent
-            .items
+            view.textContent.items
             .map(
-                item => item.str
+                item =>
+                    item.str
             )
             .join(" ")
             .toLowerCase();
 
 
         if(
-            pageText.includes(query)
+            pageText.includes(
+                query
+            )
         ){
 
-            searchResults.push(i);
+            searchResults.push(
+                view.pageNumber - 1
+            );
 
         }
 
@@ -2369,29 +3316,44 @@ async function searchPDF(query){
         ).textContent =
             "0 of 0";
 
+
         alert(
             "No results found."
         );
+
 
         return;
 
     }
 
 
-    gotoSearchResult(0);
+    gotoSearchResult(
+        0
+    );
 
 }
 
 
-function gotoSearchResult(index){
+/* =========================================================
+   GO TO SEARCH RESULT
+========================================================= */
+
+function gotoSearchResult(
+    index
+){
 
     if(
-        searchResults.length === 0
-    )
+        !searchResults.length
+    ){
+
         return;
 
+    }
 
-    if(index < 0){
+
+    if(
+        index < 0
+    ){
 
         index =
             searchResults.length - 1;
@@ -2418,39 +3380,73 @@ function gotoSearchResult(index){
         `${currentSearch + 1} of ${searchResults.length}`;
 
 
-    const view =
-        pageViews[
-            searchResults[currentSearch]
+    const pageIndex =
+        searchResults[
+            currentSearch
         ];
 
 
-    if(view){
+    const view =
+        pageViews[
+            pageIndex
+        ];
 
-        view.pageDiv.scrollIntoView({
 
-            behavior:"smooth",
+    if(!view)
+        return;
 
-            block:"start"
 
-        });
+    const viewerRect =
+        viewer.getBoundingClientRect();
 
-    }
+
+    const pageRect =
+        view.pageDiv
+        .getBoundingClientRect();
+
+
+    const targetOffset =
+        pageRect.top -
+        viewerRect.top +
+        viewer.scrollTop;
+
+
+    viewer.scrollTo({
+
+        top:
+            Math.max(
+                0,
+                targetOffset - 8
+            ),
+
+        behavior:"smooth"
+
+    });
+
+
+    pageInput.value =
+        String(
+            pageIndex + 1
+        );
 
 }
 
 
 /* =========================================================
-   SEARCH BOX
+   SEARCH INPUT
 ========================================================= */
 
 searchBox.addEventListener(
     "keydown",
-    e => {
+    event => {
 
         if(
-            e.key !== "Enter"
-        )
+            event.key !== "Enter"
+        ){
+
             return;
+
+        }
 
 
         const query =
@@ -2461,7 +3457,8 @@ searchBox.addEventListener(
 
         if(
 
-            query !== lastSearchQuery ||
+            query !==
+            lastSearchQuery ||
 
             searchResults.length === 0 ||
 
@@ -2469,7 +3466,10 @@ searchBox.addEventListener(
 
         ){
 
-            searchPDF(query);
+            searchPDF(
+                query
+            );
+
 
             return;
 
@@ -2485,45 +3485,46 @@ searchBox.addEventListener(
 
 
 /* =========================================================
-   SEARCH POPUP
+   SEARCH BUTTON
 ========================================================= */
 
-const searchButton =
-    document.getElementById(
-        "searchButton"
+document.getElementById(
+    "searchButton"
+).onclick = event => {
+
+    event.stopPropagation();
+
+
+    searchPopup.classList.toggle(
+        "hidden"
     );
 
 
-searchButton.onclick =
-    e => {
-
-        e.stopPropagation();
-
-
-        searchPopup.classList.toggle(
-            "hidden"
-        );
-
-
-        if(
-            !searchPopup.classList
+    if(
+        !searchPopup.classList
             .contains("hidden")
-        ){
+    ){
 
-            searchBox.focus();
+        searchBox.focus();
 
-        }
+    }
 
-    };
+};
 
 
-searchPopup.onclick =
-    e => {
+searchPopup.addEventListener(
+    "click",
+    event => {
 
-        e.stopPropagation();
+        event.stopPropagation();
 
-    };
+    }
+);
 
+
+/* =========================================================
+   SEARCH CLOSE
+========================================================= */
 
 document.addEventListener(
     "click",
@@ -2538,7 +3539,7 @@ document.addEventListener(
 
 
 /* =========================================================
-   PREVIOUS RESULT
+   PREVIOUS SEARCH RESULT
 ========================================================= */
 
 document.getElementById(
@@ -2553,7 +3554,8 @@ document.getElementById(
 
     if(
 
-        query !== lastSearchQuery ||
+        query !==
+        lastSearchQuery ||
 
         searchResults.length === 0 ||
 
@@ -2561,7 +3563,10 @@ document.getElementById(
 
     ){
 
-        searchPDF(query);
+        searchPDF(
+            query
+        );
+
 
         return;
 
@@ -2576,7 +3581,7 @@ document.getElementById(
 
 
 /* =========================================================
-   NEXT RESULT
+   NEXT SEARCH RESULT
 ========================================================= */
 
 document.getElementById(
@@ -2591,7 +3596,8 @@ document.getElementById(
 
     if(
 
-        query !== lastSearchQuery ||
+        query !==
+        lastSearchQuery ||
 
         searchResults.length === 0 ||
 
@@ -2599,7 +3605,10 @@ document.getElementById(
 
     ){
 
-        searchPDF(query);
+        searchPDF(
+            query
+        );
+
 
         return;
 
@@ -2620,11 +3629,6 @@ document.getElementById(
 let suppressReadingModeClick =
     false;
 
-
-/*
-    If text is already selected and the user
-    clicks elsewhere, suppress that click.
-*/
 
 viewer.addEventListener(
     "mousedown",
@@ -2653,8 +3657,7 @@ viewer.addEventListener(
     event => {
 
         /*
-            Clicking a link must never activate
-            reading mode.
+           PDF links always take priority.
         */
 
         if(
@@ -2668,28 +3671,28 @@ viewer.addEventListener(
         }
 
 
+        /*
+           Only actual PDF pages can
+           enter reading mode.
+        */
+
         const page =
             event.target.closest(
                 ".page"
             );
 
 
-        /*
-            Gray area or anything outside
-            an actual PDF page.
-        */
-
         if(!page)
             return;
 
 
-        /*
-            Text selection takes priority.
-        */
-
         const selection =
             window.getSelection();
 
+
+        /*
+           Active text selection.
+        */
 
         if(
             selection &&
@@ -2705,8 +3708,8 @@ viewer.addEventListener(
 
 
         /*
-            Suppress the click used to
-            deselect previously selected text.
+           The click used to deselect
+           previously selected text.
         */
 
         if(
@@ -2728,7 +3731,9 @@ viewer.addEventListener(
 
         if(
             document.body.classList
-            .contains("reading-mode")
+                .contains(
+                    "reading-mode"
+                )
         ){
 
             menu.style.display =
@@ -2766,18 +3771,46 @@ window.addEventListener(
                 async () => {
 
                     if(
-                        window.innerWidth <= 768 &&
-                        pageViews.length
+                        !pageViews.length
                     ){
 
-                        baseScale =
-                            getFitWidthScale(
-                                pageViews[0].page
+                        return;
+
+                    }
+
+
+                    /*
+                       Mobile/tablet widths are
+                       automatically fitted.
+                    */
+
+                    if(
+                        window.innerWidth <= 768
+                    ){
+
+                        const firstView =
+                            pageViews.find(
+                                view =>
+                                    Boolean(view)
                             );
 
-                        updateScale();
 
-                        await renderAllPages();
+                        if(
+                            firstView
+                        ){
+
+                            baseScale =
+                                getFitWidthScale(
+                                    firstView.page
+                                );
+
+
+                            updateScale();
+
+
+                            await renderAllPages();
+
+                        }
 
                     }
 
