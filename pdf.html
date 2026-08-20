@@ -1,19 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="stylesheet" href="./pdfjs/web/text_layer_builder.css">
-  <link rel="icon" type="image/png" href="file_000000000c40722f92b1fe6758cb4855.png">
+<link rel="stylesheet" href="./pdfjs/web/text_layer_builder.css">
+<link rel="icon" type="image/png" href="file_000000000c40722f92b1fe6758cb4855.png">
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
+
 <title>PDF Viewer</title>
 
-<!--
-  PDF.js files to add beside this file:
-  pdfjs/pdf.mjs
-  pdfjs/pdf.worker.mjs
--->
-
 <style>
+
 :root{
     --bg:#111;
     --panel:#1d1d1d;
@@ -22,8 +19,13 @@
     --muted:#aaa;
     --accent:#3a3a3a;
 }
-*{box-sizing:border-box}
-html,body{
+
+*{
+    box-sizing:border-box;
+}
+
+html,
+body{
     margin:0;
     height:100%;
     background:var(--bg);
@@ -31,46 +33,156 @@ html,body{
     font-family:Arial,sans-serif;
     overflow:hidden;
 }
- 
-  .page{
+
+.page{
     position:relative;
     margin:0 auto 20px;
     box-shadow:0 0 14px rgba(0,0,0,.4);
     background:white;
 }
-  .pageCanvas{
+
+.pageCanvas{
     display:block;
+    pointer-events:none;
 }
 
-
-  /* ---------- Reading Mode ---------- */
-
-body.reading-mode header,
-body.reading-mode #toolbar,
-body.reading-mode #titleBar,
-body.reading-mode #searchPopup,
-body.reading-mode #menu{
-    display:none !important;
+.btn{
+    background:#333;
+    color:#fff;
+    border:none;
+    border-radius:7px;
+    padding:9px 12px;
+    text-decoration:none;
+    cursor:pointer;
 }
 
-body.reading-mode #layout{
+button,
+input{
+    background:#2b2b2b;
+    color:#fff;
+    border:none;
+    border-radius:8px;
+    padding:8px 12px;
+}
+
+button:hover{
+    background:#3a3a3a;
+    cursor:pointer;
+}
+
+header{
+    height:58px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 14px;
+    background:#181818;
+    border-bottom:1px solid #2d2d2d;
+}
+
+#toolbar{
+    display:flex;
+    gap:8px;
+    align-items:center;
+    padding:10px;
+    background:#1b1b1b;
+    border-bottom:1px solid #2d2d2d;
+    flex-wrap:wrap;
+}
+
+#layout{
+    height:calc(100% - 106px);
+}
+
+#viewer{
+    width:100%;
     height:100%;
+    overflow:auto;
+    padding:30px 30px 90px;
+    background:#111;
+
+    display:flex;
+    flex-direction:column;
+    align-items:center;
 }
 
-body.reading-mode #viewer{
-    height:100%;
-    padding-top:20px;
-    padding-bottom:20px;
+.zoomControls,
+.pageControls{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    white-space:nowrap;
+    flex-shrink:0;
 }
 
-body.reading-mode #loadingOverlay{
-    inset:0;
+.hidden{
+    display:none;
 }
 
+/* ---------- Title ---------- */
 
-  
+#titleBar{
+    position:fixed;
+    left:0;
+    right:0;
+    bottom:0;
+
+    background:rgba(24,24,24,.92);
+    padding:12px 18px;
+
+    text-align:center;
+
+    z-index:3000;
+
+    border-top:1px solid #333;
+
+    backdrop-filter:blur(6px);
+}
+
+#title{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    width:100%;
+
+    text-align:center;
+
+    font-size:1.2rem;
+    font-weight:bold;
+
+    overflow:hidden;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+}
+
+.title-text{
+    order:1;
+
+    position:relative;
+
+    display:inline-block;
+
+    min-width:0;
+
+    overflow:hidden;
+
+    text-overflow:ellipsis;
+
+    white-space:nowrap;
+}
+
+.title-badges{
+    display:inline-flex;
+
+    gap:8px;
+
+    margin-left:12px;
+
+    vertical-align:middle;
+}
+
 .title-badge{
-
     display:inline-block;
 
     padding:4px 10px;
@@ -88,228 +200,53 @@ body.reading-mode #loadingOverlay{
     letter-spacing:.5px;
 
     flex-shrink:0;
-
 }
 
 .title-badge.new{
-
     order:2;
-
     background:#00b050;
-
 }
 
 .title-badge.featured{
-
     order:3;
-
     background:#2f7cff;
-
 }
 
-.title-text{
+/* ---------- Menu ---------- */
 
-    order:1;
-
-    position:relative;
-
-    display:inline-block;
-
-    min-width:0;
-
-    overflow:hidden;
-
-    text-overflow:ellipsis;
-
-    white-space:nowrap;
-
-}
-
-  .title-badges{
-
-    display:inline-flex;
-
-    gap:8px;
-
-    margin-left:12px;
-
-    vertical-align:middle;
-
-}
-
-  
-@media (orientation:portrait){
-.title-badges{
-
-    display:flex;
-
-    justify-content:center;
-
-    gap:8px;
-
-    margin:0 0 8px 0;
-
-}
-
-.title-text{
-
-    display:flex;
-
-    flex-direction:column-reverse;
-
-    align-items:center;
-
-}
-
-  
-    #title{
-
-    flex-direction:column;
-
-    align-items:center;
-
-    gap:6px;
-
-}
-
-.title-text{
-
-    order:2;
-
-    width:100%;
-
-    white-space:nowrap;
-
-    overflow:hidden;
-
-    text-overflow:ellipsis;
-
-}
-
-.title-badge.new{
-
-    order:1;
-
-}
-
-.title-badge.featured{
-
-    order:1;
-
-}
-}  
-  .pageCanvas{
-    pointer-events:none;
-}
-.btn{
-    background:#333;
-    color:#fff;
-    border:none;
-    border-radius:7px;
-    padding:9px 12px;
-    text-decoration:none;
-    cursor:pointer;
-}
-.textLayer span{
-    position:absolute;
-    color:transparent;
-    white-space:pre;
-    transform-origin:0 0;
-    cursor:text;
-}
-  
-
-
-
-.textLayer ::selection{
-    background:rgba(0,120,255,.35);
-}
-header{
-    height:58px;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:0 14px;
-    background:#181818;
-    border-bottom:1px solid #2d2d2d;
-}
-#title{
-    font-size:1.2rem;
-    font-weight:bold;
-    overflow:hidden;
-    white-space:nowrap;
-    text-overflow:ellipsis;
-}
-button,input{
-    background:#2b2b2b;
-    color:#fff;
-    border:none;
-    border-radius:8px;
-    padding:8px 12px;
-}
-button:hover{background:#3a3a3a;cursor:pointer}
-#toolbar{
-    display:flex;
-    gap:8px;
-    align-items:center;
-    padding:10px;
-    background:#1b1b1b;
-    border-bottom:1px solid #2d2d2d;
-    flex-wrap:wrap;
-}
-#layout{
-    height:calc(100% - 106px);
-}
-
-#viewer{
-    width:100%;
-    height:100%;
-    overflow:auto;
-    padding:30px 30px 90px;
-    background:#111;
-
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-}
-  .zoomControls{
-    display:flex;
-    align-items:center;
-    gap:6px;
-    white-space:nowrap;
-    flex-shrink:0;
-}
-  .pageControls{
-    display:flex;
-    align-items:center;
-    gap:6px;
-    white-space:nowrap;
-    flex-shrink:0;
-}
-
-.hidden{display:none}
 #menu{
     position:absolute;
+
     right:10px;
     top:58px;
+
     background:#222;
+
     border:1px solid #333;
+
     border-radius:10px;
+
     padding:8px;
+
     display:none;
+
     min-width:220px;
+
+    z-index:4000;
 }
+
 #menu button{
     width:100%;
     text-align:left;
     margin:3px 0;
 }
-  #searchPopup{
 
+/* ---------- Search ---------- */
+
+#searchPopup{
     position:absolute;
 
     top:108px;
-
     left:110px;
 
     display:flex;
@@ -328,95 +265,236 @@ button:hover{background:#3a3a3a;cursor:pointer}
 
     box-shadow:0 8px 20px rgba(0,0,0,.45);
 
-    z-index:1000;
-
-}
-#titleBar{
-    position:fixed;
-    left:0;
-    right:0;
-    bottom:0;
-
-    background:rgba(24,24,24,.92);
-
-    padding:12px 18px;
-
-    text-align:center;
-
-    z-index:3000;
-
-    border-top:1px solid #333;
-
-    backdrop-filter:blur(6px);
+    z-index:4500;
 }
 
-#title{
-
-    display:flex;
-
-    justify-content:center;
-
-    align-items:center;
-
-    width:100%;
-
-    text-align:center;
-
-}
-  
 #searchPopup.hidden{
-
     display:none;
-
 }
 
 #searchPopup input{
-
     width:220px;
-
 }
 
 #searchResults{
-
     color:#bbb;
 
     min-width:70px;
 
     text-align:center;
-
 }
-  #loadingOverlay{
+
+/* ---------- PDF Text Layer ---------- */
+
+/*
+   PDF.js controls the actual text positioning.
+   Do not manually transform the spans.
+*/
+
+.textLayer{
     position:absolute;
-    inset:106px 0 0 0;   /* below header + toolbar */
+
+    inset:0;
+
+    overflow:hidden;
+
+    line-height:1;
+
+    text-align:initial;
+
+    forced-color-adjust:none;
+
+    z-index:2;
+
+    user-select:text;
+
+    -webkit-user-select:text;
+
+    cursor:text;
+}
+
+.textLayer span,
+.textLayer br{
+    color:transparent;
+}
+
+.textLayer ::selection{
+    background:rgba(0,120,255,.35);
+}
+
+/*
+   Keep PDF.js text-layer highlights functional.
+*/
+
+.textLayer .highlight{
+    margin:-1px;
+    padding:1px;
+
+    background-color:rgba(180,0,170,.2);
+
+    border-radius:4px;
+}
+
+.textLayer .highlight.selected{
+    background-color:rgba(0,100,255,.35);
+}
+
+.textLayer .endOfContent{
+    display:block;
+
+    position:absolute;
+
+    left:0;
+    top:100%;
+    right:0;
+    bottom:0;
+
+    z-index:-1;
+
+    cursor:default;
+
+    user-select:none;
+}
+
+.textLayer .endOfContent.active{
+    top:0;
+}
+
+/* ---------- Annotation / Link Layer ---------- */
+
+.annotationLayer{
+    position:absolute;
+
+    inset:0;
+
+    overflow:hidden;
+
+    z-index:3;
+
+    pointer-events:none;
+}
+
+.annotationLayer section{
+    position:absolute;
+
+    text-align:initial;
+
+    pointer-events:auto;
+}
+
+.annotationLayer .linkAnnotation{
+    position:absolute;
+
+    pointer-events:auto;
+}
+
+.annotationLayer .linkAnnotation > a{
+    position:absolute;
+
+    font-size:1em;
+
+    top:0;
+    left:0;
+
+    width:100%;
+    height:100%;
+
+    display:block;
+
+    cursor:pointer;
+
+    text-decoration:none;
+
+    background:transparent;
+}
+
+/*
+   Do not show borders around PDF links.
+*/
+
+.annotationLayer .linkAnnotation > a:hover{
+    background:rgba(0,120,255,.08);
+}
+
+/* ---------- Loading ---------- */
+
+#loadingOverlay{
+    position:absolute;
+
+    inset:106px 0 0 0;
+
     display:flex;
+
     flex-direction:column;
+
     justify-content:center;
+
     align-items:center;
+
     background:#111;
+
     z-index:5000;
 }
 
 .spinner{
     width:60px;
     height:60px;
+
     border:6px solid #333;
     border-top:6px solid #ffffff;
+
     border-radius:50%;
+
     animation:spin 0.9s linear infinite;
 }
-/* ---------- Mobile Search Popup ---------- */
+
+.loadingText{
+    margin-top:18px;
+
+    color:#ddd;
+
+    font-size:18px;
+}
+
+/* ---------- Reading Mode ---------- */
+
+body.reading-mode header,
+body.reading-mode #toolbar,
+body.reading-mode #titleBar,
+body.reading-mode #searchPopup,
+body.reading-mode #menu{
+    display:none !important;
+}
+
+body.reading-mode #layout{
+    height:100%;
+}
+
+body.reading-mode #viewer{
+    height:100%;
+
+    padding-top:20px;
+    padding-bottom:20px;
+}
+
+body.reading-mode #loadingOverlay{
+    inset:0;
+}
+
+/* ---------- Mobile ---------- */
 
 @media (max-width:768px){
 
     #searchPopup{
-
         left:10px;
         right:10px;
+
         top:108px;
 
         width:auto;
 
         display:flex;
+
         flex-wrap:wrap;
 
         justify-content:center;
@@ -425,276 +503,299 @@ button:hover{background:#3a3a3a;cursor:pointer}
     }
 
     #searchPopup input{
-
         flex:1 1 100%;
+
         width:100%;
+
         min-width:0;
     }
 
     #prevResult,
     #nextResult{
-
         flex:0 0 auto;
     }
 
     #searchResults{
-
         flex:1;
+
         text-align:center;
+
         min-width:0;
     }
 
-}
-.loadingText{
-    margin-top:18px;
-    color:#ddd;
-    font-size:18px;
-}
+    .title-badges{
+        display:flex;
 
+        justify-content:center;
 
+        gap:8px;
 
+        margin:0 0 8px 0;
+    }
 
+    #title{
+        flex-direction:column;
 
- .textLayer{
-    position:absolute;
-    inset:0;
-    overflow:hidden;
-    line-height:1;
-    cursor:text;
-    user-select:text;
-}
-.textLayer span,
-.textLayer br {
-  color: transparent;
-  position: absolute;
-  white-space: pre;
-  cursor: text;
-  transform-origin: 0 0;
-}
+        align-items:center;
 
-.textLayer span.markedContent {
-  top: 0;
-  height: 0;
-}
+        gap:6px;
+    }
 
-.textLayer .highlight {
-  margin: -1px;
-  padding: 1px;
-  background-color: rgba(180, 0, 170, 0.2);
-  border-radius: 4px;
+    .title-text{
+        order:2;
+
+        width:100%;
+
+        white-space:nowrap;
+
+        overflow:hidden;
+
+        text-overflow:ellipsis;
+    }
+
+    .title-badge.new,
+    .title-badge.featured{
+        order:1;
+    }
+
 }
 
-.textLayer .highlight.appended {
-  position: initial;
-}
-
-.textLayer .highlight.begin {
-  border-radius: 4px 0 0 4px;
-}
-
-.textLayer .highlight.end {
-  border-radius: 0 4px 4px 0;
-}
-
-.textLayer .highlight.middle {
-  border-radius: 0;
-}
-
-.textLayer .highlight.selected {
-  background-color: rgba(0, 100, 255, 0.35);
-}
-
-.textLayer ::selection {
-  background: rgba(0, 120, 255, 0.35);
-}
-
-.textLayer br::selection {
-  background: transparent;
-}
-
-.textLayer .endOfContent {
-  display: block;
-  position: absolute;
-  left: 0;
-  top: 100%;
-  right: 0;
-  bottom: 0;
-  z-index: -1;
-  cursor: default;
-  user-select: none;
-}
-
-.textLayer .endOfContent.active {
-  top: 0;
-}
-
-
-  
+/* ---------- Animation ---------- */
 
 @keyframes spin{
     from{
         transform:rotate(0deg);
     }
+
     to{
         transform:rotate(360deg);
     }
 }
+
 </style>
 </head>
+
 <body>
 
 <header>
+
 <a class="btn" id="backBtn" href="index.html">◀ Back</a>
 
 <div style="flex:1"></div>
 
 <button id="menuBtn">☰</button>
+
 </header>
 
-<div id="toolbar">
 
+<div id="toolbar">
 
 <button id="searchButton">🔍 Search</button>
 
 <div class="zoomControls">
 
-    <button id="zoomOut">−</button>
+<button id="zoomOut">−</button>
 
-    <input
-        id="zoomPercent"
-        value="150%"
-        style="width:70px;text-align:center">
+<input
+    id="zoomPercent"
+    value="150%"
+    style="width:70px;text-align:center">
 
-    <button id="zoomIn">+</button>
+<button id="zoomIn">+</button>
 
 </div>
 
 <button id="fitWidth">Fit Width</button>
+
 <button id="fitPage">Fit Page</button>
 
 <div class="pageControls">
 
-    <label>Page</label>
+<label>Page</label>
 
-    <input
-        id="pageNumber"
-        value="1"
-        inputmode="numeric"
-        style="width:60px;text-align:center">
+<input
+    id="pageNumber"
+    value="1"
+    inputmode="numeric"
+    style="width:60px;text-align:center">
 
-    <span id="pageCount">of 0</span>
+<span id="pageCount">of 0</span>
 
 </div>
+
 </div>
+
 
 <div id="searchPopup" class="hidden">
 
-    <input
-        id="searchBox"
-        placeholder="Search..."
-        autocomplete="off">
+<input
+    id="searchBox"
+    placeholder="Search..."
+    autocomplete="off">
 
-    <button id="prevResult">▲</button>
+<button id="prevResult">▲</button>
 
-    <button id="nextResult">▼</button>
+<button id="nextResult">▼</button>
 
-    <span id="searchResults">
-        0 of 0
-    </span>
+<span id="searchResults">
+0 of 0
+</span>
 
 </div>
 
-  
+
 <div id="layout">
 
-    <div id="loadingOverlay">
-        <div class="spinner"></div>
-        <div class="loadingText">Loading PDF...</div>
-    </div>
+<div id="loadingOverlay">
 
-    <div id="viewer"></div>
+<div class="spinner"></div>
+
+<div class="loadingText">
+Loading PDF...
+</div>
 
 </div>
+
+<div id="viewer"></div>
+
+</div>
+
+
 <div id="titleBar">
-    <div id="title">Loading PDF...</div>
+
+<div id="title">
+Loading PDF...
 </div>
+
+</div>
+
+
 <div id="menu">
-<button id="downloadBtn">Download PDF</button>
 
-<button id="newTabBtn">Open in New Tab</button>
-<button id="copyLinkBtn">Share PDF</button>
-<button id="fullscreenBtn">Fullscreen</button>
+<button id="downloadBtn">
+Download PDF
+</button>
+
+<button id="newTabBtn">
+Open in New Tab
+</button>
+
+<button id="copyLinkBtn">
+Share PDF
+</button>
+
+<button id="fullscreenBtn">
+Fullscreen
+</button>
+
 </div>
 
-<script type="module">  
+
+<script type="module">
 
 import {
     getDocument,
     GlobalWorkerOptions,
-    TextLayer
+    TextLayer,
+    AnnotationLayer
 } from "./pdfjs/build/pdf.mjs";
-
 
 
 GlobalWorkerOptions.workerSrc =
     "./pdfjs/build/pdf.worker.mjs";
 
+
+/* =========================================================
+   URL PARAMETERS
+========================================================= */
+
 const p = new URLSearchParams(location.search);
 
-const file = decodeURIComponent(
-    p.get("file") || ""
-);
+const file =
+    decodeURIComponent(
+        p.get("file") || ""
+    );
 
-const title = decodeURIComponent(
-    p.get("paper") || "PDF"
-);
+const title =
+    decodeURIComponent(
+        p.get("paper") || "PDF"
+    );
+
+
+/* =========================================================
+   DESCRIPTIONS
+========================================================= */
+
 const descriptions =
     await fetch("descriptions.json")
     .then(r => r.json());
 
 
-  const newestEntry = Object.entries(descriptions)
-    .sort((a,b)=>
+const newestEntry =
+    Object.entries(descriptions)
+    .sort((a,b) =>
         new Date(b[1].updated) -
         new Date(a[1].updated)
     )[0];
 
-const newestKey = newestEntry[0];
 
-const newestDate = new Date(newestEntry[1].updated);
+const newestKey =
+    newestEntry[0];
 
-const today = new Date();
 
-const oneYearAgo = new Date(today);
-oneYearAgo.setFullYear(today.getFullYear() - 1);
+const newestDate =
+    new Date(newestEntry[1].updated);
+
+
+const today =
+    new Date();
+
+
+const oneYearAgo =
+    new Date(today);
+
+oneYearAgo.setFullYear(
+    today.getFullYear() - 1
+);
+
 
 const showNewestBadge =
     newestDate >= oneYearAgo;
 
-  
+
 const paper =
     Object.values(descriptions)
     .find(p => p.url === file);
 
 
+const paperKey =
+    Object.keys(descriptions)
+    .find(
+        key => descriptions[key].url === file
+    );
 
-  const paperKey = Object.keys(descriptions)
-    .find(key => descriptions[key].url === file);
 
 const isNewest =
     showNewestBadge &&
     paperKey === newestKey;
 
 
-  
-const returnPage = decodeURIComponent(
-    p.get("return") || "index.html"
-);
-console.log("returnPage =", returnPage);
+/* =========================================================
+   RETURN PAGE
+========================================================= */
+
+const returnPage =
+    decodeURIComponent(
+        p.get("return") || "index.html"
+    );
 
 
+/* =========================================================
+   TITLE
+========================================================= */
 
 document.getElementById("title").innerHTML = `
+
 <div class="title-text">
 
     ${title}
@@ -716,59 +817,126 @@ document.getElementById("title").innerHTML = `
     </span>
 
 </div>
+
 `;
 
-  
-  
-console.log("File:", file);
 
-const viewer = document.getElementById("viewer");
-  const loadingOverlay =
+/* =========================================================
+   ELEMENTS
+========================================================= */
+
+const viewer =
+    document.getElementById("viewer");
+
+
+const loadingOverlay =
     document.getElementById("loadingOverlay");
-  let baseScale = 1;
+
+
+const menu =
+    document.getElementById("menu");
+
+
+const menuButton =
+    document.getElementById("menuBtn");
+
+
+const searchPopup =
+    document.getElementById("searchPopup");
+
+
+const searchBox =
+    document.getElementById("searchBox");
+
+
+const pageInput =
+    document.getElementById("pageNumber");
+
+
+const zoomBox =
+    document.getElementById("zoomPercent");
+
+
+/* =========================================================
+   SCALE
+========================================================= */
+
+let baseScale = 1;
+
 let zoomLevel = 1;
+
 let currentScale = 1;
-  function getFitWidthScale(page) {
 
-    const viewport = page.getViewport({
-        scale: 1
-    });
 
-    const styles = getComputedStyle(viewer);
+function getFitWidthScale(page){
 
-const width =
-    viewer.clientWidth
-    - parseFloat(styles.paddingLeft)
-    - parseFloat(styles.paddingRight);
+    const viewport =
+        page.getViewport({
+            scale:1
+        });
 
-return width / viewport.width;
+
+    const styles =
+        getComputedStyle(viewer);
+
+
+    const width =
+        viewer.clientWidth
+        - parseFloat(styles.paddingLeft)
+        - parseFloat(styles.paddingRight);
+
+
+    return width / viewport.width;
 
 }
 
-function getFitPageScale(page) {
 
-    const viewport = page.getViewport({
-        scale: 1
-    });
+function getFitPageScale(page){
+
+    const viewport =
+        page.getViewport({
+            scale:1
+        });
+
 
     const widthScale =
-        viewer.clientWidth / viewport.width;
+        viewer.clientWidth /
+        viewport.width;
+
 
     const heightScale =
-        viewer.clientHeight / viewport.height;
+        viewer.clientHeight /
+        viewport.height;
 
-    return Math.min(widthScale, heightScale);
 
-}
-  function updateScale() {
-
-    currentScale = baseScale * zoomLevel;
-
-    document.getElementById("zoomPercent").value =
-        Math.round(zoomLevel * 100) + "%";
+    return Math.min(
+        widthScale,
+        heightScale
+    );
 
 }
-  const zoomLevels = [
+
+
+function updateScale(){
+
+    currentScale =
+        baseScale * zoomLevel;
+
+
+    zoomBox.value =
+        Math.round(
+            zoomLevel * 100
+        ) + "%";
+
+}
+
+
+/* =========================================================
+   ZOOM LEVELS
+========================================================= */
+
+const zoomLevels = [
+
     0.25,
     0.5,
     0.75,
@@ -789,208 +957,183 @@ function getFitPageScale(page) {
     4.5,
     4.75,
     5
+
 ];
+
+
+/* =========================================================
+   PDF STATE
+========================================================= */
+
 const pageViews = [];
-  let searchResults = [];
+
+let searchResults = [];
+
 let currentSearch = -1;
-  let lastSearchQuery = "";
+
+let lastSearchQuery = "";
+
 let pdfDoc = null;
-const menu = document.getElementById("menu");
-const menuButton = document.getElementById("menuBtn");
 
 
+/* =========================================================
+   BACK BUTTON
+========================================================= */
 
-
-  
 const backButton =
     document.getElementById("backBtn");
+
 
 backButton.href =
     returnPage || "index.html";
 
-backButton.addEventListener("click", (e) => {
 
-    e.preventDefault();
+backButton.addEventListener(
+    "click",
+    e => {
 
-    sessionStorage.setItem(
-        "restoreSearch",
-        "yes"
-    );
+        e.preventDefault();
 
-    sessionStorage.setItem(
-        "returnFromPage",
-        "yes"
-    );
+        sessionStorage.setItem(
+            "restoreSearch",
+            "yes"
+        );
 
-    location.href =
-        returnPage || "index.html";
+        sessionStorage.setItem(
+            "returnFromPage",
+            "yes"
+        );
 
-});
+        location.href =
+            returnPage || "index.html";
 
+    }
+);
 
 
-  
-  
-try {
+/* =========================================================
+   RENDER PDF
+========================================================= */
 
-  
+try{
 
-    console.log("Creating loading task...");
+    const loadingTask =
+        getDocument(file);
 
-    const loadingTask = getDocument(file);
 
-    console.log("Waiting for PDF...");
+    pdfDoc =
+        await loadingTask.promise;
 
-    pdfDoc = await loadingTask.promise;
-const pdf = pdfDoc;
-  const firstPage = await pdf.getPage(1);
 
-baseScale = getFitWidthScale(firstPage);
+    const pdf =
+        pdfDoc;
 
-zoomLevel = 1;
 
-updateScale();
+    const firstPage =
+        await pdf.getPage(1);
 
-    console.log("PDF loaded!");
 
-    console.log("Pages:", pdf.numPages);
+    baseScale =
+        getFitWidthScale(
+            firstPage
+        );
 
-   document.getElementById("pageCount").textContent =
-    "of " + pdf.numPages;
-const pageInput = document.getElementById("pageNumber");
 
-for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+    zoomLevel = 1;
 
-    console.log("Rendering page", pageNumber);
 
-    const page = await pdf.getPage(pageNumber);
-  
+    updateScale();
 
-    const viewport = page.getViewport({
-        scale: currentScale
-    });
 
-   const pageDiv = document.createElement("div");
-pageDiv.className = "page";
+    document.getElementById(
+        "pageCount"
+    ).textContent =
+        "of " + pdf.numPages;
 
-pageDiv.style.width = viewport.width + "px";
-pageDiv.style.height = viewport.height + "px";
 
-const canvas = document.createElement("canvas");
-canvas.className = "pageCanvas";
+    for(
+        let pageNumber = 1;
+        pageNumber <= pdf.numPages;
+        pageNumber++
+    ){
 
-const outputScale = window.devicePixelRatio || 1;
+        const page =
+            await pdf.getPage(
+                pageNumber
+            );
 
-canvas.width = Math.floor(viewport.width * outputScale);
-canvas.height = Math.floor(viewport.height * outputScale);
 
-canvas.style.width = viewport.width + "px";
-canvas.style.height = viewport.height + "px";
+        const viewport =
+            page.getViewport({
+                scale:currentScale
+            });
 
-const ctx = canvas.getContext("2d");
-ctx.setTransform(outputScale, 0, 0, outputScale, 0, 0);
 
-await page.render({
-    canvasContext: ctx,
-    viewport
-}).promise;
+        /* -----------------------------------------
+           Page container
+        ----------------------------------------- */
 
-canvas.style.width = viewport.width + "px";
-canvas.style.height = viewport.height + "px";
+        const pageDiv =
+            document.createElement(
+                "div"
+            );
 
-pageDiv.appendChild(canvas);
 
-const textLayerDiv = document.createElement("div");
-textLayerDiv.className = "textLayer";
-textLayerDiv.style.width = viewport.width + "px";
-textLayerDiv.style.height = viewport.height + "px";
-pageDiv.appendChild(textLayerDiv);
+        pageDiv.className =
+            "page";
 
-viewer.appendChild(pageDiv);
-const textContent =
-    await page.getTextContent();
 
-pageViews.push({
-    page,
-    pageDiv,
-    canvas,
-    textLayerDiv,
-    textContent
-});
-  
-const textLayer = new TextLayer({
-
-    textContentSource: textContent,
-
-    container: textLayerDiv,
-
-    viewport: viewport.clone({
-        dontFlip: true
-    })
-
-});
-
-await textLayer.render();
-  console.log(textLayerDiv);
-console.log(textLayerDiv.children.length);
-
-}
-  
-loadingOverlay.style.display = "none";
-
-}
-
-
-
-
-
-  
-catch(err){
-loadingOverlay.style.display = "none";
-    console.error("ERROR:", err);
-
-}
-
-
-
-
-
-
-async function renderAllPages() {
-
-    const outputScale = window.devicePixelRatio || 1;
-
-    for (const view of pageViews) {
-
-        const viewport = view.page.getViewport({
-            scale: currentScale
-        });
-
-        //
-        // Resize the page container
-        //
-
-        view.pageDiv.style.width = viewport.width + "px";
-        view.pageDiv.style.height = viewport.height + "px";
-
-        //
-        // Resize the canvas
-        //
-
-        view.canvas.width =
-            Math.floor(viewport.width * outputScale);
-
-        view.canvas.height =
-            Math.floor(viewport.height * outputScale);
-
-        view.canvas.style.width =
+        pageDiv.style.width =
             viewport.width + "px";
 
-        view.canvas.style.height =
+
+        pageDiv.style.height =
             viewport.height + "px";
 
+
+        /* -----------------------------------------
+           Canvas
+        ----------------------------------------- */
+
+        const canvas =
+            document.createElement(
+                "canvas"
+            );
+
+
+        canvas.className =
+            "pageCanvas";
+
+
+        const outputScale =
+            window.devicePixelRatio || 1;
+
+
+        canvas.width =
+            Math.floor(
+                viewport.width *
+                outputScale
+            );
+
+
+        canvas.height =
+            Math.floor(
+                viewport.height *
+                outputScale
+            );
+
+
+        canvas.style.width =
+            viewport.width + "px";
+
+
+        canvas.style.height =
+            viewport.height + "px";
+
+
         const ctx =
-            view.canvas.getContext("2d");
+            canvas.getContext("2d");
+
 
         ctx.setTransform(
             outputScale,
@@ -1001,26 +1144,288 @@ async function renderAllPages() {
             0
         );
 
-        //
-        // Render the page
-        //
 
-        await view.page.render({
-            canvasContext: ctx,
-            viewport
+        await page.render({
+
+            canvasContext:ctx,
+
+            viewport:viewport
+
         }).promise;
 
-        //
-        // Completely rebuild the text layer
-        //
 
-        view.textLayerDiv.innerHTML = "";
+        pageDiv.appendChild(
+            canvas
+        );
+
+
+        /* -----------------------------------------
+           Text Layer
+        ----------------------------------------- */
+
+        const textLayerDiv =
+            document.createElement(
+                "div"
+            );
+
+
+        textLayerDiv.className =
+            "textLayer";
+
+
+        textLayerDiv.style.width =
+            viewport.width + "px";
+
+
+        textLayerDiv.style.height =
+            viewport.height + "px";
+
+
+        pageDiv.appendChild(
+            textLayerDiv
+        );
+
+
+        const textContent =
+            await page.getTextContent();
+
+
+        const textLayer =
+            new TextLayer({
+
+                textContentSource:
+                    textContent,
+
+                container:
+                    textLayerDiv,
+
+                viewport:
+                    viewport
+
+            });
+
+
+        await textLayer.render();
+
+
+        /* -----------------------------------------
+           Annotation / Link Layer
+        ----------------------------------------- */
+
+        const annotationLayerDiv =
+            document.createElement(
+                "div"
+            );
+
+
+        annotationLayerDiv.className =
+            "annotationLayer";
+
+
+        annotationLayerDiv.style.width =
+            viewport.width + "px";
+
+
+        annotationLayerDiv.style.height =
+            viewport.height + "px";
+
+
+        pageDiv.appendChild(
+            annotationLayerDiv
+        );
+
+
+        const annotations =
+            await page.getAnnotations({
+                intent:"display"
+            });
+
+
+        if(
+            annotations.length > 0
+        ){
+
+            const annotationLayer =
+                new AnnotationLayer({
+
+                    div:
+                        annotationLayerDiv,
+
+                    page:
+
+                        page,
+
+                    viewport:
+                        viewport,
+
+                    accessibilityManager:
+                        null
+
+                });
+
+
+            await annotationLayer.render({
+                annotations
+            });
+
+        }
+
+
+        /* -----------------------------------------
+           Add page
+        ----------------------------------------- */
+
+        viewer.appendChild(
+            pageDiv
+        );
+
+
+        pageViews.push({
+
+            page,
+
+            pageDiv,
+
+            canvas,
+
+            textLayerDiv,
+
+            annotationLayerDiv,
+
+            textContent,
+
+            annotations
+
+        });
+
+    }
+
+
+    loadingOverlay.style.display =
+        "none";
+
+
+}
+
+catch(err){
+
+    loadingOverlay.style.display =
+        "none";
+
+
+    console.error(
+        "PDF ERROR:",
+        err
+    );
+
+}
+
+
+/* =========================================================
+   RE-RENDER ALL PAGES
+========================================================= */
+
+async function renderAllPages(){
+
+    const outputScale =
+        window.devicePixelRatio || 1;
+
+
+    for(
+        const view of pageViews
+    ){
+
+        const viewport =
+            view.page.getViewport({
+
+                scale:
+                    currentScale
+
+            });
+
+
+        /* -----------------------------------------
+           Page
+        ----------------------------------------- */
+
+        view.pageDiv.style.width =
+            viewport.width + "px";
+
+
+        view.pageDiv.style.height =
+            viewport.height + "px";
+
+
+        /* -----------------------------------------
+           Canvas
+        ----------------------------------------- */
+
+        view.canvas.width =
+            Math.floor(
+                viewport.width *
+                outputScale
+            );
+
+
+        view.canvas.height =
+            Math.floor(
+                viewport.height *
+                outputScale
+            );
+
+
+        view.canvas.style.width =
+            viewport.width + "px";
+
+
+        view.canvas.style.height =
+            viewport.height + "px";
+
+
+        const ctx =
+            view.canvas.getContext(
+                "2d"
+            );
+
+
+        ctx.setTransform(
+
+            outputScale,
+            0,
+            0,
+            outputScale,
+            0,
+            0
+
+        );
+
+
+        await view.page.render({
+
+            canvasContext:
+                ctx,
+
+            viewport:
+                viewport
+
+        }).promise;
+
+
+        /* -----------------------------------------
+           Text layer
+        ----------------------------------------- */
+
+        view.textLayerDiv.innerHTML =
+            "";
+
 
         view.textLayerDiv.style.width =
             viewport.width + "px";
 
+
         view.textLayerDiv.style.height =
             viewport.height + "px";
+
 
         const textLayer =
             new TextLayer({
@@ -1032,40 +1437,110 @@ async function renderAllPages() {
                     view.textLayerDiv,
 
                 viewport:
-                    viewport.clone({
-                        dontFlip: true
-                    })
+                    viewport
 
             });
 
+
         await textLayer.render();
+
+
+        /* -----------------------------------------
+           Annotation layer
+        ----------------------------------------- */
+
+        view.annotationLayerDiv.innerHTML =
+            "";
+
+
+        view.annotationLayerDiv.style.width =
+            viewport.width + "px";
+
+
+        view.annotationLayerDiv.style.height =
+            viewport.height + "px";
+
+
+        if(
+            view.annotations &&
+            view.annotations.length
+        ){
+
+            const annotationLayer =
+                new AnnotationLayer({
+
+                    div:
+                        view.annotationLayerDiv,
+
+                    page:
+                        view.page,
+
+                    viewport:
+                        viewport,
+
+                    accessibilityManager:
+                        null
+
+                });
+
+
+            await annotationLayer.render({
+
+                annotations:
+                    view.annotations
+
+            });
+
+        }
 
     }
 
 }
 
 
-  
+/* =========================================================
+   SEARCH
+========================================================= */
 
-  
-async function searchPDF(query) {
+async function searchPDF(query){
 
     searchResults = [];
+
     currentSearch = -1;
 
-    query = query.trim().toLowerCase();
 
-    if (query === "") return;
-  lastSearchQuery = query;
+    query =
+        query.trim().toLowerCase();
 
-    for (let i = 0; i < pageViews.length; i++) {
 
-        const pageText = pageViews[i].textContent.items
-            .map(item => item.str)
+    if(query === "")
+        return;
+
+
+    lastSearchQuery =
+        query;
+
+
+    for(
+        let i = 0;
+        i < pageViews.length;
+        i++
+    ){
+
+        const pageText =
+            pageViews[i]
+            .textContent
+            .items
+            .map(
+                item => item.str
+            )
             .join(" ")
             .toLowerCase();
 
-        if (pageText.includes(query)) {
+
+        if(
+            pageText.includes(query)
+        ){
 
             searchResults.push(i);
 
@@ -1073,436 +1548,900 @@ async function searchPDF(query) {
 
     }
 
-    if (searchResults.length === 0) {
 
-        alert("No results found.");
+    if(
+        searchResults.length === 0
+    ){
+
+        alert(
+            "No results found."
+        );
+
         return;
 
     }
 
-    currentSearch = 0;
 
     currentSearch = 0;
 
-gotoSearchResult(0);
+
+    gotoSearchResult(0);
 
 }
 
 
-function gotoSearchResult(index) {
+function gotoSearchResult(index){
 
-    if (searchResults.length === 0)
+    if(
+        searchResults.length === 0
+    )
         return;
 
-    if (index < 0)
-        index = searchResults.length - 1;
 
-    if (index >= searchResults.length)
+    if(index < 0){
+
+        index =
+            searchResults.length - 1;
+
+    }
+
+
+    if(
+        index >= searchResults.length
+    ){
+
         index = 0;
 
-    currentSearch = index;
+    }
 
-    document.getElementById("searchResults").textContent =
+
+    currentSearch =
+        index;
+
+
+    document.getElementById(
+        "searchResults"
+    ).textContent =
+
         `${currentSearch + 1} of ${searchResults.length}`;
 
-    pageViews[searchResults[currentSearch]].pageDiv.scrollIntoView({
-        behavior: "smooth",
-        block: "start"
+
+    pageViews[
+        searchResults[currentSearch]
+    ].pageDiv.scrollIntoView({
+
+        behavior:"smooth",
+
+        block:"start"
+
     });
 
 }
 
 
-  
- 
-  menuButton.addEventListener("click", (event) => {
+/* =========================================================
+   MENU
+========================================================= */
 
-    event.stopPropagation();
+menuButton.addEventListener(
+    "click",
+    event => {
 
-    if (menu.style.display === "block") {
+        event.stopPropagation();
 
-        menu.style.display = "none";
 
-    } else {
+        if(
+            menu.style.display ===
+            "block"
+        ){
 
-        menu.style.display = "block";
+            menu.style.display =
+                "none";
 
-    }
+        }
+        else{
 
-});
-  menu.addEventListener("click", (event) => {
+            menu.style.display =
+                "block";
 
-    event.stopPropagation();
-
-});
-  document.addEventListener("click", () => {
-
-    menu.style.display = "none";
-
-});
- document.getElementById("downloadBtn").addEventListener("click", () => {
-
-    const a = document.createElement("a");
-
-    a.href = file;
-
-    // Force a download using the PDF's filename
-    a.download = file.split("/").pop();
-
-    document.body.appendChild(a);
-
-    a.click();
-
-    a.remove();
-
-    menu.style.display = "none";
-
-});
-
-document.getElementById("newTabBtn").onclick = () => {
-    window.open(file, "_blank");
-};
-
-document.getElementById("fullscreenBtn").onclick = () => {
-    document.documentElement.requestFullscreen();
-};
-
-document.getElementById("copyLinkBtn").addEventListener("click", async () => {
-
-    const url = window.location.href;
-
-    menu.style.display = "none";
-
-    if (navigator.share) {
-
-        try {
-
-            await navigator.share({
-                title: document.title,
-                text: document.getElementById("title").textContent,
-                url: url
-            });
-
-        } catch (err) {
-
-            // User cancelled or share failed.
         }
 
-        return;
+    }
+);
+
+
+menu.addEventListener(
+    "click",
+    event => {
+
+        event.stopPropagation();
 
     }
+);
 
-    try {
 
-        await navigator.clipboard.writeText(url);
+document.addEventListener(
+    "click",
+    () => {
 
-        alert("Link copied to clipboard!");
+        menu.style.display =
+            "none";
 
-    } catch {
+    }
+);
 
-        window.prompt(
-            "Copy this link:",
-            url
+
+/* =========================================================
+   DOWNLOAD
+========================================================= */
+
+document.getElementById(
+    "downloadBtn"
+).addEventListener(
+    "click",
+    () => {
+
+        const a =
+            document.createElement(
+                "a"
+            );
+
+
+        a.href =
+            file;
+
+
+        a.download =
+            file.split("/").pop();
+
+
+        document.body.appendChild(
+            a
+        );
+
+
+        a.click();
+
+
+        a.remove();
+
+
+        menu.style.display =
+            "none";
+
+    }
+);
+
+
+/* =========================================================
+   NEW TAB
+========================================================= */
+
+document.getElementById(
+    "newTabBtn"
+).onclick = () => {
+
+    window.open(
+        file,
+        "_blank"
+    );
+
+};
+
+
+/* =========================================================
+   FULLSCREEN
+========================================================= */
+
+document.getElementById(
+    "fullscreenBtn"
+).onclick = () => {
+
+    document.documentElement
+        .requestFullscreen();
+
+};
+
+
+/* =========================================================
+   SHARE
+========================================================= */
+
+document.getElementById(
+    "copyLinkBtn"
+).addEventListener(
+    "click",
+    async () => {
+
+        const url =
+            window.location.href;
+
+
+        menu.style.display =
+            "none";
+
+
+        if(navigator.share){
+
+            try{
+
+                await navigator.share({
+
+                    title:
+                        document.title,
+
+                    text:
+                        document.getElementById(
+                            "title"
+                        ).textContent,
+
+                    url:
+                        url
+
+                });
+
+            }
+            catch(err){
+
+                // Cancelled or failed.
+
+            }
+
+            return;
+
+        }
+
+
+        try{
+
+            await navigator.clipboard
+                .writeText(url);
+
+
+            alert(
+                "Link copied to clipboard!"
+            );
+
+        }
+        catch{
+
+            window.prompt(
+                "Copy this link:",
+                url
+            );
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   ZOOM IN
+========================================================= */
+
+document.getElementById(
+    "zoomIn"
+).onclick = async () => {
+
+    const next =
+        zoomLevels.find(
+            z => z > zoomLevel
+        );
+
+
+    if(!next)
+        return;
+
+
+    zoomLevel =
+        next;
+
+
+    updateScale();
+
+
+    await renderAllPages();
+
+};
+
+
+/* =========================================================
+   ZOOM OUT
+========================================================= */
+
+document.getElementById(
+    "zoomOut"
+).onclick = async () => {
+
+    const previous =
+        [...zoomLevels]
+        .reverse()
+        .find(
+            z => z < zoomLevel
+        );
+
+
+    if(!previous)
+        return;
+
+
+    zoomLevel =
+        previous;
+
+
+    updateScale();
+
+
+    await renderAllPages();
+
+};
+
+
+/* =========================================================
+   FIT WIDTH
+========================================================= */
+
+document.getElementById(
+    "fitWidth"
+).onclick = async () => {
+
+    baseScale =
+        getFitWidthScale(
+            pageViews[0].page
+        );
+
+
+    zoomLevel = 1;
+
+
+    updateScale();
+
+
+    await renderAllPages();
+
+};
+
+
+/* =========================================================
+   FIT PAGE
+========================================================= */
+
+document.getElementById(
+    "fitPage"
+).onclick = async () => {
+
+    baseScale =
+        getFitPageScale(
+            pageViews[0].page
+        );
+
+
+    zoomLevel = 1;
+
+
+    updateScale();
+
+
+    await renderAllPages();
+
+};
+
+
+/* =========================================================
+   PAGE NUMBER
+========================================================= */
+
+pageInput.addEventListener(
+    "keydown",
+    e => {
+
+        if(
+            e.key !== "Enter"
+        )
+            return;
+
+
+        let page =
+            parseInt(
+                pageInput.value
+            );
+
+
+        if(
+            isNaN(page)
+        ){
+
+            page = 1;
+
+        }
+
+
+        if(page < 1)
+            page = 1;
+
+
+        if(
+            page > pageViews.length
+        ){
+
+            page =
+                pageViews.length;
+
+        }
+
+
+        pageInput.value =
+            page;
+
+
+        pageViews[
+            page - 1
+        ].pageDiv.scrollIntoView({
+
+            behavior:"smooth",
+
+            block:"start"
+
+        });
+
+    }
+);
+
+
+/* =========================================================
+   ZOOM BOX
+========================================================= */
+
+zoomBox.addEventListener(
+    "keydown",
+    async e => {
+
+        if(
+            e.key !== "Enter"
+        )
+            return;
+
+
+        let value =
+            parseFloat(
+                zoomBox.value
+                    .replace("%","")
+            );
+
+
+        if(
+            isNaN(value)
+        ){
+
+            value = 100;
+
+        }
+
+
+        if(value < 25)
+            value = 25;
+
+
+        if(value > 500)
+            value = 500;
+
+
+        zoomLevel =
+            value / 100;
+
+
+        updateScale();
+
+
+        await renderAllPages();
+
+    }
+);
+
+
+/* =========================================================
+   CURRENT PAGE TRACKING
+========================================================= */
+
+viewer.addEventListener(
+    "scroll",
+    () => {
+
+        let current = 1;
+
+
+        for(
+            let i = 0;
+            i < pageViews.length;
+            i++
+        ){
+
+            const rect =
+                pageViews[i]
+                .pageDiv
+                .getBoundingClientRect();
+
+
+            if(
+                rect.top < 150
+            ){
+
+                current =
+                    i + 1;
+
+            }
+
+        }
+
+
+        pageInput.value =
+            current;
+
+    }
+);
+
+
+/* =========================================================
+   SEARCH BOX
+========================================================= */
+
+searchBox.addEventListener(
+    "keydown",
+    e => {
+
+        if(
+            e.key !== "Enter"
+        )
+            return;
+
+
+        const query =
+            searchBox.value
+                .trim()
+                .toLowerCase();
+
+
+        if(
+
+            query !==
+                lastSearchQuery ||
+
+            searchResults.length === 0 ||
+
+            currentSearch === -1
+
+        ){
+
+            searchPDF(query);
+
+            return;
+
+        }
+
+
+        gotoSearchResult(
+            currentSearch + 1
         );
 
     }
+);
 
-});
-  
-  document.getElementById("zoomIn").onclick = async () => {
 
-    const next = zoomLevels.find(z => z > zoomLevel);
+/* =========================================================
+   SEARCH BUTTON
+========================================================= */
 
-if (!next) return;
-
-zoomLevel = next;
-
-updateScale();
-
-await renderAllPages();
-
-};
-  document.getElementById("zoomOut").onclick = async () => {
-
-    const previous = [...zoomLevels]
-    .reverse()
-    .find(z => z < zoomLevel);
-
-if (!previous) return;
-
-zoomLevel = previous;
-
-updateScale();
-
-await renderAllPages();
-
-};
-document.getElementById("fitWidth").onclick = async () => {
-
-    baseScale =
-        getFitWidthScale(pageViews[0].page);
-
-    zoomLevel = 1;
-
-    updateScale();
-
-    await renderAllPages();
-
-};
- document.getElementById("fitPage").onclick = async () => {
-
-    baseScale =
-        getFitPageScale(pageViews[0].page);
-
-    zoomLevel = 1;
-
-    updateScale();
-
-    await renderAllPages();
-
-};
-  const pageInput = document.getElementById("pageNumber");
-
-pageInput.addEventListener("keydown", e => {
-
-    if (e.key !== "Enter") return;
-
-    let page = parseInt(pageInput.value);
-
-    // If it's blank or invalid, go to page 1.
-    if (isNaN(page)) {
-        page = 1;
-    }
-
-    // Clamp to the valid range.
-    if (page < 1) {
-        page = 1;
-    }
-
-    if (page > pageViews.length) {
-        page = pageViews.length;
-    }
-
-    // Update the text box to the corrected page number.
-    pageInput.value = page;
-
-    // Jump to that page.
-    pageViews[page - 1].pageDiv.scrollIntoView({
-        behavior: "smooth",
-        block: "start"
-    });
-
-});
-  const zoomBox = document.getElementById("zoomPercent");
-
-zoomBox.addEventListener("keydown", async e => {
-
-    if (e.key !== "Enter") return;
-
-    let value = parseFloat(
-        zoomBox.value.replace("%", "")
+const searchButton =
+    document.getElementById(
+        "searchButton"
     );
 
-    if (isNaN(value)) {
-        value = 100;
-    }
 
-    if (value < 25) {
-        value = 25;
-    }
+searchButton.onclick =
+    e => {
 
-    if (value > 500) {
-        value = 500;
-    }
+        e.stopPropagation();
 
-    zoomLevel = value / 100;
 
-updateScale();
+        searchPopup.classList.toggle(
+            "hidden"
+        );
 
-await renderAllPages();
-});
-  viewer.addEventListener("scroll", () => {
 
-    let current = 1;
+        if(
+            !searchPopup.classList
+                .contains("hidden")
+        ){
 
-    for (let i = 0; i < pageViews.length; i++) {
-
-        const rect = pageViews[i].pageDiv.getBoundingClientRect();
-
-        if (rect.top < 150)
-            current = i + 1;
-
-    }
-
-    document.getElementById("pageNumber").value = current;
-
-});
-  const searchBox = document.getElementById("searchBox");
- searchBox.addEventListener("keydown", e => {
-
-    if (e.key !== "Enter")
-        return;
-
-    // First search
-    const query = searchBox.value.trim().toLowerCase();
-
-if (
-    query !== lastSearchQuery ||
-    searchResults.length === 0 ||
-    currentSearch === -1
-) {
-
-    searchPDF(query);
-    return;
-
-}
-
-    // Go to next result
-    gotoSearchResult(currentSearch + 1);
-
-});
-
-  const searchButton = document.getElementById("searchButton");
-const searchPopup = document.getElementById("searchPopup");
-
-searchButton.onclick = e => {
-
-    e.stopPropagation();
-
-    searchPopup.classList.toggle("hidden");
-
-    if (!searchPopup.classList.contains("hidden")) {
-
-        document.getElementById("searchBox").focus();
-
-    }
-
-};
-  searchPopup.onclick = e => {
-
-    e.stopPropagation();
-
-};
-  document.addEventListener("click", () => {
-
-    searchPopup.classList.add("hidden");
-
-});
-  document.getElementById("prevResult").onclick = () => {
-
-    // If the user hasn't searched yet,
-    // perform the search first.
-    const query = searchBox.value.trim().toLowerCase();
-
-if (
-    query !== lastSearchQuery ||
-    searchResults.length === 0 ||
-    currentSearch === -1
-) {
-
-    searchPDF(query);
-    return;
-
-}
-
-    gotoSearchResult(currentSearch - 1);
-
-};
-
-  document.getElementById("nextResult").onclick = () => {
-
-    // If the user hasn't searched yet,
-    // perform the search first.
-   const query = searchBox.value.trim().toLowerCase();
-
-if (
-    query !== lastSearchQuery ||
-    searchResults.length === 0 ||
-    currentSearch === -1
-) {
-
-    searchPDF(query);
-    return;
-
-}
-
-    gotoSearchResult(currentSearch + 1);
-
-};
-
-  let resizeTimer;
-
-window.addEventListener("resize", () => {
-
-    clearTimeout(resizeTimer);
-
-    resizeTimer = setTimeout(async () => {
-
-        // Only auto-fit phones/tablets.
-        if (window.innerWidth <= 768 && pageViews.length) {
-
-           baseScale =
-    getFitWidthScale(pageViews[0].page);
-
-updateScale();
-
-await renderAllPages();
+            searchBox.focus();
 
         }
 
-    }, 150);
-
-});
+    };
 
 
-/* ---------- PDF Reading Mode ---------- */
+searchPopup.onclick =
+    e => {
 
-let suppressReadingModeClick = false;
+        e.stopPropagation();
 
-viewer.addEventListener("mousedown", () => {
+    };
 
-    const selection = window.getSelection();
 
-    if (selection && selection.toString().length > 0) {
-        suppressReadingModeClick = true;
+document.addEventListener(
+    "click",
+    () => {
+
+        searchPopup.classList.add(
+            "hidden"
+        );
+
     }
+);
 
-});
 
-viewer.addEventListener("click", (e) => {
+/* =========================================================
+   PREVIOUS SEARCH RESULT
+========================================================= */
 
-    const page = e.target.closest(".page");
+document.getElementById(
+    "prevResult"
+).onclick = () => {
 
-    if (!page) return;
+    const query =
+        searchBox.value
+            .trim()
+            .toLowerCase();
 
-    const selection = window.getSelection();
 
-    // Do not toggle while text is selected.
-    if (selection && selection.toString().length > 0) {
-        suppressReadingModeClick = true;
+    if(
+
+        query !==
+            lastSearchQuery ||
+
+        searchResults.length === 0 ||
+
+        currentSearch === -1
+
+    ){
+
+        searchPDF(query);
+
         return;
+
     }
 
-    // Suppress the click immediately following text selection.
-    if (suppressReadingModeClick) {
-        suppressReadingModeClick = false;
+
+    gotoSearchResult(
+        currentSearch - 1
+    );
+
+};
+
+
+/* =========================================================
+   NEXT SEARCH RESULT
+========================================================= */
+
+document.getElementById(
+    "nextResult"
+).onclick = () => {
+
+    const query =
+        searchBox.value
+            .trim()
+            .toLowerCase();
+
+
+    if(
+
+        query !==
+            lastSearchQuery ||
+
+        searchResults.length === 0 ||
+
+        currentSearch === -1
+
+    ){
+
+        searchPDF(query);
+
         return;
-    }
-
-    document.body.classList.toggle("reading-mode");
-
-    if (document.body.classList.contains("reading-mode")) {
-
-        menu.style.display = "none";
-        searchPopup.classList.add("hidden");
 
     }
 
-});
 
-  
+    gotoSearchResult(
+        currentSearch + 1
+    );
+
+};
+
+
+/* =========================================================
+   READING MODE
+========================================================= */
+
+let suppressReadingModeClick =
+    false;
+
+
+/*
+   Detect an existing selection before
+   the user clicks somewhere else.
+*/
+
+viewer.addEventListener(
+    "mousedown",
+    () => {
+
+        const selection =
+            window.getSelection();
+
+
+        if(
+            selection &&
+            selection.toString().length > 0
+        ){
+
+            suppressReadingModeClick =
+                true;
+
+        }
+
+    }
+);
+
+
+/*
+   Only the actual PDF page can activate
+   reading mode.
+*/
+
+viewer.addEventListener(
+    "click",
+    e => {
+
+        const page =
+            e.target.closest(
+                ".page"
+            );
+
+
+        if(!page)
+            return;
+
+
+        /*
+           Clicking an actual PDF link
+           must never toggle reading mode.
+        */
+
+        const link =
+            e.target.closest(
+                "a"
+            );
+
+
+        if(link)
+            return;
+
+
+        /*
+           Do not toggle while text
+           is currently selected.
+        */
+
+        const selection =
+            window.getSelection();
+
+
+        if(
+            selection &&
+            selection.toString().length > 0
+        ){
+
+            suppressReadingModeClick =
+                true;
+
+            return;
+
+        }
+
+
+        /*
+           Suppress the click immediately
+           following a text selection.
+        */
+
+        if(
+            suppressReadingModeClick
+        ){
+
+            suppressReadingModeClick =
+                false;
+
+            return;
+
+        }
+
+
+        /*
+           Toggle reading mode.
+        */
+
+        document.body.classList.toggle(
+            "reading-mode"
+        );
+
+
+        if(
+            document.body.classList
+                .contains("reading-mode")
+        ){
+
+            menu.style.display =
+                "none";
+
+
+            searchPopup.classList.add(
+                "hidden"
+            );
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   RESIZE
+========================================================= */
+
+let resizeTimer;
+
+
+window.addEventListener(
+    "resize",
+    () => {
+
+        clearTimeout(
+            resizeTimer
+        );
+
+
+        resizeTimer =
+            setTimeout(
+                async () => {
+
+                    if(
+                        window.innerWidth <=
+                        768 &&
+                        pageViews.length
+                    ){
+
+                        baseScale =
+                            getFitWidthScale(
+                                pageViews[0].page
+                            );
+
+
+                        updateScale();
+
+
+                        await renderAllPages();
+
+                    }
+
+                },
+                150
+            );
+
+    }
+);
+
 </script>
-
 
 </body>
 </html>
