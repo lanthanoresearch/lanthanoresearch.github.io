@@ -17,7 +17,12 @@
 
     <title>Advanced Image Viewer</title>
 
+
     <style>
+
+        /* =====================================================
+           GLOBAL
+           ===================================================== */
 
         *{
             box-sizing:border-box;
@@ -25,78 +30,327 @@
 
         html,
         body{
+
             margin:0;
+
+            width:100%;
             height:100%;
+
             background:#111;
+
             color:#eee;
+
             font-family:Arial,sans-serif;
+
             overflow:hidden;
+
         }
 
         body{
+
             display:flex;
+
             flex-direction:column;
+
         }
 
 
-        /* ---------- Header ---------- */
+        /* =====================================================
+           HEADER
+           ===================================================== */
 
         header{
+
             background:#1b1b1b;
+
             border-bottom:1px solid #333;
+
             padding:8px;
+
+            flex-shrink:0;
+
+            z-index:20;
+
         }
+
 
         .top{
+
             display:flex;
+
             justify-content:space-between;
+
             align-items:center;
+
             gap:8px;
+
         }
 
 
-        /* ---------- Menu ---------- */
+        /* =====================================================
+           HEADER BUTTONS
+           ===================================================== */
 
-        #menu{
-            position:absolute;
-            right:10px;
-            top:58px;
-            background:#222;
-            border:1px solid #333;
-            border-radius:10px;
-            padding:8px;
-            display:none;
-            min-width:220px;
-            z-index:1000;
-        }
+        .headerButton{
 
-        #menu button{
-            width:100%;
-            text-align:left;
-            margin:3px 0;
+            width:42px;
+            height:38px;
+
+            padding:0;
+
+            display:flex;
+
+            align-items:center;
+
+            justify-content:center;
+
             background:#333;
+
             color:#fff;
-            border:none;
+
+            border:1px solid #3d3d3d;
+
             border-radius:7px;
-            padding:9px 12px;
+
+            text-decoration:none;
+
             cursor:pointer;
+
+            font-size:20px;
+
+            line-height:1;
+
+            transition:
+                background .15s ease,
+                border-color .15s ease,
+                transform .05s ease;
+
         }
 
-        #menu button:hover{
+
+        .headerButton:hover{
+
             background:#444;
+
+            border-color:#4a4a4a;
+
         }
 
 
-        /* ---------- PDF Button ---------- */
+        .headerButton:active{
+
+            transform:scale(.97);
+
+        }
+
+
+        /* =====================================================
+           STANDARD BUTTONS
+           ===================================================== */
+
+        .controls{
+
+            display:flex;
+
+            gap:6px;
+
+            flex-wrap:wrap;
+
+            align-items:center;
+
+        }
+
+
+        .btn{
+
+            appearance:none;
+
+            -webkit-appearance:none;
+
+            background:#333;
+
+            color:#fff;
+
+            border:1px solid #3d3d3d;
+
+            border-radius:7px;
+
+            padding:9px 12px;
+
+            text-decoration:none;
+
+            cursor:pointer;
+
+            font-family:inherit;
+
+            font-size:14px;
+
+            line-height:normal;
+
+            transition:
+                background .15s ease,
+                border-color .15s ease,
+                transform .05s ease;
+
+        }
+
+
+        .btn:hover{
+
+            background:#444;
+
+            border-color:#4a4a4a;
+
+        }
+
+
+        .btn:active{
+
+            transform:scale(.97);
+
+        }
+
+
+        /* =====================================================
+           PDF BUTTON
+           ===================================================== */
 
         #pdfButton{
+
             display:none;
+
         }
 
 
-        /* ---------- Title ---------- */
+        /* =====================================================
+           MENU
+           ===================================================== */
+
+        #menu{
+
+            position:absolute;
+
+            right:10px;
+
+            top:58px;
+
+            min-width:220px;
+
+            padding:8px;
+
+            background:#222;
+
+            border:1px solid #3a3a3a;
+
+            border-radius:10px;
+
+            box-shadow:
+                0 12px 35px rgba(0,0,0,.45);
+
+            display:none;
+
+            z-index:1000;
+
+        }
+
+
+        #menu button{
+
+            appearance:none;
+
+            -webkit-appearance:none;
+
+            width:100%;
+
+            margin:3px 0;
+
+            padding:9px 12px;
+
+            text-align:left;
+
+            background:#333;
+
+            color:#fff;
+
+            border:1px solid transparent;
+
+            border-radius:7px;
+
+            cursor:pointer;
+
+            font-family:inherit;
+
+            font-size:14px;
+
+            transition:
+                background .15s ease,
+                border-color .15s ease;
+
+        }
+
+
+        #menu button:hover{
+
+            background:#444;
+
+            border-color:#4a4a4a;
+
+        }
+
+
+        /* =====================================================
+           VIEWER
+           ===================================================== */
+
+        #viewer{
+
+            flex:1;
+
+            position:relative;
+
+            overflow:hidden;
+
+            min-height:0;
+
+            width:100%;
+
+            touch-action:none;
+
+            background:#111;
+
+        }
+
+
+        #img{
+
+            position:absolute;
+
+            left:50%;
+
+            top:50%;
+
+            transform-origin:center center;
+
+            max-width:none;
+
+            user-select:none;
+
+            -webkit-user-select:none;
+
+            -webkit-user-drag:none;
+
+            pointer-events:auto;
+
+        }
+
+
+        /* =====================================================
+           TITLE
+           ===================================================== */
 
         .title{
+
+            flex-shrink:0;
 
             padding:12px 18px;
 
@@ -106,73 +360,49 @@
 
             font-size:1.2rem;
 
+            line-height:1.2;
+
             white-space:nowrap;
 
             overflow:hidden;
 
             text-overflow:ellipsis;
 
-            background:rgba(24,24,24,.92);
+            background:rgba(24,24,24,.94);
 
             border-top:1px solid #333;
 
             backdrop-filter:blur(6px);
 
+            -webkit-backdrop-filter:blur(6px);
+
         }
 
 
-        /* ---------- Controls ---------- */
-
-        .controls{
-            display:flex;
-            gap:6px;
-            flex-wrap:wrap;
-        }
-
-        .btn{
-            background:#333;
-            color:#fff;
-            border:none;
-            border-radius:7px;
-            padding:9px 12px;
-            text-decoration:none;
-            cursor:pointer;
-        }
-
-        .btn:hover{
-            background:#444;
-        }
-
-
-        /* ---------- Viewer ---------- */
-
-        #viewer{
-            flex:1;
-            position:relative;
-            overflow:hidden;
-            touch-action:none;
-        }
-
-        #img{
-            position:absolute;
-            left:50%;
-            top:50%;
-            transform-origin:center center;
-            user-select:none;
-            -webkit-user-drag:none;
-            max-width:none;
-        }
-
-
-        /* ---------- Zoom Bar ---------- */
+        /* =====================================================
+           ZOOM BAR
+           ===================================================== */
 
         #zoomBar{
+
+            flex-shrink:0;
+
             display:flex;
+
             justify-content:center;
+
+            align-items:center;
+
             gap:8px;
+
             padding:8px;
+
             background:#181818;
+
+            border-top:1px solid #262626;
+
         }
+
 
         #zoom{
 
@@ -180,33 +410,123 @@
 
             align-items:center;
 
+            justify-content:center;
+
             position:relative;
 
-            top:3px;
+            top:2px;
 
             min-width:60px;
 
-            justify-content:center;
+            padding:0 2px;
+
+            font-size:14px;
 
         }
 
 
-        /* ---------- Mobile ---------- */
+        /* =====================================================
+           READING MODE
+           ===================================================== */
+
+        body.readMode{
+
+            background:#111;
+
+        }
+
+
+        body.readMode header,
+        body.readMode .title,
+        body.readMode #zoomBar{
+
+            display:none;
+
+        }
+
+
+        body.readMode #viewer{
+
+            flex:1;
+
+            width:100%;
+
+            height:100%;
+
+        }
+
+
+        /* =====================================================
+           MOBILE
+           ===================================================== */
 
         @media(max-width:700px){
 
-            .top{
-                align-items:flex-start;
+            header{
+
+                padding:7px;
+
             }
+
+
+            .top{
+
+                align-items:flex-start;
+
+            }
+
+
+            .headerButton{
+
+                width:42px;
+
+                height:38px;
+
+            }
+
 
             .controls .btn{
+
                 padding:8px 10px;
+
                 font-size:.9rem;
+
             }
 
+
             .title{
+
                 font-size:1.2rem;
+
                 padding:10px 14px;
+
+            }
+
+
+            #zoomBar{
+
+                gap:6px;
+
+                padding:7px;
+
+            }
+
+
+            #zoomBar .btn{
+
+                padding:8px 10px;
+
+            }
+
+
+            #menu{
+
+                top:54px;
+
+                right:8px;
+
+                min-width:210px;
+
             }
 
         }
@@ -219,36 +539,49 @@
 <body>
 
 
+<!-- =======================================================
+     HEADER
+     ======================================================= -->
+
 <header>
 
     <div class="top">
 
+
         <a
-            class="btn"
+            class="headerButton"
             id="homeButton"
             href="index.html"
+            aria-label="Back"
+            title="Back"
         >
-            ◀ Back
+            ☰
         </a>
 
 
         <div class="controls">
 
+
             <a
                 class="btn"
                 id="pdfButton"
                 target="_blank"
+                rel="noopener"
             >
                 PDF
             </a>
 
 
             <button
-                class="btn"
+                class="headerButton"
                 id="menuBtn"
+                type="button"
+                aria-label="Menu"
+                title="Menu"
             >
                 ☰
             </button>
+
 
         </div>
 
@@ -257,30 +590,51 @@
 </header>
 
 
-<!-- ---------- Menu ---------- -->
+<!-- =======================================================
+     MENU
+     ======================================================= -->
 
 <div id="menu">
 
-    <button id="downloadBtn">
+
+    <button
+        id="downloadBtn"
+        type="button"
+    >
         Download Image
     </button>
 
-    <button id="newTabBtn">
+
+    <button
+        id="newTabBtn"
+        type="button"
+    >
         Open in New Tab
     </button>
 
-    <button id="shareBtn">
-        Share
+
+    <button
+        id="shareBtn"
+        type="button"
+    >
+        Share Image
     </button>
 
-    <button id="fullscreenBtn">
+
+    <button
+        id="fullscreenBtn"
+        type="button"
+    >
         Fullscreen
     </button>
+
 
 </div>
 
 
-<!-- ---------- Image Viewer ---------- -->
+<!-- =======================================================
+     IMAGE VIEWER
+     ======================================================= -->
 
 <div id="viewer">
 
@@ -292,7 +646,9 @@
 </div>
 
 
-<!-- ---------- File Name ---------- -->
+<!-- =======================================================
+     FILE NAME
+     ======================================================= -->
 
 <div
     class="title"
@@ -302,13 +658,19 @@
 </div>
 
 
-<!-- ---------- Zoom Controls ---------- -->
+<!-- =======================================================
+     ZOOM / IMAGE CONTROLS
+     ======================================================= -->
 
 <div id="zoomBar">
+
 
     <button
         class="btn"
         id="minus"
+        type="button"
+        aria-label="Zoom out"
+        title="Zoom out"
     >
         −
     </button>
@@ -322,6 +684,9 @@
     <button
         class="btn"
         id="plus"
+        type="button"
+        aria-label="Zoom in"
+        title="Zoom in"
     >
         +
     </button>
@@ -330,6 +695,7 @@
     <button
         class="btn"
         id="fit"
+        type="button"
     >
         Reset
     </button>
@@ -338,9 +704,20 @@
     <button
         class="btn"
         id="lock"
+        type="button"
     >
         ✣ Free
     </button>
+
+
+    <button
+        class="btn"
+        id="readModeBtn"
+        type="button"
+    >
+        Reading
+    </button>
+
 
 </div>
 
@@ -349,11 +726,8 @@
 
 
 /* =========================================================
-   IMAGE VIEWER
+   URL PARAMETERS
    ========================================================= */
-
-
-/* ---------- URL Parameters ---------- */
 
 const p =
     new URLSearchParams(
@@ -362,39 +736,63 @@ const p =
 
 
 const img =
-    document.getElementById("img");
+    document.getElementById(
+        "img"
+    );
 
 
 const viewer =
-    document.getElementById("viewer");
+    document.getElementById(
+        "viewer"
+    );
 
 
 const title =
-    document.getElementById("title");
+    document.getElementById(
+        "title"
+    );
 
 
 const fitButton =
-    document.getElementById("fit");
+    document.getElementById(
+        "fit"
+    );
 
 
 const lockButton =
-    document.getElementById("lock");
+    document.getElementById(
+        "lock"
+    );
 
 
 const minusButton =
-    document.getElementById("minus");
+    document.getElementById(
+        "minus"
+    );
 
 
 const plusButton =
-    document.getElementById("plus");
+    document.getElementById(
+        "plus"
+    );
 
 
 const menu =
-    document.getElementById("menu");
+    document.getElementById(
+        "menu"
+    );
 
 
 const menuButton =
-    document.getElementById("menuBtn");
+    document.getElementById(
+        "menuBtn"
+    );
+
+
+const readModeButton =
+    document.getElementById(
+        "readModeBtn"
+    );
 
 
 const src =
@@ -405,14 +803,19 @@ const src =
 
 const returnPage =
     decodeURIComponent(
-        p.get("return") || "index.html"
+        p.get("return") ||
+        "index.html"
     );
 
 
-/* ---------- Back Button ---------- */
+/* =========================================================
+   BACK BUTTON
+   ========================================================= */
 
 const homeButton =
-    document.getElementById("homeButton");
+    document.getElementById(
+        "homeButton"
+    );
 
 
 homeButton.href =
@@ -439,43 +842,55 @@ homeButton.addEventListener(
 );
 
 
-/* ---------- Find PDF ---------- */
+/* =========================================================
+   FIND ASSOCIATED PDF
+   ========================================================= */
 
 fetch("descriptions.json")
-.then(r => r.json())
-.then(data => {
+.then(
+    r => r.json()
+)
+.then(
+    data => {
 
-    let paper = null;
+        let paper = null;
 
 
-    Object.values(data).forEach(p => {
+        Object.values(data).forEach(
+            p => {
 
-        if(!p.images)
+                if(!p.images)
+                    return;
+
+
+                if(
+                    p.images.includes(src)
+                ){
+
+                    paper = p;
+
+                }
+
+            }
+        );
+
+
+        if(!paper)
             return;
 
 
-        if(p.images.includes(src)){
+        document.getElementById(
+            "pdfButton"
+        ).href =
+            paper.url;
 
-            paper = p;
-
-        }
-
-    });
-
-
-    if(!paper)
-        return;
+    }
+);
 
 
-    document.getElementById(
-        "pdfButton"
-    ).href =
-        paper.url;
-
-});
-
-
-/* ---------- Image ---------- */
+/* =========================================================
+   IMAGE INFORMATION
+   ========================================================= */
 
 img.src =
     src;
@@ -489,13 +904,22 @@ const filename =
 
 const displayName =
     filename
-        .replace(/\.[^/.]+$/, "")
-        .replace(/[-_]+/g, " ")
-        .replace(/\b\w/g, function(char){
+        .replace(
+            /\.[^/.]+$/,
+            ""
+        )
+        .replace(
+            /[-_]+/g,
+            " "
+        )
+        .replace(
+            /\b\w/g,
+            function(char){
 
-            return char.toUpperCase();
+                return char.toUpperCase();
 
-        });
+            }
+        );
 
 
 title.textContent =
@@ -507,9 +931,8 @@ document.title =
 
 
 /* =========================================================
-   IMAGE MOVEMENT / ZOOM
+   MOVEMENT / ZOOM STATE
    ========================================================= */
-
 
 let base = 1;
 
@@ -521,18 +944,19 @@ let offsetY = 0;
 
 
 /*
-    Movement modes:
-
     free       = left/right + up/down
     vertical   = up/down only
     horizontal = left/right only
 */
 
-let movementMode = "free";
+let movementMode =
+    "free";
 
 
 const zoomLabel =
-    document.getElementById("zoom");
+    document.getElementById(
+        "zoom"
+    );
 
 
 const pointers =
@@ -544,7 +968,9 @@ let pinchDistance = 0;
 let pinchZoom = 1;
 
 
-/* ---------- Zoom Limits ---------- */
+/* =========================================================
+   ZOOM LIMITS
+   ========================================================= */
 
 function clampZoom(){
 
@@ -564,7 +990,9 @@ function clampZoom(){
 }
 
 
-/* ---------- Draw ---------- */
+/* =========================================================
+   DRAW
+   ========================================================= */
 
 function draw(){
 
@@ -581,12 +1009,16 @@ function draw(){
 
 
     zoomLabel.textContent =
-        Math.round(zoom * 100) + "%";
+        Math.round(
+            zoom * 100
+        ) + "%";
 
 }
 
 
-/* ---------- Fit / Reset ---------- */
+/* =========================================================
+   FIT / RESET
+   ========================================================= */
 
 function fit(){
 
@@ -607,7 +1039,6 @@ function fit(){
 
     zoom = 1;
 
-
     offsetX = 0;
 
     offsetY = 0;
@@ -623,7 +1054,8 @@ function fit(){
     setTimeout(
         () => {
 
-            img.style.transition = "";
+            img.style.transition =
+                "";
 
         },
         220
@@ -638,11 +1070,25 @@ img.onload =
 
 window.addEventListener(
     "resize",
-    fit
+    () => {
+
+        if(
+            !document.body.classList.contains(
+                "readMode"
+            )
+        ){
+
+            fit();
+
+        }
+
+    }
 );
 
 
-/* ---------- Zoom Buttons ---------- */
+/* =========================================================
+   ZOOM BUTTONS
+   ========================================================= */
 
 minusButton.onclick =
     () => {
@@ -672,40 +1118,219 @@ fitButton.onclick =
    MOVEMENT MODE
    ========================================================= */
 
-lockButton.onclick = () => {
+lockButton.onclick =
+    () => {
 
-    if(movementMode === "free"){
+        if(
+            movementMode ===
+            "free"
+        ){
 
-        movementMode = "vertical";
+            movementMode =
+                "vertical";
 
-        lockButton.textContent =
-            "↕ Vertical";
 
-    }else if(movementMode === "vertical"){
+            lockButton.textContent =
+                "↕ Vertical";
 
-        movementMode = "horizontal";
 
-        lockButton.textContent =
-            "↔ Horizontal";
+        }else if(
+            movementMode ===
+            "vertical"
+        ){
 
-    }else{
+            movementMode =
+                "horizontal";
 
-        movementMode = "free";
 
-        lockButton.textContent =
-            "✣ Free";
+            lockButton.textContent =
+                "↔ Horizontal";
 
-    }
 
-};
+        }else{
+
+            movementMode =
+                "free";
+
+
+            lockButton.textContent =
+                "✣ Free";
+
+        }
+
+    };
 
 
 /* =========================================================
-   POINTER EVENTS
+   READING MODE
    ========================================================= */
 
+let readMode = false;
 
-/* ---------- Pointer Down ---------- */
+
+/*
+    Reading Mode simply removes the
+    interface while leaving the image
+    viewer itself completely active.
+*/
+
+function enterReadMode(){
+
+    readMode =
+        true;
+
+
+    document.body.classList.add(
+        "readMode"
+    );
+
+
+    readModeButton.textContent =
+        "Reading";
+
+
+    menu.style.display =
+        "none";
+
+}
+
+
+function exitReadMode(){
+
+    readMode =
+        false;
+
+
+    document.body.classList.remove(
+        "readMode"
+    );
+
+
+    readModeButton.textContent =
+        "Reading";
+
+}
+
+
+readModeButton.addEventListener(
+    "click",
+    e => {
+
+        e.stopPropagation();
+
+
+        if(readMode){
+
+            exitReadMode();
+
+        }else{
+
+            enterReadMode();
+
+        }
+
+    }
+);
+
+
+/*
+    Used only to determine whether a
+    pointer interaction was a tap or
+    an actual drag.
+*/
+
+let readStartX = null;
+
+let readStartY = null;
+
+
+viewer.addEventListener(
+    "pointerdown",
+    e => {
+
+        if(!readMode)
+            return;
+
+
+        if(pointers.size > 0)
+            return;
+
+
+        readStartX =
+            e.clientX;
+
+
+        readStartY =
+            e.clientY;
+
+    },
+    true
+);
+
+
+viewer.addEventListener(
+    "pointerup",
+    e => {
+
+        if(!readMode)
+            return;
+
+
+        if(
+            readStartX === null ||
+            readStartY === null
+        ){
+
+            return;
+
+        }
+
+
+        const dx =
+            Math.abs(
+                e.clientX -
+                readStartX
+            );
+
+
+        const dy =
+            Math.abs(
+                e.clientY -
+                readStartY
+            );
+
+
+        readStartX = null;
+
+        readStartY = null;
+
+
+        /*
+            Only a genuine tap restores
+            the controls.
+
+            Dragging and pinching remain
+            completely functional.
+        */
+
+        if(
+            dx < 10 &&
+            dy < 10 &&
+            pointers.size === 0
+        ){
+
+            exitReadMode();
+
+        }
+
+    },
+    true
+);
+
+
+/* =========================================================
+   POINTER DOWN
+   ========================================================= */
 
 viewer.onpointerdown =
     e => {
@@ -727,7 +1352,9 @@ viewer.onpointerdown =
         );
 
 
-        if(pointers.size === 2){
+        if(
+            pointers.size === 2
+        ){
 
             const pts =
                 [...pointers.values()];
@@ -753,13 +1380,22 @@ viewer.onpointerdown =
     };
 
 
-/* ---------- Pointer Move ---------- */
+/* =========================================================
+   POINTER MOVE
+   ========================================================= */
 
 viewer.onpointermove =
     e => {
 
-        if(!pointers.has(e.pointerId))
+        if(
+            !pointers.has(
+                e.pointerId
+            )
+        ){
+
             return;
+
+        }
 
 
         const previous =
@@ -780,9 +1416,13 @@ viewer.onpointermove =
         );
 
 
-        /* ---------- One Finger ---------- */
+        /* -------------------------------------------------
+           ONE FINGER
+           ------------------------------------------------- */
 
-        if(pointers.size === 1){
+        if(
+            pointers.size === 1
+        ){
 
             const dx =
                 e.clientX -
@@ -794,28 +1434,28 @@ viewer.onpointermove =
                 previous.y;
 
 
-            /*
-                Free:
-                move both directions.
-
-                Vertical:
-                only up/down.
-
-                Horizontal:
-                only left/right.
-            */
-
-            if(movementMode === "free"){
+            if(
+                movementMode ===
+                "free"
+            ){
 
                 offsetX += dx;
 
                 offsetY += dy;
 
-            }else if(movementMode === "vertical"){
+
+            }else if(
+                movementMode ===
+                "vertical"
+            ){
 
                 offsetY += dy;
 
-            }else if(movementMode === "horizontal"){
+
+            }else if(
+                movementMode ===
+                "horizontal"
+            ){
 
                 offsetX += dx;
 
@@ -824,16 +1464,26 @@ viewer.onpointermove =
 
             draw();
 
-
             return;
 
         }
 
 
-        /* ---------- Two Finger Pinch ---------- */
+        /* -------------------------------------------------
+           TWO FINGER PINCH
+           ------------------------------------------------- */
 
         const pts =
             [...pointers.values()];
+
+
+        if(
+            pinchDistance <= 0
+        ){
+
+            return;
+
+        }
 
 
         const distance =
@@ -890,7 +1540,9 @@ viewer.onpointermove =
     };
 
 
-/* ---------- Pointer Up ---------- */
+/* =========================================================
+   POINTER UP
+   ========================================================= */
 
 viewer.onpointerup =
     e => {
@@ -900,7 +1552,9 @@ viewer.onpointerup =
         );
 
 
-        if(pointers.size < 2){
+        if(
+            pointers.size < 2
+        ){
 
             pinchDistance = 0;
 
@@ -909,7 +1563,9 @@ viewer.onpointerup =
     };
 
 
-/* ---------- Pointer Cancel ---------- */
+/* =========================================================
+   POINTER CANCEL
+   ========================================================= */
 
 viewer.onpointercancel =
     e => {
@@ -919,7 +1575,9 @@ viewer.onpointercancel =
         );
 
 
-        if(pointers.size < 2){
+        if(
+            pointers.size < 2
+        ){
 
             pinchDistance = 0;
 
@@ -928,7 +1586,9 @@ viewer.onpointercancel =
     };
 
 
-/* ---------- Initial Draw ---------- */
+/* =========================================================
+   INITIAL DRAW
+   ========================================================= */
 
 draw();
 
@@ -940,14 +1600,19 @@ fit();
    ========================================================= */
 
 document
-    .getElementById("fullscreenBtn")
-    .onclick = () => {
+    .getElementById(
+        "fullscreenBtn"
+    )
+    .onclick =
+    () => {
 
         menu.style.display =
             "none";
 
 
-        if(document.fullscreenElement){
+        if(
+            document.fullscreenElement
+        ){
 
             document.exitFullscreen();
 
@@ -992,7 +1657,9 @@ viewer.addEventListener(
             base * zoom;
 
 
-        if(e.deltaY < 0){
+        if(
+            e.deltaY < 0
+        ){
 
             zoom *= 1.12;
 
@@ -1016,7 +1683,6 @@ viewer.addEventListener(
 
 
         offsetX =
-
             mouseX -
             (
                 mouseX -
@@ -1025,7 +1691,6 @@ viewer.addEventListener(
 
 
         offsetY =
-
             mouseY -
             (
                 mouseY -
@@ -1055,11 +1720,11 @@ menuButton.addEventListener(
 
         menu.style.display =
 
-            menu.style.display === "block"
+            menu.style.display ===
+            "block"
 
-            ? "none"
-
-            : "block";
+                ? "none"
+                : "block";
 
     }
 );
@@ -1087,12 +1752,15 @@ document.addEventListener(
 
 
 /* =========================================================
-   NEW TAB
+   OPEN IN NEW TAB
    ========================================================= */
 
 document
-    .getElementById("newTabBtn")
-    .onclick = () => {
+    .getElementById(
+        "newTabBtn"
+    )
+    .onclick =
+    () => {
 
         menu.style.display =
             "none";
@@ -1111,11 +1779,16 @@ document
    ========================================================= */
 
 document
-    .getElementById("downloadBtn")
-    .onclick = () => {
+    .getElementById(
+        "downloadBtn"
+    )
+    .onclick =
+    () => {
 
         const a =
-            document.createElement("a");
+            document.createElement(
+                "a"
+            );
 
 
         a.href =
@@ -1123,10 +1796,13 @@ document
 
 
         a.download =
-            src.split("/").pop();
+            src.split("/")
+                .pop();
 
 
-        document.body.appendChild(a);
+        document.body.appendChild(
+            a
+        );
 
 
         a.click();
@@ -1142,11 +1818,13 @@ document
 
 
 /* =========================================================
-   SHARE
+   SHARE IMAGE
    ========================================================= */
 
 document
-    .getElementById("shareBtn")
+    .getElementById(
+        "shareBtn"
+    )
     .addEventListener(
         "click",
         async () => {
@@ -1159,9 +1837,13 @@ document
                 "none";
 
 
-            /* Native share */
+            /* ---------------------------------------------
+               Native Share
+               --------------------------------------------- */
 
-            if(navigator.share){
+            if(
+                navigator.share
+            ){
 
                 try{
 
@@ -1198,7 +1880,9 @@ document
             }
 
 
-            /* Clipboard fallback */
+            /* ---------------------------------------------
+               Clipboard Fallback
+               --------------------------------------------- */
 
             if(
                 navigator.clipboard &&
@@ -1217,14 +1901,16 @@ document
 
                 }catch(err){
 
-                    /* Continue to final fallback */
+                    /* Continue to manual fallback */
 
                 }
 
             }
 
 
-            /* Manual fallback */
+            /* ---------------------------------------------
+               Manual Fallback
+               --------------------------------------------- */
 
             window.prompt(
                 "Copy this link:",
