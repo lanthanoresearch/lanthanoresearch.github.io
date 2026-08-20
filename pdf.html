@@ -2,7 +2,13 @@
 <html lang="en">
 <head>
 
-<link rel="icon" type="image/png" href="file_000000000c40722f92b1fe6758cb4855.png">
+<link rel="stylesheet" href="./pdfjs/web/text_layer_builder.css">
+
+<link
+  rel="icon"
+  type="image/png"
+  href="file_000000000c40722f92b1fe6758cb4855.png"
+>
 
 <meta charset="UTF-8">
 
@@ -133,6 +139,8 @@ header{
   overflow:auto;
 
   padding:30px 30px 90px;
+
+  margin:0;
 
   background:#111;
 
@@ -550,21 +558,45 @@ button:active{
 }
 
 .textLayer ::selection{
-  background:
-    rgba(0,120,255,.35);
+  background:rgba(0,120,255,.35);
 
   color:transparent;
 }
 
 .textLayer ::-moz-selection{
-  background:
-    rgba(0,120,255,.35);
+  background:rgba(0,120,255,.35);
 
   color:transparent;
 }
 
 .textLayer br::selection{
   background:transparent;
+}
+
+/* ============================================================
+   SEARCH HIGHLIGHT
+============================================================ */
+
+.search-highlight{
+  background:#ffe600 !important;
+
+  color:transparent !important;
+
+  border-radius:2px;
+
+  box-shadow:
+    0 0 0 1px rgba(180,150,0,.35);
+
+  padding:0 1px;
+
+  margin:0 -1px;
+}
+
+.search-highlight.search-current{
+  background:#ff9d00 !important;
+
+  box-shadow:
+    0 0 0 2px rgba(180,90,0,.45);
 }
 
 .textLayer .highlight{
@@ -609,50 +641,6 @@ button:active{
 
 .textLayer.selecting .endOfContent{
   top:0;
-}
-
-/* ============================================================
-   SEARCH HIGHLIGHT LAYER
-   ------------------------------------------------------------
-   This sits BELOW the selectable text layer.
-
-   The PDF text remains transparent/selectable while these
-   elements provide the visible yellow search highlighting.
-============================================================ */
-
-.searchHighlightLayer{
-  position:absolute;
-
-  inset:0;
-
-  overflow:hidden;
-
-  z-index:1;
-
-  pointer-events:none;
-}
-
-.search-highlight{
-  position:absolute;
-
-  background:
-    rgba(255,220,0,.48);
-
-  border-radius:2px;
-
-  pointer-events:none;
-
-  mix-blend-mode:multiply;
-}
-
-/* Current search result */
-
-.search-highlight.current{
-  background:
-    rgba(255,190,0,.72);
-
-  outline:
-    1px solid rgba(210,150,0,.45);
 }
 
 /* ============================================================
@@ -741,7 +729,14 @@ button:active{
 
 /* ============================================================
    READING MODE
+   ------------------------------------------------------------
+   EVERYTHING normal disappears.
+   The PDF gets the complete viewport.
 ============================================================ */
+
+body.reading-mode{
+  overflow:hidden;
+}
 
 body.reading-mode header,
 body.reading-mode #toolbar,
@@ -752,21 +747,52 @@ body.reading-mode #menu{
 }
 
 body.reading-mode #layout{
-  top:0;
+  position:fixed;
 
+  top:0 !important;
+  left:0 !important;
+  right:0 !important;
+  bottom:0 !important;
+
+  width:100%;
   height:100%;
+
+  margin:0;
+  padding:0;
 }
 
 body.reading-mode #viewer{
+  position:absolute;
+
+  top:0;
+  left:0;
+  right:0;
+  bottom:0;
+
+  width:100%;
   height:100%;
 
-  padding-top:20px;
+  margin:0;
 
-  padding-bottom:20px;
+  padding:0;
+
+  overflow:auto;
+
+  background:#111;
+
+  align-items:center;
+}
+
+body.reading-mode .page:first-child{
+  margin-top:0;
+}
+
+body.reading-mode .page{
+  margin-bottom:20px;
 }
 
 body.reading-mode #loadingOverlay{
-  inset:0;
+  inset:0 !important;
 }
 
 /* ============================================================
@@ -778,7 +804,7 @@ body.reading-mode #loadingOverlay{
 
   right:18px;
 
-  bottom:76px;
+  bottom:96px;
 
   width:46px;
   height:46px;
@@ -799,15 +825,15 @@ body.reading-mode #loadingOverlay{
   border:1px solid #444;
 
   box-shadow:
-    0 5px 18px rgba(0,0,0,.55);
+    0 4px 14px rgba(0,0,0,.5);
 
   z-index:9000;
 
-  font-size:12px;
+  font-size:10px;
 
   font-weight:bold;
 
-  letter-spacing:.2px;
+  letter-spacing:.3px;
 
   line-height:1;
 
@@ -816,6 +842,11 @@ body.reading-mode #loadingOverlay{
   -webkit-user-select:none;
 
   touch-action:manipulation;
+
+  transition:
+    background .15s ease,
+    transform .15s ease,
+    bottom .2s ease;
 }
 
 #readingModeFloat:hover{
@@ -823,15 +854,22 @@ body.reading-mode #loadingOverlay{
 }
 
 #readingModeFloat:active{
-  transform:scale(.94);
+  transform:scale(.92);
 }
 
 body.reading-mode #readingModeFloat{
-  background:#3a3a3a;
+  right:18px;
 
-  border-color:#666;
+  bottom:18px;
 
-  font-size:19px;
+  background:#292929;
+
+  border-color:#555;
+
+  font-size:18px;
+
+  width:46px;
+  height:46px;
 }
 
 /* ============================================================
@@ -917,17 +955,29 @@ body.reading-mode #readingModeFloat{
   #readingModeFloat{
     right:14px;
 
-    bottom:76px;
+    bottom:88px;
 
     width:44px;
     height:44px;
 
-    font-size:11px;
+    font-size:9px;
   }
 
   body.reading-mode #readingModeFloat{
+    right:14px;
+
     bottom:14px;
+
+    width:44px;
+    height:44px;
+
+    font-size:18px;
   }
+
+  body.reading-mode #viewer{
+    padding:0;
+  }
+
 }
 
 @keyframes spin{
@@ -996,6 +1046,8 @@ body.reading-mode #readingModeFloat{
   <button id="fitPage">
     Fit Page
   </button>
+
+  <div class="toolbarDivider"></div>
 
   <div class="pageControls">
 
@@ -1084,13 +1136,10 @@ body.reading-mode #readingModeFloat{
 
 </div>
 
-<!-- =========================================================
-     FLOATING READING MODE CONTROL
-========================================================= -->
+<!-- FLOATING READING MODE BUTTON -->
 
 <button
   id="readingModeFloat"
-  type="button"
   aria-label="Toggle Reading Mode"
   title="Reading Mode"
 >
@@ -1700,12 +1749,6 @@ function layoutPage(
   view.textLayerDiv.style.height =
     `${viewport.height}px`;
 
-  view.searchHighlightLayer.style.width =
-    `${viewport.width}px`;
-
-  view.searchHighlightLayer.style.height =
-    `${viewport.height}px`;
-
   view.linkLayerDiv.style.width =
     `${viewport.width}px`;
 
@@ -1762,8 +1805,6 @@ function resetRenderedPage(
   }catch{}
 
   view.textLayerDiv.replaceChildren();
-
-  view.searchHighlightLayer.replaceChildren();
 
   view.linkLayerDiv.replaceChildren();
 
@@ -1908,50 +1949,108 @@ async function ensureTextContent(
 }
 
 /* ============================================================
-   SEARCH HIGHLIGHT HELPERS
+   REMOVE SEARCH HIGHLIGHTS
 ============================================================ */
 
-/*
-   Find every occurrence of the search term in the rendered
-   text layer.
+function clearSearchHighlights(){
 
-   This works across multiple text spans, so a search phrase
-   does not have to exist inside one individual PDF.js span.
-*/
+  for(
+    const view
+    of pageViews
+  ){
 
-function getTextNodesForHighlight(
-  container
+    if(
+      !view ||
+      !view.textLayerDiv
+    ){
+
+      continue;
+    }
+
+    const highlights =
+      view.textLayerDiv.querySelectorAll(
+        ".search-highlight"
+      );
+
+    for(
+      const highlight
+      of highlights
+    ){
+
+      const parent =
+        highlight.parentNode;
+
+      if(!parent){
+
+        continue;
+      }
+
+      parent.replaceChild(
+        document.createTextNode(
+          highlight.textContent
+        ),
+        highlight
+      );
+
+      parent.normalize();
+    }
+  }
+}
+
+/* ============================================================
+   HIGHLIGHT TEXT
+   ------------------------------------------------------------
+   Searches the already-rendered PDF.js text layer and wraps
+   matching text in a yellow span.
+
+   This does NOT change the PDF coordinates or text-layer
+   geometry, so selection remains aligned.
+============================================================ */
+
+function highlightTextOnPage(
+  view,
+  query
 ){
 
-  const nodes = [];
+  if(
+    !view ||
+    !view.textLayerDiv ||
+    !query
+  ){
+
+    return 0;
+  }
+
+  const normalizedQuery =
+    query.trim().toLowerCase();
+
+  if(!normalizedQuery){
+
+    return 0;
+  }
 
   const walker =
     document.createTreeWalker(
-      container,
+      view.textLayerDiv,
 
       NodeFilter.SHOW_TEXT,
 
       {
         acceptNode(node){
 
-          const parent =
-            node.parentElement;
-
-          if(!parent){
-            return NodeFilter.FILTER_REJECT;
-          }
-
           if(
-            parent.closest(
-              ".endOfContent"
-            )
+            !node.nodeValue ||
+            !node.nodeValue.trim()
           ){
 
             return NodeFilter.FILTER_REJECT;
           }
 
+          const parent =
+            node.parentElement;
+
           if(
-            parent.closest(
+            parent?.closest(
               ".search-highlight"
             )
           ){
@@ -1964,275 +2063,214 @@ function getTextNodesForHighlight(
       }
     );
 
+  const textNodes = [];
+
   let node;
 
   while(
-    node =
-      walker.nextNode()
+    (node = walker.nextNode())
   ){
 
-    nodes.push(node);
+    textNodes.push(node);
   }
 
-  return nodes;
-}
-
-function applySearchHighlights(
-  view
-){
-
-  view.searchHighlightLayer.replaceChildren();
-
-  const query =
-    lastSearchQuery.trim();
-
-  if(
-    !query ||
-    !view.textLayerDiv ||
-    !view.viewport
-  ){
-
-    return;
-  }
-
-  const textNodes =
-    getTextNodesForHighlight(
-      view.textLayerDiv
-    );
-
-  if(
-    !textNodes.length
-  ){
-
-    return;
-  }
-
-  /*
-     Build a single searchable string while remembering where
-     every character came from in the DOM.
-  */
-
-  const mappings = [];
-
-  let combinedText = "";
+  let count = 0;
 
   for(
-    const node
+    const textNode
     of textNodes
   ){
 
     const text =
-      node.nodeValue || "";
+      textNode.nodeValue;
 
-    if(!text){
+    const lower =
+      text.toLowerCase();
+
+    let searchStart = 0;
+
+    const fragment =
+      document.createDocumentFragment();
+
+    let found = false;
+
+    while(true){
+
+      const index =
+        lower.indexOf(
+          normalizedQuery,
+          searchStart
+        );
+
+      if(index === -1){
+
+        break;
+      }
+
+      found = true;
+
+      if(
+        index >
+        searchStart
+      ){
+
+        fragment.appendChild(
+          document.createTextNode(
+            text.slice(
+              searchStart,
+              index
+            )
+          )
+        );
+      }
+
+      const highlight =
+        document.createElement(
+          "span"
+        );
+
+      highlight.className =
+        "search-highlight";
+
+      highlight.textContent =
+        text.slice(
+          index,
+          index +
+          normalizedQuery.length
+        );
+
+      fragment.appendChild(
+        highlight
+      );
+
+      count++;
+
+      searchStart =
+        index +
+        normalizedQuery.length;
+    }
+
+    if(!found){
+
       continue;
     }
 
-    const start =
-      combinedText.length;
+    if(
+      searchStart <
+      text.length
+    ){
 
-    combinedText += text;
+      fragment.appendChild(
+        document.createTextNode(
+          text.slice(
+            searchStart
+          )
+        )
+      );
+    }
 
-    mappings.push({
-
-      node,
-
-      start,
-
-      end:
-        combinedText.length
-
-    });
+    textNode.parentNode.replaceChild(
+      fragment,
+      textNode
+    );
   }
 
-  const lowerText =
-    combinedText.toLowerCase();
+  return count;
+}
 
-  const lowerQuery =
-    query.toLowerCase();
+/* ============================================================
+   HIGHLIGHT ALL SEARCH RESULTS
+============================================================ */
+
+function highlightAllSearchResults(){
+
+  clearSearchHighlights();
 
   if(
-    !lowerQuery ||
-    !lowerText
+    !lastSearchQuery
   ){
 
     return;
   }
 
-  let searchPosition = 0;
-
-  while(true){
-
-    const found =
-      lowerText.indexOf(
-        lowerQuery,
-        searchPosition
-      );
-
-    if(
-      found === -1
-    ){
-
-      break;
-    }
-
-    const matchStart =
-      found;
-
-    const matchEnd =
-      found +
-      lowerQuery.length;
-
-    const startMapping =
-      mappings.find(
-        mapping =>
-          matchStart >= mapping.start &&
-          matchStart < mapping.end
-      );
-
-    const endMapping =
-      mappings.find(
-        mapping =>
-          matchEnd > mapping.start &&
-          matchEnd <= mapping.end
-      );
-
-    /*
-       Normally the match will span one or more text nodes.
-    */
-
-    if(
-      startMapping &&
-      endMapping
-    ){
-
-      const range =
-        document.createRange();
-
-      try{
-
-        range.setStart(
-          startMapping.node,
-
-          matchStart -
-          startMapping.start
-        );
-
-        range.setEnd(
-          endMapping.node,
-
-          matchEnd -
-          endMapping.start
-        );
-
-        const rects =
-          Array.from(
-            range.getClientRects()
-          );
-
-        const layerRect =
-          view.searchHighlightLayer
-            .getBoundingClientRect();
-
-        for(
-          const rect
-          of rects
-        ){
-
-          if(
-            rect.width <= 0 ||
-            rect.height <= 0
-          ){
-
-            continue;
-          }
-
-          const highlight =
-            document.createElement(
-              "div"
-            );
-
-          highlight.className =
-            "search-highlight";
-
-          highlight.style.left =
-            `${rect.left - layerRect.left}px`;
-
-          highlight.style.top =
-            `${rect.top - layerRect.top}px`;
-
-          highlight.style.width =
-            `${rect.width}px`;
-
-          highlight.style.height =
-            `${rect.height}px`;
-
-          view.searchHighlightLayer.appendChild(
-            highlight
-          );
-        }
-
-      }catch(error){
-
-        console.warn(
-          "Could not create search highlight:",
-          error
-        );
-      }
-    }
-
-    searchPosition =
-      Math.max(
-        found +
-        lowerQuery.length,
-
-        searchPosition + 1
-      );
-  }
-}
-
-/*
-   Make the current result visually stronger.
-
-   The page containing the current result gets the darker yellow
-   highlight. Other matching pages remain normal yellow.
-*/
-
-function markCurrentSearchPage(){
-
   for(
-    const view
-    of pageViews
+    const resultIndex
+    of searchResults
   ){
 
-    if(
-      !view?.searchHighlightLayer
-    ){
+    const view =
+      pageViews[
+        resultIndex
+      ];
+
+    if(!view){
 
       continue;
     }
 
-    const isCurrent =
-      searchResults[
-        currentSearch
-      ] ===
-      view.pageNumber - 1;
+    highlightTextOnPage(
+      view,
+      lastSearchQuery
+    );
+  }
 
-    const highlights =
-      view.searchHighlightLayer
-        .querySelectorAll(
-          ".search-highlight"
-        );
+  highlightCurrentSearchResult();
+}
 
-    highlights.forEach(
-      highlight => {
+/* ============================================================
+   CURRENT SEARCH HIGHLIGHT
+============================================================ */
 
-        highlight.classList.toggle(
-          "current",
-          isCurrent
-        );
+function highlightCurrentSearchResult(){
 
-      }
+  /*
+     Remove the stronger current-result style.
+  */
+
+  const currentHighlights =
+    viewer.querySelectorAll(
+      ".search-highlight.search-current"
+    );
+
+  currentHighlights.forEach(
+    element =>
+      element.classList.remove(
+        "search-current"
+      )
+  );
+
+  if(
+    currentSearch < 0 ||
+    !searchResults.length
+  ){
+
+    return;
+  }
+
+  const pageNumber =
+    searchResults[
+      currentSearch
+    ];
+
+  const view =
+    pageViews[
+      pageNumber
+    ];
+
+  if(!view){
+
+    return;
+  }
+
+  const first =
+    view.textLayerDiv.querySelector(
+      ".search-highlight"
+    );
+
+  if(first){
+
+    first.classList.add(
+      "search-current"
     );
   }
 }
@@ -2335,6 +2373,16 @@ async function paintText(
     view.textLayerEnd =
       endOfContent;
 
+    if(
+      lastSearchQuery
+    ){
+
+      highlightTextOnPage(
+        view,
+        lastSearchQuery
+      );
+    }
+
     view.textLayerDiv.addEventListener(
       "pointerdown",
       () => {
@@ -2343,41 +2391,14 @@ async function paintText(
           "selecting"
         );
 
+      },
+      {
+        passive:true
       }
     );
 
     view.textLayer =
       textLayer;
-
-    /*
-       If a search is currently active, immediately draw its
-       highlights after the text layer finishes rendering.
-    */
-
-    if(
-      lastSearchQuery
-    ){
-
-      requestAnimationFrame(
-        () => {
-
-          if(
-            generation !==
-            renderGeneration
-          ){
-
-            return;
-          }
-
-          applySearchHighlights(
-            view
-          );
-
-          markCurrentSearchPage();
-
-        }
-      );
-    }
 
   }catch(error){
 
@@ -2612,19 +2633,6 @@ function createPageShell(
   canvas.className =
     "pageCanvas";
 
-  /*
-     Search highlights must be between the canvas and the
-     selectable text layer.
-  */
-
-  const searchHighlightLayer =
-    document.createElement(
-      "div"
-    );
-
-  searchHighlightLayer.className =
-    "searchHighlightLayer";
-
   const textLayerDiv =
     document.createElement(
       "div"
@@ -2643,10 +2651,6 @@ function createPageShell(
 
   pageDiv.appendChild(
     canvas
-  );
-
-  pageDiv.appendChild(
-    searchHighlightLayer
   );
 
   pageDiv.appendChild(
@@ -2670,8 +2674,6 @@ function createPageShell(
     pageDiv,
 
     canvas,
-
-    searchHighlightLayer,
 
     textLayerDiv,
 
@@ -2722,8 +2724,8 @@ async function renderPage(
   ){
 
     /*
-       The page is already rendered. Make sure an active search
-       highlight still exists.
+       The page may have been rendered before the current
+       search query existed, so refresh highlighting if needed.
     */
 
     if(
@@ -2731,16 +2733,9 @@ async function renderPage(
       view.textLayerDiv.children.length
     ){
 
-      requestAnimationFrame(
-        () => {
-
-          applySearchHighlights(
-            view
-          );
-
-          markCurrentSearchPage();
-
-        }
+      highlightTextOnPage(
+        view,
+        lastSearchQuery
       );
     }
 
@@ -3145,13 +3140,11 @@ function updateReadingModeButton(){
     readingModeFloat.textContent =
       "×";
 
-    readingModeFloat.setAttribute(
-      "aria-label",
-      "Exit Reading Mode"
-    );
+    readingModeFloat.title =
+      "Exit Reading Mode";
 
     readingModeFloat.setAttribute(
-      "title",
+      "aria-label",
       "Exit Reading Mode"
     );
 
@@ -3160,14 +3153,12 @@ function updateReadingModeButton(){
     readingModeFloat.textContent =
       "RM";
 
+    readingModeFloat.title =
+      "Reading Mode";
+
     readingModeFloat.setAttribute(
       "aria-label",
       "Enter Reading Mode"
-    );
-
-    readingModeFloat.setAttribute(
-      "title",
-      "Reading Mode"
     );
   }
 }
@@ -3187,6 +3178,10 @@ function setReadingMode(
     readingMode
   ){
 
+    /*
+       Completely remove normal viewer chrome.
+    */
+
     document.body.classList.add(
       "reading-mode"
     );
@@ -3203,34 +3198,56 @@ function setReadingMode(
     document.body.classList.remove(
       "reading-mode"
     );
+
+    /*
+       Restore the real toolbar height.
+    */
+
+    requestAnimationFrame(
+      () => {
+
+        syncViewerTop();
+
+      }
+    );
   }
+
+  /*
+     Let the browser apply the new layout first.
+  */
 
   requestAnimationFrame(
     () => {
 
-      renderGeneration++;
+      requestAnimationFrame(
+        () => {
 
-      for(
-        const view
-        of pageViews
-      ){
+          renderGeneration++;
 
-        if(!view){
+          for(
+            const view
+            of pageViews
+          ){
 
-          continue;
+            if(!view){
+
+              continue;
+            }
+
+            layoutPage(
+              view,
+              currentScale
+            );
+
+            resetRenderedPage(
+              view
+            );
+          }
+
+          renderNearbyPages();
+
         }
-
-        layoutPage(
-          view,
-          currentScale
-        );
-
-        resetRenderedPage(
-          view
-        );
-      }
-
-      renderNearbyPages();
+      );
 
     }
   );
@@ -3240,9 +3257,160 @@ readingModeFloat.addEventListener(
   "click",
   event => {
 
-    event.preventDefault();
-
     event.stopPropagation();
+
+    setReadingMode(
+      !readingMode
+    );
+  }
+);
+
+/* ============================================================
+   TAP-TO-READ
+   ------------------------------------------------------------
+   Tap a blank portion of a PDF page to enter/exit Reading Mode.
+
+   Text selection does not trigger it.
+   Links do not trigger it.
+   Dragging does not trigger it.
+============================================================ */
+
+let tapState = {
+
+  active:false,
+
+  moved:false,
+
+  startX:0,
+
+  startY:0
+
+};
+
+viewer.addEventListener(
+  "pointerdown",
+  event => {
+
+    if(
+      event.target.closest(
+        ".textLayer"
+      ) ||
+      event.target.closest(
+        ".pdf-link"
+      )
+    ){
+
+      tapState.active =
+        false;
+
+      return;
+    }
+
+    const page =
+      event.target.closest(
+        ".page"
+      );
+
+    if(!page){
+
+      tapState.active =
+        false;
+
+      return;
+    }
+
+    tapState.active =
+      true;
+
+    tapState.moved =
+      false;
+
+    tapState.startX =
+      event.clientX;
+
+    tapState.startY =
+      event.clientY;
+
+  }
+);
+
+viewer.addEventListener(
+  "pointermove",
+  event => {
+
+    if(
+      !tapState.active
+    ){
+
+      return;
+    }
+
+    const dx =
+      event.clientX -
+      tapState.startX;
+
+    const dy =
+      event.clientY -
+      tapState.startY;
+
+    if(
+      Math.hypot(
+        dx,
+        dy
+      ) > 10
+    ){
+
+      tapState.moved =
+        true;
+    }
+  }
+);
+
+viewer.addEventListener(
+  "pointerup",
+  event => {
+
+    if(
+      !tapState.active
+    ){
+
+      return;
+    }
+
+    const wasMoved =
+      tapState.moved;
+
+    tapState.active =
+      false;
+
+    if(
+      wasMoved
+    ){
+
+      return;
+    }
+
+    if(
+      event.target.closest(
+        ".textLayer"
+      ) ||
+      event.target.closest(
+        ".pdf-link"
+      )
+    ){
+
+      return;
+    }
+
+    const page =
+      event.target.closest(
+        ".page"
+      );
+
+    if(!page){
+
+      return;
+    }
 
     setReadingMode(
       !readingMode
@@ -3402,7 +3570,15 @@ try{
     firstView.pageDiv
   );
 
+  /*
+     Recalculate toolbar before painting.
+  */
+
   syncViewerTop();
+
+  /*
+     Render page 1.
+  */
 
   await renderPage(
     firstView
@@ -3412,7 +3588,7 @@ try{
     "none";
 
   /*
-     Start remaining pages in background.
+     Initialize remaining pages in the background.
   */
 
   void (async () => {
@@ -4019,29 +4195,12 @@ async function searchPDF(
   query
 ){
 
-  /*
-     Remove all old visible highlights immediately.
-  */
-
-  for(
-    const view
-    of pageViews
-  ){
-
-    if(
-      view?.searchHighlightLayer
-    ){
-
-      view.searchHighlightLayer
-        .replaceChildren();
-
-    }
-  }
-
   searchResults = [];
 
   currentSearch =
     -1;
+
+  clearSearchHighlights();
 
   query =
     query
@@ -4052,7 +4211,8 @@ async function searchPDF(
     query === ""
   ){
 
-    lastSearchQuery = "";
+    lastSearchQuery =
+      "";
 
     document.getElementById(
       "searchResults"
@@ -4067,6 +4227,9 @@ async function searchPDF(
 
   /*
      Ensure page objects exist.
+
+     This does NOT render every page. It only creates the
+     lightweight page objects needed for text extraction.
   */
 
   for(
@@ -4097,7 +4260,7 @@ async function searchPDF(
   }
 
   /*
-     Extract text.
+     Extract text and find matching pages.
   */
 
   for(
@@ -4154,8 +4317,6 @@ async function searchPDF(
     searchResults.length === 0
   ){
 
-    lastSearchQuery = "";
-
     document.getElementById(
       "searchResults"
     ).textContent =
@@ -4168,10 +4329,45 @@ async function searchPDF(
     return;
   }
 
+  /*
+     Make sure every matching page's text layer exists so
+     the yellow highlights can actually be displayed.
+  */
+
+  for(
+    const resultIndex
+    of searchResults
+  ){
+
+    const view =
+      pageViews[
+        resultIndex
+      ];
+
+    if(!view){
+
+      continue;
+    }
+
+    await renderPage(
+      view
+    );
+  }
+
+  /*
+     Now add the yellow highlights.
+  */
+
+  highlightAllSearchResults();
+
   gotoSearchResult(
     0
   );
 }
+
+/* ============================================================
+   SEARCH RESULT NAVIGATION
+============================================================ */
 
 function gotoSearchResult(
   index
@@ -4209,6 +4405,12 @@ function gotoSearchResult(
   ).textContent =
     `${currentSearch + 1} of ${searchResults.length}`;
 
+  /*
+     Reapply the stronger current-result color.
+  */
+
+  highlightCurrentSearchResult();
+
   const view =
     pageViews[
       searchResults[
@@ -4221,30 +4423,9 @@ function gotoSearchResult(
     return;
   }
 
-  void (async () => {
-
-    await scrollToView(
-      view
-    );
-
-    /*
-       The target page has now been rendered, so create its
-       visible yellow highlights.
-    */
-
-    if(
-      view.textLayerDiv.children.length
-    ){
-
-      applySearchHighlights(
-        view
-      );
-
-      markCurrentSearchPage();
-
-    }
-
-  })();
+  void scrollToView(
+    view
+  );
 }
 
 async function searchOrAdvance(
@@ -4412,6 +4593,10 @@ window.addEventListener(
             return;
           }
 
+          /*
+             Phone remains Fit Width.
+          */
+
           if(
             window.innerWidth <=
             768
@@ -4469,7 +4654,7 @@ if(
 }
 
 /* ============================================================
-   INITIALIZATION
+   INITIALIZE
 ============================================================ */
 
 updateReadingModeButton();
