@@ -26,6 +26,12 @@
   --text:#eee;
   --muted:#aaa;
   --accent:#3a3a3a;
+
+  /*
+     This is updated by JavaScript to match the actual height
+     of the header + wrapped toolbar.
+  */
+  --viewer-top:106px;
 }
 
 *{
@@ -57,6 +63,7 @@ header{
   left:0;
   right:0;
 
+  min-height:58px;
   height:58px;
 
   display:flex;
@@ -101,13 +108,6 @@ header{
   z-index:5500;
 }
 
-.toolbarDivider{
-  width:1px;
-  height:28px;
-  background:#3a3a3a;
-  margin:0 2px;
-}
-
 /* ============================================================
    MAIN LAYOUT
 ============================================================ */
@@ -115,7 +115,8 @@ header{
 #layout{
   position:absolute;
 
-  top:106px;
+  top:var(--viewer-top);
+
   left:0;
   right:0;
   bottom:0;
@@ -149,7 +150,7 @@ header{
 }
 
 /* ============================================================
-   PAGE
+   PDF PAGE
 ============================================================ */
 
 .page{
@@ -159,8 +160,7 @@ header{
 
   background:#fff;
 
-  box-shadow:
-    0 0 14px rgba(0,0,0,.4);
+  box-shadow:0 0 14px rgba(0,0,0,.4);
 
   flex-shrink:0;
 
@@ -243,6 +243,15 @@ button:active{
   white-space:nowrap;
 
   flex-shrink:0;
+}
+
+.toolbarDivider{
+  width:1px;
+  height:28px;
+
+  background:#3a3a3a;
+
+  margin:0 2px;
 }
 
 /* ============================================================
@@ -405,8 +414,7 @@ button:active{
 
   border-radius:10px;
 
-  box-shadow:
-    0 8px 20px rgba(0,0,0,.45);
+  box-shadow:0 8px 20px rgba(0,0,0,.45);
 
   z-index:6500;
 }
@@ -428,10 +436,7 @@ button:active{
 }
 
 /* ============================================================
-   PDF.JS 6.0.227 TEXT LAYER
-   ------------------------------------------------------------
-   These rules intentionally mirror the 6.0.227 text-layer
-   geometry rather than manually inventing a different layout.
+   PDF.JS TEXT LAYER
 ============================================================ */
 
 .textLayer{
@@ -463,10 +468,6 @@ button:active{
 
   z-index:2;
 
-  /*
-     Allow actual text selection.
-  */
-
   pointer-events:auto;
 
   user-select:text;
@@ -476,10 +477,6 @@ button:active{
   -moz-user-select:text;
 
   -webkit-touch-callout:default;
-
-  /*
-     PDF.js uses this variable.
-  */
 
   --min-font-size:1;
 
@@ -494,10 +491,6 @@ button:active{
       1 /
       var(--min-font-size)
     );
-
-  /*
-     Fallbacks.
-  */
 
   --scale-factor:1;
 
@@ -527,6 +520,7 @@ button:active{
 
 .textLayer > :not(.markedContent),
 .textLayer .markedContent span:not(.markedContent){
+
   z-index:1;
 
   --font-height:0;
@@ -559,10 +553,6 @@ button:active{
   cursor:default;
 }
 
-/*
-   Native text selection.
-*/
-
 .textLayer ::selection{
   background:
     rgba(0,120,255,.35);
@@ -580,10 +570,6 @@ button:active{
 .textLayer br::selection{
   background:transparent;
 }
-
-/*
-   PDF.js-style highlights.
-*/
 
 .textLayer .highlight{
   --highlight-bg-color:
@@ -608,10 +594,6 @@ button:active{
 
   scroll-margin-top:50px;
 }
-
-/*
-   End-of-content selection helper.
-*/
 
 .textLayer .endOfContent{
   display:block;
@@ -681,14 +663,13 @@ button:active{
 #loadingOverlay{
   position:fixed;
 
-  inset:106px 0 0 0;
+  inset:var(--viewer-top) 0 0 0;
 
   display:flex;
 
   flex-direction:column;
 
   justify-content:center;
-
   align-items:center;
 
   background:#111;
@@ -742,24 +723,19 @@ body.reading-mode #viewer{
   padding-top:20px;
 
   padding-bottom:20px;
-
-  align-items:center;
 }
 
-/*
-   Dedicated exit control.
-
-   Reading mode therefore never leaves the user without
-   an obvious way out.
-*/
+body.reading-mode #loadingOverlay{
+  inset:0;
+}
 
 #readingModeExit{
   display:none;
 
   position:fixed;
 
-  top:14px;
-  right:14px;
+  top:12px;
+  right:12px;
 
   z-index:10000;
 
@@ -771,7 +747,7 @@ body.reading-mode #viewer{
 
   border-radius:10px;
 
-  padding:10px 14px;
+  padding:9px 13px;
 
   box-shadow:
     0 5px 18px rgba(0,0,0,.45);
@@ -786,10 +762,6 @@ body.reading-mode #readingModeExit{
 ============================================================ */
 
 @media (max-width:768px){
-
-  #toolbar{
-    gap:8px;
-  }
 
   #searchPopup{
     left:10px;
@@ -1083,9 +1055,22 @@ const returnPage =
    ELEMENTS
 ============================================================ */
 
+const header =
+  document.querySelector("header");
+
+const toolbar =
+  document.getElementById(
+    "toolbar"
+  );
+
 const viewer =
   document.getElementById(
     "viewer"
+  );
+
+const layout =
+  document.getElementById(
+    "layout"
   );
 
 const loadingOverlay =
@@ -1139,10 +1124,82 @@ const readingModeExit =
   );
 
 /* ============================================================
+   CHROME / VIEWER HEIGHT
+   ------------------------------------------------------------
+   This fixes the exact problem shown in the screenshot.
+
+   On mobile the toolbar can be 2–4 rows high. The previous
+   version still assumed it was only 48px high.
+============================================================ */
+
+function syncViewerTop(){
+
+  if(
+    document.body.classList.contains(
+      "reading-mode"
+    )
+  ){
+
+    return;
+  }
+
+  const headerHeight =
+    header.getBoundingClientRect()
+      .height;
+
+  const toolbarHeight =
+    toolbar.getBoundingClientRect()
+      .height;
+
+  const total =
+    Math.ceil(
+      headerHeight +
+      toolbarHeight
+    );
+
+  document.documentElement.style.setProperty(
+    "--viewer-top",
+    `${total}px`
+  );
+
+  /*
+     Do not allow the current page to start behind the toolbar.
+  */
+
+  layout.style.top =
+    `${total}px`;
+
+  loadingOverlay.style.top =
+    `${total}px`;
+}
+
+/*
+   Run after the document has its real dimensions.
+*/
+
+function scheduleChromeSync(){
+
+  requestAnimationFrame(
+    () => {
+
+      requestAnimationFrame(
+        () => {
+
+          syncViewerTop();
+
+        }
+      );
+
+    }
+  );
+}
+
+/* ============================================================
    PERFORMANCE / SAFETY
 ============================================================ */
 
-const MAX_ZOOM = 3;
+const MAX_ZOOM =
+  3;
 
 const MAX_CANVAS_PIXELS =
   8000000;
@@ -1369,9 +1426,7 @@ function getViewerInnerHeight(){
   );
 }
 
-function getFitWidthScale(
-  page
-){
+function getFitWidthScale(page){
 
   const viewport =
     page.getViewport({
@@ -1384,9 +1439,7 @@ function getFitWidthScale(
   );
 }
 
-function getFitPageScale(
-  page
-){
+function getFitPageScale(page){
 
   const viewport =
     page.getViewport({
@@ -1476,7 +1529,6 @@ backButton.addEventListener(
       returnPage ||
       "index.html"
     );
-
   }
 );
 
@@ -1563,13 +1615,6 @@ function layoutPage(
   scale
 ){
 
-  /*
-     One viewport object is used for:
-       - canvas
-       - text layer
-       - link layer
-  */
-
   const viewport =
     view.page.getViewport({
       scale
@@ -1604,11 +1649,6 @@ function layoutPage(
 
   const userUnit =
     view.page.userUnit || 1;
-
-  /*
-     PDF.js 6.0.227 uses total scale factor in its
-     text-layer CSS.
-  */
 
   view.textLayerDiv.style.setProperty(
     "--scale-factor",
@@ -1656,20 +1696,19 @@ function resetRenderedPage(
 
   }catch{}
 
-  view.textLayerDiv.innerHTML =
-    "";
+  view.textLayerDiv.replaceChildren();
 
-  view.linkLayerDiv.innerHTML =
-    "";
+  view.linkLayerDiv.replaceChildren();
 
-  view.textLayer = null;
+  view.textLayer =
+    null;
 
   view.textLayerEnd =
     null;
 }
 
 /* ============================================================
-   CANVAS PAINT
+   CANVAS
 ============================================================ */
 
 async function paintCanvas(
@@ -1833,16 +1872,7 @@ async function paintText(
       return;
     }
 
-    /*
-       Throw away the old layer contents.
-    */
-
     view.textLayerDiv.replaceChildren();
-
-    /*
-       Make absolutely certain PDF.js has the scale
-       variable it expects.
-    */
 
     const userUnit =
       view.page.userUnit || 1;
@@ -1869,15 +1899,6 @@ async function paintText(
       )
     );
 
-    /*
-       PDF.js itself owns:
-       - span position
-       - font size
-       - rotation
-       - scaleX
-       - selection geometry
-    */
-
     const textLayer =
       new TextLayer({
 
@@ -1902,11 +1923,6 @@ async function paintText(
       return;
     }
 
-    /*
-       PDF.js's native end-of-content helper improves selection
-       behavior in Chrome/Android.
-    */
-
     const endOfContent =
       document.createElement(
         "div"
@@ -1921,25 +1937,6 @@ async function paintText(
 
     view.textLayerEnd =
       endOfContent;
-
-    /*
-       Activate selection mode while dragging inside the
-       text layer.
-    */
-
-    view.textLayerDiv.addEventListener(
-      "mousedown",
-      () => {
-
-        view.textLayerDiv.classList.add(
-          "selecting"
-        );
-
-      },
-      {
-        once:false
-      }
-    );
 
     view.textLayerDiv.addEventListener(
       "pointerdown",
@@ -1961,7 +1958,6 @@ async function paintText(
       `Text layer failed on page ${view.pageNumber}:`,
       error
     );
-
   }
 }
 
@@ -2012,7 +2008,6 @@ async function paintLinks(
       `Link layer failed on page ${view.pageNumber}:`,
       error
     );
-
   }
 }
 
@@ -2023,8 +2018,7 @@ function renderLinkLayer(
   const layer =
     view.linkLayerDiv;
 
-  layer.innerHTML =
-    "";
+  layer.replaceChildren();
 
   if(
     !Array.isArray(
@@ -2149,7 +2143,6 @@ function renderLinkLayer(
           await openInternalDestination(
             annotation.dest
           );
-
         }
       );
 
@@ -2227,20 +2220,25 @@ function createPageShell(
   const view = {
 
     pageNumber,
+
     page,
 
     pageDiv,
+
     canvas,
 
     textLayerDiv,
+
     linkLayerDiv,
 
     viewport:null,
 
     textContent:null,
+
     annotations:null,
 
     textLayer:null,
+
     textLayerEnd:null,
 
     renderedScale:null,
@@ -2320,12 +2318,6 @@ async function renderPage(
 
         view.renderedScale =
           currentScale;
-
-        /*
-           Canvas is now visible.
-
-           Text and links follow.
-        */
 
         await Promise.all([
 
@@ -2410,7 +2402,7 @@ const pageObserver =
   );
 
 /* ============================================================
-   RENDER NEARBY
+   RENDER NEARBY PAGES
 ============================================================ */
 
 function renderNearbyPages(){
@@ -2672,7 +2664,8 @@ async function openInternalDestination(
    READING MODE
 ============================================================ */
 
-let readingMode = false;
+let readingMode =
+  false;
 
 function setReadingMode(
   enabled
@@ -2683,14 +2676,23 @@ function setReadingMode(
       enabled
     );
 
-  document.body.classList.toggle(
-    "reading-mode",
-    readingMode
-  );
-
   if(
     readingMode
   ){
+
+    /*
+       Save the current position.
+    */
+
+    readingModeButton.textContent =
+      "Exit Reading Mode";
+
+    menuReadingModeButton.textContent =
+      "Exit Reading Mode";
+
+    document.body.classList.add(
+      "reading-mode"
+    );
 
     menu.style.display =
       "none";
@@ -2699,12 +2701,6 @@ function setReadingMode(
       "hidden"
     );
 
-    readingModeButton.textContent =
-      "Exit Reading Mode";
-
-    menuReadingModeButton.textContent =
-      "Exit Reading Mode";
-
   }else{
 
     readingModeButton.textContent =
@@ -2712,11 +2708,16 @@ function setReadingMode(
 
     menuReadingModeButton.textContent =
       "Reading Mode";
+
+    document.body.classList.remove(
+      "reading-mode"
+    );
+
   }
 
   /*
-     Give the browser a layout frame and then make nearby
-     pages use the new viewport dimensions.
+     Give the browser time to apply the new layout before
+     recalculating visible page geometry.
   */
 
   requestAnimationFrame(
@@ -2745,6 +2746,7 @@ function setReadingMode(
       }
 
       renderNearbyPages();
+
     }
   );
 }
@@ -2789,6 +2791,171 @@ readingModeExit.addEventListener(
 );
 
 /* ============================================================
+   TAP-TO-READ
+   ------------------------------------------------------------
+   Tap/click a blank portion of the PDF page to toggle reading
+   mode.
+
+   Selecting text does NOT trigger it.
+   Clicking links does NOT trigger it.
+   Swiping/dragging does NOT trigger it.
+============================================================ */
+
+let tapState = {
+
+  active:false,
+
+  moved:false,
+
+  startX:0,
+
+  startY:0
+
+};
+
+viewer.addEventListener(
+  "pointerdown",
+  event => {
+
+    /*
+       Text selection or links should never become a reading
+       mode gesture.
+    */
+
+    if(
+      event.target.closest(
+        ".textLayer"
+      ) ||
+      event.target.closest(
+        ".pdf-link"
+      )
+    ){
+
+      tapState.active =
+        false;
+
+      return;
+    }
+
+    const page =
+      event.target.closest(
+        ".page"
+      );
+
+    if(!page){
+
+      tapState.active =
+        false;
+
+      return;
+    }
+
+    tapState.active =
+      true;
+
+    tapState.moved =
+      false;
+
+    tapState.startX =
+      event.clientX;
+
+    tapState.startY =
+      event.clientY;
+
+  }
+);
+
+viewer.addEventListener(
+  "pointermove",
+  event => {
+
+    if(
+      !tapState.active
+    ){
+
+      return;
+    }
+
+    const dx =
+      event.clientX -
+      tapState.startX;
+
+    const dy =
+      event.clientY -
+      tapState.startY;
+
+    if(
+      Math.hypot(
+        dx,
+        dy
+      ) > 10
+    ){
+
+      tapState.moved =
+        true;
+    }
+  }
+);
+
+viewer.addEventListener(
+  "pointerup",
+  event => {
+
+    if(
+      !tapState.active
+    ){
+
+      return;
+    }
+
+    const wasMoved =
+      tapState.moved;
+
+    tapState.active =
+      false;
+
+    if(
+      wasMoved
+    ){
+
+      return;
+    }
+
+    /*
+       Never toggle when the pointerup occurred on selectable
+       text or a link.
+    */
+
+    if(
+      event.target.closest(
+        ".textLayer"
+      ) ||
+      event.target.closest(
+        ".pdf-link"
+      )
+    ){
+
+      return;
+    }
+
+    const page =
+      event.target.closest(
+        ".page"
+      );
+
+    if(!page){
+
+      return;
+    }
+
+    setReadingMode(
+      !readingMode
+    );
+
+  }
+);
+
+/* ============================================================
    RESCALE
 ============================================================ */
 
@@ -2804,7 +2971,8 @@ async function rescaleAndRender(){
     currentScale <= 0
   ){
 
-    currentScale = 1;
+    currentScale =
+      1;
   }
 
   zoomBox.value =
@@ -2868,9 +3036,6 @@ async function rescaleAndRender(){
 
 /* ============================================================
    LOAD PDF
-   ------------------------------------------------------------
-   PAGE 1 IS SHOWN FIRST.
-   OTHER PAGES LOAD WITHOUT BLOCKING THE VIEWER.
 ============================================================ */
 
 try{
@@ -2881,6 +3046,12 @@ try{
       "No PDF file was supplied."
     );
   }
+
+  /*
+     Set the chrome position before PDF layout starts.
+  */
+
+  syncViewerTop();
 
   const loadingTask =
     getDocument({
@@ -2902,7 +3073,7 @@ try{
     `of ${pdfDoc.numPages}`;
 
   /*
-     Load page 1.
+     PAGE 1 FIRST
   */
 
   const firstPage =
@@ -2940,8 +3111,11 @@ try{
   );
 
   /*
-     Render page 1 and THEN hide the loading screen.
+     Make sure the viewer is below the complete toolbar before
+     painting page 1.
   */
+
+  syncViewerTop();
 
   await renderPage(
     firstView
@@ -2951,9 +3125,7 @@ try{
     "none";
 
   /*
-     ----------------------------------------------------------
-     BACKGROUND PAGE INITIALIZATION
-     ----------------------------------------------------------
+     Start remaining pages in background.
   */
 
   void (async () => {
@@ -3008,11 +3180,6 @@ try{
           view.pageDiv
         );
 
-        /*
-           Render only if it is near the currently visible
-           area.
-        */
-
         const viewerRect =
           viewer.getBoundingClientRect();
 
@@ -3021,17 +3188,13 @@ try{
 
         if(
           pageRect.top <=
-          viewerRect.bottom + 1400
+            viewerRect.bottom + 1400
         ){
 
           void renderPage(
             view
           );
         }
-
-        /*
-           Yield to the browser.
-        */
 
         await new Promise(
           resolve =>
@@ -3047,8 +3210,8 @@ try{
           `Could not initialize page ${pageNumber}:`,
           error
         );
-
       }
+
     }
 
   })();
@@ -3104,7 +3267,6 @@ menuButton.addEventListener(
         ? "none"
 
         : "block";
-
   }
 );
 
@@ -3120,7 +3282,6 @@ document.addEventListener(
 
     menu.style.display =
       "none";
-
   }
 );
 
@@ -3143,7 +3304,8 @@ document.getElementById(
       file;
 
     link.download =
-      file.split("/").pop();
+      file.split("/")
+        .pop();
 
     document.body.appendChild(
       link
@@ -3155,7 +3317,6 @@ document.getElementById(
 
     menu.style.display =
       "none";
-
   }
 );
 
@@ -3400,11 +3561,10 @@ zoomBox.addEventListener(
 
     let value =
       parseFloat(
-        zoomBox.value
-          .replace(
-            "%",
-            ""
-          )
+        zoomBox.value.replace(
+          "%",
+          ""
+        )
       );
 
     if(
@@ -3494,12 +3654,11 @@ pageInput.addEventListener(
     await scrollToView(
       view
     );
-
   }
 );
 
 /* ============================================================
-   CURRENT PAGE TRACKING
+   CURRENT PAGE
 ============================================================ */
 
 viewer.addEventListener(
@@ -3562,7 +3721,6 @@ viewer.addEventListener(
       );
 
     renderNearbyPages();
-
   }
 );
 
@@ -3600,7 +3758,7 @@ async function searchPDF(
     query;
 
   /*
-     Make sure all page objects exist before searching.
+     Ensure page objects exist.
   */
 
   for(
@@ -3615,10 +3773,6 @@ async function searchPDF(
     await ensurePageView(
       pageNumber
     );
-
-    /*
-       Yield periodically so the phone stays responsive.
-    */
 
     if(
       pageNumber % 3 === 0
@@ -3635,7 +3789,7 @@ async function searchPDF(
   }
 
   /*
-     Read text from pages.
+     Extract text.
   */
 
   for(
@@ -3864,127 +4018,38 @@ document.addEventListener(
 );
 
 /* ============================================================
-   READING MODE
+   TEXT SELECTION CLEANUP
 ============================================================ */
 
 document.addEventListener(
   "selectionchange",
   () => {
 
-    /*
-       Remove selecting state after selection changes.
-
-       The text remains selectable normally.
-    */
+    const selection =
+      document.getSelection();
 
     if(
-      !document.getSelection()
-        ?.toString()
-        .length
+      selection &&
+      selection.toString().length
     ){
 
-      for(
-        const view
-        of pageViews
+      return;
+    }
+
+    for(
+      const view
+      of pageViews
+    ){
+
+      if(
+        view?.textLayerDiv
       ){
 
-        view?.textLayerDiv.classList.remove(
+        view.textLayerDiv.classList.remove(
           "selecting"
         );
       }
     }
-  }
-);
-
-/*
-   Preserve the older click-to-toggle behavior for blank page
-   areas, but NEVER activate it when the user interacts with
-   actual selectable text or links.
-*/
-
-let suppressReadingModeClick =
-  false;
-
-viewer.addEventListener(
-  "pointerdown",
-  event => {
-
-    if(
-      event.target.closest(
-        ".textLayer"
-      )
-    ){
-
-      suppressReadingModeClick =
-        true;
-
-      return;
-    }
-
-    if(
-      event.target.closest(
-        ".pdf-link"
-      )
-    ){
-
-      suppressReadingModeClick =
-        true;
-
-      return;
-    }
-  }
-);
-
-viewer.addEventListener(
-  "click",
-  event => {
-
-    if(
-      event.target.closest(
-        ".textLayer"
-      )
-    ){
-
-      return;
-    }
-
-    if(
-      event.target.closest(
-        ".pdf-link"
-      )
-    ){
-
-      return;
-    }
-
-    if(
-      suppressReadingModeClick
-    ){
-
-      suppressReadingModeClick =
-        false;
-
-      return;
-    }
-
-    const page =
-      event.target.closest(
-        ".page"
-      );
-
-    if(!page){
-
-      return;
-    }
-
-    /*
-       Only blank/canvas portions of the page toggle.
-    */
-
-    setReadingMode(
-      !readingMode
-    );
-
   }
 );
 
@@ -4007,6 +4072,8 @@ window.addEventListener(
       setTimeout(
         async () => {
 
+          syncViewerTop();
+
           if(
             !pageViews.length
           ){
@@ -4015,7 +4082,7 @@ window.addEventListener(
           }
 
           /*
-             Mobile uses Fit Width.
+             Phone automatically remains Fit Width.
           */
 
           if(
@@ -4037,7 +4104,6 @@ window.addEventListener(
               getFitWidthScale(
                 firstView.page
               );
-
           }
 
           await rescaleAndRender();
@@ -4048,6 +4114,38 @@ window.addEventListener(
       );
   }
 );
+
+/* ============================================================
+   VISUAL VIEWPORT CHANGES
+============================================================ */
+
+if(
+  "ResizeObserver" in window
+){
+
+  const chromeObserver =
+    new ResizeObserver(
+      () => {
+
+        syncViewerTop();
+
+      }
+    );
+
+  chromeObserver.observe(
+    header
+  );
+
+  chromeObserver.observe(
+    toolbar
+  );
+}
+
+/*
+   Initial toolbar measurement.
+*/
+
+scheduleChromeSync();
 
 /* ============================================================
    CLEANUP
@@ -4096,7 +4194,6 @@ window.addEventListener(
       }
 
     }catch{}
-
   }
 );
 
