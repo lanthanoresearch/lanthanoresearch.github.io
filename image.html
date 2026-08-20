@@ -2,563 +2,721 @@
 <html lang="en">
 <head>
 
-    <link
-        rel="icon"
-        type="image/png"
-        href="file_000000000c40722f92b1fe6758cb4855.png"
-    >
+<link
+    rel="icon"
+    type="image/png"
+    href="file_000000000c40722f92b1fe6758cb4855.png"
+>
 
-    <meta charset="utf-8">
+<meta charset="UTF-8">
 
-    <meta
-        name="viewport"
-        content="width=device-width,initial-scale=1"
-    >
+<meta
+    name="viewport"
+    content="width=device-width,initial-scale=1.0"
+>
 
-    <title>Advanced Image Viewer</title>
+<title>Advanced Image Viewer</title>
 
-    <style>
+<style>
 
-        *{
-            box-sizing:border-box;
-        }
+/* ============================================================
+   GLOBAL
+============================================================ */
 
-        html,
-        body{
-            margin:0;
-            width:100%;
-            height:100%;
-            background:#111;
-            color:#eee;
-            font-family:Arial,sans-serif;
-            overflow:hidden;
-        }
+:root{
 
-        body{
-            display:flex;
-            flex-direction:column;
-        }
+    --bg:#111;
 
+    --panel:#1b1b1b;
 
-        /* =====================================================
-           HEADER
-           ===================================================== */
+    --panel2:#242424;
 
-        header{
-            background:#1b1b1b;
-            border-bottom:1px solid #333;
-            padding:8px;
-            flex-shrink:0;
-            z-index:20;
-        }
+    --text:#eee;
 
-        .top{
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-            gap:8px;
-        }
+    --muted:#aaa;
 
+}
 
-        /* =====================================================
-           HEADER BUTTONS
-           ===================================================== */
+*{
+    box-sizing:border-box;
+}
 
-        .headerButton{
+html,
+body{
 
-            width:42px;
-            height:38px;
+    margin:0;
 
-            padding:0;
+    width:100%;
+    height:100%;
 
-            display:flex;
+    background:var(--bg);
 
-            align-items:center;
-            justify-content:center;
+    color:var(--text);
 
-            background:#333;
+    font-family:Arial,sans-serif;
 
-            color:#fff;
+    overflow:hidden;
 
-            border:1px solid #3d3d3d;
+}
 
-            border-radius:7px;
+body{
 
-            text-decoration:none;
+    display:flex;
 
-            cursor:pointer;
+    flex-direction:column;
 
-            font-size:20px;
+}
 
-            line-height:1;
 
-            transition:
-                background .15s ease,
-                border-color .15s ease,
-                transform .05s ease;
+/* ============================================================
+   HEADER
+   Modeled after PDF header
+============================================================ */
 
-        }
+header{
 
-        .headerButton:hover{
-            background:#444;
-            border-color:#4a4a4a;
-        }
+    min-height:58px;
 
-        .headerButton:active{
-            transform:scale(.97);
-        }
+    height:58px;
 
+    display:flex;
 
-        /* =====================================================
-           STANDARD BUTTONS
-           ===================================================== */
+    align-items:center;
 
-        .controls{
+    justify-content:space-between;
 
-            display:flex;
+    padding:0 14px;
 
-            gap:6px;
+    background:#181818;
 
-            flex-wrap:wrap;
+    border-bottom:1px solid #2d2d2d;
 
-            align-items:center;
+    flex-shrink:0;
 
-        }
+    z-index:6000;
 
-        .btn{
+}
 
-            appearance:none;
-            -webkit-appearance:none;
+.top{
 
-            background:#333;
+    width:100%;
 
-            color:#fff;
+    display:flex;
 
-            border:1px solid #3d3d3d;
+    align-items:center;
 
-            border-radius:7px;
+    justify-content:space-between;
 
-            padding:9px 12px;
+    gap:8px;
 
-            text-decoration:none;
+}
 
-            cursor:pointer;
 
-            font-family:inherit;
+/* ============================================================
+   HEADER BUTTONS
+============================================================ */
 
-            font-size:14px;
+.headerButton{
 
-            line-height:normal;
+    width:42px;
 
-            transition:
-                background .15s ease,
-                border-color .15s ease,
-                transform .05s ease;
+    height:38px;
 
-        }
+    padding:0;
 
-        .btn:hover{
+    display:inline-flex;
 
-            background:#444;
+    align-items:center;
 
-            border-color:#4a4a4a;
+    justify-content:center;
 
-        }
+    background:#333;
 
-        .btn:active{
+    color:#fff;
 
-            transform:scale(.97);
+    border:none;
 
-        }
+    border-radius:7px;
 
+    text-decoration:none;
 
-        /* =====================================================
-           PDF BUTTON
-           ===================================================== */
+    cursor:pointer;
 
-        #pdfButton{
-            display:none;
-        }
+    font-family:inherit;
 
+    font-size:20px;
 
-        /* =====================================================
-           MENU
-           ===================================================== */
+    line-height:1;
 
-        #menu{
+    white-space:nowrap;
 
-            position:absolute;
+}
 
-            right:10px;
+.headerButton:hover{
 
-            top:58px;
+    background:#353535;
 
-            min-width:220px;
+}
 
-            padding:8px;
+.headerButton:active{
 
-            background:#222;
+    background:#414141;
 
-            border:1px solid #3a3a3a;
+}
 
-            border-radius:10px;
 
-            box-shadow:
-                0 12px 35px rgba(0,0,0,.45);
+/* ============================================================
+   HEADER CONTROLS
+============================================================ */
 
-            display:none;
+.controls{
 
-            z-index:1000;
+    display:flex;
 
-        }
+    align-items:center;
 
-        #menu button{
+    gap:6px;
 
-            appearance:none;
+    flex-wrap:wrap;
 
-            -webkit-appearance:none;
+}
 
-            width:100%;
 
-            margin:3px 0;
+/* ============================================================
+   STANDARD BUTTON
+   Modeled after PDF .btn
+============================================================ */
 
-            padding:9px 12px;
+.btn{
 
-            text-align:left;
+    background:#333;
 
-            background:#333;
+    color:#fff;
 
-            color:#fff;
+    border:none;
 
-            border:1px solid transparent;
+    border-radius:7px;
 
-            border-radius:7px;
+    padding:9px 12px;
 
-            cursor:pointer;
+    text-decoration:none;
 
-            font-family:inherit;
+    cursor:pointer;
 
-            font-size:14px;
+    display:inline-flex;
 
-            transition:
-                background .15s ease,
-                border-color .15s ease;
+    align-items:center;
 
-        }
+    justify-content:center;
 
-        #menu button:hover{
+    white-space:nowrap;
 
-            background:#444;
+    font-family:inherit;
 
-            border-color:#4a4a4a;
+    font-size:14px;
 
-        }
+    line-height:normal;
 
+}
 
-        /* =====================================================
-           VIEWER
-           ===================================================== */
+.btn:hover{
 
-        #viewer{
+    background:#353535;
 
-            flex:1;
+}
 
-            position:relative;
+.btn:active{
 
-            overflow:hidden;
+    background:#414141;
 
-            min-height:0;
+}
 
-            width:100%;
 
-            touch-action:none;
+/* ============================================================
+   PDF BUTTON
+============================================================ */
 
-            background:#111;
+#pdfButton{
 
-        }
+    display:none;
 
-        #img{
+}
 
-            position:absolute;
 
-            left:50%;
+/* ============================================================
+   VIEWER
+============================================================ */
 
-            top:50%;
+#viewer{
 
-            transform-origin:center center;
+    flex:1;
 
-            max-width:none;
+    position:relative;
 
-            user-select:none;
+    width:100%;
 
-            -webkit-user-select:none;
+    min-height:0;
 
-            -webkit-user-drag:none;
+    overflow:hidden;
 
-        }
+    background:#111;
 
+    touch-action:none;
 
-        /* =====================================================
-           FLOATING READING MODE BUTTON
-           ===================================================== */
+}
 
-        .readingModeButton{
+#img{
 
-            position:absolute;
+    position:absolute;
 
-            right:14px;
+    left:50%;
 
-            bottom:14px;
+    top:50%;
 
-            z-index:50;
+    transform-origin:center center;
 
-            width:42px;
+    max-width:none;
 
-            height:42px;
+    user-select:none;
 
-            padding:0;
+    -webkit-user-select:none;
 
-            display:flex;
+    -webkit-user-drag:none;
 
-            align-items:center;
+}
 
-            justify-content:center;
 
-            background:#333;
+/* ============================================================
+   TITLE BAR
+   Modeled after PDF #titleBar
+============================================================ */
 
-            color:#fff;
+.title{
 
-            border:1px solid #3d3d3d;
+    flex-shrink:0;
 
-            border-radius:7px;
+    width:100%;
 
-            cursor:pointer;
+    background:rgba(24,24,24,.92);
 
-            font-family:Arial,sans-serif;
+    padding:12px 18px;
 
-            font-size:20px;
+    text-align:center;
 
-            line-height:1;
+    border-top:1px solid #333;
 
-            box-shadow:
-                0 4px 14px rgba(0,0,0,.35);
+    backdrop-filter:blur(6px);
 
-            transition:
-                background .15s ease,
-                border-color .15s ease,
-                transform .05s ease;
+    -webkit-backdrop-filter:blur(6px);
 
-        }
+    z-index:3000;
 
-        .readingModeButton:hover{
+}
 
-            background:#444;
+#title{
 
-            border-color:#4a4a4a;
+    display:flex;
 
-        }
+    justify-content:center;
 
-        .readingModeButton:active{
+    align-items:center;
 
-            transform:scale(.96);
+    width:100%;
 
-        }
+    text-align:center;
 
+    font-size:1.2rem;
 
-        /* =====================================================
-           TITLE
-           ===================================================== */
+    font-weight:bold;
 
-        .title{
+    overflow:hidden;
 
-            flex-shrink:0;
+    white-space:nowrap;
 
-            padding:12px 18px;
+    text-overflow:ellipsis;
 
-            text-align:center;
+}
 
-            font-weight:bold;
 
-            font-size:1.2rem;
+/* ============================================================
+   ZOOM BAR
+   Visually modeled after PDF toolbar
+   Existing control positions preserved
+============================================================ */
 
-            line-height:1.2;
+#zoomBar{
 
-            white-space:nowrap;
+    flex-shrink:0;
 
-            overflow:hidden;
+    min-height:46px;
 
-            text-overflow:ellipsis;
+    display:flex;
 
-            background:rgba(24,24,24,.94);
+    align-items:center;
 
-            border-top:1px solid #333;
+    justify-content:center;
 
-            backdrop-filter:blur(6px);
+    gap:6px;
 
-            -webkit-backdrop-filter:blur(6px);
+    padding:6px 8px;
 
-        }
+    background:#1b1b1b;
 
+    border-top:1px solid #2d2d2d;
 
-        /* =====================================================
-           ZOOM BAR
-           ===================================================== */
+    flex-wrap:wrap;
 
-        #zoomBar{
+    z-index:5500;
 
-            flex-shrink:0;
+}
 
-            display:flex;
 
-            justify-content:center;
+/* ============================================================
+   IMAGE ZOOM DISPLAY
+============================================================ */
 
-            align-items:center;
+#zoom{
 
-            gap:8px;
+    width:58px;
 
-            padding:8px;
+    height:27px;
 
-            background:#181818;
+    padding:2px 4px;
 
-            border-top:1px solid #262626;
+    display:flex;
 
-        }
+    align-items:center;
 
-        #zoom{
+    justify-content:center;
 
-            display:flex;
+    text-align:center;
 
-            align-items:center;
+    background:#1d1d1d;
 
-            justify-content:center;
+    border:0;
 
-            position:relative;
+    border-radius:4px;
 
-            top:2px;
+    color:#fff;
 
-            min-width:60px;
+    font-size:12px;
 
-            padding:0 2px;
+}
 
-            font-size:14px;
 
-        }
+/* ============================================================
+   IMAGE TOOL BUTTONS
+   Same compact sizing language as PDF
+============================================================ */
 
+#zoomBar .btn{
 
-        /* =====================================================
-           READING MODE
-           ===================================================== */
+    height:32px;
 
-        body.readMode header,
-        body.readMode .title,
-        body.readMode #zoomBar{
+    min-height:32px;
 
-            display:none;
+    padding:0 10px;
 
-        }
+    display:inline-flex;
 
+    align-items:center;
 
-        body.readMode #viewer{
+    justify-content:center;
 
-            flex:1;
+    white-space:nowrap;
 
-            width:100%;
+    font-size:13px;
 
-            height:100%;
+    border-radius:6px;
 
-        }
+}
 
 
-        /*
-            The Reading Mode button deliberately
-            remains visible while Reading Mode
-            is active.
-        */
+/* ============================================================
+   MENU
+   Modeled directly after PDF menu
+============================================================ */
 
-        body.readMode .readingModeButton{
+#menu{
 
-            display:flex;
+    position:fixed;
 
-        }
+    right:10px;
 
+    top:58px;
 
-        /* =====================================================
-           MOBILE
-           ===================================================== */
+    background:#222;
 
-        @media(max-width:700px){
+    border:1px solid #333;
 
-            header{
-                padding:7px;
-            }
+    border-radius:10px;
 
-            .top{
-                align-items:flex-start;
-            }
+    padding:8px;
 
-            .headerButton{
+    display:none;
 
-                width:42px;
+    min-width:220px;
 
-                height:38px;
+    z-index:7000;
 
-            }
+}
 
-            .controls .btn{
+#menu button{
 
-                padding:8px 10px;
+    width:100%;
 
-                font-size:.9rem;
+    text-align:left;
 
-            }
+    margin:3px 0;
 
-            .title{
+    background:#292929;
 
-                font-size:1.2rem;
+    color:#fff;
 
-                padding:10px 14px;
+    border:1px solid #383838;
 
-            }
+    border-radius:6px;
 
-            #zoomBar{
+    padding:6px 9px;
 
-                gap:6px;
+    font:inherit;
 
-                padding:7px;
+    cursor:pointer;
 
-            }
+    outline:none;
 
-            #zoomBar .btn{
+}
 
-                padding:8px 10px;
+#menu button:hover{
 
-            }
+    background:#353535;
 
-            #menu{
+}
 
-                top:54px;
+#menu button:active{
 
-                right:8px;
+    background:#414141;
 
-                min-width:210px;
+}
 
-            }
 
-            .readingModeButton{
+/* ============================================================
+   FLOATING READING MODE
+   Exact visual model of PDF
+============================================================ */
 
-                right:10px;
+#readingModeFloat{
 
-                bottom:10px;
+    position:fixed;
 
-                width:42px;
+    right:18px;
 
-                height:42px;
+    bottom:86px;
 
-            }
+    width:48px;
 
-        }
+    height:48px;
 
-    </style>
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    padding:0;
+
+    border-radius:50%;
+
+    background:rgba(40,40,40,.94);
+
+    border:1px solid #555;
+
+    color:#fff;
+
+    font-size:18px;
+
+    box-shadow:
+        0 5px 18px rgba(0,0,0,.45);
+
+    z-index:9000;
+
+    cursor:pointer;
+
+    backdrop-filter:blur(6px);
+
+    -webkit-backdrop-filter:blur(6px);
+
+    transition:
+        transform .15s ease,
+        background .15s ease;
+
+}
+
+#readingModeFloat:hover{
+
+    background:#3a3a3a;
+
+    transform:scale(1.05);
+
+}
+
+#readingModeFloat:active{
+
+    transform:scale(.96);
+
+}
+
+
+/* ============================================================
+   READING MODE
+   Modeled after PDF body.reading-mode
+============================================================ */
+
+body.reading-mode header,
+body.reading-mode #zoomBar,
+body.reading-mode .title,
+body.reading-mode #menu{
+
+    display:none !important;
+
+    height:0 !important;
+
+    min-height:0 !important;
+
+    max-height:0 !important;
+
+    margin:0 !important;
+
+    padding:0 !important;
+
+    border:0 !important;
+
+    overflow:hidden !important;
+
+}
+
+body.reading-mode{
+
+    display:block;
+
+}
+
+body.reading-mode #viewer{
+
+    position:absolute;
+
+    inset:0;
+
+    width:100%;
+
+    height:100%;
+
+}
+
+body.reading-mode #readingModeFloat{
+
+    right:16px;
+
+    bottom:16px;
+
+    background:rgba(40,40,40,.88);
+
+}
+
+
+/* ============================================================
+   MOBILE
+============================================================ */
+
+@media(max-width:768px){
+
+    header{
+
+        padding:0 8px;
+
+    }
+
+    .headerButton{
+
+        width:42px;
+
+        height:38px;
+
+    }
+
+    #zoomBar{
+
+        gap:4px;
+
+        padding:5px;
+
+    }
+
+    #zoomBar .btn{
+
+        height:30px;
+
+        min-height:30px;
+
+        padding:0 8px;
+
+        font-size:12px;
+
+    }
+
+    #zoom{
+
+        height:25px;
+
+        width:53px;
+
+    }
+
+    #menu{
+
+        top:58px;
+
+        right:8px;
+
+    }
+
+    .title{
+
+        padding:10px 14px;
+
+    }
+
+    #title{
+
+        font-size:1.2rem;
+
+    }
+
+    #readingModeFloat{
+
+        right:14px;
+
+        bottom:88px;
+
+        width:46px;
+
+        height:46px;
+
+        font-size:16px;
+
+    }
+
+    body.reading-mode #readingModeFloat{
+
+        right:12px;
+
+        bottom:12px;
+
+    }
+
+}
+
+</style>
 
 </head>
 
@@ -566,13 +724,14 @@
 <body>
 
 
-<!-- =======================================================
+<!-- ==========================================================
      HEADER
-     ======================================================= -->
+========================================================== -->
 
 <header>
 
     <div class="top">
+
 
         <a
             class="headerButton"
@@ -586,6 +745,7 @@
 
 
         <div class="controls">
+
 
             <a
                 class="btn"
@@ -607,6 +767,7 @@
                 ☰
             </button>
 
+
         </div>
 
     </div>
@@ -614,9 +775,9 @@
 </header>
 
 
-<!-- =======================================================
+<!-- ==========================================================
      MENU
-     ======================================================= -->
+========================================================== -->
 
 <div id="menu">
 
@@ -627,7 +788,6 @@
         Download Image
     </button>
 
-
     <button
         id="newTabBtn"
         type="button"
@@ -635,14 +795,12 @@
         Open in New Tab
     </button>
 
-
     <button
         id="shareBtn"
         type="button"
     >
         Share Image
     </button>
-
 
     <button
         id="fullscreenBtn"
@@ -654,9 +812,9 @@
 </div>
 
 
-<!-- =======================================================
+<!-- ==========================================================
      IMAGE VIEWER
-     ======================================================= -->
+========================================================== -->
 
 <div id="viewer">
 
@@ -665,25 +823,26 @@
         alt=""
     >
 
-
-    <!-- Floating Read Mode control -->
-
-    <button
-        class="readingModeButton"
-        id="readModeBtn"
-        type="button"
-        aria-label="Reading Mode"
-        title="Reading Mode"
-    >
-        ◉
-    </button>
-
 </div>
 
 
-<!-- =======================================================
-     FILE NAME
-     ======================================================= -->
+<!-- ==========================================================
+     FLOATING READING MODE
+========================================================== -->
+
+<button
+    id="readingModeFloat"
+    type="button"
+    aria-label="Toggle Reading Mode"
+    title="Reading Mode"
+>
+    ▣
+</button>
+
+
+<!-- ==========================================================
+     TITLE
+========================================================== -->
 
 <div
     class="title"
@@ -693,11 +852,12 @@
 </div>
 
 
-<!-- =======================================================
-     ZOOM CONTROLS
-     ======================================================= -->
+<!-- ==========================================================
+     CONTROLS
+========================================================== -->
 
 <div id="zoomBar">
+
 
     <button
         class="btn"
@@ -743,6 +903,7 @@
         ✣ Free
     </button>
 
+
 </div>
 
 
@@ -751,7 +912,7 @@
 
 /* =========================================================
    URL PARAMETERS
-   ========================================================= */
+========================================================= */
 
 const p =
     new URLSearchParams(
@@ -815,7 +976,7 @@ const menuButton =
 
 const readModeButton =
     document.getElementById(
-        "readModeBtn"
+        "readingModeFloat"
     );
 
 
@@ -834,7 +995,7 @@ const returnPage =
 
 /* =========================================================
    BACK BUTTON
-   ========================================================= */
+========================================================= */
 
 const homeButton =
     document.getElementById(
@@ -852,12 +1013,10 @@ homeButton.addEventListener(
 
         e.preventDefault();
 
-
         sessionStorage.setItem(
             "restoreSearch",
             "yes"
         );
-
 
         location.href =
             returnPage;
@@ -868,7 +1027,7 @@ homeButton.addEventListener(
 
 /* =========================================================
    FIND PDF
-   ========================================================= */
+========================================================= */
 
 fetch("descriptions.json")
 .then(
@@ -909,12 +1068,22 @@ fetch("descriptions.json")
             paper.url;
 
     }
+)
+.catch(
+    error => {
+
+        console.warn(
+            "Could not load descriptions.json:",
+            error
+        );
+
+    }
 );
 
 
 /* =========================================================
-   IMAGE
-   ========================================================= */
+   IMAGE INFORMATION
+========================================================= */
 
 img.src =
     src;
@@ -955,8 +1124,8 @@ document.title =
 
 
 /* =========================================================
-   MOVEMENT / ZOOM
-   ========================================================= */
+   MOVEMENT / ZOOM STATE
+========================================================= */
 
 let base = 1;
 
@@ -966,6 +1135,15 @@ let offsetX = 0;
 
 let offsetY = 0;
 
+
+/*
+    Existing movement modes are deliberately
+    preserved.
+
+    free       = left/right + up/down
+    vertical   = up/down only
+    horizontal = left/right only
+*/
 
 let movementMode =
     "free";
@@ -988,18 +1166,22 @@ let pinchZoom = 1;
 
 /* =========================================================
    ZOOM LIMITS
-   ========================================================= */
+========================================================= */
 
 function clampZoom(){
 
-    if(zoom < 0.05){
+    if(
+        zoom < 0.05
+    ){
 
         zoom = 0.05;
 
     }
 
 
-    if(zoom > 50){
+    if(
+        zoom > 50
+    ){
 
         zoom = 50;
 
@@ -1010,7 +1192,7 @@ function clampZoom(){
 
 /* =========================================================
    DRAW
-   ========================================================= */
+========================================================= */
 
 function draw(){
 
@@ -1036,12 +1218,17 @@ function draw(){
 
 /* =========================================================
    FIT / RESET
-   ========================================================= */
+========================================================= */
 
 function fit(){
 
-    if(!img.naturalWidth)
+    if(
+        !img.naturalWidth
+    ){
+
         return;
+
+    }
 
 
     base = Math.min(
@@ -1089,13 +1276,37 @@ img.onload =
 
 window.addEventListener(
     "resize",
-    fit
+    () => {
+
+        /*
+            Preserve the image state while
+            Reading Mode is active.
+
+            Normal mode retains the original
+            fit behavior.
+        */
+
+        if(
+            document.body.classList.contains(
+                "reading-mode"
+            )
+        ){
+
+            draw();
+
+        }else{
+
+            fit();
+
+        }
+
+    }
 );
 
 
 /* =========================================================
    ZOOM BUTTONS
-   ========================================================= */
+========================================================= */
 
 minusButton.onclick =
     () => {
@@ -1123,7 +1334,7 @@ fitButton.onclick =
 
 /* =========================================================
    MOVEMENT MODE
-   ========================================================= */
+========================================================= */
 
 lockButton.onclick =
     () => {
@@ -1135,7 +1346,6 @@ lockButton.onclick =
 
             movementMode =
                 "vertical";
-
 
             lockButton.textContent =
                 "↕ Vertical";
@@ -1149,7 +1359,6 @@ lockButton.onclick =
             movementMode =
                 "horizontal";
 
-
             lockButton.textContent =
                 "↔ Horizontal";
 
@@ -1158,7 +1367,6 @@ lockButton.onclick =
 
             movementMode =
                 "free";
-
 
             lockButton.textContent =
                 "✣ Free";
@@ -1170,97 +1378,85 @@ lockButton.onclick =
 
 /* =========================================================
    READING MODE
-   ========================================================= */
+   Modeled directly after PDF
+========================================================= */
 
-let readMode = false;
-
-
-/*
-    The floating button is always available.
-
-    Normal:
-        ◉
-
-    Reading Mode:
-        ×
-*/
-
-function enterReadMode(){
-
-    readMode = true;
+let readingMode =
+    false;
 
 
-    document.body.classList.add(
-        "readMode"
-    );
+function setReadingMode(
+    enabled
+){
+
+    readingMode =
+        Boolean(
+            enabled
+        );
 
 
-    readModeButton.textContent =
-        "×";
+    if(
+        readingMode
+    ){
+
+        document.body.classList.add(
+            "reading-mode"
+        );
 
 
-    readModeButton.setAttribute(
-        "aria-label",
-        "Exit Reading Mode"
-    );
+        readModeButton.textContent =
+            "×";
 
 
-    readModeButton.setAttribute(
-        "title",
-        "Exit Reading Mode"
-    );
+        readModeButton.title =
+            "Exit Reading Mode";
 
 
-    menu.style.display =
-        "none";
-
-}
-
-
-function exitReadMode(){
-
-    readMode = false;
+        readModeButton.setAttribute(
+            "aria-label",
+            "Exit Reading Mode"
+        );
 
 
-    document.body.classList.remove(
-        "readMode"
-    );
+        menu.style.display =
+            "none";
 
 
-    readModeButton.textContent =
-        "◉";
+    }else{
+
+        document.body.classList.remove(
+            "reading-mode"
+        );
 
 
-    readModeButton.setAttribute(
-        "aria-label",
-        "Reading Mode"
-    );
+        readModeButton.textContent =
+            "▣";
 
 
-    readModeButton.setAttribute(
-        "title",
-        "Reading Mode"
-    );
+        readModeButton.title =
+            "Reading Mode";
+
+
+        readModeButton.setAttribute(
+            "aria-label",
+            "Reading Mode"
+        );
+
+    }
 
 }
 
 
 readModeButton.addEventListener(
     "click",
-    e => {
+    event => {
 
-        e.stopPropagation();
+        event.stopPropagation();
 
 
-        if(readMode){
-
-            exitReadMode();
-
-        }else{
-
-            enterReadMode();
-
-        }
+        setReadingMode(
+            !readingMode
+        );
 
     }
 );
@@ -1268,28 +1464,10 @@ readModeButton.addEventListener(
 
 /* =========================================================
    POINTER EVENTS
-   ========================================================= */
-
-
-/* ---------- Pointer Down ---------- */
+========================================================= */
 
 viewer.onpointerdown =
     e => {
-
-        /*
-            Do not treat the Reading button
-            as an image interaction.
-        */
-
-        if(
-            e.target ===
-            readModeButton
-        ){
-
-            return;
-
-        }
-
 
         viewer.setPointerCapture(
             e.pointerId
@@ -1336,8 +1514,6 @@ viewer.onpointerdown =
     };
 
 
-/* ---------- Pointer Move ---------- */
-
 viewer.onpointermove =
     e => {
 
@@ -1370,7 +1546,9 @@ viewer.onpointermove =
         );
 
 
-        /* ---------- One Finger ---------- */
+        /* =================================================
+           ONE FINGER
+        ================================================= */
 
         if(
             pointers.size === 1
@@ -1422,7 +1600,9 @@ viewer.onpointermove =
         }
 
 
-        /* ---------- Two Finger Pinch ---------- */
+        /* =================================================
+           TWO FINGER PINCH
+        ================================================= */
 
         if(
             pinchDistance <= 0
@@ -1491,8 +1671,6 @@ viewer.onpointermove =
     };
 
 
-/* ---------- Pointer Up ---------- */
-
 viewer.onpointerup =
     e => {
 
@@ -1505,14 +1683,13 @@ viewer.onpointerup =
             pointers.size < 2
         ){
 
-            pinchDistance = 0;
+            pinchDistance =
+                0;
 
         }
 
     };
 
-
-/* ---------- Pointer Cancel ---------- */
 
 viewer.onpointercancel =
     e => {
@@ -1526,7 +1703,8 @@ viewer.onpointercancel =
             pointers.size < 2
         ){
 
-            pinchDistance = 0;
+            pinchDistance =
+                0;
 
         }
 
@@ -1535,7 +1713,7 @@ viewer.onpointercancel =
 
 /* =========================================================
    INITIAL DRAW
-   ========================================================= */
+========================================================= */
 
 draw();
 
@@ -1543,39 +1721,8 @@ fit();
 
 
 /* =========================================================
-   FULLSCREEN
-   ========================================================= */
-
-document
-    .getElementById(
-        "fullscreenBtn"
-    )
-    .onclick =
-    () => {
-
-        menu.style.display =
-            "none";
-
-
-        if(
-            document.fullscreenElement
-        ){
-
-            document.exitFullscreen();
-
-        }else{
-
-            document.documentElement
-                .requestFullscreen();
-
-        }
-
-    };
-
-
-/* =========================================================
    MOUSE WHEEL ZOOM
-   ========================================================= */
+========================================================= */
 
 viewer.addEventListener(
     "wheel",
@@ -1658,7 +1805,7 @@ viewer.addEventListener(
 
 /* =========================================================
    MENU
-   ========================================================= */
+========================================================= */
 
 menuButton.addEventListener(
     "click",
@@ -1673,6 +1820,7 @@ menuButton.addEventListener(
             "block"
 
                 ? "none"
+
                 : "block";
 
     }
@@ -1702,7 +1850,7 @@ document.addEventListener(
 
 /* =========================================================
    NEW TAB
-   ========================================================= */
+========================================================= */
 
 document
     .getElementById(
@@ -1725,7 +1873,7 @@ document
 
 /* =========================================================
    DOWNLOAD
-   ========================================================= */
+========================================================= */
 
 document
     .getElementById(
@@ -1745,7 +1893,8 @@ document
 
 
         a.download =
-            src.split("/")
+            src
+                .split("/")
                 .pop();
 
 
@@ -1768,7 +1917,7 @@ document
 
 /* =========================================================
    SHARE IMAGE
-   ========================================================= */
+========================================================= */
 
 document
     .getElementById(
@@ -1785,8 +1934,6 @@ document
             menu.style.display =
                 "none";
 
-
-            /* ---------- Native Share ---------- */
 
             if(
                 navigator.share
@@ -1810,11 +1957,11 @@ document
 
                     return;
 
-                }catch(err){
+                }catch(error){
 
                     if(
-                        err &&
-                        err.name ===
+                        error &&
+                        error.name ===
                         "AbortError"
                     ){
 
@@ -1827,11 +1974,10 @@ document
             }
 
 
-            /* ---------- Clipboard ---------- */
-
             if(
                 navigator.clipboard &&
-                typeof navigator.clipboard.writeText ===
+                typeof
+                navigator.clipboard.writeText ===
                 "function"
             ){
 
@@ -1844,16 +1990,14 @@ document
 
                     return;
 
-                }catch(err){
+                }catch(error){
 
-                    /* Continue */
+                    /* Continue to fallback */
 
                 }
 
             }
 
-
-            /* ---------- Manual Fallback ---------- */
 
             window.prompt(
                 "Copy this link:",
@@ -1863,6 +2007,10 @@ document
         }
     );
 
+
+/* =========================================================
+   DONE
+========================================================= */
 
 </script>
 
