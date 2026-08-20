@@ -26,6 +26,8 @@
   --text:#eee;
   --muted:#aaa;
   --viewer-top:106px;
+  --titlebar-h:56px;
+  --float-gap:18px;
 }
 
 *{
@@ -408,9 +410,9 @@ input:focus-visible{
 
   position:fixed;
 
-  right:18px;
+  right:var(--float-gap);
 
-  bottom:86px;
+  bottom:calc(var(--titlebar-h) + var(--float-gap));
 
   width:48px;
   height:48px;
@@ -604,7 +606,7 @@ body.reading-mode #readingModeFloat{
 
     right:14px;
 
-    bottom:88px;
+    bottom:calc(var(--titlebar-h) + 14px);
 
     width:46px;
     height:46px;
@@ -703,8 +705,6 @@ body.reading-mode #readingModeFloat{
     ✣ Free
   </button>
 
-  <div class="toolbarDivider"></div>
-
   <a
     class="btn toolButton"
     id="pdfButton"
@@ -747,7 +747,9 @@ body.reading-mode #readingModeFloat{
      TITLE BAR
 ========================================================== -->
 
-<div id="titleBar">
+<div
+  id="titleBar"
+>
 
   <div id="title">
     Loading...
@@ -865,6 +867,24 @@ const layout =
 
 const readingModeFloat =
     document.getElementById("readingModeFloat");
+
+
+const titleBar =
+    document.getElementById("titleBar");
+
+
+function syncTitleBarHeight(){
+
+    const height =
+        titleBar.getBoundingClientRect()
+            .height;
+
+    document.documentElement.style.setProperty(
+        "--titlebar-h",
+        `${Math.ceil(height)}px`
+    );
+
+}
 
 
 const src =
@@ -985,8 +1005,7 @@ fetch("descriptions.json")
     pdfButton.href =
         paper.url;
 
-    pdfButton.style.display =
-        "inline-flex";
+    /* PDF button is intentionally kept hidden */
 
 });
 
@@ -1914,8 +1933,13 @@ if(
 
     const chromeObserver =
         new ResizeObserver(
-            () =>
-                syncViewerTop()
+            () => {
+
+                syncViewerTop();
+
+                syncTitleBarHeight();
+
+            }
         );
 
     chromeObserver.observe(
@@ -1926,10 +1950,16 @@ if(
         toolbar
     );
 
+    chromeObserver.observe(
+        titleBar
+    );
+
 }
 
 
 syncViewerTop();
+
+syncTitleBarHeight();
 
 
 </script>
