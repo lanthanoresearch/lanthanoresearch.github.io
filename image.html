@@ -17,12 +17,7 @@
 
     <title>Advanced Image Viewer</title>
 
-
     <style>
-
-        /* =====================================================
-           GLOBAL
-           ===================================================== */
 
         *{
             box-sizing:border-box;
@@ -30,28 +25,18 @@
 
         html,
         body{
-
             margin:0;
-
             width:100%;
             height:100%;
-
             background:#111;
-
             color:#eee;
-
             font-family:Arial,sans-serif;
-
             overflow:hidden;
-
         }
 
         body{
-
             display:flex;
-
             flex-direction:column;
-
         }
 
 
@@ -60,30 +45,18 @@
            ===================================================== */
 
         header{
-
             background:#1b1b1b;
-
             border-bottom:1px solid #333;
-
             padding:8px;
-
             flex-shrink:0;
-
             z-index:20;
-
         }
 
-
         .top{
-
             display:flex;
-
             justify-content:space-between;
-
             align-items:center;
-
             gap:8px;
-
         }
 
 
@@ -101,7 +74,6 @@
             display:flex;
 
             align-items:center;
-
             justify-content:center;
 
             background:#333;
@@ -127,20 +99,13 @@
 
         }
 
-
         .headerButton:hover{
-
             background:#444;
-
             border-color:#4a4a4a;
-
         }
 
-
         .headerButton:active{
-
             transform:scale(.97);
-
         }
 
 
@@ -160,11 +125,9 @@
 
         }
 
-
         .btn{
 
             appearance:none;
-
             -webkit-appearance:none;
 
             background:#333;
@@ -194,7 +157,6 @@
 
         }
 
-
         .btn:hover{
 
             background:#444;
@@ -202,7 +164,6 @@
             border-color:#4a4a4a;
 
         }
-
 
         .btn:active{
 
@@ -216,9 +177,7 @@
            ===================================================== */
 
         #pdfButton{
-
             display:none;
-
         }
 
 
@@ -252,7 +211,6 @@
             z-index:1000;
 
         }
-
 
         #menu button{
 
@@ -288,7 +246,6 @@
 
         }
 
-
         #menu button:hover{
 
             background:#444;
@@ -320,7 +277,6 @@
 
         }
 
-
         #img{
 
             position:absolute;
@@ -339,7 +295,72 @@
 
             -webkit-user-drag:none;
 
-            pointer-events:auto;
+        }
+
+
+        /* =====================================================
+           FLOATING READING MODE BUTTON
+           ===================================================== */
+
+        .readingModeButton{
+
+            position:absolute;
+
+            right:14px;
+
+            bottom:14px;
+
+            z-index:50;
+
+            width:42px;
+
+            height:42px;
+
+            padding:0;
+
+            display:flex;
+
+            align-items:center;
+
+            justify-content:center;
+
+            background:#333;
+
+            color:#fff;
+
+            border:1px solid #3d3d3d;
+
+            border-radius:7px;
+
+            cursor:pointer;
+
+            font-family:Arial,sans-serif;
+
+            font-size:20px;
+
+            line-height:1;
+
+            box-shadow:
+                0 4px 14px rgba(0,0,0,.35);
+
+            transition:
+                background .15s ease,
+                border-color .15s ease,
+                transform .05s ease;
+
+        }
+
+        .readingModeButton:hover{
+
+            background:#444;
+
+            border-color:#4a4a4a;
+
+        }
+
+        .readingModeButton:active{
+
+            transform:scale(.96);
 
         }
 
@@ -403,7 +424,6 @@
 
         }
 
-
         #zoom{
 
             display:flex;
@@ -429,13 +449,6 @@
            READING MODE
            ===================================================== */
 
-        body.readMode{
-
-            background:#111;
-
-        }
-
-
         body.readMode header,
         body.readMode .title,
         body.readMode #zoomBar{
@@ -456,6 +469,19 @@
         }
 
 
+        /*
+            The Reading Mode button deliberately
+            remains visible while Reading Mode
+            is active.
+        */
+
+        body.readMode .readingModeButton{
+
+            display:flex;
+
+        }
+
+
         /* =====================================================
            MOBILE
            ===================================================== */
@@ -463,18 +489,12 @@
         @media(max-width:700px){
 
             header{
-
                 padding:7px;
-
             }
-
 
             .top{
-
                 align-items:flex-start;
-
             }
-
 
             .headerButton{
 
@@ -484,7 +504,6 @@
 
             }
 
-
             .controls .btn{
 
                 padding:8px 10px;
@@ -492,7 +511,6 @@
                 font-size:.9rem;
 
             }
-
 
             .title{
 
@@ -502,7 +520,6 @@
 
             }
 
-
             #zoomBar{
 
                 gap:6px;
@@ -511,13 +528,11 @@
 
             }
 
-
             #zoomBar .btn{
 
                 padding:8px 10px;
 
             }
-
 
             #menu{
 
@@ -526,6 +541,18 @@
                 right:8px;
 
                 min-width:210px;
+
+            }
+
+            .readingModeButton{
+
+                right:10px;
+
+                bottom:10px;
+
+                width:42px;
+
+                height:42px;
 
             }
 
@@ -547,7 +574,6 @@
 
     <div class="top">
 
-
         <a
             class="headerButton"
             id="homeButton"
@@ -560,7 +586,6 @@
 
 
         <div class="controls">
-
 
             <a
                 class="btn"
@@ -582,7 +607,6 @@
                 ☰
             </button>
 
-
         </div>
 
     </div>
@@ -595,7 +619,6 @@
      ======================================================= -->
 
 <div id="menu">
-
 
     <button
         id="downloadBtn"
@@ -628,7 +651,6 @@
         Fullscreen
     </button>
 
-
 </div>
 
 
@@ -642,6 +664,19 @@
         id="img"
         alt=""
     >
+
+
+    <!-- Floating Read Mode control -->
+
+    <button
+        class="readingModeButton"
+        id="readModeBtn"
+        type="button"
+        aria-label="Reading Mode"
+        title="Reading Mode"
+    >
+        ◉
+    </button>
 
 </div>
 
@@ -659,11 +694,10 @@
 
 
 <!-- =======================================================
-     ZOOM / IMAGE CONTROLS
+     ZOOM CONTROLS
      ======================================================= -->
 
 <div id="zoomBar">
-
 
     <button
         class="btn"
@@ -708,16 +742,6 @@
     >
         ✣ Free
     </button>
-
-
-    <button
-        class="btn"
-        id="readModeBtn"
-        type="button"
-    >
-        Reading
-    </button>
-
 
 </div>
 
@@ -843,7 +867,7 @@ homeButton.addEventListener(
 
 
 /* =========================================================
-   FIND ASSOCIATED PDF
+   FIND PDF
    ========================================================= */
 
 fetch("descriptions.json")
@@ -889,7 +913,7 @@ fetch("descriptions.json")
 
 
 /* =========================================================
-   IMAGE INFORMATION
+   IMAGE
    ========================================================= */
 
 img.src =
@@ -931,7 +955,7 @@ document.title =
 
 
 /* =========================================================
-   MOVEMENT / ZOOM STATE
+   MOVEMENT / ZOOM
    ========================================================= */
 
 let base = 1;
@@ -942,12 +966,6 @@ let offsetX = 0;
 
 let offsetY = 0;
 
-
-/*
-    free       = left/right + up/down
-    vertical   = up/down only
-    horizontal = left/right only
-*/
 
 let movementMode =
     "free";
@@ -1039,6 +1057,7 @@ function fit(){
 
     zoom = 1;
 
+
     offsetX = 0;
 
     offsetY = 0;
@@ -1070,19 +1089,7 @@ img.onload =
 
 window.addEventListener(
     "resize",
-    () => {
-
-        if(
-            !document.body.classList.contains(
-                "readMode"
-            )
-        ){
-
-            fit();
-
-        }
-
-    }
+    fit
 );
 
 
@@ -1169,15 +1176,18 @@ let readMode = false;
 
 
 /*
-    Reading Mode simply removes the
-    interface while leaving the image
-    viewer itself completely active.
+    The floating button is always available.
+
+    Normal:
+        ◉
+
+    Reading Mode:
+        ×
 */
 
 function enterReadMode(){
 
-    readMode =
-        true;
+    readMode = true;
 
 
     document.body.classList.add(
@@ -1186,7 +1196,19 @@ function enterReadMode(){
 
 
     readModeButton.textContent =
-        "Reading";
+        "×";
+
+
+    readModeButton.setAttribute(
+        "aria-label",
+        "Exit Reading Mode"
+    );
+
+
+    readModeButton.setAttribute(
+        "title",
+        "Exit Reading Mode"
+    );
 
 
     menu.style.display =
@@ -1197,8 +1219,7 @@ function enterReadMode(){
 
 function exitReadMode(){
 
-    readMode =
-        false;
+    readMode = false;
 
 
     document.body.classList.remove(
@@ -1207,7 +1228,19 @@ function exitReadMode(){
 
 
     readModeButton.textContent =
-        "Reading";
+        "◉";
+
+
+    readModeButton.setAttribute(
+        "aria-label",
+        "Reading Mode"
+    );
+
+
+    readModeButton.setAttribute(
+        "title",
+        "Reading Mode"
+    );
 
 }
 
@@ -1233,107 +1266,30 @@ readModeButton.addEventListener(
 );
 
 
-/*
-    Used only to determine whether a
-    pointer interaction was a tap or
-    an actual drag.
-*/
-
-let readStartX = null;
-
-let readStartY = null;
-
-
-viewer.addEventListener(
-    "pointerdown",
-    e => {
-
-        if(!readMode)
-            return;
-
-
-        if(pointers.size > 0)
-            return;
-
-
-        readStartX =
-            e.clientX;
-
-
-        readStartY =
-            e.clientY;
-
-    },
-    true
-);
-
-
-viewer.addEventListener(
-    "pointerup",
-    e => {
-
-        if(!readMode)
-            return;
-
-
-        if(
-            readStartX === null ||
-            readStartY === null
-        ){
-
-            return;
-
-        }
-
-
-        const dx =
-            Math.abs(
-                e.clientX -
-                readStartX
-            );
-
-
-        const dy =
-            Math.abs(
-                e.clientY -
-                readStartY
-            );
-
-
-        readStartX = null;
-
-        readStartY = null;
-
-
-        /*
-            Only a genuine tap restores
-            the controls.
-
-            Dragging and pinching remain
-            completely functional.
-        */
-
-        if(
-            dx < 10 &&
-            dy < 10 &&
-            pointers.size === 0
-        ){
-
-            exitReadMode();
-
-        }
-
-    },
-    true
-);
-
-
 /* =========================================================
-   POINTER DOWN
+   POINTER EVENTS
    ========================================================= */
+
+
+/* ---------- Pointer Down ---------- */
 
 viewer.onpointerdown =
     e => {
+
+        /*
+            Do not treat the Reading button
+            as an image interaction.
+        */
+
+        if(
+            e.target ===
+            readModeButton
+        ){
+
+            return;
+
+        }
+
 
         viewer.setPointerCapture(
             e.pointerId
@@ -1380,9 +1336,7 @@ viewer.onpointerdown =
     };
 
 
-/* =========================================================
-   POINTER MOVE
-   ========================================================= */
+/* ---------- Pointer Move ---------- */
 
 viewer.onpointermove =
     e => {
@@ -1416,9 +1370,7 @@ viewer.onpointermove =
         );
 
 
-        /* -------------------------------------------------
-           ONE FINGER
-           ------------------------------------------------- */
+        /* ---------- One Finger ---------- */
 
         if(
             pointers.size === 1
@@ -1464,18 +1416,13 @@ viewer.onpointermove =
 
             draw();
 
+
             return;
 
         }
 
 
-        /* -------------------------------------------------
-           TWO FINGER PINCH
-           ------------------------------------------------- */
-
-        const pts =
-            [...pointers.values()];
-
+        /* ---------- Two Finger Pinch ---------- */
 
         if(
             pinchDistance <= 0
@@ -1484,6 +1431,10 @@ viewer.onpointermove =
             return;
 
         }
+
+
+        const pts =
+            [...pointers.values()];
 
 
         const distance =
@@ -1540,9 +1491,7 @@ viewer.onpointermove =
     };
 
 
-/* =========================================================
-   POINTER UP
-   ========================================================= */
+/* ---------- Pointer Up ---------- */
 
 viewer.onpointerup =
     e => {
@@ -1563,9 +1512,7 @@ viewer.onpointerup =
     };
 
 
-/* =========================================================
-   POINTER CANCEL
-   ========================================================= */
+/* ---------- Pointer Cancel ---------- */
 
 viewer.onpointercancel =
     e => {
@@ -1683,6 +1630,7 @@ viewer.addEventListener(
 
 
         offsetX =
+
             mouseX -
             (
                 mouseX -
@@ -1691,6 +1639,7 @@ viewer.addEventListener(
 
 
         offsetY =
+
             mouseY -
             (
                 mouseY -
@@ -1752,7 +1701,7 @@ document.addEventListener(
 
 
 /* =========================================================
-   OPEN IN NEW TAB
+   NEW TAB
    ========================================================= */
 
 document
@@ -1837,9 +1786,7 @@ document
                 "none";
 
 
-            /* ---------------------------------------------
-               Native Share
-               --------------------------------------------- */
+            /* ---------- Native Share ---------- */
 
             if(
                 navigator.share
@@ -1880,9 +1827,7 @@ document
             }
 
 
-            /* ---------------------------------------------
-               Clipboard Fallback
-               --------------------------------------------- */
+            /* ---------- Clipboard ---------- */
 
             if(
                 navigator.clipboard &&
@@ -1901,16 +1846,14 @@ document
 
                 }catch(err){
 
-                    /* Continue to manual fallback */
+                    /* Continue */
 
                 }
 
             }
 
 
-            /* ---------------------------------------------
-               Manual Fallback
-               --------------------------------------------- */
+            /* ---------- Manual Fallback ---------- */
 
             window.prompt(
                 "Copy this link:",
