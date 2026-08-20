@@ -21,10 +21,11 @@
 
 :root{
   --bg:#111;
-  --panel:#1b1b1b;
-  --panel2:#242424;
+  --panel:#1d1d1d;
+  --panel2:#222;
   --text:#eee;
   --muted:#aaa;
+  --accent:#3a3a3a;
   --viewer-top:106px;
 }
 
@@ -45,7 +46,6 @@ body{
 
 /* ============================================================
    HEADER
-   LEFT ALONE
 ============================================================ */
 
 header{
@@ -53,7 +53,6 @@ header{
   top:0;
   left:0;
   right:0;
-
   min-height:58px;
   height:58px;
 
@@ -64,14 +63,13 @@ header{
   padding:0 14px;
 
   background:#181818;
-
   border-bottom:1px solid #2d2d2d;
 
   z-index:6000;
 }
 
 /* ============================================================
-   COMPACT TOOLBAR
+   TOOLBAR
 ============================================================ */
 
 #toolbar{
@@ -81,18 +79,15 @@ header{
   left:0;
   right:0;
 
-  min-height:46px;
+  min-height:48px;
 
   display:flex;
   align-items:center;
-  justify-content:center;
 
-  gap:6px;
-
-  padding:6px 8px;
+  gap:8px;
+  padding:10px;
 
   background:#1b1b1b;
-
   border-bottom:1px solid #2d2d2d;
 
   flex-wrap:wrap;
@@ -108,7 +103,6 @@ header{
   position:absolute;
 
   top:var(--viewer-top);
-
   left:0;
   right:0;
   bottom:0;
@@ -137,7 +131,6 @@ header{
   align-items:center;
 
   scroll-behavior:auto;
-
   overscroll-behavior:contain;
 }
 
@@ -152,8 +145,7 @@ header{
 
   background:#fff;
 
-  box-shadow:
-    0 0 14px rgba(0,0,0,.4);
+  box-shadow:0 0 14px rgba(0,0,0,.4);
 
   flex-shrink:0;
 
@@ -166,9 +158,7 @@ header{
 
 .pageCanvas{
   display:block;
-
   pointer-events:none;
-
   background:#fff;
 }
 
@@ -178,21 +168,17 @@ header{
 
 .btn{
   background:#333;
-
   color:#fff;
 
   border:none;
-
   border-radius:7px;
 
   padding:9px 12px;
 
   text-decoration:none;
-
   cursor:pointer;
 
   display:inline-flex;
-
   align-items:center;
 
   white-space:nowrap;
@@ -200,213 +186,51 @@ header{
 
 button,
 input{
-  background:#292929;
-
+  background:#2b2b2b;
   color:#fff;
 
-  border:1px solid #383838;
+  border:none;
+  border-radius:8px;
 
-  border-radius:6px;
-
-  padding:6px 9px;
+  padding:8px 12px;
 
   font:inherit;
-
-  outline:none;
 }
 
 button:hover{
-  background:#353535;
-
+  background:#3a3a3a;
   cursor:pointer;
 }
 
 button:active{
-  background:#414141;
-}
-
-button:focus-visible,
-input:focus-visible{
-  border-color:#666;
-
-  outline:1px solid #555;
+  background:#444;
 }
 
 /* ============================================================
-   COMPACT TOOLBAR CONTROLS
+   CONTROL GROUPS
 ============================================================ */
 
-.toolButton{
-  height:32px;
-
-  padding:0 10px;
-
-  display:inline-flex;
-
-  align-items:center;
-
-  justify-content:center;
-
-  white-space:nowrap;
-
-  font-size:13px;
-
-  border-radius:6px;
-}
-
-.iconButton{
-  width:32px;
-  height:32px;
-
-  padding:0;
-
-  display:inline-flex;
-
-  align-items:center;
-
-  justify-content:center;
-
-  font-size:16px;
-
-  border-radius:6px;
-}
-
-/* ============================================================
-   ZOOM
-============================================================ */
-
-.zoomControls{
-  display:flex;
-
-  align-items:center;
-
-  gap:3px;
-
-  height:32px;
-
-  padding:0 3px;
-
-  background:#242424;
-
-  border:1px solid #353535;
-
-  border-radius:7px;
-}
-
-.zoomControls button{
-  width:29px;
-  height:28px;
-
-  padding:0;
-
-  border:0;
-
-  background:transparent;
-
-  font-size:17px;
-
-  display:flex;
-
-  align-items:center;
-
-  justify-content:center;
-}
-
-.zoomControls button:hover{
-  background:#353535;
-}
-
-#zoomPercent{
-  width:58px;
-
-  height:27px;
-
-  padding:2px 4px;
-
-  text-align:center;
-
-  background:#1d1d1d;
-
-  border:0;
-
-  border-radius:4px;
-
-  font-size:12px;
-}
-
-/* ============================================================
-   PAGE CONTROLS
-============================================================ */
-
+.zoomControls,
 .pageControls{
   display:flex;
-
   align-items:center;
-
-  gap:4px;
-
-  height:32px;
-
-  padding:0 6px;
-
-  background:#242424;
-
-  border:1px solid #353535;
-
-  border-radius:7px;
+  gap:6px;
 
   white-space:nowrap;
+  flex-shrink:0;
 }
-
-.pageControls label{
-  color:#aaa;
-
-  font-size:12px;
-}
-
-#pageNumber{
-  width:43px;
-
-  height:27px;
-
-  padding:2px 4px;
-
-  text-align:center;
-
-  background:#1d1d1d;
-
-  border:0;
-
-  border-radius:4px;
-
-  font-size:12px;
-}
-
-#pageCount{
-  color:#999;
-
-  font-size:12px;
-
-  padding-right:2px;
-}
-
-/* ============================================================
-   TOOLBAR DIVIDER
-============================================================ */
 
 .toolbarDivider{
   width:1px;
+  height:28px;
 
-  height:22px;
-
-  background:#383838;
+  background:#3a3a3a;
 
   margin:0 2px;
 }
 
 /* ============================================================
    TITLE BAR
-   LEFT ALONE
 ============================================================ */
 
 #titleBar{
@@ -440,13 +264,11 @@ input:focus-visible{
   text-align:center;
 
   font-size:1.2rem;
-
   font-weight:bold;
 
   overflow:hidden;
 
   white-space:nowrap;
-
   text-overflow:ellipsis;
 }
 
@@ -498,19 +320,16 @@ input:focus-visible{
 
 .title-badge.new{
   order:2;
-
   background:#00b050;
 }
 
 .title-badge.featured{
   order:3;
-
   background:#2f7cff;
 }
 
 /* ============================================================
    MENU
-   LEFT ALONE
 ============================================================ */
 
 #menu{
@@ -522,7 +341,6 @@ input:focus-visible{
   background:#222;
 
   border:1px solid #333;
-
   border-radius:10px;
 
   padding:8px;
@@ -536,9 +354,7 @@ input:focus-visible{
 
 #menu button{
   width:100%;
-
   text-align:left;
-
   margin:3px 0;
 }
 
@@ -550,26 +366,21 @@ input:focus-visible{
   position:fixed;
 
   top:108px;
-  left:50%;
-
-  transform:translateX(-50%);
+  left:110px;
 
   display:flex;
-
   align-items:center;
 
-  gap:5px;
+  gap:8px;
 
-  padding:7px;
+  padding:10px;
 
   background:#222;
 
   border:1px solid #444;
+  border-radius:10px;
 
-  border-radius:8px;
-
-  box-shadow:
-    0 8px 20px rgba(0,0,0,.45);
+  box-shadow:0 8px 20px rgba(0,0,0,.45);
 
   z-index:6500;
 }
@@ -579,43 +390,15 @@ input:focus-visible{
 }
 
 #searchPopup input{
-  width:230px;
-
-  height:31px;
-
-  background:#181818;
-
-  border-color:#3b3b3b;
-
-  font-size:13px;
-}
-
-#searchPopup button{
-  width:31px;
-
-  height:31px;
-
-  padding:0;
-
-  display:flex;
-
-  align-items:center;
-
-  justify-content:center;
-
-  font-size:13px;
+  width:220px;
 }
 
 #searchResults{
-  color:#aaa;
+  color:#bbb;
 
-  min-width:65px;
+  min-width:70px;
 
   text-align:center;
-
-  font-size:12px;
-
-  white-space:nowrap;
 }
 
 /* ============================================================
@@ -638,7 +421,6 @@ input:focus-visible{
   line-height:1;
 
   letter-spacing:normal;
-
   word-spacing:normal;
 
   text-size-adjust:none;
@@ -654,9 +436,7 @@ input:focus-visible{
   pointer-events:auto;
 
   user-select:text;
-
   -webkit-user-select:text;
-
   -moz-user-select:text;
 
   -webkit-touch-callout:default;
@@ -676,9 +456,7 @@ input:focus-visible{
     );
 
   --scale-factor:1;
-
   --user-unit:1;
-
   --total-scale-factor:1;
 }
 
@@ -695,15 +473,12 @@ input:focus-visible{
   transform-origin:0% 0%;
 
   user-select:text;
-
   -webkit-user-select:text;
-
   -moz-user-select:text;
 }
 
 .textLayer > :not(.markedContent),
 .textLayer .markedContent span:not(.markedContent){
-
   z-index:1;
 
   --font-height:0;
@@ -715,7 +490,6 @@ input:focus-visible{
     );
 
   --scale-x:1;
-
   --rotate:0deg;
 
   transform:
@@ -730,23 +504,18 @@ input:focus-visible{
 
 .textLayer span[role="img"]{
   user-select:none;
-
   -webkit-user-select:none;
 
   cursor:default;
 }
 
 .textLayer ::selection{
-  background:
-    rgba(0,120,255,.35);
-
+  background:rgba(0,120,255,.35);
   color:transparent;
 }
 
 .textLayer ::-moz-selection{
-  background:
-    rgba(0,120,255,.35);
-
+  background:rgba(0,120,255,.35);
   color:transparent;
 }
 
@@ -766,7 +535,6 @@ input:focus-visible{
   cursor:default;
 
   user-select:none;
-
   -webkit-user-select:none;
 }
 
@@ -775,8 +543,12 @@ input:focus-visible{
 }
 
 /* ============================================================
-   SEARCH OVERLAY
-   DOES NOT MODIFY SELECTABLE TEXT
+   SEARCH HIGHLIGHT LAYER
+
+   IMPORTANT:
+   This sits between the text layer and link layer.
+
+   It does NOT interfere with text selection.
 ============================================================ */
 
 .searchHighlightLayer{
@@ -795,24 +567,28 @@ input:focus-visible{
   position:absolute;
 
   background:
-    rgba(255,225,0,.30);
+    rgba(0,140,255,.25);
 
-  border-radius:2px;
+  border:
+    1px solid rgba(0,140,255,.32);
+
+  border-radius:3px;
 
   box-shadow:
-    0 0 0 1px
-    rgba(190,155,0,.12);
+    0 0 2px rgba(0,140,255,.15);
 
   pointer-events:none;
 }
 
 .search-highlight.search-current{
   background:
-    rgba(255,175,0,.43);
+    rgba(0,140,255,.42);
+
+  border:
+    1px solid rgba(0,120,255,.65);
 
   box-shadow:
-    0 0 0 1px
-    rgba(170,105,0,.28);
+    0 0 5px rgba(0,120,255,.35);
 }
 
 /* ============================================================
@@ -845,7 +621,6 @@ input:focus-visible{
   border:0;
 
   padding:0;
-
   margin:0;
 
   text-decoration:none;
@@ -900,59 +675,8 @@ input:focus-visible{
 }
 
 /* ============================================================
-   FLOATING READING MODE
+   READING MODE
 ============================================================ */
-
-#readingModeFloat{
-  position:fixed;
-
-  right:18px;
-  bottom:70px;
-
-  width:48px;
-  height:48px;
-
-  display:flex;
-
-  align-items:center;
-  justify-content:center;
-
-  padding:0;
-
-  border-radius:50%;
-
-  background:
-    rgba(40,40,40,.94);
-
-  border:1px solid #555;
-
-  color:#fff;
-
-  font-size:18px;
-
-  box-shadow:
-    0 5px 18px rgba(0,0,0,.45);
-
-  z-index:9000;
-
-  cursor:pointer;
-
-  backdrop-filter:blur(6px);
-
-  transition:
-    transform .15s ease,
-    background .15s ease;
-}
-
-#readingModeFloat:hover{
-  background:#3a3a3a;
-
-  transform:scale(1.05);
-}
-
-#readingModeFloat:active{
-  transform:scale(.96);
-}
 
 body.reading-mode header,
 body.reading-mode #toolbar,
@@ -972,7 +696,6 @@ body.reading-mode #viewer{
   height:100%;
 
   padding-top:20px;
-
   padding-bottom:20px;
 }
 
@@ -980,78 +703,76 @@ body.reading-mode #loadingOverlay{
   inset:0;
 }
 
-body.reading-mode #readingModeFloat{
-  right:16px;
+/* Floating reading-mode control */
 
-  bottom:16px;
+#readingModeButton{
+  position:fixed;
 
-  background:
-    rgba(40,40,40,.88);
+  right:18px;
+  bottom:70px;
+
+  width:44px;
+  height:44px;
+
+  padding:0;
+
+  display:flex;
+
+  align-items:center;
+  justify-content:center;
+
+  border-radius:50%;
+
+  background:#292929;
+
+  border:1px solid #4a4a4a;
+
+  color:#fff;
+
+  font-size:18px;
+
+  box-shadow:
+    0 4px 14px rgba(0,0,0,.45);
+
+  z-index:9000;
+}
+
+#readingModeButton:hover{
+  background:#3a3a3a;
+}
+
+body.reading-mode #readingModeButton{
+  right:18px;
+  bottom:18px;
+
+  background:#333;
+}
+
+#readingModeButton .readingIcon{
+  pointer-events:none;
 }
 
 /* ============================================================
    MOBILE
 ============================================================ */
 
-@media (max-width:768px){
-
-  #toolbar{
-    justify-content:center;
-
-    gap:4px;
-
-    padding:5px;
-  }
-
-  .toolButton{
-    height:30px;
-
-    padding:0 8px;
-
-    font-size:12px;
-  }
-
-  .zoomControls{
-    height:30px;
-  }
-
-  .zoomControls button{
-    width:27px;
-
-    height:26px;
-  }
-
-  #zoomPercent{
-    width:53px;
-
-    height:25px;
-  }
-
-  .pageControls{
-    height:30px;
-
-    padding:0 5px;
-  }
-
-  #pageNumber{
-    width:40px;
-
-    height:25px;
-  }
+@media(max-width:768px){
 
   #searchPopup{
-    left:8px;
-    right:8px;
+    left:10px;
+    right:10px;
 
-    top:104px;
-
-    transform:none;
+    top:108px;
 
     width:auto;
+
+    display:flex;
 
     flex-wrap:wrap;
 
     justify-content:center;
+
+    gap:8px;
   }
 
   #searchPopup input{
@@ -1064,28 +785,15 @@ body.reading-mode #readingModeFloat{
 
   #prevResult,
   #nextResult{
-    flex:0 0 31px;
+    flex:0 0 auto;
   }
 
   #searchResults{
     flex:1;
-  }
 
-  #readingModeFloat{
-    right:14px;
+    text-align:center;
 
-    bottom:68px;
-
-    width:44px;
-    height:44px;
-
-    font-size:16px;
-  }
-
-  body.reading-mode #readingModeFloat{
-    right:12px;
-
-    bottom:12px;
+    min-width:0;
   }
 
   .title-badges{
@@ -1122,11 +830,15 @@ body.reading-mode #readingModeFloat{
   .title-badge.featured{
     order:1;
   }
-}
 
-/* ============================================================
-   ANIMATION
-============================================================ */
+  #readingModeButton{
+    right:14px;
+    bottom:68px;
+
+    width:42px;
+    height:42px;
+  }
+}
 
 @keyframes spin{
 
@@ -1144,10 +856,6 @@ body.reading-mode #readingModeFloat{
 </head>
 
 <body>
-
-<!-- ==========================================================
-     HEADER — UNCHANGED
-========================================================== -->
 
 <header>
 
@@ -1167,58 +875,36 @@ body.reading-mode #readingModeFloat{
 
 </header>
 
-<!-- ==========================================================
-     COMPACT TOOLBAR
-========================================================== -->
-
 <div id="toolbar">
 
-  <button
-    id="searchButton"
-    class="toolButton"
-    title="Search PDF"
-  >
-    ⌕
+  <button id="searchButton">
+    ⌕ Search
   </button>
 
   <div class="zoomControls">
 
-    <button
-      id="zoomOut"
-      title="Zoom out"
-    >
+    <button id="zoomOut">
       −
     </button>
 
     <input
       id="zoomPercent"
       value="100%"
-      aria-label="Zoom percentage"
+      style="width:70px;text-align:center"
     >
 
-    <button
-      id="zoomIn"
-      title="Zoom in"
-    >
+    <button id="zoomIn">
       +
     </button>
 
   </div>
 
-  <button
-    id="fitWidth"
-    class="toolButton"
-    title="Fit page width"
-  >
-    Width
+  <button id="fitWidth">
+    ↔ Width
   </button>
 
-  <button
-    id="fitPage"
-    class="toolButton"
-    title="Fit entire page"
-  >
-    Page
+  <button id="fitPage">
+    □ Page
   </button>
 
   <div class="toolbarDivider"></div>
@@ -1226,14 +912,14 @@ body.reading-mode #readingModeFloat{
   <div class="pageControls">
 
     <label>
-      Pg
+      Page
     </label>
 
     <input
       id="pageNumber"
       value="1"
       inputmode="numeric"
-      aria-label="Page number"
+      style="width:60px;text-align:center"
     >
 
     <span id="pageCount">
@@ -1244,32 +930,19 @@ body.reading-mode #readingModeFloat{
 
 </div>
 
-<!-- ==========================================================
-     SEARCH
-========================================================== -->
-
-<div
-  id="searchPopup"
-  class="hidden"
->
+<div id="searchPopup" class="hidden">
 
   <input
     id="searchBox"
-    placeholder="Find in PDF..."
+    placeholder="Search..."
     autocomplete="off"
   >
 
-  <button
-    id="prevResult"
-    title="Previous result"
-  >
+  <button id="prevResult">
     ↑
   </button>
 
-  <button
-    id="nextResult"
-    title="Next result"
-  >
+  <button id="nextResult">
     ↓
   </button>
 
@@ -1278,10 +951,6 @@ body.reading-mode #readingModeFloat{
   </span>
 
 </div>
-
-<!-- ==========================================================
-     LAYOUT
-========================================================== -->
 
 <div id="layout">
 
@@ -1299,10 +968,6 @@ body.reading-mode #readingModeFloat{
 
 </div>
 
-<!-- ==========================================================
-     TITLE BAR — UNCHANGED
-========================================================== -->
-
 <div id="titleBar">
 
   <div id="title">
@@ -1310,10 +975,6 @@ body.reading-mode #readingModeFloat{
   </div>
 
 </div>
-
-<!-- ==========================================================
-     MENU — UNCHANGED
-========================================================== -->
 
 <div id="menu">
 
@@ -1335,16 +996,14 @@ body.reading-mode #readingModeFloat{
 
 </div>
 
-<!-- ==========================================================
-     FLOATING READING MODE
-========================================================== -->
+<!-- FLOATING READING MODE BUTTON -->
 
 <button
-  id="readingModeFloat"
-  aria-label="Toggle Reading Mode"
+  id="readingModeButton"
   title="Reading Mode"
+  aria-label="Toggle Reading Mode"
 >
-  ▣
+  <span class="readingIcon">▤</span>
 </button>
 
 <script type="module">
@@ -1391,58 +1050,38 @@ const header =
   document.querySelector("header");
 
 const toolbar =
-  document.getElementById(
-    "toolbar"
-  );
+  document.getElementById("toolbar");
 
 const viewer =
-  document.getElementById(
-    "viewer"
-  );
+  document.getElementById("viewer");
 
 const layout =
-  document.getElementById(
-    "layout"
-  );
+  document.getElementById("layout");
 
 const loadingOverlay =
-  document.getElementById(
-    "loadingOverlay"
-  );
+  document.getElementById("loadingOverlay");
 
 const pageInput =
-  document.getElementById(
-    "pageNumber"
-  );
+  document.getElementById("pageNumber");
 
 const zoomBox =
-  document.getElementById(
-    "zoomPercent"
-  );
+  document.getElementById("zoomPercent");
 
 const searchPopup =
-  document.getElementById(
-    "searchPopup"
-  );
+  document.getElementById("searchPopup");
 
 const searchBox =
-  document.getElementById(
-    "searchBox"
-  );
+  document.getElementById("searchBox");
 
 const menu =
-  document.getElementById(
-    "menu"
-  );
+  document.getElementById("menu");
 
 const menuButton =
-  document.getElementById(
-    "menuBtn"
-  );
+  document.getElementById("menuBtn");
 
-const readingModeFloat =
+const readingModeButton =
   document.getElementById(
-    "readingModeFloat"
+    "readingModeButton"
   );
 
 /* ============================================================
@@ -1474,10 +1113,11 @@ function syncViewerTop(){
       toolbarHeight
     );
 
-  document.documentElement.style.setProperty(
-    "--viewer-top",
-    `${total}px`
-  );
+  document.documentElement.style
+    .setProperty(
+      "--viewer-top",
+      `${total}px`
+    );
 
   layout.style.top =
     `${total}px`;
@@ -1492,7 +1132,11 @@ function scheduleChromeSync(){
     () => {
 
       requestAnimationFrame(
-        syncViewerTop
+        () => {
+
+          syncViewerTop();
+
+        }
       );
 
     }
@@ -1503,8 +1147,7 @@ function scheduleChromeSync(){
    LIMITS
 ============================================================ */
 
-const MAX_ZOOM =
-  3;
+const MAX_ZOOM = 3;
 
 const MAX_CANVAS_PIXELS =
   8000000;
@@ -1516,37 +1159,17 @@ const RENDER_MARGIN =
   "1400px";
 
 /* ============================================================
-   ESCAPE
+   HTML ESCAPE
 ============================================================ */
 
 function escapeHtml(value){
 
   return String(value)
-
-    .replaceAll(
-      "&",
-      "&amp;"
-    )
-
-    .replaceAll(
-      "<",
-      "&lt;"
-    )
-
-    .replaceAll(
-      ">",
-      "&gt;"
-    )
-
-    .replaceAll(
-      '"',
-      "&quot;"
-    )
-
-    .replaceAll(
-      "'",
-      "&#039;"
-    );
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
 }
 
 /* ============================================================
@@ -1657,21 +1280,13 @@ document.getElementById(
 
       ${
         isNewest
-          ? `
-            <span class="title-badge new">
-              NEW
-            </span>
-          `
+          ? `<span class="title-badge new">NEW</span>`
           : ""
       }
 
       ${
         paper?.featured
-          ? `
-            <span class="title-badge featured">
-              FEATURED
-            </span>
-          `
+          ? `<span class="title-badge featured">FEATURED</span>`
           : ""
       }
 
@@ -1685,14 +1300,9 @@ document.getElementById(
    VIEWPORT SIZING
 ============================================================ */
 
-let baseScale =
-  1;
-
-let zoomLevel =
-  1;
-
-let currentScale =
-  1;
+let baseScale = 1;
+let zoomLevel = 1;
+let currentScale = 1;
 
 function getViewerInnerWidth(){
 
@@ -1773,14 +1383,17 @@ const zoomLevels = [
   0.25,
   0.5,
   0.75,
+
   1,
   1.25,
   1.5,
   1.75,
+
   2,
   2.25,
   2.5,
   2.75,
+
   3
 
 ];
@@ -1789,23 +1402,17 @@ const zoomLevels = [
    PDF STATE
 ============================================================ */
 
-let pdfDoc =
-  null;
+let pdfDoc = null;
 
-const pageViews =
-  [];
+const pageViews = [];
 
-let searchResults =
-  [];
+let searchResults = [];
 
-let currentSearch =
-  -1;
+let currentSearch = -1;
 
-let lastSearchQuery =
-  "";
+let lastSearchQuery = "";
 
-let renderGeneration =
-  0;
+let renderGeneration = 0;
 
 /* ============================================================
    BACK
@@ -1845,7 +1452,7 @@ backButton.addEventListener(
 );
 
 /* ============================================================
-   SAFE OUTPUT SCALE
+   SAFE CANVAS SCALE
 ============================================================ */
 
 function getSafeOutputScale(
@@ -1907,7 +1514,7 @@ function getSafeOutputScale(
   }
 
   return Math.max(
-    0.35,
+    .35,
 
     Math.min(
       outputScale,
@@ -1951,10 +1558,10 @@ function layoutPage(
   view.textLayerDiv.style.height =
     `${viewport.height}px`;
 
-  view.searchLayerDiv.style.width =
+  view.searchHighlightLayer.style.width =
     `${viewport.width}px`;
 
-  view.searchLayerDiv.style.height =
+  view.searchHighlightLayer.style.height =
     `${viewport.height}px`;
 
   view.linkLayerDiv.style.width =
@@ -1992,7 +1599,7 @@ function layoutPage(
 }
 
 /* ============================================================
-   RESET PAGE
+   RESET
 ============================================================ */
 
 function resetRenderedPage(
@@ -2004,25 +1611,37 @@ function resetRenderedPage(
 
   try{
 
-    view.canvas.width =
-      1;
-
-    view.canvas.height =
-      1;
+    view.canvas.width = 1;
+    view.canvas.height = 1;
 
   }catch{}
 
   view.textLayerDiv.replaceChildren();
 
-  view.searchLayerDiv.replaceChildren();
+  view.searchHighlightLayer.replaceChildren();
 
   view.linkLayerDiv.replaceChildren();
 
-  view.textLayer =
-    null;
+  view.textLayer = null;
+  view.textLayerEnd = null;
 
-  view.textLayerEnd =
-    null;
+  /*
+     Search positions are invalid after zoom.
+  */
+
+  for(
+    const result
+    of searchResults
+  ){
+
+    if(
+      result &&
+      result.view === view
+    ){
+
+      result.elements = [];
+    }
+  }
 }
 
 /* ============================================================
@@ -2123,7 +1742,7 @@ async function paintCanvas(
 }
 
 /* ============================================================
-   TEXT CONTENT
+   TEXT
 ============================================================ */
 
 async function ensureTextContent(
@@ -2166,6 +1785,14 @@ async function paintText(
       await ensureTextContent(
         view
       );
+
+    if(
+      generation !==
+      renderGeneration
+    ){
+
+      return;
+    }
 
     view.textLayerDiv.replaceChildren();
 
@@ -2233,16 +1860,14 @@ async function paintText(
     view.textLayerEnd =
       endOfContent;
 
-    view.textLayerDiv.addEventListener(
-      "pointerdown",
+    view.textLayerDiv.onpointerdown =
       () => {
 
         view.textLayerDiv.classList.add(
           "selecting"
         );
 
-      }
-    );
+      };
 
     view.textLayer =
       textLayer;
@@ -2283,6 +1908,14 @@ async function paintLinks(
         await view.page.getAnnotations({
           intent:"display"
         });
+    }
+
+    if(
+      generation !==
+      renderGeneration
+    ){
+
+      return;
     }
 
     renderLinkLayer(
@@ -2416,15 +2049,13 @@ function renderLinkLayer(
       annotation.dest
     ){
 
-      link.href =
-        "#";
+      link.href = "#";
 
       link.addEventListener(
         "click",
         async event => {
 
           event.preventDefault();
-
           event.stopPropagation();
 
           await openInternalDestination(
@@ -2481,12 +2112,12 @@ function createPageShell(
   textLayerDiv.className =
     "textLayer";
 
-  const searchLayerDiv =
+  const searchHighlightLayer =
     document.createElement(
       "div"
     );
 
-  searchLayerDiv.className =
+  searchHighlightLayer.className =
     "searchHighlightLayer";
 
   const linkLayerDiv =
@@ -2497,6 +2128,15 @@ function createPageShell(
   linkLayerDiv.className =
     "linkLayer";
 
+  /*
+     Correct layer order:
+
+     Canvas
+     Text
+     Search highlights
+     Links
+  */
+
   pageDiv.appendChild(
     canvas
   );
@@ -2506,7 +2146,7 @@ function createPageShell(
   );
 
   pageDiv.appendChild(
-    searchLayerDiv
+    searchHighlightLayer
   );
 
   pageDiv.appendChild(
@@ -2520,31 +2160,24 @@ function createPageShell(
   const view = {
 
     pageNumber,
-
     page,
 
     pageDiv,
-
     canvas,
 
     textLayerDiv,
-
-    searchLayerDiv,
-
+    searchHighlightLayer,
     linkLayerDiv,
 
     viewport:null,
 
     textContent:null,
-
     annotations:null,
 
     textLayer:null,
-
     textLayerEnd:null,
 
     renderedScale:null,
-
     renderingPromise:null
 
   };
@@ -2577,6 +2210,21 @@ async function renderPage(
     currentScale
   ){
 
+    /*
+       The page itself is already rendered.
+
+       Search highlights may still need rebuilding.
+    */
+
+    if(
+      lastSearchQuery
+    ){
+
+      rebuildSearchHighlightsForPage(
+        view
+      );
+    }
+
     return;
   }
 
@@ -2591,6 +2239,14 @@ async function renderPage(
     (async () => {
 
       try{
+
+        if(
+          generation !==
+          renderGeneration
+        ){
+
+          return;
+        }
 
         layoutPage(
           view,
@@ -2626,6 +2282,20 @@ async function renderPage(
           )
 
         ]);
+
+        /*
+           Search highlights must be generated AFTER
+           the text layer has been generated.
+        */
+
+        if(
+          lastSearchQuery
+        ){
+
+          rebuildSearchHighlightsForPage(
+            view
+          );
+        }
 
       }catch(error){
 
@@ -2715,14 +2385,17 @@ function renderNearbyPages(){
     }
 
     const rect =
-      view.pageDiv.getBoundingClientRect();
+      view.pageDiv
+        .getBoundingClientRect();
 
-    if(
+    const nearViewport =
       rect.bottom >=
         viewerRect.top - 1400 &&
-
       rect.top <=
-        viewerRect.bottom + 1400
+        viewerRect.bottom + 1400;
+
+    if(
+      nearViewport
     ){
 
       void renderPage(
@@ -2796,7 +2469,7 @@ async function ensurePageView(
 }
 
 /* ============================================================
-   INTERNAL DESTINATIONS
+   DESTINATIONS
 ============================================================ */
 
 async function resolveDestination(
@@ -2868,7 +2541,12 @@ async function resolveDestination(
 
     return pageIndex;
 
-  }catch{
+  }catch(error){
+
+    console.warn(
+      "Could not resolve PDF destination:",
+      error
+    );
 
     return null;
   }
@@ -2900,14 +2578,12 @@ async function scrollToView(
 
   viewer.scrollTo({
 
-    top:
-      Math.max(
-        0,
-        targetOffset - 8
-      ),
+    top:Math.max(
+      0,
+      targetOffset - 8
+    ),
 
-    behavior:
-      "smooth"
+    behavior:"smooth"
 
   });
 
@@ -2938,12 +2614,14 @@ async function openInternalDestination(
       pageIndex + 1
     );
 
-  if(view){
+  if(!view){
 
-    await scrollToView(
-      view
-    );
+    return;
   }
+
+  await scrollToView(
+    view
+  );
 }
 
 /* ============================================================
@@ -2970,12 +2648,6 @@ function setReadingMode(
       "reading-mode"
     );
 
-    readingModeFloat.textContent =
-      "×";
-
-    readingModeFloat.title =
-      "Exit Reading Mode";
-
     menu.style.display =
       "none";
 
@@ -2983,23 +2655,50 @@ function setReadingMode(
       "hidden"
     );
 
+    readingModeButton.title =
+      "Exit Reading Mode";
+
   }else{
 
     document.body.classList.remove(
       "reading-mode"
     );
 
-    readingModeFloat.textContent =
-      "▣";
-
-    readingModeFloat.title =
+    readingModeButton.title =
       "Reading Mode";
-
-    scheduleChromeSync();
   }
 
   requestAnimationFrame(
     () => {
+
+      /*
+         Recalculate the actual viewer height.
+
+         This is important because reading mode removes
+         the header, toolbar AND bottom title bar.
+      */
+
+      if(
+        readingMode
+      ){
+
+        layout.style.top =
+          "0";
+
+        layout.style.bottom =
+          "0";
+
+        viewer.style.height =
+          "100%";
+
+        loadingOverlay.style.top =
+          "0";
+
+      }else{
+
+        syncViewerTop();
+
+      }
 
       renderGeneration++;
 
@@ -3029,7 +2728,7 @@ function setReadingMode(
   );
 }
 
-readingModeFloat.addEventListener(
+readingModeButton.addEventListener(
   "click",
   event => {
 
@@ -3043,1018 +2742,7 @@ readingModeFloat.addEventListener(
 );
 
 /* ============================================================
-   TAP TO READ
-============================================================ */
-
-let tapState = {
-
-  active:false,
-
-  moved:false,
-
-  startX:0,
-
-  startY:0
-
-};
-
-viewer.addEventListener(
-  "pointerdown",
-  event => {
-
-    if(
-      event.target.closest(
-        ".textLayer"
-      ) ||
-      event.target.closest(
-        ".pdf-link"
-      ) ||
-      event.target.closest(
-        ".searchHighlightLayer"
-      )
-    ){
-
-      tapState.active =
-        false;
-
-      return;
-    }
-
-    const page =
-      event.target.closest(
-        ".page"
-      );
-
-    if(!page){
-
-      tapState.active =
-        false;
-
-      return;
-    }
-
-    tapState.active =
-      true;
-
-    tapState.moved =
-      false;
-
-    tapState.startX =
-      event.clientX;
-
-    tapState.startY =
-      event.clientY;
-
-  }
-);
-
-viewer.addEventListener(
-  "pointermove",
-  event => {
-
-    if(
-      !tapState.active
-    ){
-
-      return;
-    }
-
-    if(
-      Math.hypot(
-        event.clientX -
-        tapState.startX,
-
-        event.clientY -
-        tapState.startY
-      ) > 10
-    ){
-
-      tapState.moved =
-        true;
-    }
-  }
-);
-
-viewer.addEventListener(
-  "pointerup",
-  event => {
-
-    if(
-      !tapState.active
-    ){
-
-      return;
-    }
-
-    const moved =
-      tapState.moved;
-
-    tapState.active =
-      false;
-
-    if(moved){
-
-      return;
-    }
-
-    if(
-      event.target.closest(
-        ".textLayer"
-      ) ||
-      event.target.closest(
-        ".pdf-link"
-      ) ||
-      event.target.closest(
-        ".searchHighlightLayer"
-      )
-    ){
-
-      return;
-    }
-
-    if(
-      event.target.closest(
-        ".page"
-      )
-    ){
-
-      setReadingMode(
-        !readingMode
-      );
-    }
-  }
-);
-
-/* ============================================================
-   SEARCH HELPERS
-============================================================ */
-
-/*
-   Build a character map from the actual PDF.js text layer.
-
-   Unlike the previous version, this does NOT assume that a
-   search term has to exist inside one individual span.
-
-   Therefore:
-
-       "United"
-       " States"
-
-   can be found as:
-
-       "United States"
-
-   even when PDF.js split it across multiple spans.
-*/
-
-function getTextNodes(
-  view
-){
-
-  const nodes = [];
-
-  const walker =
-    document.createTreeWalker(
-      view.textLayerDiv,
-
-      NodeFilter.SHOW_TEXT,
-
-      {
-        acceptNode(node){
-
-          const parent =
-            node.parentElement;
-
-          if(
-            !node.nodeValue ||
-            !node.nodeValue.length
-          ){
-
-            return NodeFilter.FILTER_REJECT;
-          }
-
-          if(
-            parent?.closest(
-              ".endOfContent"
-            )
-          ){
-
-            return NodeFilter.FILTER_REJECT;
-          }
-
-          return NodeFilter.FILTER_ACCEPT;
-        }
-      }
-    );
-
-  let node;
-
-  while(
-    (node = walker.nextNode())
-  ){
-
-    nodes.push(node);
-  }
-
-  return nodes;
-}
-
-/* ============================================================
-   CREATE HIGHLIGHT RECTANGLES
-============================================================ */
-
-function createHighlightForRange(
-  view,
-  startNode,
-  startOffset,
-  endNode,
-  endOffset
-){
-
-  const range =
-    document.createRange();
-
-  try{
-
-    range.setStart(
-      startNode,
-      startOffset
-    );
-
-    range.setEnd(
-      endNode,
-      endOffset
-    );
-
-  }catch{
-
-    return [];
-  }
-
-  const pageRect =
-    view.searchLayerDiv.getBoundingClientRect();
-
-  const rects =
-    Array.from(
-      range.getClientRects()
-    );
-
-  const elements = [];
-
-  for(
-    const rect
-    of rects
-  ){
-
-    if(
-      rect.width <= 0 ||
-      rect.height <= 0
-    ){
-
-      continue;
-    }
-
-    const highlight =
-      document.createElement(
-        "div"
-      );
-
-    highlight.className =
-      "search-highlight";
-
-    highlight.style.left =
-      `${rect.left - pageRect.left}px`;
-
-    highlight.style.top =
-      `${rect.top - pageRect.top}px`;
-
-    highlight.style.width =
-      `${rect.width}px`;
-
-    highlight.style.height =
-      `${rect.height}px`;
-
-    view.searchLayerDiv.appendChild(
-      highlight
-    );
-
-    elements.push(
-      highlight
-    );
-  }
-
-  return elements;
-}
-
-/* ============================================================
-   FIND ALL OCCURRENCES ON ONE PAGE
-============================================================ */
-
-function findOccurrencesOnPage(
-  view,
-  query
-){
-
-  if(
-    !view ||
-    !query
-  ){
-
-    return [];
-  }
-
-  const nodes =
-    getTextNodes(
-      view
-    );
-
-  if(
-    !nodes.length
-  ){
-
-    return [];
-  }
-
-  let fullText =
-    "";
-
-  const positions = [];
-
-  for(
-    const node
-    of nodes
-  ){
-
-    const start =
-      fullText.length;
-
-    fullText +=
-      node.nodeValue;
-
-    positions.push({
-
-      node,
-
-      start,
-
-      end:
-        fullText.length
-
-    });
-  }
-
-  const lowerText =
-    fullText.toLowerCase();
-
-  const lowerQuery =
-    query.toLowerCase();
-
-  const occurrences =
-    [];
-
-  let searchAt =
-    0;
-
-  while(true){
-
-    const matchStart =
-      lowerText.indexOf(
-        lowerQuery,
-        searchAt
-      );
-
-    if(
-      matchStart === -1
-    ){
-
-      break;
-    }
-
-    const matchEnd =
-      matchStart +
-      lowerQuery.length;
-
-    let startInfo =
-      null;
-
-    let endInfo =
-      null;
-
-    for(
-      const info
-      of positions
-    ){
-
-      if(
-        !startInfo &&
-        matchStart >=
-          info.start &&
-        matchStart <
-          info.end
-      ){
-
-        startInfo =
-          info;
-      }
-
-      if(
-        matchEnd >
-          info.start &&
-        matchEnd <=
-          info.end
-      ){
-
-        endInfo =
-          info;
-
-        break;
-      }
-    }
-
-    if(
-      startInfo &&
-      endInfo
-    ){
-
-      const startOffset =
-        matchStart -
-        startInfo.start;
-
-      const endOffset =
-        matchEnd -
-        endInfo.start;
-
-      const elements =
-        createHighlightForRange(
-
-          view,
-
-          startInfo.node,
-          startOffset,
-
-          endInfo.node,
-          endOffset
-
-        );
-
-      if(
-        elements.length
-      ){
-
-        occurrences.push({
-
-          view,
-
-          pageNumber:
-            view.pageNumber,
-
-          elements
-
-        });
-      }
-    }
-
-    /*
-       Always advance by at least one character so repeated
-       matches cannot create an infinite loop.
-    */
-
-    searchAt =
-      matchStart +
-      Math.max(
-        1,
-        lowerQuery.length
-      );
-  }
-
-  return occurrences;
-}
-
-/* ============================================================
-   CLEAR SEARCH
-============================================================ */
-
-function clearSearchHighlights(){
-
-  for(
-    const view
-    of pageViews
-  ){
-
-    if(
-      view?.searchLayerDiv
-    ){
-
-      view.searchLayerDiv.replaceChildren();
-    }
-  }
-}
-
-/* ============================================================
-   MARK CURRENT RESULT
-============================================================ */
-
-function markCurrentSearch(){
-
-  for(
-    const result
-    of searchResults
-  ){
-
-    for(
-      const element
-      of result.elements
-    ){
-
-      element.classList.remove(
-        "search-current"
-      );
-    }
-  }
-
-  if(
-    currentSearch < 0 ||
-    currentSearch >=
-      searchResults.length
-  ){
-
-    return;
-  }
-
-  const result =
-    searchResults[
-      currentSearch
-    ];
-
-  for(
-    const element
-    of result.elements
-  ){
-
-    element.classList.add(
-      "search-current"
-    );
-  }
-}
-
-/* ============================================================
-   UPDATE SEARCH COUNTER
-============================================================ */
-
-function updateSearchCounter(){
-
-  document.getElementById(
-    "searchResults"
-  ).textContent =
-    searchResults.length
-
-      ? `${currentSearch + 1} of ${searchResults.length}`
-
-      : "0 of 0";
-}
-
-/* ============================================================
-   SEARCH ALL PAGES
-============================================================ */
-
-async function searchPDF(
-  query
-){
-
-  query =
-    query
-      .trim()
-      .toLowerCase();
-
-  clearSearchHighlights();
-
-  searchResults =
-    [];
-
-  currentSearch =
-    -1;
-
-  lastSearchQuery =
-    query;
-
-  updateSearchCounter();
-
-  if(!query){
-
-    return;
-  }
-
-  /*
-     Make every page object available.
-     This does not render every page.
-  */
-
-  for(
-    let pageNumber = 1;
-
-    pageNumber <=
-      (pdfDoc?.numPages || 0);
-
-    pageNumber++
-  ){
-
-    await ensurePageView(
-      pageNumber
-    );
-
-    if(
-      pageNumber % 4 === 0
-    ){
-
-      await new Promise(
-        resolve =>
-          setTimeout(
-            resolve,
-            0
-          )
-      );
-    }
-  }
-
-  /*
-     Load text content for every page first.
-
-     This is deliberately separate from rendering.
-  */
-
-  for(
-    const view
-    of pageViews
-  ){
-
-    if(!view){
-
-      continue;
-    }
-
-    try{
-
-      await ensureTextContent(
-        view
-      );
-
-    }catch(error){
-
-      console.warn(
-        `Could not read page ${view.pageNumber}:`,
-        error
-      );
-    }
-  }
-
-  /*
-     Render only pages that actually contain the query.
-  */
-
-  const matchingViews =
-    [];
-
-  for(
-    const view
-    of pageViews
-  ){
-
-    if(
-      !view ||
-      !view.textContent
-    ){
-
-      continue;
-    }
-
-    const pageText =
-      view.textContent.items
-
-        .map(
-          item =>
-            item.str || ""
-        )
-
-        .join("");
-
-    if(
-      pageText
-        .toLowerCase()
-        .includes(
-          query
-        )
-    ){
-
-      matchingViews.push(
-        view
-      );
-    }
-  }
-
-  for(
-    const view
-    of matchingViews
-  ){
-
-    await renderPage(
-      view
-    );
-  }
-
-  /*
-     Now find every individual occurrence.
-  */
-
-  for(
-    const view
-    of matchingViews
-  ){
-
-    const occurrences =
-      findOccurrencesOnPage(
-        view,
-        query
-      );
-
-    searchResults.push(
-      ...occurrences
-    );
-  }
-
-  if(
-    !searchResults.length
-  ){
-
-    updateSearchCounter();
-
-    alert(
-      "No results found."
-    );
-
-    return;
-  }
-
-  currentSearch =
-    0;
-
-  markCurrentSearch();
-
-  updateSearchCounter();
-
-  await showSearchResult(
-    0
-  );
-}
-
-/* ============================================================
-   SHOW SEARCH RESULT
-============================================================ */
-
-async function showSearchResult(
-  index
-){
-
-  if(
-    !searchResults.length
-  ){
-
-    return;
-  }
-
-  if(
-    index < 0
-  ){
-
-    index =
-      searchResults.length - 1;
-  }
-
-  if(
-    index >=
-    searchResults.length
-  ){
-
-    index =
-      0;
-  }
-
-  currentSearch =
-    index;
-
-  const result =
-    searchResults[
-      currentSearch
-    ];
-
-  if(!result){
-
-    return;
-  }
-
-  markCurrentSearch();
-
-  updateSearchCounter();
-
-  const view =
-    result.view;
-
-  pageInput.value =
-    String(
-      view.pageNumber
-    );
-
-  const firstElement =
-    result.elements[0];
-
-  if(
-    firstElement
-  ){
-
-    const viewerRect =
-      viewer.getBoundingClientRect();
-
-    const elementRect =
-      firstElement.getBoundingClientRect();
-
-    const pageRect =
-      view.pageDiv.getBoundingClientRect();
-
-    const target =
-      viewer.scrollTop +
-
-      (
-        pageRect.top -
-        viewerRect.top
-      ) +
-
-      (
-        elementRect.top -
-        pageRect.top
-      ) -
-
-      (
-        viewer.clientHeight /
-        2
-      ) +
-
-      (
-        elementRect.height /
-        2
-      );
-
-    viewer.scrollTo({
-
-      top:
-        Math.max(
-          0,
-          target
-        ),
-
-      behavior:
-        "smooth"
-
-    });
-  }
-}
-
-/* ============================================================
-   SEARCH NEXT / PREVIOUS
-============================================================ */
-
-async function searchOrAdvance(
-  step
-){
-
-  const query =
-    searchBox.value
-      .trim()
-      .toLowerCase();
-
-  if(
-    !query
-  ){
-
-    return;
-  }
-
-  if(
-    query !==
-      lastSearchQuery ||
-
-    searchResults.length === 0
-  ){
-
-    await searchPDF(
-      query
-    );
-
-    return;
-  }
-
-  await showSearchResult(
-    currentSearch + step
-  );
-}
-
-/* ============================================================
-   SEARCH INPUT
-============================================================ */
-
-searchBox.addEventListener(
-  "keydown",
-  async event => {
-
-    if(
-      event.key ===
-      "Enter"
-    ){
-
-      event.preventDefault();
-
-      await searchOrAdvance(
-        event.shiftKey
-          ? -1
-          : 1
-      );
-    }
-
-    if(
-      event.key ===
-      "Escape"
-    ){
-
-      searchPopup.classList.add(
-        "hidden"
-      );
-    }
-  }
-);
-
-document.getElementById(
-  "prevResult"
-).addEventListener(
-  "click",
-  () =>
-    void searchOrAdvance(
-      -1
-    )
-);
-
-document.getElementById(
-  "nextResult"
-).addEventListener(
-  "click",
-  () =>
-    void searchOrAdvance(
-      1
-    )
-);
-
-/* ============================================================
-   SEARCH BUTTON
-============================================================ */
-
-document.getElementById(
-  "searchButton"
-).addEventListener(
-  "click",
-  event => {
-
-    event.stopPropagation();
-
-    searchPopup.classList.toggle(
-      "hidden"
-    );
-
-    if(
-      !searchPopup.classList.contains(
-        "hidden"
-      )
-    ){
-
-      searchBox.focus();
-
-      searchBox.select();
-    }
-  }
-);
-
-searchPopup.addEventListener(
-  "click",
-  event =>
-    event.stopPropagation()
-);
-
-document.addEventListener(
-  "click",
-  () =>
-    searchPopup.classList.add(
-      "hidden"
-    )
-);
-
-/* ============================================================
-   ZOOM
+   RESCALE
 ============================================================ */
 
 async function rescaleAndRender(){
@@ -4069,8 +2757,7 @@ async function rescaleAndRender(){
     currentScale <= 0
   ){
 
-    currentScale =
-      1;
+    currentScale = 1;
   }
 
   zoomBox.value =
@@ -4078,7 +2765,7 @@ async function rescaleAndRender(){
       zoomLevel * 100
     )}%`;
 
-  const ratio =
+  const scrollRatio =
     viewer.scrollHeight >
     viewer.clientHeight
 
@@ -4121,7 +2808,7 @@ async function rescaleAndRender(){
       ){
 
         viewer.scrollTop =
-          ratio *
+          scrollRatio *
           (
             viewer.scrollHeight -
             viewer.clientHeight
@@ -4132,10 +2819,1393 @@ async function rescaleAndRender(){
   );
 }
 
+/* ============================================================
+   SEARCH — DATA
+============================================================ */
+
+/*
+   Each search result is an individual occurrence.
+
+   Example:
+
+   Page 1: 3 matches
+   Page 2: 4 matches
+   Page 5: 11 matches
+
+   searchResults.length = 18
+
+   NOT 3 pages.
+*/
+
+function normalizeSearchText(
+  value
+){
+
+  return String(
+    value || ""
+  )
+    .replace(/\s+/g," ")
+    .trim()
+    .toLowerCase();
+}
+
+/*
+   Creates a searchable string from PDF.js text items.
+
+   We intentionally preserve every item's text separately
+   because the individual span positions are what allow us
+   to create accurate highlights.
+*/
+
+function getTextItems(
+  view
+){
+
+  if(
+    !view.textContent ||
+    !Array.isArray(
+      view.textContent.items
+    )
+  ){
+
+    return [];
+  }
+
+  return view.textContent.items.filter(
+    item =>
+      typeof item.str ===
+      "string" &&
+      item.str.length > 0
+  );
+}
+
+/* ============================================================
+   SEARCH — BUILD OCCURRENCES
+============================================================ */
+
+function findOccurrencesOnPage(
+  view,
+  query
+){
+
+  const results = [];
+
+  if(
+    !view ||
+    !query
+  ){
+
+    return results;
+  }
+
+  const items =
+    getTextItems(
+      view
+    );
+
+  if(!items.length){
+
+    return results;
+  }
+
+  const queryLower =
+    query.toLowerCase();
+
+  /*
+     Each PDF text item corresponds to one or more text
+     spans in the text layer.
+
+     We search across the complete page text, but then map
+     each match back onto the relevant text items.
+  */
+
+  let fullText = "";
+
+  const itemRanges = [];
+
+  for(
+    let i = 0;
+    i < items.length;
+    i++
+  ){
+
+    const item =
+      items[i];
+
+    const start =
+      fullText.length;
+
+    fullText +=
+      item.str;
+
+    const end =
+      fullText.length;
+
+    itemRanges.push({
+
+      item,
+
+      start,
+
+      end,
+
+      index:i
+
+    });
+
+    /*
+       PDF text items often represent spaces separately,
+       so add a logical separator when appropriate.
+
+       Do NOT add it after the last item.
+    */
+
+    if(
+      i <
+      items.length - 1
+    ){
+
+      fullText += " ";
+    }
+  }
+
+  const searchableText =
+    fullText.toLowerCase();
+
+  let position = 0;
+
+  while(true){
+
+    const matchIndex =
+      searchableText.indexOf(
+        queryLower,
+        position
+      );
+
+    if(
+      matchIndex === -1
+    ){
+
+      break;
+    }
+
+    const matchEnd =
+      matchIndex +
+      queryLower.length;
+
+    const matchingItems =
+      itemRanges.filter(
+        range =>
+          range.end >
+            matchIndex &&
+          range.start <
+            matchEnd
+      );
+
+    if(
+      matchingItems.length
+    ){
+
+      const result = {
+
+        view,
+
+        pageNumber:
+          view.pageNumber,
+
+        matchIndex,
+
+        matchEnd,
+
+        items:
+          matchingItems.map(
+            range =>
+              range.item
+          ),
+
+        elements:[]
+
+      };
+
+      results.push(
+        result
+      );
+    }
+
+    /*
+       Move by one character so overlapping/adjacent
+       occurrences are not skipped.
+    */
+
+    position =
+      matchIndex + 1;
+  }
+
+  return results;
+}
+
+/* ============================================================
+   SEARCH — FIND SPANS
+============================================================ */
+
+function getTextLayerSpans(
+  view
+){
+
+  return Array.from(
+    view.textLayerDiv.querySelectorAll(
+      "span"
+    )
+  ).filter(
+    span =>
+      span.textContent &&
+      span.textContent.length
+  );
+}
+
+/*
+   PDF.js may create spans that correspond very closely to
+   text items, but not always one-to-one.
+
+   The safest way to locate a search match visually is to
+   compare the text layer's spans against the PDF text items
+   in document order.
+*/
+
+function getSpanForTextItem(
+  view,
+  item,
+  itemIndex
+){
+
+  const spans =
+    getTextLayerSpans(
+      view
+    );
+
+  if(
+    !spans.length
+  ){
+
+    return null;
+  }
+
+  /*
+     Cache the mapping after the first lookup.
+  */
+
+  if(
+    !view.spanMap
+  ){
+
+    view.spanMap = [];
+
+    let spanIndex = 0;
+
+    const items =
+      getTextItems(
+        view
+      );
+
+    for(
+      let i = 0;
+      i < items.length;
+      i++
+    ){
+
+      const itemText =
+        items[i].str;
+
+      let collected = "";
+
+      const matchedSpans = [];
+
+      while(
+        spanIndex <
+          spans.length &&
+        collected.length <
+          itemText.length
+      ){
+
+        const span =
+          spans[spanIndex];
+
+        const text =
+          span.textContent || "";
+
+        matchedSpans.push(
+          span
+        );
+
+        collected +=
+          text;
+
+        spanIndex++;
+      }
+
+      view.spanMap[i] =
+        matchedSpans;
+    }
+  }
+
+  return (
+    view.spanMap[itemIndex] ||
+    null
+  );
+}
+
+/* ============================================================
+   SEARCH — HIGHLIGHT ONE RESULT
+============================================================ */
+
+function highlightSearchResult(
+  result
+){
+
+  const view =
+    result.view;
+
+  if(!view){
+
+    return;
+  }
+
+  const layer =
+    view.searchHighlightLayer;
+
+  if(!layer){
+
+    return;
+  }
+
+  /*
+     Remove old highlight elements belonging to this result.
+  */
+
+  result.elements = [];
+
+  const items =
+    getTextItems(
+      view
+    );
+
+  const queryLength =
+    result.matchEnd -
+    result.matchIndex;
+
+  /*
+     Determine the text range within each PDF text item.
+  */
+
+  for(
+    let itemIndex = 0;
+    itemIndex < items.length;
+    itemIndex++
+  ){
+
+    const item =
+      items[itemIndex];
+
+    const itemStart =
+      getItemStart(
+        view,
+        itemIndex
+      );
+
+    const itemEnd =
+      itemStart +
+      item.str.length;
+
+    const overlapStart =
+      Math.max(
+        result.matchIndex,
+        itemStart
+      );
+
+    const overlapEnd =
+      Math.min(
+        result.matchEnd,
+        itemEnd
+      );
+
+    if(
+      overlapEnd <=
+      overlapStart
+    ){
+
+      continue;
+    }
+
+    const spans =
+      getSpanForTextItem(
+        view,
+        item,
+        itemIndex
+      );
+
+    if(
+      !spans ||
+      !spans.length
+    ){
+
+      continue;
+    }
+
+    /*
+       If the match covers the item, highlight the entire
+       item span.
+
+       If it covers only part of the item, use the span's
+       bounding box. This is visually accurate enough while
+       keeping the actual text layer untouched and selectable.
+    */
+
+    const firstSpan =
+      spans[0];
+
+    const lastSpan =
+      spans[
+        spans.length - 1
+      ];
+
+    const firstRect =
+      firstSpan.getBoundingClientRect();
+
+    const lastRect =
+      lastSpan.getBoundingClientRect();
+
+    const layerRect =
+      layer.getBoundingClientRect();
+
+    if(
+      firstRect.width <= 0 ||
+      firstRect.height <= 0
+    ){
+
+      continue;
+    }
+
+    const left =
+      firstRect.left -
+      layerRect.left;
+
+    const top =
+      firstRect.top -
+      layerRect.top;
+
+    const right =
+      lastRect.right -
+      layerRect.left;
+
+    const bottom =
+      lastRect.bottom -
+      layerRect.top;
+
+    const highlight =
+      document.createElement(
+        "div"
+      );
+
+    highlight.className =
+      "search-highlight";
+
+    highlight.style.left =
+      `${Math.max(0,left)}px`;
+
+    highlight.style.top =
+      `${Math.max(0,top)}px`;
+
+    highlight.style.width =
+      `${Math.max(2,right-left)}px`;
+
+    highlight.style.height =
+      `${Math.max(2,bottom-top)}px`;
+
+    layer.appendChild(
+      highlight
+    );
+
+    result.elements.push(
+      highlight
+    );
+  }
+
+  /*
+     Fallback when the PDF text layer does not map cleanly.
+
+     Highlight the complete text-item boxes rather than
+     displaying nothing.
+  */
+
+  if(
+    result.elements.length === 0
+  ){
+
+    for(
+      let itemIndex = 0;
+      itemIndex < items.length;
+      itemIndex++
+    ){
+
+      const item =
+        items[itemIndex];
+
+      const itemStart =
+        getItemStart(
+          view,
+          itemIndex
+        );
+
+      const itemEnd =
+        itemStart +
+        item.str.length;
+
+      if(
+        itemEnd <=
+          result.matchIndex ||
+        itemStart >=
+          result.matchEnd
+      ){
+
+        continue;
+      }
+
+      const spans =
+        getSpanForTextItem(
+          view,
+          item,
+          itemIndex
+        );
+
+      if(
+        !spans ||
+        !spans.length
+      ){
+
+        continue;
+      }
+
+      for(
+        const span
+        of spans
+      ){
+
+        const rect =
+          span.getBoundingClientRect();
+
+        const layerRect =
+          layer.getBoundingClientRect();
+
+        const highlight =
+          document.createElement(
+            "div"
+          );
+
+        highlight.className =
+          "search-highlight";
+
+        highlight.style.left =
+          `${rect.left-layerRect.left}px`;
+
+        highlight.style.top =
+          `${rect.top-layerRect.top}px`;
+
+        highlight.style.width =
+          `${Math.max(2,rect.width)}px`;
+
+        highlight.style.height =
+          `${Math.max(2,rect.height)}px`;
+
+        layer.appendChild(
+          highlight
+        );
+
+        result.elements.push(
+          highlight
+        );
+      }
+    }
+  }
+
+  return result.elements;
+}
+
+/* ============================================================
+   SEARCH — ITEM START
+============================================================ */
+
+function getItemStart(
+  view,
+  itemIndex
+){
+
+  const items =
+    getTextItems(
+      view
+    );
+
+  let start = 0;
+
+  for(
+    let i = 0;
+    i < itemIndex;
+    i++
+  ){
+
+    start +=
+      items[i].str.length;
+
+    if(
+      i <
+      items.length - 1
+    ){
+
+      start += 1;
+    }
+  }
+
+  return start;
+}
+
+/* ============================================================
+   SEARCH — REBUILD PAGE HIGHLIGHTS
+============================================================ */
+
+function rebuildSearchHighlightsForPage(
+  view
+){
+
+  if(
+    !view ||
+    !lastSearchQuery
+  ){
+
+    return;
+  }
+
+  const layer =
+    view.searchHighlightLayer;
+
+  if(!layer){
+
+    return;
+  }
+
+  layer.replaceChildren();
+
+  /*
+     Remove stale elements.
+  */
+
+  for(
+    const result
+    of searchResults
+  ){
+
+    if(
+      result &&
+      result.view === view
+    ){
+
+      result.elements = [];
+    }
+  }
+
+  const pageResults =
+    searchResults.filter(
+      result =>
+        result.view === view
+    );
+
+  for(
+    const result
+    of pageResults
+  ){
+
+    highlightSearchResult(
+      result
+    );
+  }
+
+  markCurrentSearch();
+}
+
+/* ============================================================
+   SEARCH — CLEAR
+============================================================ */
+
+function clearSearchHighlights(){
+
+  for(
+    const view
+    of pageViews
+  ){
+
+    if(
+      !view
+    ){
+
+      continue;
+    }
+
+    if(
+      view.searchHighlightLayer
+    ){
+
+      view.searchHighlightLayer.replaceChildren();
+    }
+  }
+
+  for(
+    const result
+    of searchResults
+  ){
+
+    if(result){
+
+      result.elements = [];
+    }
+  }
+}
+
+/* ============================================================
+   SEARCH — MARK CURRENT
+============================================================ */
+
+function markCurrentSearch(){
+
+  /*
+     First make every result normal blue.
+  */
+
+  for(
+    const result
+    of searchResults
+  ){
+
+    if(
+      !result ||
+      !result.elements
+    ){
+
+      continue;
+    }
+
+    for(
+      const element
+      of result.elements
+    ){
+
+      element.classList.remove(
+        "search-current"
+      );
+    }
+  }
+
+  if(
+    currentSearch < 0 ||
+    currentSearch >=
+      searchResults.length
+  ){
+
+    return;
+  }
+
+  const current =
+    searchResults[
+      currentSearch
+    ];
+
+  if(
+    !current ||
+    !current.elements
+  ){
+
+    return;
+  }
+
+  for(
+    const element
+    of current.elements
+  ){
+
+    element.classList.add(
+      "search-current"
+    );
+  }
+}
+
+/* ============================================================
+   SEARCH — COUNTER
+============================================================ */
+
+function updateSearchCounter(){
+
+  const counter =
+    document.getElementById(
+      "searchResults"
+    );
+
+  if(
+    !searchResults.length ||
+    currentSearch < 0
+  ){
+
+    counter.textContent =
+      "0 of 0";
+
+    return;
+  }
+
+  counter.textContent =
+    `${currentSearch + 1} of ${searchResults.length}`;
+}
+
+/* ============================================================
+   SEARCH — MAIN SEARCH
+============================================================ */
+
+async function searchPDF(
+  query
+){
+
+  query =
+    normalizeSearchText(
+      query
+    );
+
+  searchResults = [];
+
+  currentSearch =
+    -1;
+
+  clearSearchHighlights();
+
+  if(
+    query === ""
+  ){
+
+    lastSearchQuery =
+      "";
+
+    updateSearchCounter();
+
+    return;
+  }
+
+  lastSearchQuery =
+    query;
+
+  /*
+     Make sure every page exists.
+
+     This does NOT render every canvas.
+     It only obtains the PDF page objects and text data.
+  */
+
+  for(
+    let pageNumber = 1;
+
+    pageNumber <=
+      (pdfDoc?.numPages || 0);
+
+    pageNumber++
+  ){
+
+    const view =
+      await ensurePageView(
+        pageNumber
+      );
+
+    if(
+      !view
+    ){
+
+      continue;
+    }
+
+    try{
+
+      await ensureTextContent(
+        view
+      );
+
+    }catch(error){
+
+      console.warn(
+        `Could not extract text from page ${pageNumber}:`,
+        error
+      );
+    }
+
+    /*
+       Yield occasionally so mobile browsers do not appear
+       frozen during a large PDF search.
+    */
+
+    if(
+      pageNumber % 3 === 0
+    ){
+
+      await new Promise(
+        resolve =>
+          setTimeout(
+            resolve,
+            0
+          )
+      );
+    }
+  }
+
+  /*
+     Find EVERY occurrence on EVERY page.
+  */
+
+  for(
+    const view
+    of pageViews
+  ){
+
+    if(
+      !view ||
+      !view.textContent
+    ){
+
+      continue;
+    }
+
+    const occurrences =
+      findOccurrencesOnPage(
+        view,
+        query
+      );
+
+    searchResults.push(
+      ...occurrences
+    );
+  }
+
+  if(
+    !searchResults.length
+  ){
+
+    updateSearchCounter();
+
+    alert(
+      "No results found."
+    );
+
+    return;
+  }
+
+  /*
+     Render pages containing matches so their text spans
+     exist and can be highlighted.
+  */
+
+  for(
+    const result
+    of searchResults
+  ){
+
+    if(
+      result.view.renderedScale !==
+      currentScale
+    ){
+
+      await renderPage(
+        result.view
+      );
+    }
+
+    /*
+       Avoid repeatedly rebuilding the entire page.
+    */
+
+    if(
+      result.elements.length === 0
+    ){
+
+      highlightSearchResult(
+        result
+      );
+    }
+  }
+
+  /*
+     Start at the FIRST INDIVIDUAL occurrence.
+  */
+
+  currentSearch =
+    0;
+
+  markCurrentSearch();
+
+  updateSearchCounter();
+
+  await goToSearchResult(
+    currentSearch
+  );
+}
+
+/* ============================================================
+   SEARCH — GO TO RESULT
+============================================================ */
+
+async function goToSearchResult(
+  index
+){
+
+  if(
+    !searchResults.length
+  ){
+
+    return;
+  }
+
+  if(
+    index < 0
+  ){
+
+    index =
+      searchResults.length - 1;
+  }
+
+  if(
+    index >=
+    searchResults.length
+  ){
+
+    index = 0;
+  }
+
+  currentSearch =
+    index;
+
+  const result =
+    searchResults[
+      currentSearch
+    ];
+
+  if(!result){
+
+    return;
+  }
+
+  const view =
+    result.view;
+
+  if(!view){
+
+    return;
+  }
+
+  /*
+     Make sure this page is rendered.
+  */
+
+  await renderPage(
+    view
+  );
+
+  /*
+     If zoom/rendering destroyed the highlight, recreate it.
+  */
+
+  if(
+    !result.elements ||
+    result.elements.length === 0
+  ){
+
+    /*
+       Rebuild all results on this page because the span
+       positions may have changed.
+    */
+
+    rebuildSearchHighlightsForPage(
+      view
+    );
+
+    /*
+       The result object is still the same object, so its
+       elements array has now been updated.
+    */
+
+    if(
+      !result.elements ||
+      !result.elements.length
+    ){
+
+      highlightSearchResult(
+        result
+      );
+    }
+  }
+
+  markCurrentSearch();
+
+  updateSearchCounter();
+
+  pageInput.value =
+    String(
+      view.pageNumber
+    );
+
+  /*
+     THIS IS THE IMPORTANT PART.
+
+     Scroll to the actual highlight, not merely to the page.
+
+     Two animation frames give the browser time to finish
+     layout before measuring/scrolling.
+  */
+
+  requestAnimationFrame(
+    () => {
+
+      requestAnimationFrame(
+        () => {
+
+          const currentResult =
+            searchResults[
+              currentSearch
+            ];
+
+          const highlight =
+            currentResult?.elements?.[0];
+
+          if(
+            highlight &&
+            highlight.isConnected
+          ){
+
+            highlight.scrollIntoView({
+
+              behavior:"smooth",
+
+              block:"center",
+
+              inline:"nearest"
+
+            });
+
+          }else{
+
+            /*
+               Safe fallback.
+            */
+
+            view.pageDiv.scrollIntoView({
+
+              behavior:"smooth",
+
+              block:"center",
+
+              inline:"nearest"
+
+            });
+          }
+
+        }
+      );
+
+    }
+  );
+}
+
+/* ============================================================
+   SEARCH — NEXT/PREVIOUS
+============================================================ */
+
+async function searchOrAdvance(
+  step
+){
+
+  const query =
+    normalizeSearchText(
+      searchBox.value
+    );
+
+  if(
+    !query
+  ){
+
+    return;
+  }
+
+  /*
+     New query.
+  */
+
+  if(
+    query !==
+    lastSearchQuery ||
+    searchResults.length === 0
+  ){
+
+    await searchPDF(
+      query
+    );
+
+    return;
+  }
+
+  /*
+     Move through individual occurrences.
+
+     This is NOT page-based.
+  */
+
+  await goToSearchResult(
+    currentSearch + step
+  );
+}
+
+/* ============================================================
+   SEARCH INPUT
+============================================================ */
+
+searchBox.addEventListener(
+  "keydown",
+  async event => {
+
+    if(
+      event.key ===
+      "Enter"
+    ){
+
+      event.preventDefault();
+
+      /*
+         Shift + Enter = previous.
+         Enter = next.
+      */
+
+      await searchOrAdvance(
+        event.shiftKey
+          ? -1
+          : 1
+      );
+    }
+
+  }
+);
+
 document.getElementById(
-  "zoomIn"
+  "prevResult"
 ).addEventListener(
   "click",
+  async event => {
+
+    event.stopPropagation();
+
+    await searchOrAdvance(
+      -1
+    );
+
+  }
+);
+
+document.getElementById(
+  "nextResult"
+).addEventListener(
+  "click",
+  async event => {
+
+    event.stopPropagation();
+
+    await searchOrAdvance(
+      1
+    );
+
+  }
+);
+
+/* ============================================================
+   SEARCH BUTTON
+============================================================ */
+
+document.getElementById(
+  "searchButton"
+).onclick =
+  event => {
+
+    event.stopPropagation();
+
+    searchPopup.classList.toggle(
+      "hidden"
+    );
+
+    if(
+      !searchPopup.classList.contains(
+        "hidden"
+      )
+    ){
+
+      searchBox.focus();
+
+    }
+
+  };
+
+searchPopup.addEventListener(
+  "click",
+  event =>
+    event.stopPropagation()
+);
+
+document.addEventListener(
+  "click",
+  () =>
+    searchPopup.classList.add(
+      "hidden"
+    )
+);
+
+/* ============================================================
+   SELECTION CLEANUP
+============================================================ */
+
+document.addEventListener(
+  "selectionchange",
+  () => {
+
+    const selection =
+      document.getSelection();
+
+    if(
+      selection &&
+      selection.toString().length
+    ){
+
+      return;
+    }
+
+    for(
+      const view
+      of pageViews
+    ){
+
+      if(
+        view?.textLayerDiv
+      ){
+
+        view.textLayerDiv.classList.remove(
+          "selecting"
+        );
+      }
+    }
+
+  }
+);
+
+/* ============================================================
+   ZOOM IN
+============================================================ */
+
+document.getElementById(
+  "zoomIn"
+).onclick =
   async () => {
 
     const next =
@@ -4146,21 +4216,29 @@ document.getElementById(
       );
 
     if(
-      next !== undefined
+      next === undefined
     ){
 
-      zoomLevel =
-        next;
-
-      await rescaleAndRender();
+      return;
     }
-  }
-);
+
+    zoomLevel =
+      Math.min(
+        next,
+        MAX_ZOOM
+      );
+
+    await rescaleAndRender();
+
+  };
+
+/* ============================================================
+   ZOOM OUT
+============================================================ */
 
 document.getElementById(
   "zoomOut"
-).addEventListener(
-  "click",
+).onclick =
   async () => {
 
     const previous =
@@ -4173,16 +4251,80 @@ document.getElementById(
         );
 
     if(
-      previous !== undefined
+      previous === undefined
     ){
 
-      zoomLevel =
-        previous;
-
-      await rescaleAndRender();
+      return;
     }
-  }
-);
+
+    zoomLevel =
+      previous;
+
+    await rescaleAndRender();
+
+  };
+
+/* ============================================================
+   FIT WIDTH
+============================================================ */
+
+document.getElementById(
+  "fitWidth"
+).onclick =
+  async () => {
+
+    const firstView =
+      pageViews.find(
+        Boolean
+      );
+
+    if(!firstView){
+
+      return;
+    }
+
+    baseScale =
+      getFitWidthScale(
+        firstView.page
+      );
+
+    zoomLevel =
+      1;
+
+    await rescaleAndRender();
+
+  };
+
+/* ============================================================
+   FIT PAGE
+============================================================ */
+
+document.getElementById(
+  "fitPage"
+).onclick =
+  async () => {
+
+    const firstView =
+      pageViews.find(
+        Boolean
+      );
+
+    if(!firstView){
+
+      return;
+    }
+
+    baseScale =
+      getFitPageScale(
+        firstView.page
+      );
+
+    zoomLevel =
+      1;
+
+    await rescaleAndRender();
+
+  };
 
 /* ============================================================
    MANUAL ZOOM
@@ -4209,17 +4351,17 @@ zoomBox.addEventListener(
       );
 
     if(
-      Number.isNaN(value)
+      Number.isNaN(
+        value
+      )
     ){
 
-      value =
-        100;
+      value = 100;
     }
 
     value =
       Math.max(
         25,
-
         Math.min(
           300,
           value
@@ -4230,70 +4372,7 @@ zoomBox.addEventListener(
       value / 100;
 
     await rescaleAndRender();
-  }
-);
 
-/* ============================================================
-   FIT WIDTH
-============================================================ */
-
-document.getElementById(
-  "fitWidth"
-).addEventListener(
-  "click",
-  async () => {
-
-    const firstView =
-      pageViews.find(
-        Boolean
-      );
-
-    if(!firstView){
-
-      return;
-    }
-
-    baseScale =
-      getFitWidthScale(
-        firstView.page
-      );
-
-    zoomLevel =
-      1;
-
-    await rescaleAndRender();
-  }
-);
-
-/* ============================================================
-   FIT PAGE
-============================================================ */
-
-document.getElementById(
-  "fitPage"
-).addEventListener(
-  "click",
-  async () => {
-
-    const firstView =
-      pageViews.find(
-        Boolean
-      );
-
-    if(!firstView){
-
-      return;
-    }
-
-    baseScale =
-      getFitPageScale(
-        firstView.page
-      );
-
-    zoomLevel =
-      1;
-
-    await rescaleAndRender();
   }
 );
 
@@ -4325,14 +4404,12 @@ pageInput.addEventListener(
       )
     ){
 
-      pageNumber =
-        1;
+      pageNumber = 1;
     }
 
     pageNumber =
       Math.max(
         1,
-
         Math.min(
           pdfDoc?.numPages || 1,
           pageNumber
@@ -4344,17 +4421,20 @@ pageInput.addEventListener(
         pageNumber
       );
 
-    if(view){
+    if(!view){
 
-      pageInput.value =
-        String(
-          pageNumber
-        );
-
-      await scrollToView(
-        view
-      );
+      return;
     }
+
+    pageInput.value =
+      String(
+        pageNumber
+      );
+
+    await scrollToView(
+      view
+    );
+
   }
 );
 
@@ -4393,7 +4473,8 @@ viewer.addEventListener(
       }
 
       const rect =
-        view.pageDiv.getBoundingClientRect();
+        view.pageDiv
+          .getBoundingClientRect();
 
       const distance =
         Math.abs(
@@ -4421,211 +4502,7 @@ viewer.addEventListener(
       );
 
     renderNearbyPages();
-  }
-);
 
-/* ============================================================
-   MENU
-============================================================ */
-
-menuButton.addEventListener(
-  "click",
-  event => {
-
-    event.stopPropagation();
-
-    menu.style.display =
-      menu.style.display === "block"
-
-        ? "none"
-
-        : "block";
-  }
-);
-
-menu.addEventListener(
-  "click",
-  event =>
-    event.stopPropagation()
-);
-
-document.addEventListener(
-  "click",
-  () => {
-
-    menu.style.display =
-      "none";
-  }
-);
-
-/* ============================================================
-   DOWNLOAD
-============================================================ */
-
-document.getElementById(
-  "downloadBtn"
-).addEventListener(
-  "click",
-  () => {
-
-    const link =
-      document.createElement(
-        "a"
-      );
-
-    link.href =
-      file;
-
-    link.download =
-      file.split("/")
-        .pop();
-
-    document.body.appendChild(
-      link
-    );
-
-    link.click();
-
-    link.remove();
-
-    menu.style.display =
-      "none";
-  }
-);
-
-/* ============================================================
-   NEW TAB
-============================================================ */
-
-document.getElementById(
-  "newTabBtn"
-).onclick =
-  () =>
-    window.open(
-      file,
-      "_blank"
-    );
-
-/* ============================================================
-   FULLSCREEN
-============================================================ */
-
-document.getElementById(
-  "fullscreenBtn"
-).onclick =
-  async () => {
-
-    try{
-
-      await document.documentElement
-        .requestFullscreen();
-
-    }catch(error){
-
-      console.warn(
-        "Fullscreen failed:",
-        error
-      );
-    }
-  };
-
-/* ============================================================
-   SHARE
-============================================================ */
-
-document.getElementById(
-  "copyLinkBtn"
-).addEventListener(
-  "click",
-  async () => {
-
-    const url =
-      window.location.href;
-
-    menu.style.display =
-      "none";
-
-    if(
-      navigator.share
-    ){
-
-      try{
-
-        await navigator.share({
-
-          title:
-            document.title,
-
-          text:
-            document.getElementById(
-              "title"
-            ).textContent,
-
-          url
-
-        });
-
-      }catch{
-
-        /* cancelled */
-      }
-
-      return;
-    }
-
-    try{
-
-      await navigator.clipboard.writeText(
-        url
-      );
-
-      alert(
-        "Link copied to clipboard!"
-      );
-
-    }catch{
-
-      window.prompt(
-        "Copy this link:",
-        url
-      );
-    }
-  }
-);
-
-/* ============================================================
-   SELECTION CLEANUP
-============================================================ */
-
-document.addEventListener(
-  "selectionchange",
-  () => {
-
-    const selection =
-      document.getSelection();
-
-    if(
-      selection &&
-      selection.toString().length
-    ){
-
-      return;
-    }
-
-    for(
-      const view
-      of pageViews
-    ){
-
-      if(
-        view?.textLayerDiv
-      ){
-
-        view.textLayerDiv.classList.remove(
-          "selecting"
-        );
-      }
-    }
   }
 );
 
@@ -4667,21 +4544,23 @@ window.addEventListener(
                 Boolean
               );
 
-            if(firstView){
+            if(!firstView){
 
-              baseScale =
-                getFitWidthScale(
-                  firstView.page
-                );
+              return;
             }
+
+            baseScale =
+              getFitWidthScale(
+                firstView.page
+              );
           }
 
           await rescaleAndRender();
 
         },
-
         150
       );
+
   }
 );
 
@@ -4695,8 +4574,11 @@ if(
 
   const chromeObserver =
     new ResizeObserver(
-      () =>
-        syncViewerTop()
+      () => {
+
+        syncViewerTop();
+
+      }
     );
 
   chromeObserver.observe(
@@ -4707,8 +4589,6 @@ if(
     toolbar
   );
 }
-
-scheduleChromeSync();
 
 /* ============================================================
    LOAD PDF
@@ -4744,6 +4624,10 @@ try{
   ).textContent =
     `of ${pdfDoc.numPages}`;
 
+  /*
+     Load page 1 first.
+  */
+
   const firstPage =
     await pdfDoc.getPage(
       1
@@ -4759,6 +4643,9 @@ try{
 
   currentScale =
     baseScale;
+
+  zoomBox.value =
+    "100%";
 
   const firstView =
     createPageShell(
@@ -4785,7 +4672,7 @@ try{
     "none";
 
   /*
-     Initialize remaining pages in the background.
+     Initialize the remaining pages in the background.
   */
 
   void (async () => {
@@ -4834,7 +4721,8 @@ try{
           viewer.getBoundingClientRect();
 
         const pageRect =
-          view.pageDiv.getBoundingClientRect();
+          view.pageDiv
+            .getBoundingClientRect();
 
         if(
           pageRect.top <=
@@ -4861,6 +4749,7 @@ try{
           error
         );
       }
+
     }
 
   })();
@@ -4901,6 +4790,180 @@ try{
 }
 
 /* ============================================================
+   MENU
+============================================================ */
+
+menuButton.addEventListener(
+  "click",
+  event => {
+
+    event.stopPropagation();
+
+    menu.style.display =
+      menu.style.display === "block"
+        ? "none"
+        : "block";
+
+  }
+);
+
+menu.addEventListener(
+  "click",
+  event =>
+    event.stopPropagation()
+);
+
+document.addEventListener(
+  "click",
+  () => {
+
+    menu.style.display =
+      "none";
+
+  }
+);
+
+/* ============================================================
+   DOWNLOAD
+============================================================ */
+
+document.getElementById(
+  "downloadBtn"
+).addEventListener(
+  "click",
+  () => {
+
+    const link =
+      document.createElement(
+        "a"
+      );
+
+    link.href =
+      file;
+
+    link.download =
+      file.split("/")
+        .pop();
+
+    document.body.appendChild(
+      link
+    );
+
+    link.click();
+
+    link.remove();
+
+    menu.style.display =
+      "none";
+
+  }
+);
+
+/* ============================================================
+   NEW TAB
+============================================================ */
+
+document.getElementById(
+  "newTabBtn"
+).onclick =
+  () =>
+    window.open(
+      file,
+      "_blank"
+    );
+
+/* ============================================================
+   FULLSCREEN
+============================================================ */
+
+document.getElementById(
+  "fullscreenBtn"
+).onclick =
+  async () => {
+
+    try{
+
+      await document.documentElement
+        .requestFullscreen();
+
+    }catch(error){
+
+      console.warn(
+        "Fullscreen failed:",
+        error
+      );
+    }
+
+  };
+
+/* ============================================================
+   SHARE
+============================================================ */
+
+document.getElementById(
+  "copyLinkBtn"
+).addEventListener(
+  "click",
+  async () => {
+
+    const url =
+      window.location.href;
+
+    menu.style.display =
+      "none";
+
+    if(
+      navigator.share
+    ){
+
+      try{
+
+        await navigator.share({
+
+          title:
+            document.title,
+
+          text:
+            document.getElementById(
+              "title"
+            ).textContent,
+
+          url
+
+        });
+
+      }catch{
+
+        /* User cancelled */
+
+      }
+
+      return;
+    }
+
+    try{
+
+      await navigator.clipboard.writeText(
+        url
+      );
+
+      alert(
+        "Link copied to clipboard!"
+      );
+
+    }catch{
+
+      window.prompt(
+        "Copy this link:",
+        url
+      );
+
+    }
+
+  }
+);
+
+/* ============================================================
    CLEANUP
 ============================================================ */
 
@@ -4937,6 +5000,7 @@ window.addEventListener(
           1;
 
       }catch{}
+
     }
 
     try{
@@ -4944,13 +5008,21 @@ window.addEventListener(
       if(pdfDoc){
 
         pdfDoc.destroy();
+
       }
 
     }catch{}
+
   }
 );
+
+/* ============================================================
+   INITIAL CHROME SYNC
+============================================================ */
+
+scheduleChromeSync();
 
 </script>
 
 </body>
-  </html>
+</html>
