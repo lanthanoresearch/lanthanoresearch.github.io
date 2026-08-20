@@ -935,12 +935,6 @@ input:focus-visible{
    FLOATING READING MODE
 ============================================================ */
 
-/*
-   Deliberately positioned ABOVE the title bar.
-
-   It no longer sits on the title bar.
-*/
-
 #readingModeFloat{
 
   position:fixed;
@@ -994,21 +988,50 @@ input:focus-visible{
   transform:scale(.96);
 }
 
+/* ============================================================
+   READING MODE
+============================================================ */
+
+/*
+   Reading mode completely removes the normal viewer chrome.
+   The elements are not merely visually hidden; their height,
+   padding, borders, and spacing are also collapsed.
+*/
+
 body.reading-mode header,
 body.reading-mode #toolbar,
 body.reading-mode #titleBar,
 body.reading-mode #searchPopup,
 body.reading-mode #menu{
+
   display:none !important;
+
+  height:0 !important;
+
+  min-height:0 !important;
+
+  max-height:0 !important;
+
+  margin:0 !important;
+
+  padding:0 !important;
+
+  border:0 !important;
+
+  overflow:hidden !important;
 }
 
 body.reading-mode #layout{
-  top:0;
 
-  height:100%;
+  top:0 !important;
+
+  height:100% !important;
+
+  position:absolute;
 }
 
 body.reading-mode #viewer{
+
   height:100%;
 
   padding-top:20px;
@@ -1017,6 +1040,7 @@ body.reading-mode #viewer{
 }
 
 body.reading-mode #loadingOverlay{
+
   inset:0;
 }
 
@@ -3111,13 +3135,27 @@ function setReadingMode(
       "none";
 
     /*
-       Reading mode does not destroy search state.
-       It only closes the popup.
+       Reading mode closes the search popup,
+       but does not destroy the search data.
     */
 
     searchPopup.classList.add(
       "hidden"
     );
+
+    /*
+       Explicitly remove the normal chrome
+       space from the viewer.
+    */
+
+    layout.style.top =
+      "0px";
+
+    layout.style.height =
+      "100%";
+
+    loadingOverlay.style.top =
+      "0px";
 
   }else{
 
@@ -3130,6 +3168,17 @@ function setReadingMode(
 
     readingModeFloat.title =
       "Reading Mode";
+
+    /*
+       Let the normal chrome measurement restore
+       the correct viewer position.
+    */
+
+    layout.style.height =
+      "";
+
+    loadingOverlay.style.top =
+      "";
 
     scheduleChromeSync();
   }
@@ -3893,13 +3942,6 @@ async function rebuildSearchHighlights(
       query
     );
 
-  /*
-     Search all pages independently.
-
-     A page is only rendered when its actual text content
-     contains the requested search term.
-  */
-
   for(
     let pageNumber = 1;
 
@@ -3959,10 +4001,6 @@ async function rebuildSearchHighlights(
       continue;
     }
 
-    /*
-       Render this page so the text-layer DOM exists.
-    */
-
     await renderPage(
       view
     );
@@ -3974,11 +4012,6 @@ async function rebuildSearchHighlights(
 
       return;
     }
-
-    /*
-       Allow the browser to finish positioning the text layer
-       before getClientRects() is used.
-    */
 
     await new Promise(
       resolve =>
@@ -4055,10 +4088,6 @@ function scheduleSearch(){
   clearTimeout(
     searchTimer
   );
-
-  /*
-     Every new input invalidates all previous searches.
-  */
 
   searchGeneration++;
 
@@ -4340,10 +4369,6 @@ searchPopup.addEventListener(
   "click",
   event => {
 
-    /*
-       Clicking anywhere inside the popup must NOT cancel it.
-    */
-
     event.stopPropagation();
 
   }
@@ -4383,11 +4408,6 @@ document.addEventListener(
 
       return;
     }
-
-    /*
-       Any tap outside the popup cancels the search,
-       removes all highlights, and closes the popup.
-    */
 
     closeSearch();
 
@@ -4468,11 +4488,6 @@ async function rescaleAndRender(){
             viewer.clientHeight
           );
       }
-
-      /*
-         Search highlights are rebuilt automatically after
-         zooming so they remain aligned with the text.
-      */
 
       if(
         lastSearchQuery
@@ -5156,10 +5171,6 @@ try{
 
   loadingOverlay.style.display =
     "none";
-
-  /*
-     Initialize remaining pages in the background.
-  */
 
   void (async () => {
 
