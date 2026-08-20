@@ -2471,6 +2471,13 @@ function updateSearchCounter(){
     return;
   }
 
+  if(currentSearch < 0){
+    // Matches exist and are highlighted, but the person hasn't
+    // navigated to one yet (typing never jumps automatically).
+    searchResultsLabel.textContent = `${searchResults.length} found`;
+    return;
+  }
+
   searchResultsLabel.textContent = `${currentSearch + 1} of ${searchResults.length}`;
 }
 
@@ -2580,7 +2587,10 @@ async function rebuildSearchHighlights(query, generation, isNewSearch){
 
   // Capture the reference scroll position up front, before any
   // rendering happens, so it reflects where the person actually was
-  // when the search was kicked off.
+  // when the search was kicked off. Highlighting never causes a
+  // jump on its own — this reference is only used to decide which
+  // match becomes "next" the first time the person actually
+  // presses Enter or an arrow.
   const referenceScrollTop = isNewSearch ? viewer.scrollTop : null;
 
   const rawResults = [];
@@ -2648,7 +2658,13 @@ async function rebuildSearchHighlights(query, generation, isNewSearch){
     orderedResults = rawResults.slice(startIndex).concat(rawResults.slice(0, startIndex));
 
     searchOrderKeys = orderedResults.map(result => `${result.pageNumber}:${result.charStart}`);
-    nextCurrentIndex = orderedResults.length ? 0 : -1;
+
+    // A fresh search never auto-navigates — it only highlights.
+    // currentSearch stays "unset" until the person presses Enter
+    // or an arrow, at which point goToSearchResult() picks index 0
+    // (the nearest next match) or the last index (the nearest
+    // previous match), using the order established here.
+    nextCurrentIndex = -1;
 
   }else{
 
@@ -2685,13 +2701,14 @@ async function rebuildSearchHighlights(query, generation, isNewSearch){
 
     searchOrderKeys = orderedResults.map(result => `${result.pageNumber}:${result.charStart}`);
 
+    // Only restore a "current" match if one was actually active
+    // before (i.e. the person had already navigated to it). If
+    // nothing was active, stay unset rather than inventing a
+    // selection — this rebuild (e.g. from zooming) never navigates
+    // on its own either.
     nextCurrentIndex = activeResultKey
       ? orderedResults.findIndex(result => `${result.pageNumber}:${result.charStart}` === activeResultKey)
       : -1;
-
-    if(nextCurrentIndex === -1){
-      nextCurrentIndex = orderedResults.length ? 0 : -1;
-    }
   }
 
   searchResults = orderedResults;
@@ -2705,9 +2722,9 @@ async function rebuildSearchHighlights(query, generation, isNewSearch){
   markCurrentSearch();
   updateSearchCounter();
 
-  if(currentSearch >= 0){
-    await scrollToSearchResult(searchResults[currentSearch]);
-  }
+  // Deliberately no auto-scroll here — highlighting the document
+  // should never move the page. The view only jumps in response to
+  // Enter (in the search box) or the up/down arrow buttons.
 }
 
 /* ============================================================
@@ -2776,6 +2793,8 @@ function runSearchNow(query, isNewSearch = true){
    SEARCH AS YOU TYPE
 ============================================================ */
 
+const MIN_SEARCH_LENGTH = 3;
+
 function scheduleSearch(){
 
   const query = searchBox.value.trim();
@@ -2794,8 +2813,11 @@ function scheduleSearch(){
 
   clearSearchHighlights();
 
-  if(!query){
+  if(query.length < MIN_SEARCH_LENGTH){
 
+    // Too short to search yet (need more than 2 letters). Don't
+    // touch the page, don't show "no results" — just wait for more
+    // typing.
     searchBusy = false;
 
     searchBox.classList.remove("searching");
@@ -2812,8 +2834,9 @@ function scheduleSearch(){
     searchTimer = null;
 
     // Every time the search text is updated, this is a fresh
-    // search: numbering re-anchors to wherever the person is
-    // currently sitting in the document.
+    // search: highlighting re-anchors its ordering to wherever the
+    // person is currently sitting in the document (but doesn't
+    // move the page — see rebuildSearchHighlights).
     runSearchNow(query, true);
 
   }, 150);
@@ -2832,7 +2855,7 @@ async function ensureQuerySearched(){
 
   const query = searchBox.value.trim();
 
-  if(!query){
+  if(query.length < MIN_SEARCH_LENGTH){
     return false;
   }
 
@@ -2897,7 +2920,19 @@ async function goToSearchResult(direction){
     return;
   }
 
-  await showSearchResult(currentSearch + direction);
+  if(currentSearch < 0){
+
+    // Nothing has been navigated to yet. Pressing "next" jumps to
+    // the nearest match at/after the current scroll position
+    // (index 0, per the ordering computed when highlighting ran).
+    // Pressing "previous" jumps to the nearest match before it
+    // (the last index, since that ordering wraps around).
+    await showSearchResult(direction > 0 ? 0 : searchResults.length - 1);
+
+  }else{
+
+    await showSearchResult(currentSearch + direction);
+  }
 }
 
 /* ============================================================
@@ -2969,9 +3004,61 @@ searchPopup.addEventListener("click", event => {
 
 /* ============================================================
    OUTSIDE SEARCH CLICK = CANCEL SEARCH
+
+   A direct tap outside the search popup cancels the search. A
+   scroll or drag must NOT cancel it — so this tracks whether the
+   pointer actually moved between down and up, the same way the
+   reading-mode tap detection above does, and only treats it as a
+   "click" (and closes the search) when it didn't.
 ============================================================ */
 
+let searchOutsideTap = {
+  active:false,
+  moved:false,
+  startX:0,
+  startY:0
+};
+
 document.addEventListener("pointerdown", event => {
+
+  if(searchPopup.classList.contains("hidden")){
+    searchOutsideTap.active = false;
+    return;
+  }
+
+  searchOutsideTap.active = true;
+  searchOutsideTap.moved = false;
+  searchOutsideTap.startX = event.clientX;
+  searchOutsideTap.startY = event.clientY;
+
+});
+
+document.addEventListener("pointermove", event => {
+
+  if(!searchOutsideTap.active){
+    return;
+  }
+
+  if(Math.hypot(event.clientX - searchOutsideTap.startX, event.clientY - searchOutsideTap.startY) > 10){
+    searchOutsideTap.moved = true;
+  }
+
+});
+
+document.addEventListener("pointerup", event => {
+
+  if(!searchOutsideTap.active){
+    return;
+  }
+
+  const moved = searchOutsideTap.moved;
+
+  searchOutsideTap.active = false;
+
+  if(moved){
+    // Was a scroll/drag, not a click — leave the search open.
+    return;
+  }
 
   if(searchPopup.classList.contains("hidden")){
     return;
