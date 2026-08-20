@@ -21,11 +21,10 @@
 
 :root{
   --bg:#111;
-  --panel:#1d1d1d;
-  --panel2:#222;
+  --panel:#1b1b1b;
+  --panel2:#242424;
   --text:#eee;
   --muted:#aaa;
-  --accent:#3a3a3a;
   --viewer-top:106px;
 }
 
@@ -46,6 +45,7 @@ body{
 
 /* ============================================================
    HEADER
+   LEFT ALONE
 ============================================================ */
 
 header{
@@ -53,34 +53,50 @@ header{
   top:0;
   left:0;
   right:0;
+
   min-height:58px;
   height:58px;
+
   display:flex;
   align-items:center;
   justify-content:space-between;
+
   padding:0 14px;
+
   background:#181818;
+
   border-bottom:1px solid #2d2d2d;
+
   z-index:6000;
 }
 
 /* ============================================================
-   TOOLBAR
+   COMPACT TOOLBAR
 ============================================================ */
 
 #toolbar{
   position:fixed;
+
   top:58px;
   left:0;
   right:0;
-  min-height:48px;
+
+  min-height:46px;
+
   display:flex;
   align-items:center;
-  gap:8px;
-  padding:10px;
+  justify-content:center;
+
+  gap:6px;
+
+  padding:6px 8px;
+
   background:#1b1b1b;
+
   border-bottom:1px solid #2d2d2d;
+
   flex-wrap:wrap;
+
   z-index:5500;
 }
 
@@ -90,10 +106,13 @@ header{
 
 #layout{
   position:absolute;
+
   top:var(--viewer-top);
+
   left:0;
   right:0;
   bottom:0;
+
   height:auto;
 }
 
@@ -103,15 +122,22 @@ header{
 
 #viewer{
   position:relative;
+
   width:100%;
   height:100%;
+
   overflow:auto;
+
   padding:30px 30px 90px;
+
   background:#111;
+
   display:flex;
   flex-direction:column;
   align-items:center;
+
   scroll-behavior:auto;
+
   overscroll-behavior:contain;
 }
 
@@ -121,10 +147,16 @@ header{
 
 .page{
   position:relative;
+
   margin:0 auto 20px;
+
   background:#fff;
-  box-shadow:0 0 14px rgba(0,0,0,.4);
+
+  box-shadow:
+    0 0 14px rgba(0,0,0,.4);
+
   flex-shrink:0;
+
   overflow:hidden;
 }
 
@@ -134,7 +166,9 @@ header{
 
 .pageCanvas{
   display:block;
+
   pointer-events:none;
+
   background:#fff;
 }
 
@@ -144,145 +178,367 @@ header{
 
 .btn{
   background:#333;
+
   color:#fff;
+
   border:none;
+
   border-radius:7px;
+
   padding:9px 12px;
+
   text-decoration:none;
+
   cursor:pointer;
+
   display:inline-flex;
+
   align-items:center;
+
   white-space:nowrap;
 }
 
 button,
 input{
-  background:#2b2b2b;
+  background:#292929;
+
   color:#fff;
-  border:none;
-  border-radius:8px;
-  padding:8px 12px;
+
+  border:1px solid #383838;
+
+  border-radius:6px;
+
+  padding:6px 9px;
+
   font:inherit;
+
+  outline:none;
 }
 
 button:hover{
-  background:#3a3a3a;
+  background:#353535;
+
   cursor:pointer;
 }
 
 button:active{
-  background:#444;
+  background:#414141;
+}
+
+button:focus-visible,
+input:focus-visible{
+  border-color:#666;
+
+  outline:1px solid #555;
 }
 
 /* ============================================================
-   CONTROL GROUPS
+   COMPACT TOOLBAR CONTROLS
 ============================================================ */
 
-.zoomControls,
+.toolButton{
+  height:32px;
+
+  padding:0 10px;
+
+  display:inline-flex;
+
+  align-items:center;
+
+  justify-content:center;
+
+  white-space:nowrap;
+
+  font-size:13px;
+
+  border-radius:6px;
+}
+
+.iconButton{
+  width:32px;
+  height:32px;
+
+  padding:0;
+
+  display:inline-flex;
+
+  align-items:center;
+
+  justify-content:center;
+
+  font-size:16px;
+
+  border-radius:6px;
+}
+
+/* ============================================================
+   ZOOM
+============================================================ */
+
+.zoomControls{
+  display:flex;
+
+  align-items:center;
+
+  gap:3px;
+
+  height:32px;
+
+  padding:0 3px;
+
+  background:#242424;
+
+  border:1px solid #353535;
+
+  border-radius:7px;
+}
+
+.zoomControls button{
+  width:29px;
+  height:28px;
+
+  padding:0;
+
+  border:0;
+
+  background:transparent;
+
+  font-size:17px;
+
+  display:flex;
+
+  align-items:center;
+
+  justify-content:center;
+}
+
+.zoomControls button:hover{
+  background:#353535;
+}
+
+#zoomPercent{
+  width:58px;
+
+  height:27px;
+
+  padding:2px 4px;
+
+  text-align:center;
+
+  background:#1d1d1d;
+
+  border:0;
+
+  border-radius:4px;
+
+  font-size:12px;
+}
+
+/* ============================================================
+   PAGE CONTROLS
+============================================================ */
+
 .pageControls{
   display:flex;
+
   align-items:center;
-  gap:6px;
+
+  gap:4px;
+
+  height:32px;
+
+  padding:0 6px;
+
+  background:#242424;
+
+  border:1px solid #353535;
+
+  border-radius:7px;
+
   white-space:nowrap;
-  flex-shrink:0;
 }
+
+.pageControls label{
+  color:#aaa;
+
+  font-size:12px;
+}
+
+#pageNumber{
+  width:43px;
+
+  height:27px;
+
+  padding:2px 4px;
+
+  text-align:center;
+
+  background:#1d1d1d;
+
+  border:0;
+
+  border-radius:4px;
+
+  font-size:12px;
+}
+
+#pageCount{
+  color:#999;
+
+  font-size:12px;
+
+  padding-right:2px;
+}
+
+/* ============================================================
+   TOOLBAR DIVIDER
+============================================================ */
 
 .toolbarDivider{
   width:1px;
-  height:28px;
-  background:#3a3a3a;
+
+  height:22px;
+
+  background:#383838;
+
   margin:0 2px;
 }
 
 /* ============================================================
    TITLE BAR
+   LEFT ALONE
 ============================================================ */
 
 #titleBar{
   position:fixed;
+
   left:0;
   right:0;
   bottom:0;
+
   background:rgba(24,24,24,.92);
+
   padding:12px 18px;
+
   text-align:center;
+
   z-index:3000;
+
   border-top:1px solid #333;
+
   backdrop-filter:blur(6px);
 }
 
 #title{
   display:flex;
+
   justify-content:center;
   align-items:center;
+
   width:100%;
+
   text-align:center;
+
   font-size:1.2rem;
+
   font-weight:bold;
+
   overflow:hidden;
+
   white-space:nowrap;
+
   text-overflow:ellipsis;
 }
 
 .title-text{
   order:1;
+
   position:relative;
+
   display:inline-block;
+
   min-width:0;
+
   overflow:hidden;
+
   text-overflow:ellipsis;
+
   white-space:nowrap;
 }
 
 .title-badges{
   display:inline-flex;
+
   gap:8px;
+
   margin-left:12px;
+
   vertical-align:middle;
 }
 
 .title-badge{
   display:inline-block;
+
   padding:4px 10px;
+
   color:#fff;
+
   font-size:.72em;
+
   font-weight:bold;
+
   border-radius:999px;
+
   text-transform:uppercase;
+
   letter-spacing:.5px;
+
   flex-shrink:0;
 }
 
 .title-badge.new{
   order:2;
+
   background:#00b050;
 }
 
 .title-badge.featured{
   order:3;
+
   background:#2f7cff;
 }
 
 /* ============================================================
    MENU
+   LEFT ALONE
 ============================================================ */
 
 #menu{
   position:fixed;
+
   right:10px;
   top:58px;
+
   background:#222;
+
   border:1px solid #333;
+
   border-radius:10px;
+
   padding:8px;
+
   display:none;
+
   min-width:220px;
+
   z-index:7000;
 }
 
 #menu button{
   width:100%;
+
   text-align:left;
+
   margin:3px 0;
 }
 
@@ -292,16 +548,29 @@ button:active{
 
 #searchPopup{
   position:fixed;
+
   top:108px;
-  left:110px;
+  left:50%;
+
+  transform:translateX(-50%);
+
   display:flex;
+
   align-items:center;
-  gap:8px;
-  padding:10px;
+
+  gap:5px;
+
+  padding:7px;
+
   background:#222;
+
   border:1px solid #444;
-  border-radius:10px;
-  box-shadow:0 8px 20px rgba(0,0,0,.45);
+
+  border-radius:8px;
+
+  box-shadow:
+    0 8px 20px rgba(0,0,0,.45);
+
   z-index:6500;
 }
 
@@ -310,13 +579,43 @@ button:active{
 }
 
 #searchPopup input{
-  width:220px;
+  width:230px;
+
+  height:31px;
+
+  background:#181818;
+
+  border-color:#3b3b3b;
+
+  font-size:13px;
+}
+
+#searchPopup button{
+  width:31px;
+
+  height:31px;
+
+  padding:0;
+
+  display:flex;
+
+  align-items:center;
+
+  justify-content:center;
+
+  font-size:13px;
 }
 
 #searchResults{
-  color:#bbb;
-  min-width:70px;
+  color:#aaa;
+
+  min-width:65px;
+
   text-align:center;
+
+  font-size:12px;
+
+  white-space:nowrap;
 }
 
 /* ============================================================
@@ -325,23 +624,41 @@ button:active{
 
 .textLayer{
   color-scheme:only light;
+
   position:absolute;
+
   text-align:initial;
+
   inset:0;
+
   overflow:clip;
+
   opacity:1;
+
   line-height:1;
+
   letter-spacing:normal;
+
   word-spacing:normal;
+
   text-size-adjust:none;
+
   forced-color-adjust:none;
+
   transform-origin:0 0;
+
   caret-color:CanvasText;
+
   z-index:2;
+
   pointer-events:auto;
+
   user-select:text;
+
   -webkit-user-select:text;
+
   -moz-user-select:text;
+
   -webkit-touch-callout:default;
 
   --min-font-size:1;
@@ -359,24 +676,34 @@ button:active{
     );
 
   --scale-factor:1;
+
   --user-unit:1;
+
   --total-scale-factor:1;
 }
 
 .textLayer span,
 .textLayer br{
   color:transparent;
+
   position:absolute;
+
   white-space:pre;
+
   cursor:text;
+
   transform-origin:0% 0%;
+
   user-select:text;
+
   -webkit-user-select:text;
+
   -moz-user-select:text;
 }
 
 .textLayer > :not(.markedContent),
 .textLayer .markedContent span:not(.markedContent){
+
   z-index:1;
 
   --font-height:0;
@@ -388,6 +715,7 @@ button:active{
     );
 
   --scale-x:1;
+
   --rotate:0deg;
 
   transform:
@@ -402,17 +730,23 @@ button:active{
 
 .textLayer span[role="img"]{
   user-select:none;
+
   -webkit-user-select:none;
+
   cursor:default;
 }
 
 .textLayer ::selection{
-  background:rgba(0,120,255,.35);
+  background:
+    rgba(0,120,255,.35);
+
   color:transparent;
 }
 
 .textLayer ::-moz-selection{
-  background:rgba(0,120,255,.35);
+  background:
+    rgba(0,120,255,.35);
+
   color:transparent;
 }
 
@@ -420,36 +754,19 @@ button:active{
   background:transparent;
 }
 
-.textLayer .highlight{
-  --highlight-bg-color:
-    rgb(180 0 170 / 0.25);
-
-  --highlight-selected-bg-color:
-    rgb(0 100 0 / 0.25);
-
-  margin:-1px;
-  padding:1px;
-
-  background-color:
-    var(--highlight-bg-color);
-
-  border-radius:4px;
-}
-
-.textLayer .highlight.selected{
-  background-color:
-    var(--highlight-selected-bg-color);
-
-  scroll-margin-top:50px;
-}
-
 .textLayer .endOfContent{
   display:block;
+
   position:absolute;
+
   inset:100% 0 0;
+
   z-index:0;
+
   cursor:default;
+
   user-select:none;
+
   -webkit-user-select:none;
 }
 
@@ -458,35 +775,44 @@ button:active{
 }
 
 /* ============================================================
-   SEARCH HIGHLIGHT
+   SEARCH OVERLAY
+   DOES NOT MODIFY SELECTABLE TEXT
 ============================================================ */
 
-.search-highlight{
-  background:
-    rgba(255,230,0,.32) !important;
+.searchHighlightLayer{
+  position:absolute;
 
-  color:transparent !important;
+  inset:0;
+
+  overflow:hidden;
+
+  z-index:3;
+
+  pointer-events:none;
+}
+
+.search-highlight{
+  position:absolute;
+
+  background:
+    rgba(255,225,0,.30);
 
   border-radius:2px;
 
   box-shadow:
-    0 0 0 1px rgba(180,150,0,.18);
+    0 0 0 1px
+    rgba(190,155,0,.12);
 
-  padding:0 1px;
-
-  margin:0 -1px;
-
-  z-index:5 !important;
+  pointer-events:none;
 }
 
 .search-highlight.search-current{
   background:
-    rgba(255,165,0,.48) !important;
+    rgba(255,175,0,.43);
 
   box-shadow:
-    0 0 0 2px rgba(200,110,0,.35);
-
-  z-index:6 !important;
+    0 0 0 1px
+    rgba(170,105,0,.28);
 }
 
 /* ============================================================
@@ -495,21 +821,33 @@ button:active{
 
 .linkLayer{
   position:absolute;
+
   inset:0;
+
   overflow:hidden;
+
   z-index:4;
+
   pointer-events:none;
 }
 
 .pdf-link{
   position:absolute;
+
   display:block;
+
   pointer-events:auto;
+
   cursor:pointer;
+
   background:transparent;
+
   border:0;
+
   padding:0;
+
   margin:0;
+
   text-decoration:none;
 }
 
@@ -524,59 +862,45 @@ button:active{
 
 #loadingOverlay{
   position:fixed;
+
   inset:var(--viewer-top) 0 0 0;
+
   display:flex;
+
   flex-direction:column;
+
   justify-content:center;
   align-items:center;
+
   background:#111;
+
   z-index:8000;
 }
 
 .spinner{
   width:60px;
   height:60px;
+
   border:6px solid #333;
+
   border-top:6px solid #fff;
+
   border-radius:50%;
-  animation:spin .9s linear infinite;
+
+  animation:
+    spin .9s linear infinite;
 }
 
 .loadingText{
   margin-top:18px;
+
   color:#ddd;
+
   font-size:18px;
 }
 
 /* ============================================================
-   READING MODE
-============================================================ */
-
-body.reading-mode header,
-body.reading-mode #toolbar,
-body.reading-mode #titleBar,
-body.reading-mode #searchPopup,
-body.reading-mode #menu{
-  display:none !important;
-}
-
-body.reading-mode #layout{
-  top:0;
-  height:100%;
-}
-
-body.reading-mode #viewer{
-  height:100%;
-  padding-top:20px;
-  padding-bottom:20px;
-}
-
-body.reading-mode #loadingOverlay{
-  inset:0;
-}
-
-/* ============================================================
-   FLOATING READING MODE BUTTON
+   FLOATING READING MODE
 ============================================================ */
 
 #readingModeFloat{
@@ -589,6 +913,7 @@ body.reading-mode #loadingOverlay{
   height:48px;
 
   display:flex;
+
   align-items:center;
   justify-content:center;
 
@@ -596,7 +921,8 @@ body.reading-mode #loadingOverlay{
 
   border-radius:50%;
 
-  background:rgba(40,40,40,.94);
+  background:
+    rgba(40,40,40,.94);
 
   border:1px solid #555;
 
@@ -620,6 +946,7 @@ body.reading-mode #loadingOverlay{
 
 #readingModeFloat:hover{
   background:#3a3a3a;
+
   transform:scale(1.05);
 }
 
@@ -627,10 +954,39 @@ body.reading-mode #loadingOverlay{
   transform:scale(.96);
 }
 
+body.reading-mode header,
+body.reading-mode #toolbar,
+body.reading-mode #titleBar,
+body.reading-mode #searchPopup,
+body.reading-mode #menu{
+  display:none !important;
+}
+
+body.reading-mode #layout{
+  top:0;
+
+  height:100%;
+}
+
+body.reading-mode #viewer{
+  height:100%;
+
+  padding-top:20px;
+
+  padding-bottom:20px;
+}
+
+body.reading-mode #loadingOverlay{
+  inset:0;
+}
+
 body.reading-mode #readingModeFloat{
   right:16px;
+
   bottom:16px;
-  background:rgba(40,40,40,.88);
+
+  background:
+    rgba(40,40,40,.88);
 }
 
 /* ============================================================
@@ -639,62 +995,85 @@ body.reading-mode #readingModeFloat{
 
 @media (max-width:768px){
 
-  #searchPopup{
-    left:10px;
-    right:10px;
-    top:108px;
-    width:auto;
-    display:flex;
-    flex-wrap:wrap;
+  #toolbar{
     justify-content:center;
-    gap:8px;
+
+    gap:4px;
+
+    padding:5px;
+  }
+
+  .toolButton{
+    height:30px;
+
+    padding:0 8px;
+
+    font-size:12px;
+  }
+
+  .zoomControls{
+    height:30px;
+  }
+
+  .zoomControls button{
+    width:27px;
+
+    height:26px;
+  }
+
+  #zoomPercent{
+    width:53px;
+
+    height:25px;
+  }
+
+  .pageControls{
+    height:30px;
+
+    padding:0 5px;
+  }
+
+  #pageNumber{
+    width:40px;
+
+    height:25px;
+  }
+
+  #searchPopup{
+    left:8px;
+    right:8px;
+
+    top:104px;
+
+    transform:none;
+
+    width:auto;
+
+    flex-wrap:wrap;
+
+    justify-content:center;
   }
 
   #searchPopup input{
     flex:1 1 100%;
+
     width:100%;
+
     min-width:0;
   }
 
   #prevResult,
   #nextResult{
-    flex:0 0 auto;
+    flex:0 0 31px;
   }
 
   #searchResults{
     flex:1;
-    text-align:center;
-    min-width:0;
-  }
-
-  .title-badges{
-    display:flex;
-    justify-content:center;
-    gap:8px;
-    margin:0 0 8px 0;
-  }
-
-  #title{
-    flex-direction:column;
-    align-items:center;
-    gap:6px;
-  }
-
-  .title-text{
-    order:2;
-    width:100%;
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
-  }
-
-  .title-badge.new,
-  .title-badge.featured{
-    order:1;
   }
 
   #readingModeFloat{
     right:14px;
+
     bottom:68px;
 
     width:44px;
@@ -705,9 +1084,49 @@ body.reading-mode #readingModeFloat{
 
   body.reading-mode #readingModeFloat{
     right:12px;
+
     bottom:12px;
   }
+
+  .title-badges{
+    display:flex;
+
+    justify-content:center;
+
+    gap:8px;
+
+    margin:0 0 8px 0;
+  }
+
+  #title{
+    flex-direction:column;
+
+    align-items:center;
+
+    gap:6px;
+  }
+
+  .title-text{
+    order:2;
+
+    width:100%;
+
+    white-space:nowrap;
+
+    overflow:hidden;
+
+    text-overflow:ellipsis;
+  }
+
+  .title-badge.new,
+  .title-badge.featured{
+    order:1;
+  }
 }
+
+/* ============================================================
+   ANIMATION
+============================================================ */
 
 @keyframes spin{
 
@@ -725,6 +1144,10 @@ body.reading-mode #readingModeFloat{
 </head>
 
 <body>
+
+<!-- ==========================================================
+     HEADER — UNCHANGED
+========================================================== -->
 
 <header>
 
@@ -744,49 +1167,73 @@ body.reading-mode #readingModeFloat{
 
 </header>
 
+<!-- ==========================================================
+     COMPACT TOOLBAR
+========================================================== -->
+
 <div id="toolbar">
 
-  <button id="searchButton">
-    🔍 Search
+  <button
+    id="searchButton"
+    class="toolButton"
+    title="Search PDF"
+  >
+    ⌕
   </button>
 
   <div class="zoomControls">
 
-    <button id="zoomOut">
+    <button
+      id="zoomOut"
+      title="Zoom out"
+    >
       −
     </button>
 
     <input
       id="zoomPercent"
       value="100%"
-      style="width:70px;text-align:center"
+      aria-label="Zoom percentage"
     >
 
-    <button id="zoomIn">
+    <button
+      id="zoomIn"
+      title="Zoom in"
+    >
       +
     </button>
 
   </div>
 
-  <button id="fitWidth">
-    Fit Width
+  <button
+    id="fitWidth"
+    class="toolButton"
+    title="Fit page width"
+  >
+    Width
   </button>
 
-  <button id="fitPage">
-    Fit Page
+  <button
+    id="fitPage"
+    class="toolButton"
+    title="Fit entire page"
+  >
+    Page
   </button>
+
+  <div class="toolbarDivider"></div>
 
   <div class="pageControls">
 
     <label>
-      Page
+      Pg
     </label>
 
     <input
       id="pageNumber"
       value="1"
       inputmode="numeric"
-      style="width:60px;text-align:center"
+      aria-label="Page number"
     >
 
     <span id="pageCount">
@@ -797,20 +1244,33 @@ body.reading-mode #readingModeFloat{
 
 </div>
 
-<div id="searchPopup" class="hidden">
+<!-- ==========================================================
+     SEARCH
+========================================================== -->
+
+<div
+  id="searchPopup"
+  class="hidden"
+>
 
   <input
     id="searchBox"
-    placeholder="Search..."
+    placeholder="Find in PDF..."
     autocomplete="off"
   >
 
-  <button id="prevResult">
-    ▲
+  <button
+    id="prevResult"
+    title="Previous result"
+  >
+    ↑
   </button>
 
-  <button id="nextResult">
-    ▼
+  <button
+    id="nextResult"
+    title="Next result"
+  >
+    ↓
   </button>
 
   <span id="searchResults">
@@ -818,6 +1278,10 @@ body.reading-mode #readingModeFloat{
   </span>
 
 </div>
+
+<!-- ==========================================================
+     LAYOUT
+========================================================== -->
 
 <div id="layout">
 
@@ -835,6 +1299,10 @@ body.reading-mode #readingModeFloat{
 
 </div>
 
+<!-- ==========================================================
+     TITLE BAR — UNCHANGED
+========================================================== -->
+
 <div id="titleBar">
 
   <div id="title">
@@ -842,6 +1310,10 @@ body.reading-mode #readingModeFloat{
   </div>
 
 </div>
+
+<!-- ==========================================================
+     MENU — UNCHANGED
+========================================================== -->
 
 <div id="menu">
 
@@ -864,7 +1336,7 @@ body.reading-mode #readingModeFloat{
 </div>
 
 <!-- ==========================================================
-     FLOATING READING MODE CONTROL
+     FLOATING READING MODE
 ========================================================== -->
 
 <button
@@ -872,7 +1344,7 @@ body.reading-mode #readingModeFloat{
   aria-label="Toggle Reading Mode"
   title="Reading Mode"
 >
-  📖
+  ▣
 </button>
 
 <script type="module">
@@ -974,7 +1446,7 @@ const readingModeFloat =
   );
 
 /* ============================================================
-   CHROME / VIEWER HEIGHT
+   CHROME HEIGHT
 ============================================================ */
 
 function syncViewerTop(){
@@ -1020,11 +1492,7 @@ function scheduleChromeSync(){
     () => {
 
       requestAnimationFrame(
-        () => {
-
-          syncViewerTop();
-
-        }
+        syncViewerTop
       );
 
     }
@@ -1032,7 +1500,7 @@ function scheduleChromeSync(){
 }
 
 /* ============================================================
-   PERFORMANCE / SAFETY
+   LIMITS
 ============================================================ */
 
 const MAX_ZOOM =
@@ -1048,7 +1516,7 @@ const RENDER_MARGIN =
   "1400px";
 
 /* ============================================================
-   HTML ESCAPE
+   ESCAPE
 ============================================================ */
 
 function escapeHtml(value){
@@ -1217,11 +1685,14 @@ document.getElementById(
    VIEWPORT SIZING
 ============================================================ */
 
-let baseScale = 1;
+let baseScale =
+  1;
 
-let zoomLevel = 1;
+let zoomLevel =
+  1;
 
-let currentScale = 1;
+let currentScale =
+  1;
 
 function getViewerInnerWidth(){
 
@@ -1302,17 +1773,14 @@ const zoomLevels = [
   0.25,
   0.5,
   0.75,
-
   1,
   1.25,
   1.5,
   1.75,
-
   2,
   2.25,
   2.5,
   2.75,
-
   3
 
 ];
@@ -1321,20 +1789,26 @@ const zoomLevels = [
    PDF STATE
 ============================================================ */
 
-let pdfDoc = null;
+let pdfDoc =
+  null;
 
-const pageViews = [];
+const pageViews =
+  [];
 
-let searchResults = [];
+let searchResults =
+  [];
 
-let currentSearch = -1;
+let currentSearch =
+  -1;
 
-let lastSearchQuery = "";
+let lastSearchQuery =
+  "";
 
-let renderGeneration = 0;
+let renderGeneration =
+  0;
 
 /* ============================================================
-   BACK BUTTON
+   BACK
 ============================================================ */
 
 const backButton =
@@ -1371,7 +1845,7 @@ backButton.addEventListener(
 );
 
 /* ============================================================
-   SAFE CANVAS SCALE
+   SAFE OUTPUT SCALE
 ============================================================ */
 
 function getSafeOutputScale(
@@ -1395,16 +1869,14 @@ function getSafeOutputScale(
     pagePixels > 0
   ){
 
-    const pixelLimitScale =
-      Math.sqrt(
-        MAX_CANVAS_PIXELS /
-        pagePixels
-      );
-
     outputScale =
       Math.min(
         outputScale,
-        pixelLimitScale
+
+        Math.sqrt(
+          MAX_CANVAS_PIXELS /
+          pagePixels
+        )
       );
   }
 
@@ -1479,6 +1951,12 @@ function layoutPage(
   view.textLayerDiv.style.height =
     `${viewport.height}px`;
 
+  view.searchLayerDiv.style.width =
+    `${viewport.width}px`;
+
+  view.searchLayerDiv.style.height =
+    `${viewport.height}px`;
+
   view.linkLayerDiv.style.width =
     `${viewport.width}px`;
 
@@ -1536,6 +2014,8 @@ function resetRenderedPage(
 
   view.textLayerDiv.replaceChildren();
 
+  view.searchLayerDiv.replaceChildren();
+
   view.linkLayerDiv.replaceChildren();
 
   view.textLayer =
@@ -1543,55 +2023,6 @@ function resetRenderedPage(
 
   view.textLayerEnd =
     null;
-}
-
-/* ============================================================
-   CLEAR SEARCH HIGHLIGHTS
-============================================================ */
-
-function clearSearchHighlights(){
-
-  for(
-    const view
-    of pageViews
-  ){
-
-    if(
-      !view ||
-      !view.textLayerDiv
-    ){
-
-      continue;
-    }
-
-    const highlights =
-      view.textLayerDiv.querySelectorAll(
-        ".search-highlight"
-      );
-
-    for(
-      const highlight
-      of highlights
-    ){
-
-      const parent =
-        highlight.parentNode;
-
-      if(!parent){
-
-        continue;
-      }
-
-      parent.replaceChild(
-        document.createTextNode(
-          highlight.textContent
-        ),
-        highlight
-      );
-
-      parent.normalize();
-    }
-  }
 }
 
 /* ============================================================
@@ -1622,6 +2053,7 @@ async function paintCanvas(
   const pixelWidth =
     Math.max(
       1,
+
       Math.floor(
         viewport.width *
         outputScale
@@ -1631,6 +2063,7 @@ async function paintCanvas(
   const pixelHeight =
     Math.max(
       1,
+
       Math.floor(
         viewport.height *
         outputScale
@@ -1654,12 +2087,6 @@ async function paintCanvas(
 
   view.canvas.height =
     pixelHeight;
-
-  view.canvas.style.width =
-    `${viewport.width}px`;
-
-  view.canvas.style.height =
-    `${viewport.height}px`;
 
   const context =
     view.canvas.getContext(
@@ -1690,18 +2117,9 @@ async function paintCanvas(
     canvasContext:
       context,
 
-    viewport:
-      view.viewport
+    viewport
 
   }).promise;
-
-  if(
-    generation !==
-    renderGeneration
-  ){
-
-    return;
-  }
 }
 
 /* ============================================================
@@ -1748,14 +2166,6 @@ async function paintText(
       await ensureTextContent(
         view
       );
-
-    if(
-      generation !==
-      renderGeneration
-    ){
-
-      return;
-    }
 
     view.textLayerDiv.replaceChildren();
 
@@ -1873,14 +2283,6 @@ async function paintLinks(
         await view.page.getAnnotations({
           intent:"display"
         });
-    }
-
-    if(
-      generation !==
-      renderGeneration
-    ){
-
-      return;
     }
 
     renderLinkLayer(
@@ -2079,6 +2481,14 @@ function createPageShell(
   textLayerDiv.className =
     "textLayer";
 
+  const searchLayerDiv =
+    document.createElement(
+      "div"
+    );
+
+  searchLayerDiv.className =
+    "searchHighlightLayer";
+
   const linkLayerDiv =
     document.createElement(
       "div"
@@ -2093,6 +2503,10 @@ function createPageShell(
 
   pageDiv.appendChild(
     textLayerDiv
+  );
+
+  pageDiv.appendChild(
+    searchLayerDiv
   );
 
   pageDiv.appendChild(
@@ -2114,6 +2528,8 @@ function createPageShell(
     canvas,
 
     textLayerDiv,
+
+    searchLayerDiv,
 
     linkLayerDiv,
 
@@ -2175,14 +2591,6 @@ async function renderPage(
     (async () => {
 
       try{
-
-        if(
-          generation !==
-          renderGeneration
-        ){
-
-          return;
-        }
 
         layoutPage(
           view,
@@ -2278,14 +2686,17 @@ const pageObserver =
 
     {
       root:viewer,
-      rootMargin:RENDER_MARGIN,
+
+      rootMargin:
+        RENDER_MARGIN,
+
       threshold:0
     }
 
   );
 
 /* ============================================================
-   RENDER NEARBY PAGES
+   RENDER NEARBY
 ============================================================ */
 
 function renderNearbyPages(){
@@ -2306,15 +2717,12 @@ function renderNearbyPages(){
     const rect =
       view.pageDiv.getBoundingClientRect();
 
-    const nearViewport =
+    if(
       rect.bottom >=
         viewerRect.top - 1400 &&
 
       rect.top <=
-        viewerRect.bottom + 1400;
-
-    if(
-      nearViewport
+        viewerRect.bottom + 1400
     ){
 
       void renderPage(
@@ -2460,12 +2868,7 @@ async function resolveDestination(
 
     return pageIndex;
 
-  }catch(error){
-
-    console.warn(
-      "Could not resolve PDF destination:",
-      error
-    );
+  }catch{
 
     return null;
   }
@@ -2497,12 +2900,14 @@ async function scrollToView(
 
   viewer.scrollTo({
 
-    top:Math.max(
-      0,
-      targetOffset - 8
-    ),
+    top:
+      Math.max(
+        0,
+        targetOffset - 8
+      ),
 
-    behavior:"smooth"
+    behavior:
+      "smooth"
 
   });
 
@@ -2533,14 +2938,12 @@ async function openInternalDestination(
       pageIndex + 1
     );
 
-  if(!view){
+  if(view){
 
-    return;
+    await scrollToView(
+      view
+    );
   }
-
-  await scrollToView(
-    view
-  );
 }
 
 /* ============================================================
@@ -2568,7 +2971,7 @@ function setReadingMode(
     );
 
     readingModeFloat.textContent =
-      "✕";
+      "×";
 
     readingModeFloat.title =
       "Exit Reading Mode";
@@ -2587,7 +2990,7 @@ function setReadingMode(
     );
 
     readingModeFloat.textContent =
-      "📖";
+      "▣";
 
     readingModeFloat.title =
       "Reading Mode";
@@ -2640,7 +3043,7 @@ readingModeFloat.addEventListener(
 );
 
 /* ============================================================
-   TAP-TO-READ
+   TAP TO READ
 ============================================================ */
 
 let tapState = {
@@ -2665,6 +3068,9 @@ viewer.addEventListener(
       ) ||
       event.target.closest(
         ".pdf-link"
+      ) ||
+      event.target.closest(
+        ".searchHighlightLayer"
       )
     ){
 
@@ -2713,18 +3119,13 @@ viewer.addEventListener(
       return;
     }
 
-    const dx =
-      event.clientX -
-      tapState.startX;
-
-    const dy =
-      event.clientY -
-      tapState.startY;
-
     if(
       Math.hypot(
-        dx,
-        dy
+        event.clientX -
+        tapState.startX,
+
+        event.clientY -
+        tapState.startY
       ) > 10
     ){
 
@@ -2745,15 +3146,13 @@ viewer.addEventListener(
       return;
     }
 
-    const wasMoved =
+    const moved =
       tapState.moved;
 
     tapState.active =
       false;
 
-    if(
-      wasMoved
-    ){
+    if(moved){
 
       return;
     }
@@ -2764,164 +3163,55 @@ viewer.addEventListener(
       ) ||
       event.target.closest(
         ".pdf-link"
+      ) ||
+      event.target.closest(
+        ".searchHighlightLayer"
       )
     ){
 
       return;
     }
 
-    const page =
+    if(
       event.target.closest(
         ".page"
+      )
+    ){
+
+      setReadingMode(
+        !readingMode
       );
-
-    if(!page){
-
-      return;
     }
-
-    setReadingMode(
-      !readingMode
-    );
-
   }
 );
 
 /* ============================================================
-   RESCALE
+   SEARCH HELPERS
 ============================================================ */
 
-async function rescaleAndRender(){
+/*
+   Build a character map from the actual PDF.js text layer.
 
-  renderGeneration++;
+   Unlike the previous version, this does NOT assume that a
+   search term has to exist inside one individual span.
 
-  currentScale =
-    baseScale *
-    zoomLevel;
+   Therefore:
 
-  if(
-    currentScale <= 0
-  ){
+       "United"
+       " States"
 
-    currentScale =
-      1;
-  }
+   can be found as:
 
-  zoomBox.value =
-    `${Math.round(
-      zoomLevel * 100
-    )}%`;
+       "United States"
 
-  const scrollRatio =
-    viewer.scrollHeight >
-    viewer.clientHeight
+   even when PDF.js split it across multiple spans.
+*/
 
-      ? viewer.scrollTop /
-        (
-          viewer.scrollHeight -
-          viewer.clientHeight
-        )
-
-      : 0;
-
-  /*
-     Search highlights must be recreated after a scale change.
-  */
-
-  const hadSearch =
-    Boolean(
-      lastSearchQuery
-    );
-
-  for(
-    const view
-    of pageViews
-  ){
-
-    if(!view){
-
-      continue;
-    }
-
-    layoutPage(
-      view,
-      currentScale
-    );
-
-    resetRenderedPage(
-      view
-    );
-  }
-
-  renderNearbyPages();
-
-  requestAnimationFrame(
-    async () => {
-
-      if(
-        viewer.scrollHeight >
-        viewer.clientHeight
-      ){
-
-        viewer.scrollTop =
-          scrollRatio *
-          (
-            viewer.scrollHeight -
-            viewer.clientHeight
-          );
-      }
-
-      /*
-         Restore search highlights after visible pages
-         have finished rendering.
-      */
-
-      if(hadSearch){
-
-        await new Promise(
-          resolve =>
-            setTimeout(
-              resolve,
-              50
-            )
-        );
-
-        rebuildSearchResults();
-      }
-
-    }
-  );
-}
-
-/* ============================================================
-   SEARCH — HIGHLIGHT ONE PAGE
-============================================================ */
-
-function highlightTextOnPage(
-  view,
-  query
+function getTextNodes(
+  view
 ){
 
-  if(
-    !view ||
-    !view.textLayerDiv ||
-    !query
-  ){
-
-    return [];
-  }
-
-  const normalizedQuery =
-    query
-      .trim()
-      .toLowerCase();
-
-  if(
-    !normalizedQuery
-  ){
-
-    return [];
-  }
+  const nodes = [];
 
   const walker =
     document.createTreeWalker(
@@ -2932,21 +3222,12 @@ function highlightTextOnPage(
       {
         acceptNode(node){
 
-          if(
-            !node.nodeValue ||
-            !node.nodeValue.trim()
-          ){
-
-            return NodeFilter.FILTER_REJECT;
-          }
-
           const parent =
             node.parentElement;
 
           if(
-            parent?.closest(
-              ".search-highlight"
-            )
+            !node.nodeValue ||
+            !node.nodeValue.length
           ){
 
             return NodeFilter.FILTER_REJECT;
@@ -2966,210 +3247,330 @@ function highlightTextOnPage(
       }
     );
 
-  const textNodes = [];
-
   let node;
 
   while(
     (node = walker.nextNode())
   ){
 
-    textNodes.push(node);
+    nodes.push(node);
   }
 
-  const matches = [];
+  return nodes;
+}
+
+/* ============================================================
+   CREATE HIGHLIGHT RECTANGLES
+============================================================ */
+
+function createHighlightForRange(
+  view,
+  startNode,
+  startOffset,
+  endNode,
+  endOffset
+){
+
+  const range =
+    document.createRange();
+
+  try{
+
+    range.setStart(
+      startNode,
+      startOffset
+    );
+
+    range.setEnd(
+      endNode,
+      endOffset
+    );
+
+  }catch{
+
+    return [];
+  }
+
+  const pageRect =
+    view.searchLayerDiv.getBoundingClientRect();
+
+  const rects =
+    Array.from(
+      range.getClientRects()
+    );
+
+  const elements = [];
 
   for(
-    const textNode
-    of textNodes
+    const rect
+    of rects
   ){
 
-    const text =
-      textNode.nodeValue;
-
-    const lower =
-      text.toLowerCase();
-
-    let searchStart =
-      0;
-
-    let found =
-      false;
-
-    const fragment =
-      document.createDocumentFragment();
-
-    while(true){
-
-      const index =
-        lower.indexOf(
-          normalizedQuery,
-          searchStart
-        );
-
-      if(
-        index === -1
-      ){
-
-        break;
-      }
-
-      found =
-        true;
-
-      if(
-        index >
-        searchStart
-      ){
-
-        fragment.appendChild(
-          document.createTextNode(
-            text.slice(
-              searchStart,
-              index
-            )
-          )
-        );
-      }
-
-      const highlight =
-        document.createElement(
-          "span"
-        );
-
-      highlight.className =
-        "search-highlight";
-
-      highlight.textContent =
-        text.slice(
-          index,
-          index +
-          normalizedQuery.length
-        );
-
-      fragment.appendChild(
-        highlight
-      );
-
-      matches.push(
-        highlight
-      );
-
-      searchStart =
-        index +
-        normalizedQuery.length;
-    }
-
-    if(!found){
+    if(
+      rect.width <= 0 ||
+      rect.height <= 0
+    ){
 
       continue;
     }
 
-    if(
-      searchStart <
-      text.length
-    ){
-
-      fragment.appendChild(
-        document.createTextNode(
-          text.slice(
-            searchStart
-          )
-        )
+    const highlight =
+      document.createElement(
+        "div"
       );
-    }
 
-    textNode.parentNode.replaceChild(
-      fragment,
-      textNode
+    highlight.className =
+      "search-highlight";
+
+    highlight.style.left =
+      `${rect.left - pageRect.left}px`;
+
+    highlight.style.top =
+      `${rect.top - pageRect.top}px`;
+
+    highlight.style.width =
+      `${rect.width}px`;
+
+    highlight.style.height =
+      `${rect.height}px`;
+
+    view.searchLayerDiv.appendChild(
+      highlight
+    );
+
+    elements.push(
+      highlight
     );
   }
 
-  return matches;
+  return elements;
 }
 
 /* ============================================================
-   HIGHLIGHT ALL RESULTS
+   FIND ALL OCCURRENCES ON ONE PAGE
 ============================================================ */
 
-function highlightAllSearchResults(){
-
-  clearSearchHighlights();
-
-  searchResults = [];
+function findOccurrencesOnPage(
+  view,
+  query
+){
 
   if(
-    !lastSearchQuery
+    !view ||
+    !query
   ){
 
-    currentSearch =
-      -1;
-
-    return;
+    return [];
   }
+
+  const nodes =
+    getTextNodes(
+      view
+    );
+
+  if(
+    !nodes.length
+  ){
+
+    return [];
+  }
+
+  let fullText =
+    "";
+
+  const positions = [];
+
+  for(
+    const node
+    of nodes
+  ){
+
+    const start =
+      fullText.length;
+
+    fullText +=
+      node.nodeValue;
+
+    positions.push({
+
+      node,
+
+      start,
+
+      end:
+        fullText.length
+
+    });
+  }
+
+  const lowerText =
+    fullText.toLowerCase();
+
+  const lowerQuery =
+    query.toLowerCase();
+
+  const occurrences =
+    [];
+
+  let searchAt =
+    0;
+
+  while(true){
+
+    const matchStart =
+      lowerText.indexOf(
+        lowerQuery,
+        searchAt
+      );
+
+    if(
+      matchStart === -1
+    ){
+
+      break;
+    }
+
+    const matchEnd =
+      matchStart +
+      lowerQuery.length;
+
+    let startInfo =
+      null;
+
+    let endInfo =
+      null;
+
+    for(
+      const info
+      of positions
+    ){
+
+      if(
+        !startInfo &&
+        matchStart >=
+          info.start &&
+        matchStart <
+          info.end
+      ){
+
+        startInfo =
+          info;
+      }
+
+      if(
+        matchEnd >
+          info.start &&
+        matchEnd <=
+          info.end
+      ){
+
+        endInfo =
+          info;
+
+        break;
+      }
+    }
+
+    if(
+      startInfo &&
+      endInfo
+    ){
+
+      const startOffset =
+        matchStart -
+        startInfo.start;
+
+      const endOffset =
+        matchEnd -
+        endInfo.start;
+
+      const elements =
+        createHighlightForRange(
+
+          view,
+
+          startInfo.node,
+          startOffset,
+
+          endInfo.node,
+          endOffset
+
+        );
+
+      if(
+        elements.length
+      ){
+
+        occurrences.push({
+
+          view,
+
+          pageNumber:
+            view.pageNumber,
+
+          elements
+
+        });
+      }
+    }
+
+    /*
+       Always advance by at least one character so repeated
+       matches cannot create an infinite loop.
+    */
+
+    searchAt =
+      matchStart +
+      Math.max(
+        1,
+        lowerQuery.length
+      );
+  }
+
+  return occurrences;
+}
+
+/* ============================================================
+   CLEAR SEARCH
+============================================================ */
+
+function clearSearchHighlights(){
 
   for(
     const view
     of pageViews
   ){
 
-    if(!view){
-
-      continue;
-    }
-
     if(
-      !view.textLayerDiv.children.length
+      view?.searchLayerDiv
     ){
 
-      continue;
-    }
-
-    const highlights =
-      highlightTextOnPage(
-        view,
-        lastSearchQuery
-      );
-
-    for(
-      const highlight
-      of highlights
-    ){
-
-      searchResults.push({
-
-        pageNumber:
-          view.pageNumber,
-
-        view,
-
-        element:
-          highlight
-
-      });
+      view.searchLayerDiv.replaceChildren();
     }
   }
-
-  highlightCurrentSearchResult();
 }
 
 /* ============================================================
-   CURRENT SEARCH HIGHLIGHT
+   MARK CURRENT RESULT
 ============================================================ */
 
-function highlightCurrentSearchResult(){
+function markCurrentSearch(){
 
-  const currentHighlights =
-    viewer.querySelectorAll(
-      ".search-highlight.search-current"
-    );
+  for(
+    const result
+    of searchResults
+  ){
 
-  currentHighlights.forEach(
-    element =>
+    for(
+      const element
+      of result.elements
+    ){
+
       element.classList.remove(
         "search-current"
-      )
-  );
+      );
+    }
+  }
 
   if(
     currentSearch < 0 ||
@@ -3185,79 +3586,231 @@ function highlightCurrentSearchResult(){
       currentSearch
     ];
 
-  if(
-    !result ||
-    !result.element
+  for(
+    const element
+    of result.elements
   ){
+
+    element.classList.add(
+      "search-current"
+    );
+  }
+}
+
+/* ============================================================
+   UPDATE SEARCH COUNTER
+============================================================ */
+
+function updateSearchCounter(){
+
+  document.getElementById(
+    "searchResults"
+  ).textContent =
+    searchResults.length
+
+      ? `${currentSearch + 1} of ${searchResults.length}`
+
+      : "0 of 0";
+}
+
+/* ============================================================
+   SEARCH ALL PAGES
+============================================================ */
+
+async function searchPDF(
+  query
+){
+
+  query =
+    query
+      .trim()
+      .toLowerCase();
+
+  clearSearchHighlights();
+
+  searchResults =
+    [];
+
+  currentSearch =
+    -1;
+
+  lastSearchQuery =
+    query;
+
+  updateSearchCounter();
+
+  if(!query){
 
     return;
   }
 
-  result.element.classList.add(
-    "search-current"
+  /*
+     Make every page object available.
+     This does not render every page.
+  */
+
+  for(
+    let pageNumber = 1;
+
+    pageNumber <=
+      (pdfDoc?.numPages || 0);
+
+    pageNumber++
+  ){
+
+    await ensurePageView(
+      pageNumber
+    );
+
+    if(
+      pageNumber % 4 === 0
+    ){
+
+      await new Promise(
+        resolve =>
+          setTimeout(
+            resolve,
+            0
+          )
+      );
+    }
+  }
+
+  /*
+     Load text content for every page first.
+
+     This is deliberately separate from rendering.
+  */
+
+  for(
+    const view
+    of pageViews
+  ){
+
+    if(!view){
+
+      continue;
+    }
+
+    try{
+
+      await ensureTextContent(
+        view
+      );
+
+    }catch(error){
+
+      console.warn(
+        `Could not read page ${view.pageNumber}:`,
+        error
+      );
+    }
+  }
+
+  /*
+     Render only pages that actually contain the query.
+  */
+
+  const matchingViews =
+    [];
+
+  for(
+    const view
+    of pageViews
+  ){
+
+    if(
+      !view ||
+      !view.textContent
+    ){
+
+      continue;
+    }
+
+    const pageText =
+      view.textContent.items
+
+        .map(
+          item =>
+            item.str || ""
+        )
+
+        .join("");
+
+    if(
+      pageText
+        .toLowerCase()
+        .includes(
+          query
+        )
+    ){
+
+      matchingViews.push(
+        view
+      );
+    }
+  }
+
+  for(
+    const view
+    of matchingViews
+  ){
+
+    await renderPage(
+      view
+    );
+  }
+
+  /*
+     Now find every individual occurrence.
+  */
+
+  for(
+    const view
+    of matchingViews
+  ){
+
+    const occurrences =
+      findOccurrencesOnPage(
+        view,
+        query
+      );
+
+    searchResults.push(
+      ...occurrences
+    );
+  }
+
+  if(
+    !searchResults.length
+  ){
+
+    updateSearchCounter();
+
+    alert(
+      "No results found."
+    );
+
+    return;
+  }
+
+  currentSearch =
+    0;
+
+  markCurrentSearch();
+
+  updateSearchCounter();
+
+  await showSearchResult(
+    0
   );
 }
 
 /* ============================================================
-   REBUILD SEARCH RESULTS
+   SHOW SEARCH RESULT
 ============================================================ */
 
-function rebuildSearchResults(){
-
-  if(
-    !lastSearchQuery
-  ){
-
-    return;
-  }
-
-  const previousPage =
-    searchResults[
-      currentSearch
-    ]?.pageNumber || null;
-
-  highlightAllSearchResults();
-
-  /*
-     Preserve the general result position where possible.
-  */
-
-  if(
-    searchResults.length
-  ){
-
-    if(
-      currentSearch < 0
-    ){
-
-      currentSearch =
-        0;
-
-    }else if(
-      currentSearch >=
-      searchResults.length
-    ){
-
-      currentSearch =
-        searchResults.length - 1;
-    }
-
-    highlightCurrentSearchResult();
-
-    document.getElementById(
-      "searchResults"
-    ).textContent =
-      `${currentSearch + 1} of ${searchResults.length}`;
-  }
-
-  void previousPage;
-}
-
-/* ============================================================
-   GOTO INDIVIDUAL SEARCH RESULT
-============================================================ */
-
-function gotoSearchResult(
+async function showSearchResult(
   index
 ){
 
@@ -3288,13 +3841,6 @@ function gotoSearchResult(
   currentSearch =
     index;
 
-  document.getElementById(
-    "searchResults"
-  ).textContent =
-    `${currentSearch + 1} of ${searchResults.length}`;
-
-  highlightCurrentSearchResult();
-
   const result =
     searchResults[
       currentSearch
@@ -3305,232 +3851,74 @@ function gotoSearchResult(
     return;
   }
 
+  markCurrentSearch();
+
+  updateSearchCounter();
+
   const view =
     result.view;
-
-  if(!view){
-
-    return;
-  }
-
-  const element =
-    result.element;
-
-  if(
-    element &&
-    element.scrollIntoView
-  ){
-
-    element.scrollIntoView({
-
-      behavior:"smooth",
-
-      block:"center",
-
-      inline:"nearest"
-
-    });
-
-  }else{
-
-    void scrollToView(
-      view
-    );
-  }
 
   pageInput.value =
     String(
       view.pageNumber
     );
+
+  const firstElement =
+    result.elements[0];
+
+  if(
+    firstElement
+  ){
+
+    const viewerRect =
+      viewer.getBoundingClientRect();
+
+    const elementRect =
+      firstElement.getBoundingClientRect();
+
+    const pageRect =
+      view.pageDiv.getBoundingClientRect();
+
+    const target =
+      viewer.scrollTop +
+
+      (
+        pageRect.top -
+        viewerRect.top
+      ) +
+
+      (
+        elementRect.top -
+        pageRect.top
+      ) -
+
+      (
+        viewer.clientHeight /
+        2
+      ) +
+
+      (
+        elementRect.height /
+        2
+      );
+
+    viewer.scrollTo({
+
+      top:
+        Math.max(
+          0,
+          target
+        ),
+
+      behavior:
+        "smooth"
+
+    });
+  }
 }
 
 /* ============================================================
-   SEARCH PDF
-============================================================ */
-
-async function searchPDF(
-  query
-){
-
-  searchResults = [];
-
-  currentSearch =
-    -1;
-
-  clearSearchHighlights();
-
-  query =
-    query
-      .trim()
-      .toLowerCase();
-
-  if(
-    query === ""
-  ){
-
-    lastSearchQuery =
-      "";
-
-    document.getElementById(
-      "searchResults"
-    ).textContent =
-      "0 of 0";
-
-    return;
-  }
-
-  lastSearchQuery =
-    query;
-
-  /*
-     Make sure every page object exists.
-
-     This does NOT render every page.
-  */
-
-  for(
-    let pageNumber = 1;
-
-    pageNumber <=
-      (pdfDoc?.numPages || 0);
-
-    pageNumber++
-  ){
-
-    await ensurePageView(
-      pageNumber
-    );
-
-    if(
-      pageNumber % 3 === 0
-    ){
-
-      await new Promise(
-        resolve =>
-          setTimeout(
-            resolve,
-            0
-          )
-      );
-    }
-  }
-
-  /*
-     Find pages containing the search text.
-  */
-
-  const matchingPages = [];
-
-  for(
-    const view
-    of pageViews
-  ){
-
-    if(!view){
-
-      continue;
-    }
-
-    try{
-
-      await ensureTextContent(
-        view
-      );
-
-    }catch(error){
-
-      console.warn(
-        `Could not read text from page ${view.pageNumber}:`,
-        error
-      );
-
-      continue;
-    }
-
-    const pageText =
-      view.textContent.items
-
-        .map(
-          item =>
-            item.str
-        )
-
-        .join(" ")
-
-        .toLowerCase();
-
-    if(
-      pageText.includes(
-        query
-      )
-    ){
-
-      matchingPages.push(
-        view
-      );
-    }
-  }
-
-  if(
-    matchingPages.length === 0
-  ){
-
-    document.getElementById(
-      "searchResults"
-    ).textContent =
-      "0 of 0";
-
-    alert(
-      "No results found."
-    );
-
-    return;
-  }
-
-  /*
-     Render only pages that contain a match.
-  */
-
-  for(
-    const view
-    of matchingPages
-  ){
-
-    await renderPage(
-      view
-    );
-  }
-
-  /*
-     Turn every individual occurrence into an individual
-     result.
-  */
-
-  highlightAllSearchResults();
-
-  if(
-    searchResults.length === 0
-  ){
-
-    document.getElementById(
-      "searchResults"
-    ).textContent =
-      "0 of 0";
-
-    alert(
-      "No results found."
-    );
-
-    return;
-  }
-
-  gotoSearchResult(
-    0
-  );
-}
-
-/* ============================================================
-   SEARCH OR ADVANCE
+   SEARCH NEXT / PREVIOUS
 ============================================================ */
 
 async function searchOrAdvance(
@@ -3543,12 +3931,17 @@ async function searchOrAdvance(
       .toLowerCase();
 
   if(
+    !query
+  ){
+
+    return;
+  }
+
+  if(
     query !==
       lastSearchQuery ||
 
-    searchResults.length === 0 ||
-
-    currentSearch === -1
+    searchResults.length === 0
   ){
 
     await searchPDF(
@@ -3558,10 +3951,14 @@ async function searchOrAdvance(
     return;
   }
 
-  gotoSearchResult(
+  await showSearchResult(
     currentSearch + step
   );
 }
+
+/* ============================================================
+   SEARCH INPUT
+============================================================ */
 
 searchBox.addEventListener(
   "keydown",
@@ -3572,8 +3969,22 @@ searchBox.addEventListener(
       "Enter"
     ){
 
+      event.preventDefault();
+
       await searchOrAdvance(
-        1
+        event.shiftKey
+          ? -1
+          : 1
+      );
+    }
+
+    if(
+      event.key ===
+      "Escape"
+    ){
+
+      searchPopup.classList.add(
+        "hidden"
       );
     }
   }
@@ -3581,19 +3992,23 @@ searchBox.addEventListener(
 
 document.getElementById(
   "prevResult"
-).onclick =
+).addEventListener(
+  "click",
   () =>
     void searchOrAdvance(
       -1
-    );
+    )
+);
 
 document.getElementById(
   "nextResult"
-).onclick =
+).addEventListener(
+  "click",
   () =>
     void searchOrAdvance(
       1
-    );
+    )
+);
 
 /* ============================================================
    SEARCH BUTTON
@@ -3601,7 +4016,8 @@ document.getElementById(
 
 document.getElementById(
   "searchButton"
-).onclick =
+).addEventListener(
+  "click",
   event => {
 
     event.stopPropagation();
@@ -3617,8 +4033,11 @@ document.getElementById(
     ){
 
       searchBox.focus();
+
+      searchBox.select();
     }
-  };
+  }
+);
 
 searchPopup.addEventListener(
   "click",
@@ -3632,6 +4051,377 @@ document.addEventListener(
     searchPopup.classList.add(
       "hidden"
     )
+);
+
+/* ============================================================
+   ZOOM
+============================================================ */
+
+async function rescaleAndRender(){
+
+  renderGeneration++;
+
+  currentScale =
+    baseScale *
+    zoomLevel;
+
+  if(
+    currentScale <= 0
+  ){
+
+    currentScale =
+      1;
+  }
+
+  zoomBox.value =
+    `${Math.round(
+      zoomLevel * 100
+    )}%`;
+
+  const ratio =
+    viewer.scrollHeight >
+    viewer.clientHeight
+
+      ? viewer.scrollTop /
+        (
+          viewer.scrollHeight -
+          viewer.clientHeight
+        )
+
+      : 0;
+
+  for(
+    const view
+    of pageViews
+  ){
+
+    if(!view){
+
+      continue;
+    }
+
+    layoutPage(
+      view,
+      currentScale
+    );
+
+    resetRenderedPage(
+      view
+    );
+  }
+
+  renderNearbyPages();
+
+  requestAnimationFrame(
+    () => {
+
+      if(
+        viewer.scrollHeight >
+        viewer.clientHeight
+      ){
+
+        viewer.scrollTop =
+          ratio *
+          (
+            viewer.scrollHeight -
+            viewer.clientHeight
+          );
+      }
+
+    }
+  );
+}
+
+document.getElementById(
+  "zoomIn"
+).addEventListener(
+  "click",
+  async () => {
+
+    const next =
+      zoomLevels.find(
+        level =>
+          level >
+          zoomLevel
+      );
+
+    if(
+      next !== undefined
+    ){
+
+      zoomLevel =
+        next;
+
+      await rescaleAndRender();
+    }
+  }
+);
+
+document.getElementById(
+  "zoomOut"
+).addEventListener(
+  "click",
+  async () => {
+
+    const previous =
+      [...zoomLevels]
+        .reverse()
+        .find(
+          level =>
+            level <
+            zoomLevel
+        );
+
+    if(
+      previous !== undefined
+    ){
+
+      zoomLevel =
+        previous;
+
+      await rescaleAndRender();
+    }
+  }
+);
+
+/* ============================================================
+   MANUAL ZOOM
+============================================================ */
+
+zoomBox.addEventListener(
+  "keydown",
+  async event => {
+
+    if(
+      event.key !==
+      "Enter"
+    ){
+
+      return;
+    }
+
+    let value =
+      parseFloat(
+        zoomBox.value.replace(
+          "%",
+          ""
+        )
+      );
+
+    if(
+      Number.isNaN(value)
+    ){
+
+      value =
+        100;
+    }
+
+    value =
+      Math.max(
+        25,
+
+        Math.min(
+          300,
+          value
+        )
+      );
+
+    zoomLevel =
+      value / 100;
+
+    await rescaleAndRender();
+  }
+);
+
+/* ============================================================
+   FIT WIDTH
+============================================================ */
+
+document.getElementById(
+  "fitWidth"
+).addEventListener(
+  "click",
+  async () => {
+
+    const firstView =
+      pageViews.find(
+        Boolean
+      );
+
+    if(!firstView){
+
+      return;
+    }
+
+    baseScale =
+      getFitWidthScale(
+        firstView.page
+      );
+
+    zoomLevel =
+      1;
+
+    await rescaleAndRender();
+  }
+);
+
+/* ============================================================
+   FIT PAGE
+============================================================ */
+
+document.getElementById(
+  "fitPage"
+).addEventListener(
+  "click",
+  async () => {
+
+    const firstView =
+      pageViews.find(
+        Boolean
+      );
+
+    if(!firstView){
+
+      return;
+    }
+
+    baseScale =
+      getFitPageScale(
+        firstView.page
+      );
+
+    zoomLevel =
+      1;
+
+    await rescaleAndRender();
+  }
+);
+
+/* ============================================================
+   PAGE NAVIGATION
+============================================================ */
+
+pageInput.addEventListener(
+  "keydown",
+  async event => {
+
+    if(
+      event.key !==
+      "Enter"
+    ){
+
+      return;
+    }
+
+    let pageNumber =
+      parseInt(
+        pageInput.value,
+        10
+      );
+
+    if(
+      Number.isNaN(
+        pageNumber
+      )
+    ){
+
+      pageNumber =
+        1;
+    }
+
+    pageNumber =
+      Math.max(
+        1,
+
+        Math.min(
+          pdfDoc?.numPages || 1,
+          pageNumber
+        )
+      );
+
+    const view =
+      await ensurePageView(
+        pageNumber
+      );
+
+    if(view){
+
+      pageInput.value =
+        String(
+          pageNumber
+        );
+
+      await scrollToView(
+        view
+      );
+    }
+  }
+);
+
+/* ============================================================
+   CURRENT PAGE
+============================================================ */
+
+viewer.addEventListener(
+  "scroll",
+  () => {
+
+    if(
+      !pageViews.length
+    ){
+
+      return;
+    }
+
+    const viewerRect =
+      viewer.getBoundingClientRect();
+
+    let currentPage =
+      1;
+
+    let bestDistance =
+      Infinity;
+
+    for(
+      const view
+      of pageViews
+    ){
+
+      if(!view){
+
+        continue;
+      }
+
+      const rect =
+        view.pageDiv.getBoundingClientRect();
+
+      const distance =
+        Math.abs(
+          rect.top -
+          viewerRect.top -
+          8
+        );
+
+      if(
+        distance <
+        bestDistance
+      ){
+
+        bestDistance =
+          distance;
+
+        currentPage =
+          view.pageNumber;
+      }
+    }
+
+    pageInput.value =
+      String(
+        currentPage
+      );
+
+    renderNearbyPages();
+  }
 );
 
 /* ============================================================
@@ -3777,7 +4567,7 @@ document.getElementById(
 
       }catch{
 
-        /* User cancelled */
+        /* cancelled */
       }
 
       return;
@@ -3804,311 +4594,7 @@ document.getElementById(
 );
 
 /* ============================================================
-   ZOOM IN
-============================================================ */
-
-document.getElementById(
-  "zoomIn"
-).onclick =
-  async () => {
-
-    const next =
-      zoomLevels.find(
-        level =>
-          level >
-          zoomLevel
-      );
-
-    if(
-      next === undefined
-    ){
-
-      return;
-    }
-
-    zoomLevel =
-      Math.min(
-        next,
-        MAX_ZOOM
-      );
-
-    await rescaleAndRender();
-  };
-
-/* ============================================================
-   ZOOM OUT
-============================================================ */
-
-document.getElementById(
-  "zoomOut"
-).onclick =
-  async () => {
-
-    const previous =
-      [...zoomLevels]
-        .reverse()
-        .find(
-          level =>
-            level <
-            zoomLevel
-        );
-
-    if(
-      previous === undefined
-    ){
-
-      return;
-    }
-
-    zoomLevel =
-      previous;
-
-    await rescaleAndRender();
-  };
-
-/* ============================================================
-   FIT WIDTH
-============================================================ */
-
-document.getElementById(
-  "fitWidth"
-).onclick =
-  async () => {
-
-    const firstView =
-      pageViews.find(
-        Boolean
-      );
-
-    if(!firstView){
-
-      return;
-    }
-
-    baseScale =
-      getFitWidthScale(
-        firstView.page
-      );
-
-    zoomLevel =
-      1;
-
-    await rescaleAndRender();
-  };
-
-/* ============================================================
-   FIT PAGE
-============================================================ */
-
-document.getElementById(
-  "fitPage"
-).onclick =
-  async () => {
-
-    const firstView =
-      pageViews.find(
-        Boolean
-      );
-
-    if(!firstView){
-
-      return;
-    }
-
-    baseScale =
-      getFitPageScale(
-        firstView.page
-      );
-
-    zoomLevel =
-      1;
-
-    await rescaleAndRender();
-  };
-
-/* ============================================================
-   MANUAL ZOOM
-============================================================ */
-
-zoomBox.addEventListener(
-  "keydown",
-  async event => {
-
-    if(
-      event.key !==
-      "Enter"
-    ){
-
-      return;
-    }
-
-    let value =
-      parseFloat(
-        zoomBox.value.replace(
-          "%",
-          ""
-        )
-      );
-
-    if(
-      Number.isNaN(
-        value
-      )
-    ){
-
-      value =
-        100;
-    }
-
-    value =
-      Math.max(
-        25,
-
-        Math.min(
-          300,
-          value
-        )
-      );
-
-    zoomLevel =
-      value / 100;
-
-    await rescaleAndRender();
-  }
-);
-
-/* ============================================================
-   PAGE NAVIGATION
-============================================================ */
-
-pageInput.addEventListener(
-  "keydown",
-  async event => {
-
-    if(
-      event.key !==
-      "Enter"
-    ){
-
-      return;
-    }
-
-    let pageNumber =
-      parseInt(
-        pageInput.value,
-        10
-      );
-
-    if(
-      Number.isNaN(
-        pageNumber
-      )
-    ){
-
-      pageNumber =
-        1;
-    }
-
-    pageNumber =
-      Math.max(
-        1,
-
-        Math.min(
-          pdfDoc?.numPages || 1,
-          pageNumber
-        )
-      );
-
-    const view =
-      await ensurePageView(
-        pageNumber
-      );
-
-    if(!view){
-
-      return;
-    }
-
-    pageInput.value =
-      String(
-        pageNumber
-      );
-
-    await scrollToView(
-      view
-    );
-  }
-);
-
-/* ============================================================
-   CURRENT PAGE
-============================================================ */
-
-viewer.addEventListener(
-  "scroll",
-  () => {
-
-    if(
-      !pageViews.length
-    ){
-
-      return;
-    }
-
-    const viewerRect =
-      viewer.getBoundingClientRect();
-
-    let currentPage =
-      1;
-
-    let bestDistance =
-      Infinity;
-
-    for(
-      const view
-      of pageViews
-    ){
-
-      if(!view){
-
-        continue;
-      }
-
-      const rect =
-        view.pageDiv
-          .getBoundingClientRect();
-
-      const distance =
-        Math.abs(
-          rect.top -
-          viewerRect.top -
-          8
-        );
-
-      if(
-        distance <
-        bestDistance
-      ){
-
-        bestDistance =
-          distance;
-
-        currentPage =
-          view.pageNumber;
-      }
-    }
-
-    pageInput.value =
-      String(
-        currentPage
-      );
-
-    renderNearbyPages();
-  }
-);
-
-/* ============================================================
-   TEXT SELECTION CLEANUP
+   SELECTION CLEANUP
 ============================================================ */
 
 document.addEventListener(
@@ -4181,15 +4667,13 @@ window.addEventListener(
                 Boolean
               );
 
-            if(!firstView){
+            if(firstView){
 
-              return;
+              baseScale =
+                getFitWidthScale(
+                  firstView.page
+                );
             }
-
-            baseScale =
-              getFitWidthScale(
-                firstView.page
-              );
           }
 
           await rescaleAndRender();
@@ -4202,7 +4686,7 @@ window.addEventListener(
 );
 
 /* ============================================================
-   VISUAL VIEWPORT CHANGES
+   CHROME RESIZE OBSERVER
 ============================================================ */
 
 if(
@@ -4211,11 +4695,8 @@ if(
 
   const chromeObserver =
     new ResizeObserver(
-      () => {
-
-        syncViewerTop();
-
-      }
+      () =>
+        syncViewerTop()
     );
 
   chromeObserver.observe(
@@ -4226,10 +4707,6 @@ if(
     toolbar
   );
 }
-
-/* ============================================================
-   INITIAL CHROME MEASUREMENT
-============================================================ */
 
 scheduleChromeSync();
 
@@ -4283,9 +4760,6 @@ try{
   currentScale =
     baseScale;
 
-  zoomBox.value =
-    "100%";
-
   const firstView =
     createPageShell(
       1,
@@ -4311,7 +4785,7 @@ try{
     "none";
 
   /*
-     Initialize remaining pages without rendering all of them.
+     Initialize remaining pages in the background.
   */
 
   void (async () => {
@@ -4324,11 +4798,6 @@ try{
 
       pageNumber++
     ){
-
-      if(!pdfDoc){
-
-        return;
-      }
 
       try{
 
@@ -4392,7 +4861,6 @@ try{
           error
         );
       }
-
     }
 
   })();
@@ -4433,7 +4901,7 @@ try{
 }
 
 /* ============================================================
-   BEFORE UNLOAD CLEANUP
+   CLEANUP
 ============================================================ */
 
 window.addEventListener(
@@ -4485,4 +4953,4 @@ window.addEventListener(
 </script>
 
 </body>
-</html>
+  </html>
