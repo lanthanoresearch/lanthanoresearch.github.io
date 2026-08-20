@@ -2,8 +2,9 @@
 <html lang="en">
 <head>
 
-<link rel="stylesheet" href="./pdfjs/web/text_layer_builder.css">
 <link rel="stylesheet" href="./pdfjs/web/annotation_layer_builder.css">
+<link rel="stylesheet" href="./pdfjs/web/text_layer_builder.css">
+
 <link rel="icon" type="image/png" href="file_000000000c40722f92b1fe6758cb4855.png">
 
 <meta charset="UTF-8">
@@ -14,8 +15,16 @@
 <style>
 
 /* =========================================================
-   BASE
+   SETTINGS
 ========================================================= */
+
+/*
+   FALSE = selectable text layer is disabled.
+   TRUE  = selectable text layer is rendered.
+
+   Search still works when this is FALSE.
+*/
+const DOES_NOT_BELONG_IN_CSS = 1;
 
 :root{
     --bg:#111;
@@ -71,7 +80,7 @@ header{
 
 
 /* =========================================================
-   FIXED TOOLBAR
+   TOOLBAR
 ========================================================= */
 
 #toolbar{
@@ -100,7 +109,7 @@ header{
 
 
 /* =========================================================
-   MAIN VIEWER AREA
+   MAIN VIEWER
 ========================================================= */
 
 #layout{
@@ -131,19 +140,11 @@ header{
     align-items:center;
 
     overscroll-behavior:contain;
-
-    /*
-      PDF.js uses these variables from the viewer level.
-      They MUST track the same scale used by the page
-      viewport.
-    */
-    --scale-factor:1;
-    --total-scale-factor:1;
 }
 
 
 /* =========================================================
-   PDF PAGE
+   PAGE
 ========================================================= */
 
 .page{
@@ -156,11 +157,6 @@ header{
     box-shadow:0 0 14px rgba(0,0,0,.4);
 
     flex:0 0 auto;
-
-    /*
-      Do not apply transforms, zooms, or scale here.
-      The PDF viewport controls the page dimensions.
-    */
 }
 
 .pageCanvas{
@@ -178,15 +174,14 @@ header{
 
 
 /* =========================================================
-   PDF.JS TEXT LAYER
+   TEXT LAYER
 ========================================================= */
 
 /*
-   PDF.js's own stylesheet controls the generated
-   text spans.
+   It is intentionally kept simple.
 
-   Do NOT override their font-size, transform,
-   position, width, or height.
+   When ENABLE_TEXT_SELECTION is false,
+   no textLayer is rendered at all.
 */
 
 .textLayer{
@@ -194,7 +189,7 @@ header{
 
     inset:0;
 
-    overflow:clip;
+    overflow:hidden;
 
     z-index:2;
 
@@ -204,42 +199,34 @@ header{
     pointer-events:auto;
 
     cursor:text;
-
-    forced-color-adjust:none;
 }
 
 
 /* =========================================================
-   PDF.JS ANNOTATION LAYER
+   NATIVE PDF.JS ANNOTATION LAYER
 ========================================================= */
-
-/*
-   This is intentionally pointer-events:none.
-
-   The official PDF.js stylesheet enables pointer
-   events only on the actual annotation sections.
-
-   That is what allows text selection to continue
-   underneath the annotation layer.
-*/
 
 .annotationLayer{
     position:absolute;
 
-    top:0;
-    left:0;
+    inset:0;
 
-    width:100%;
-    height:100%;
+    overflow:hidden;
 
     z-index:4;
 
+    /*
+       IMPORTANT:
+       The layer itself must not block text selection.
+       PDF.js's actual annotation elements receive
+       pointer events through its own stylesheet.
+    */
     pointer-events:none;
 }
 
 
 /* =========================================================
-   GENERIC BUTTONS
+   BUTTONS
 ========================================================= */
 
 .btn{
@@ -300,7 +287,7 @@ button:hover{
 
 
 /* =========================================================
-   TITLE BAR
+   TITLE
 ========================================================= */
 
 #titleBar{
@@ -596,10 +583,6 @@ body.reading-mode #loadingOverlay{
 }
 
 
-/* =========================================================
-   ANIMATION
-========================================================= */
-
 @keyframes spin{
 
     from{
@@ -615,13 +598,8 @@ body.reading-mode #loadingOverlay{
 </style>
 </head>
 
-
 <body>
 
-
-<!-- =======================================================
-     FIXED HEADER
-======================================================= -->
 
 <header>
 
@@ -641,10 +619,6 @@ body.reading-mode #loadingOverlay{
 
 </header>
 
-
-<!-- =======================================================
-     FIXED TOOLBAR
-======================================================= -->
 
 <div id="toolbar">
 
@@ -703,10 +677,6 @@ body.reading-mode #loadingOverlay{
 </div>
 
 
-<!-- =======================================================
-     SEARCH POPUP
-======================================================= -->
-
 <div id="searchPopup" class="hidden">
 
 <input
@@ -730,10 +700,6 @@ body.reading-mode #loadingOverlay{
 </div>
 
 
-<!-- =======================================================
-     VIEWER
-======================================================= -->
-
 <div id="layout">
 
 <div id="loadingOverlay">
@@ -751,10 +717,6 @@ body.reading-mode #loadingOverlay{
 </div>
 
 
-<!-- =======================================================
-     TITLE
-======================================================= -->
-
 <div id="titleBar">
 
 <div id="title">
@@ -763,10 +725,6 @@ body.reading-mode #loadingOverlay{
 
 </div>
 
-
-<!-- =======================================================
-     MENU
-======================================================= -->
 
 <div id="menu">
 
@@ -791,7 +749,6 @@ body.reading-mode #loadingOverlay{
 
 <script type="module">
 
-
 /* =========================================================
    PDF.JS
 ========================================================= */
@@ -809,6 +766,21 @@ GlobalWorkerOptions.workerSrc =
 
 
 /* =========================================================
+   SINGLE TEXT-SELECTION SWITCH
+========================================================= */
+
+/*
+   Change ONLY this value.
+
+   false = text selection OFF
+   true  = text selection ON
+
+   Search still works either way.
+*/
+const ENABLE_TEXT_SELECTION = false;
+
+
+/* =========================================================
    URL PARAMETERS
 ========================================================= */
 
@@ -817,18 +789,15 @@ const params =
         location.search
     );
 
-
 const file =
     decodeURIComponent(
         params.get("file") || ""
     );
 
-
 const title =
     decodeURIComponent(
         params.get("paper") || "PDF"
     );
-
 
 const returnPage =
     decodeURIComponent(
@@ -903,7 +872,7 @@ try{
 catch(error){
 
     console.warn(
-        "descriptions.json failed:",
+        "Could not load descriptions.json:",
         error
     );
 
@@ -915,10 +884,8 @@ const entries =
         descriptions
     );
 
-
 let newestEntry =
     null;
-
 
 if(entries.length){
 
@@ -941,7 +908,6 @@ const newestKey =
         ? newestEntry[0]
         : null;
 
-
 const newestDate =
     newestEntry
         ? new Date(
@@ -949,15 +915,12 @@ const newestDate =
         )
         : null;
 
-
 const oneYearAgo =
     new Date();
-
 
 oneYearAgo.setFullYear(
     oneYearAgo.getFullYear() - 1
 );
-
 
 const paper =
     Object.values(
@@ -967,7 +930,6 @@ const paper =
             item.url === file
     );
 
-
 const paperKey =
     Object.keys(
         descriptions
@@ -975,7 +937,6 @@ const paperKey =
         key =>
             descriptions[key].url === file
     );
-
 
 const isNewest =
     Boolean(
@@ -986,37 +947,17 @@ const isNewest =
 
 
 /* =========================================================
-   ESCAPE HTML
+   HTML ESCAPE
 ========================================================= */
 
 function escapeHtml(value){
 
     return String(value)
-
-        .replaceAll(
-            "&",
-            "&amp;"
-        )
-
-        .replaceAll(
-            "<",
-            "&lt;"
-        )
-
-        .replaceAll(
-            ">",
-            "&gt;"
-        )
-
-        .replaceAll(
-            '"',
-            "&quot;"
-        )
-
-        .replaceAll(
-            "'",
-            "&#039;"
-        );
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
 
 }
 
@@ -1067,26 +1008,20 @@ document.getElementById(
 ========================================================= */
 
 let baseScale = 1;
-
 let zoomLevel = 1;
-
 let currentScale = 1;
 
 
-function setViewerScale(){
+function updateViewerScaleVariable(){
 
     /*
-       PDF.js moved --scale-factor to the viewer
-       container so that all text spans inherit it.
+       This is needed only when text selection is enabled.
+       PDF.js requires its text-layer scale factor when
+       using TextLayer outside its full viewer.
     */
 
     viewer.style.setProperty(
         "--scale-factor",
-        String(currentScale)
-    );
-
-    viewer.style.setProperty(
-        "--total-scale-factor",
         String(currentScale)
     );
 
@@ -1095,26 +1030,23 @@ function setViewerScale(){
 
 function getViewerWidth(){
 
-    const style =
+    const styles =
         getComputedStyle(
             viewer
         );
 
-
     return Math.max(
-
         1,
 
         viewer.clientWidth
         -
         parseFloat(
-            style.paddingLeft
+            styles.paddingLeft
         )
         -
         parseFloat(
-            style.paddingRight
+            styles.paddingRight
         )
-
     );
 
 }
@@ -1122,26 +1054,23 @@ function getViewerWidth(){
 
 function getViewerHeight(){
 
-    const style =
+    const styles =
         getComputedStyle(
             viewer
         );
 
-
     return Math.max(
-
         1,
 
         viewer.clientHeight
         -
         parseFloat(
-            style.paddingTop
+            styles.paddingTop
         )
         -
         parseFloat(
-            style.paddingBottom
+            styles.paddingBottom
         )
-
     );
 
 }
@@ -1155,7 +1084,6 @@ function getFitWidthScale(
         page.getViewport({
             scale:1
         });
-
 
     return (
         getViewerWidth() /
@@ -1174,16 +1102,13 @@ function getFitPageScale(
             scale:1
         });
 
-
     const widthScale =
         getViewerWidth() /
         viewport.width;
 
-
     const heightScale =
         getViewerHeight() /
         viewport.height;
-
 
     return Math.min(
         widthScale,
@@ -1199,9 +1124,7 @@ function updateScale(){
         baseScale *
         zoomLevel;
 
-
-    setViewerScale();
-
+    updateViewerScaleVariable();
 
     zoomBox.value =
         Math.round(
@@ -1216,7 +1139,6 @@ function updateScale(){
 ========================================================= */
 
 const zoomLevels = [
-
     0.25,
     0.5,
     0.75,
@@ -1237,7 +1159,6 @@ const zoomLevels = [
     4.5,
     4.75,
     5
-
 ];
 
 
@@ -1265,10 +1186,8 @@ const backButton =
         "backBtn"
     );
 
-
 backButton.href =
     returnPage || "index.html";
-
 
 backButton.addEventListener(
     "click",
@@ -1276,20 +1195,17 @@ backButton.addEventListener(
 
         event.preventDefault();
 
-
         sessionStorage.setItem(
             "restoreSearch",
             "yes"
         );
-
 
         sessionStorage.setItem(
             "returnFromPage",
             "yes"
         );
 
-
-        window.location.assign(
+        location.assign(
             returnPage || "index.html"
         );
 
@@ -1308,19 +1224,11 @@ function scrollToPage(
     if(!view)
         return;
 
-
-    /*
-       Never use scrollIntoView().
-       Only #viewer is allowed to scroll.
-    */
-
     const viewerRect =
         viewer.getBoundingClientRect();
 
-
     const pageRect =
         view.pageDiv.getBoundingClientRect();
-
 
     const target =
         viewer.scrollTop
@@ -1331,19 +1239,13 @@ function scrollToPage(
         -
         8;
 
-
     viewer.scrollTo({
-
-        top:
-            Math.max(
-                0,
-                target
-            ),
-
+        top:Math.max(
+            0,
+            target
+        ),
         behavior:"smooth"
-
     });
-
 
     pageInput.value =
         String(
@@ -1354,12 +1256,131 @@ function scrollToPage(
 
 
 /* =========================================================
+   INTERNAL DESTINATION
+========================================================= */
+
+async function resolveDestination(
+    destination
+){
+
+    if(!pdfDoc)
+        return null;
+
+    try{
+
+        let dest =
+            destination;
+
+        if(
+            typeof dest === "string"
+        ){
+
+            dest =
+                await pdfDoc.getDestination(
+                    dest
+                );
+
+        }
+
+        if(
+            !Array.isArray(dest) ||
+            !dest.length
+        ){
+
+            return null;
+
+        }
+
+        const pageRef =
+            dest[0];
+
+        let pageIndex = -1;
+
+        try{
+
+            pageIndex =
+                await pdfDoc.getPageIndex(
+                    pageRef
+                );
+
+        }
+        catch{
+
+            if(
+                typeof pageRef === "number"
+            ){
+
+                pageIndex =
+                    pageRef;
+
+            }
+
+        }
+
+        if(
+            pageIndex < 0 ||
+            pageIndex >= pageViews.length
+        ){
+
+            return null;
+
+        }
+
+        return pageIndex;
+
+    }
+    catch(error){
+
+        console.warn(
+            "Could not resolve PDF destination:",
+            error
+        );
+
+        return null;
+
+    }
+
+}
+
+
+async function goToDestination(
+    destination
+){
+
+    const pageIndex =
+        await resolveDestination(
+            destination
+        );
+
+    if(
+        pageIndex === null
+    )
+        return;
+
+    const view =
+        pageViews[
+            pageIndex
+        ];
+
+    if(view){
+
+        scrollToPage(
+            view
+        );
+
+    }
+
+}
+
+
+/* =========================================================
    LINK SERVICE
 ========================================================= */
 
 /*
-   This implements the subset of PDFLinkService that
-   PDF.js's AnnotationLayer uses for link annotations.
+   PDF.js AnnotationLayer uses a link service for
+   navigation. External URLs are handled here,
+   internal destinations go through goToDestination().
 */
 
 const linkService = {
@@ -1369,9 +1390,9 @@ const linkService = {
     externalLinkRel:
         "noopener noreferrer",
 
-    externalLinkEnabled: true,
+    externalLinkEnabled:true,
 
-    ignoreDestinationZoom: false,
+    ignoreDestinationZoom:false,
 
 
     addLinkAttributes(
@@ -1383,26 +1404,15 @@ const linkService = {
         if(!url)
             return;
 
-
         link.href =
             url;
 
-
         /*
-           External links always get their own
-           tab in this viewer.
+           Keep your existing viewer behavior:
+           external PDF links open separately.
         */
-
-        if(
-            newWindow ||
-            true
-        ){
-
-            link.target =
-                "_blank";
-
-        }
-
+        link.target =
+            "_blank";
 
         link.rel =
             "noopener noreferrer";
@@ -1415,8 +1425,7 @@ const linkService = {
     ){
 
         if(
-            typeof destination ===
-            "string"
+            typeof destination === "string"
         ){
 
             return (
@@ -1427,7 +1436,6 @@ const linkService = {
             );
 
         }
-
 
         return "#";
 
@@ -1447,18 +1455,7 @@ const linkService = {
         destination
     ){
 
-        await navigateToDestination(
-            destination
-        );
-
-    },
-
-
-    async navigateTo(
-        destination
-    ){
-
-        await navigateToDestination(
+        await goToDestination(
             destination
         );
 
@@ -1469,25 +1466,7 @@ const linkService = {
         action
     ){
 
-        /*
-           Preserve basic PDF navigation actions.
-        */
-
         if(
-            action === "GoBack"
-        ){
-
-            window.history.back();
-
-        }
-        else if(
-            action === "GoForward"
-        ){
-
-            window.history.forward();
-
-        }
-        else if(
             action === "NextPage"
         ){
 
@@ -1527,7 +1506,6 @@ const linkService = {
                     pageViews.length - 1
                 ];
 
-
             if(last){
 
                 scrollToPage(
@@ -1552,176 +1530,24 @@ function goRelativePage(
 ){
 
     const current =
-        Math.max(
-            1,
-            parseInt(
-                pageInput.value,
-                10
-            ) || 1
-        );
-
+        parseInt(
+            pageInput.value,
+            10
+        ) || 1;
 
     const target =
         Math.max(
-
             1,
-
             Math.min(
-
                 pageViews.length,
-
                 current + amount
-
             )
-
         );
-
 
     const view =
         pageViews[
             target - 1
         ];
-
-
-    if(view){
-
-        scrollToPage(
-            view
-        );
-
-    }
-
-}
-
-
-/* =========================================================
-   DESTINATION RESOLUTION
-========================================================= */
-
-async function resolveDestination(
-    destination
-){
-
-    if(!pdfDoc)
-        return null;
-
-
-    try{
-
-        let dest =
-            destination;
-
-
-        if(
-            typeof dest ===
-            "string"
-        ){
-
-            dest =
-                await pdfDoc.getDestination(
-                    dest
-                );
-
-        }
-
-
-        if(
-            !Array.isArray(dest) ||
-            !dest.length
-        ){
-
-            return null;
-
-        }
-
-
-        const pageRef =
-            dest[0];
-
-
-        let pageIndex =
-            -1;
-
-
-        try{
-
-            pageIndex =
-                await pdfDoc.getPageIndex(
-                    pageRef
-                );
-
-        }
-        catch{
-
-            if(
-                typeof pageRef ===
-                "number"
-            ){
-
-                pageIndex =
-                    pageRef;
-
-            }
-
-        }
-
-
-        if(
-            pageIndex < 0 ||
-            pageIndex >= pageViews.length
-        ){
-
-            return null;
-
-        }
-
-
-        return pageIndex;
-
-    }
-    catch(error){
-
-        console.warn(
-            "Destination resolution failed:",
-            error
-        );
-
-
-        return null;
-
-    }
-
-}
-
-
-/* =========================================================
-   DESTINATION NAVIGATION
-========================================================= */
-
-async function navigateToDestination(
-    destination
-){
-
-    const pageIndex =
-        await resolveDestination(
-            destination
-        );
-
-
-    if(
-        pageIndex === null
-    ){
-
-        return;
-
-    }
-
-
-    const view =
-        pageViews[
-            pageIndex
-        ];
-
 
     if(view){
 
@@ -1747,32 +1573,26 @@ async function createPage(
             pageNumber
         );
 
-
     const viewport =
         page.getViewport({
             scale:currentScale
-        );
-
+        });
 
     const pageDiv =
         document.createElement(
             "div"
         );
 
-
     pageDiv.className =
         "page";
-
 
     pageDiv.dataset.pageNumber =
         String(
             pageNumber
         );
 
-
     pageDiv.style.width =
         `${viewport.width}px`;
-
 
     pageDiv.style.height =
         `${viewport.height}px`;
@@ -1787,14 +1607,11 @@ async function createPage(
             "canvas"
         );
 
-
     canvas.className =
         "pageCanvas";
 
-
     const outputScale =
         window.devicePixelRatio || 1;
-
 
     canvas.width =
         Math.floor(
@@ -1802,21 +1619,17 @@ async function createPage(
             outputScale
         );
 
-
     canvas.height =
         Math.floor(
             viewport.height *
             outputScale
         );
 
-
     canvas.style.width =
         `${viewport.width}px`;
 
-
     canvas.style.height =
         `${viewport.height}px`;
-
 
     pageDiv.appendChild(
         canvas
@@ -1832,10 +1645,8 @@ async function createPage(
             "div"
         );
 
-
     textLayerDiv.className =
         "textLayer";
-
 
     pageDiv.appendChild(
         textLayerDiv
@@ -1851,10 +1662,8 @@ async function createPage(
             "div"
         );
 
-
     annotationLayerDiv.className =
         "annotationLayer";
-
 
     pageDiv.appendChild(
         annotationLayerDiv
@@ -1869,25 +1678,17 @@ async function createPage(
     const view = {
 
         pageNumber,
-
         page,
-
         pageDiv,
-
         canvas,
-
         textLayerDiv,
-
         annotationLayerDiv,
-
         viewport,
 
         textContent:null,
-
         annotations:[],
 
         textLayer:null,
-
         annotationLayer:null
 
     };
@@ -1917,14 +1718,12 @@ async function renderCanvas(
             scale:currentScale
         });
 
-
     view.viewport =
         viewport;
 
 
     view.pageDiv.style.width =
         `${viewport.width}px`;
-
 
     view.pageDiv.style.height =
         `${viewport.height}px`;
@@ -1940,7 +1739,6 @@ async function renderCanvas(
             outputScale
         );
 
-
     view.canvas.height =
         Math.floor(
             viewport.height *
@@ -1950,7 +1748,6 @@ async function renderCanvas(
 
     view.canvas.style.width =
         `${viewport.width}px`;
-
 
     view.canvas.style.height =
         `${viewport.height}px`;
@@ -1992,32 +1789,67 @@ async function renderText(
     view
 ){
 
+    /*
+       Text extraction remains available for SEARCH
+       regardless of whether visual selection is enabled.
+    */
+
     try{
 
-        const textContent =
+        view.textContent =
             await view.page.getTextContent();
 
+    }
+    catch(error){
 
-        view.textContent =
-            textContent;
+        console.warn(
+            `Text extraction failed on page ${view.pageNumber}:`,
+            error
+        );
 
+        return;
+
+    }
+
+
+    if(
+        !ENABLE_TEXT_SELECTION
+    ){
+
+        view.textLayerDiv.style.display =
+            "none";
+
+        return;
+
+    }
+
+
+    try{
+
+        view.textLayerDiv.style.display =
+            "block";
 
         view.textLayerDiv.replaceChildren();
 
 
         /*
-           Use the exact same viewport as the canvas.
-
-           Do NOT use dontFlip:true here. Current PDF.js
-           TextLayer expects the normal PageViewport and
-           applies its own transform internally.
+           PDF.js requires --scale-factor when using
+           TextLayer outside the complete viewer.
         */
+
+        view.textLayerDiv.style.setProperty(
+            "--scale-factor",
+            String(
+                currentScale
+            )
+        );
+
 
         const textLayer =
             new TextLayer({
 
                 textContentSource:
-                    textContent,
+                    view.textContent,
 
                 container:
                     view.textLayerDiv,
@@ -2071,7 +1903,15 @@ async function renderAnnotations(
 
 
         /*
-           PDF.js 6.x uses an AnnotationLayer instance.
+           Native PDF.js annotation layer.
+
+           This handles:
+           - external URL links
+           - internal PDF destinations
+           - link coordinates
+           - rotation
+           - scaling
+           - other supported annotations
         */
 
         const annotationLayer =
@@ -2092,9 +1932,7 @@ async function renderAnnotations(
 
 
         await annotationLayer.render({
-
             annotations
-
         });
 
 
@@ -2104,7 +1942,7 @@ async function renderAnnotations(
     }
     catch(error){
 
-        console.warn(
+        console.error(
             `Annotation layer failed on page ${view.pageNumber}:`,
             error
         );
@@ -2115,7 +1953,7 @@ async function renderAnnotations(
 
 
 /* =========================================================
-   INITIAL LOAD
+   LOAD PDF
 ========================================================= */
 
 try{
@@ -2162,9 +2000,9 @@ try{
     updateScale();
 
 
-    /* -----------------------------------------
-       Create every page container first.
-    ----------------------------------------- */
+    /*
+       Create all page containers first.
+    */
 
     for(
         let pageNumber = 1;
@@ -2182,10 +2020,9 @@ try{
         catch(error){
 
             console.error(
-                `Failed to create page ${pageNumber}:`,
+                `Could not create page ${pageNumber}:`,
                 error
             );
-
 
             pageViews[
                 pageNumber - 1
@@ -2197,9 +2034,9 @@ try{
     }
 
 
-    /* -----------------------------------------
-       Render every canvas.
-    ----------------------------------------- */
+    /*
+       Render canvases.
+    */
 
     for(
         const view
@@ -2208,7 +2045,6 @@ try{
 
         if(!view)
             continue;
-
 
         try{
 
@@ -2230,16 +2066,17 @@ try{
 
 
     /*
-       All actual PDF pages are now visible.
+       The actual PDF pages are visible now.
     */
 
     loadingOverlay.style.display =
         "none";
 
 
-    /* -----------------------------------------
-       Text + annotations.
-    ----------------------------------------- */
+    /*
+       Text extraction and links.
+       Selection can be disabled independently.
+    */
 
     for(
         const view
@@ -2249,12 +2086,6 @@ try{
         if(!view)
             continue;
 
-
-        /*
-           Independent promises:
-           a bad annotation cannot stop text,
-           and a bad text layer cannot stop links.
-        */
 
         void renderText(
             view
@@ -2271,7 +2102,7 @@ try{
 catch(error){
 
     console.error(
-        "PDF loading failed:",
+        "PDF load failed:",
         error
     );
 
@@ -2285,8 +2116,8 @@ catch(error){
         <div style="
             color:#fff;
             padding:40px;
-            max-width:600px;
             text-align:center;
+            max-width:600px;
         ">
 
             <h2>
@@ -2308,27 +2139,23 @@ catch(error){
 
 
 /* =========================================================
-   RERENDER AFTER ZOOM / ORIENTATION
+   ZOOM / ORIENTATION RENDER
 ========================================================= */
 
 async function renderAllPages(){
 
     /*
-       Preserve the current location within #viewer.
-       The window/document itself is never scrolled.
+       Preserve current position within the PDF viewer.
     */
 
     const oldScrollableHeight =
         viewer.scrollHeight -
         viewer.clientHeight;
 
-
     const scrollRatio =
         oldScrollableHeight > 0
-
             ? viewer.scrollTop /
               oldScrollableHeight
-
             : 0;
 
 
@@ -2357,7 +2184,6 @@ async function renderAllPages(){
         view.pageDiv.style.width =
             `${viewport.width}px`;
 
-
         view.pageDiv.style.height =
             `${viewport.height}px`;
 
@@ -2378,7 +2204,6 @@ async function renderAllPages(){
                     outputScale
                 );
 
-
             view.canvas.height =
                 Math.floor(
                     viewport.height *
@@ -2388,7 +2213,6 @@ async function renderAllPages(){
 
             view.canvas.style.width =
                 `${viewport.width}px`;
-
 
             view.canvas.style.height =
                 `${viewport.height}px`;
@@ -2423,7 +2247,7 @@ async function renderAllPages(){
         catch(error){
 
             console.warn(
-                `Canvas zoom/orientation failed on page ${view.pageNumber}:`,
+                `Canvas rerender failed on page ${view.pageNumber}:`,
                 error
             );
 
@@ -2434,13 +2258,24 @@ async function renderAllPages(){
            Text
         ----------------------------------------- */
 
-        try{
+        if(
+            ENABLE_TEXT_SELECTION &&
+            view.textContent
+        ){
 
-            if(
-                view.textContent
-            ){
+            try{
 
                 view.textLayerDiv.replaceChildren();
+
+                view.textLayerDiv.style.display =
+                    "block";
+
+                view.textLayerDiv.style.setProperty(
+                    "--scale-factor",
+                    String(
+                        currentScale
+                    )
+                );
 
 
                 const textLayer =
@@ -2464,20 +2299,20 @@ async function renderAllPages(){
                     textLayer;
 
             }
+            catch(error){
 
-        }
-        catch(error){
+                console.warn(
+                    `Text rerender failed on page ${view.pageNumber}:`,
+                    error
+                );
 
-            console.warn(
-                `Text zoom/orientation failed on page ${view.pageNumber}:`,
-                error
-            );
+            }
 
         }
 
 
         /* -----------------------------------------
-           Annotation layer
+           Native annotations
         ----------------------------------------- */
 
         try{
@@ -2523,7 +2358,7 @@ async function renderAllPages(){
         catch(error){
 
             console.warn(
-                `Annotation zoom/orientation failed on page ${view.pageNumber}:`,
+                `Annotation rerender failed on page ${view.pageNumber}:`,
                 error
             );
 
@@ -2533,7 +2368,7 @@ async function renderAllPages(){
 
 
     /*
-       Restore approximate scroll position.
+       Restore PDF-only scroll position.
     */
 
     requestAnimationFrame(
@@ -2575,11 +2410,8 @@ menuButton.addEventListener(
 
 
         menu.style.display =
-            menu.style.display ===
-            "block"
-
+            menu.style.display === "block"
                 ? "none"
-
                 : "block";
 
     }
@@ -2652,7 +2484,7 @@ document.getElementById(
 
 
 /* =========================================================
-   OPEN NEW TAB
+   NEW TAB
 ========================================================= */
 
 document.getElementById(
@@ -2781,8 +2613,8 @@ document.getElementById(
 
     const next =
         zoomLevels.find(
-            level =>
-                level > zoomLevel
+            value =>
+                value > zoomLevel
         );
 
 
@@ -2811,8 +2643,8 @@ document.getElementById(
         [...zoomLevels]
         .reverse()
         .find(
-            level =>
-                level < zoomLevel
+            value =>
+                value < zoomLevel
         );
 
 
@@ -2839,8 +2671,7 @@ document.getElementById(
 
     const firstView =
         pageViews.find(
-            view =>
-                Boolean(view)
+            Boolean
         );
 
 
@@ -2873,8 +2704,7 @@ document.getElementById(
 
     const firstView =
         pageViews.find(
-            view =>
-                Boolean(view)
+            Boolean
         );
 
 
@@ -2898,7 +2728,7 @@ document.getElementById(
 
 
 /* =========================================================
-   PAGE NUMBER
+   PAGE INPUT
 ========================================================= */
 
 pageInput.addEventListener(
@@ -2907,14 +2737,11 @@ pageInput.addEventListener(
 
         if(
             event.key !== "Enter"
-        ){
-
+        )
             return;
 
-        }
 
-
-        let number =
+        let pageNumber =
             parseInt(
                 pageInput.value,
                 10
@@ -2923,32 +2750,30 @@ pageInput.addEventListener(
 
         if(
             Number.isNaN(
-                number
+                pageNumber
             )
         ){
 
-            number =
+            pageNumber =
                 1;
 
         }
 
 
-        number =
+        pageNumber =
             Math.max(
-
                 1,
 
                 Math.min(
                     pageViews.length,
-                    number
+                    pageNumber
                 )
-
             );
 
 
         const view =
             pageViews[
-                number - 1
+                pageNumber - 1
             ];
 
 
@@ -2974,17 +2799,17 @@ zoomBox.addEventListener(
 
         if(
             event.key !== "Enter"
-        ){
-
+        )
             return;
-
-        }
 
 
         let value =
             parseFloat(
                 zoomBox.value
-                    .replace("%","")
+                    .replace(
+                        "%",
+                        ""
+                    )
             );
 
 
@@ -3002,14 +2827,12 @@ zoomBox.addEventListener(
 
         value =
             Math.max(
-
                 25,
 
                 Math.min(
                     500,
                     value
                 )
-
             );
 
 
@@ -3024,7 +2847,7 @@ zoomBox.addEventListener(
 
 
 /* =========================================================
-   CURRENT PAGE
+   CURRENT PAGE INDICATOR
 ========================================================= */
 
 let scrollFrame =
@@ -3051,7 +2874,7 @@ viewer.addEventListener(
                         viewer.getBoundingClientRect();
 
 
-                    let currentPage =
+                    let current =
                         1;
 
 
@@ -3075,13 +2898,9 @@ viewer.addEventListener(
 
                         const distance =
                             Math.abs(
-
-                                rect.top
-                                -
-                                viewerRect.top
-                                -
+                                rect.top -
+                                viewerRect.top -
                                 8
-
                             );
 
 
@@ -3093,8 +2912,7 @@ viewer.addEventListener(
                             bestDistance =
                                 distance;
 
-
-                            currentPage =
+                            current =
                                 view.pageNumber;
 
                         }
@@ -3104,7 +2922,7 @@ viewer.addEventListener(
 
                     pageInput.value =
                         String(
-                            currentPage
+                            current
                         );
 
                 }
@@ -3163,11 +2981,8 @@ async function searchPDF(
         if(
             !view ||
             !view.textContent
-        ){
-
+        )
             continue;
-
-        }
 
 
         const text =
@@ -3231,11 +3046,8 @@ function gotoSearchResult(
 
     if(
         searchResults.length === 0
-    ){
-
+    )
         return;
-
-    }
 
 
     if(
@@ -3269,11 +3081,15 @@ function gotoSearchResult(
         `${currentSearch + 1} of ${searchResults.length}`;
 
 
+    const pageIndex =
+        searchResults[
+            currentSearch
+        ];
+
+
     const view =
         pageViews[
-            searchResults[
-                currentSearch
-            ]
+            pageIndex
         ];
 
 
@@ -3298,11 +3114,8 @@ searchBox.addEventListener(
 
         if(
             event.key !== "Enter"
-        ){
-
+        )
             return;
-
-        }
 
 
         const query =
@@ -3314,7 +3127,7 @@ searchBox.addEventListener(
         if(
 
             query !==
-            lastSearchQuery ||
+                lastSearchQuery ||
 
             searchResults.length === 0 ||
 
@@ -3325,7 +3138,6 @@ searchBox.addEventListener(
             searchPDF(
                 query
             );
-
 
             return;
 
@@ -3391,7 +3203,7 @@ document.addEventListener(
 
 
 /* =========================================================
-   PREVIOUS SEARCH RESULT
+   SEARCH PREVIOUS
 ========================================================= */
 
 document.getElementById(
@@ -3407,7 +3219,7 @@ document.getElementById(
     if(
 
         query !==
-        lastSearchQuery ||
+            lastSearchQuery ||
 
         searchResults.length === 0 ||
 
@@ -3418,7 +3230,6 @@ document.getElementById(
         searchPDF(
             query
         );
-
 
         return;
 
@@ -3433,7 +3244,7 @@ document.getElementById(
 
 
 /* =========================================================
-   NEXT SEARCH RESULT
+   SEARCH NEXT
 ========================================================= */
 
 document.getElementById(
@@ -3449,7 +3260,7 @@ document.getElementById(
     if(
 
         query !==
-        lastSearchQuery ||
+            lastSearchQuery ||
 
         searchResults.length === 0 ||
 
@@ -3460,7 +3271,6 @@ document.getElementById(
         searchPDF(
             query
         );
-
 
         return;
 
@@ -3478,18 +3288,39 @@ document.getElementById(
    READING MODE
 ========================================================= */
 
+/*
+   Reading mode is completely independent of
+   PDF text selection.
+
+   A click on actual PDF page content toggles it.
+
+   A click on an annotation/link does NOT toggle it.
+
+   Gray space does NOT toggle it.
+*/
+
 let suppressReadingModeClick =
     false;
 
 
-/*
-   Record an existing text selection before
-   a click is interpreted by the page.
-*/
-
 viewer.addEventListener(
     "mousedown",
-    () => {
+    event => {
+
+        /*
+           If there is a text selection enabled,
+           remember it so the click used to clear it
+           won't toggle reading mode.
+        */
+
+        if(
+            !ENABLE_TEXT_SELECTION
+        ){
+
+            return;
+
+        }
+
 
         const selection =
             window.getSelection();
@@ -3514,13 +3345,19 @@ viewer.addEventListener(
     event => {
 
         /*
-           Do not interpret any actual annotation
-           interaction as a reading-mode toggle.
+           Annotation/link click:
+           never enter reading mode.
         */
 
         if(
             event.target.closest(
                 ".annotationLayer section"
+            ) ||
+            event.target.closest(
+                ".annotationLayer a"
+            ) ||
+            event.target.closest(
+                ".annotationLayer button"
             )
         ){
 
@@ -3529,58 +3366,64 @@ viewer.addEventListener(
         }
 
 
-        /*
-           Only actual PDF page content can
-           toggle reading mode.
-        */
-
         const page =
             event.target.closest(
                 ".page"
             );
 
 
+        /*
+           Gray area:
+           no reading-mode change.
+        */
+
         if(!page)
             return;
 
 
-        const selection =
-            window.getSelection();
-
-
         /*
-           Do not toggle while text is selected.
+           When selectable text is enabled,
+           preserve the previous behavior.
         */
 
         if(
-            selection &&
-            selection.toString().length > 0
+            ENABLE_TEXT_SELECTION
         ){
 
-            suppressReadingModeClick =
-                true;
+            const selection =
+                window.getSelection();
 
-            return;
+
+            if(
+                selection &&
+                selection.toString().length > 0
+            ){
+
+                suppressReadingModeClick =
+                    true;
+
+                return;
+
+            }
+
+
+            if(
+                suppressReadingModeClick
+            ){
+
+                suppressReadingModeClick =
+                    false;
+
+                return;
+
+            }
 
         }
 
 
         /*
-           Ignore the click used to deselect
-           existing text.
+           Toggle reading mode.
         */
-
-        if(
-            suppressReadingModeClick
-        ){
-
-            suppressReadingModeClick =
-                false;
-
-            return;
-
-        }
-
 
         document.body.classList.toggle(
             "reading-mode"
@@ -3609,7 +3452,7 @@ viewer.addEventListener(
 
 
 /* =========================================================
-   RESIZE
+   RESIZE / ORIENTATION
 ========================================================= */
 
 let resizeTimer =
@@ -3630,14 +3473,24 @@ window.addEventListener(
                 async () => {
 
                     if(
-                        window.innerWidth <= 768 &&
-                        pageViews.length
+                        !pageViews.length
+                    )
+                        return;
+
+
+                    /*
+                       Preserve the original behavior:
+                       automatically Fit Width on mobile.
+                    */
+
+                    if(
+                        window.innerWidth <=
+                        768
                     ){
 
                         const firstView =
                             pageViews.find(
-                                view =>
-                                    Boolean(view)
+                                Boolean
                             );
 
 
