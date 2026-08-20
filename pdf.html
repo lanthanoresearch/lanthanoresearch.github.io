@@ -633,6 +633,12 @@ input:focus-visible{
   transform:scale(.96);
 }
 
+#searchPopup .searchNavButton:disabled{
+  opacity:.4;
+
+  cursor:default;
+}
+
 #searchResults{
   color:#aaa;
 
@@ -1307,8 +1313,6 @@ body.reading-mode #readingModeFloat{
     Page
   </button>
 
-  <div class="toolbarDivider"></div>
-
   <div class="pageControls">
 
     <label>
@@ -1524,6 +1528,16 @@ const searchBox =
 const searchResultsLabel =
   document.getElementById(
     "searchResults"
+  );
+
+const prevResultBtn =
+  document.getElementById(
+    "prevResult"
+  );
+
+const nextResultBtn =
+  document.getElementById(
+    "nextResult"
   );
 
 const menu =
@@ -1909,6 +1923,17 @@ let searchTimer =
 
 let searchBusy =
   false;
+
+/*
+   currentSearchOperation always resolves once whatever
+   search is currently running (debounced or forced) has
+   finished. Navigation (Enter / arrow buttons) awaits this
+   before acting, so it never silently no-ops just because a
+   search was still in flight.
+*/
+
+let currentSearchOperation =
+  Promise.resolve();
 
 /* ============================================================
    SEARCH CANCELLATION
@@ -4077,6 +4102,96 @@ async function rebuildSearchHighlights(
 }
 
 /* ============================================================
+   RUN SEARCH NOW
+   (shared by the debounce timer and by forced/immediate
+   triggers like Enter or the nav arrows, so both paths go
+   through the exact same busy-state bookkeeping and both
+   are captured by currentSearchOperation)
+============================================================ */
+
+function runSearchNow(
+  query
+){
+
+  searchGeneration++;
+
+  const generation =
+    searchGeneration;
+
+  searchBusy =
+    true;
+
+  searchBox.classList.add(
+    "searching"
+  );
+
+  searchResultsLabel.textContent =
+    "Searching…";
+
+  const operation =
+    (async () => {
+
+      try{
+
+        await rebuildSearchHighlights(
+          query,
+          generation
+        );
+
+      }catch(error){
+
+        if(
+          generation ===
+            searchGeneration
+        ){
+
+          console.error(
+            "PDF search failed:",
+            error
+          );
+
+          searchResults =
+            [];
+
+          currentSearch =
+            -1;
+
+          lastSearchQuery =
+            query;
+
+          clearSearchHighlights();
+
+          searchResultsLabel.textContent =
+            "Search error";
+        }
+
+      }finally{
+
+        if(
+          generation ===
+            searchGeneration
+        ){
+
+          searchBusy =
+            false;
+
+          searchBox.classList.remove(
+            "searching"
+          );
+
+          updateSearchCounter();
+        }
+      }
+
+    })();
+
+  currentSearchOperation =
+    operation;
+
+  return operation;
+}
+
+/* ============================================================
    SEARCH AS YOU TYPE
 ============================================================ */
 
@@ -4089,10 +4204,10 @@ function scheduleSearch(){
     searchTimer
   );
 
-  searchGeneration++;
+  searchTimer =
+    null;
 
-  const generation =
-    searchGeneration;
+  searchGeneration++;
 
   searchResults =
     [];
@@ -4114,81 +4229,88 @@ function scheduleSearch(){
       "searching"
     );
 
+    currentSearchOperation =
+      Promise.resolve();
+
     updateSearchCounter();
 
     return;
   }
 
-  searchBusy =
-    true;
-
-  searchBox.classList.add(
-    "searching"
-  );
-
-  searchResultsLabel.textContent =
-    "Searching…";
-
   searchTimer =
     setTimeout(
-      async () => {
+      () => {
 
-        try{
+        searchTimer =
+          null;
 
-          await rebuildSearchHighlights(
-            query,
-            generation
-          );
-
-        }catch(error){
-
-          if(
-            generation ===
-              searchGeneration
-          ){
-
-            console.error(
-              "PDF search failed:",
-              error
-            );
-
-            searchResults =
-              [];
-
-            currentSearch =
-              -1;
-
-            lastSearchQuery =
-              query;
-
-            clearSearchHighlights();
-
-            searchResultsLabel.textContent =
-              "Search error";
-          }
-
-        }finally{
-
-          if(
-            generation ===
-              searchGeneration
-          ){
-
-            searchBusy =
-              false;
-
-            searchBox.classList.remove(
-              "searching"
-            );
-
-            updateSearchCounter();
-          }
-        }
+        runSearchNow(
+          query
+        );
 
       },
 
       150
     );
+}
+
+/* ============================================================
+   ENSURE QUERY SEARCHED
+   Used before any navigation action (Enter key, prev/next
+   arrows). If a debounce is still pending, run it right now
+   instead of waiting. If a search is already in flight, wait
+   for it. Either way, by the time this resolves the current
+   searchBox value has been (or is being) searched.
+============================================================ */
+
+async function ensureQuerySearched(){
+
+  const query =
+    searchBox.value.trim();
+
+  if(!query){
+
+    return false;
+  }
+
+  if(
+    searchTimer !== null
+  ){
+
+    clearTimeout(
+      searchTimer
+    );
+
+    searchTimer =
+      null;
+
+    runSearchNow(
+      query
+    );
+
+  }else if(
+    query !==
+      lastSearchQuery &&
+    !searchBusy
+  ){
+
+    /*
+       Query text doesn't match what's currently
+       highlighted and nothing is in flight — search
+       hasn't run for this text yet (e.g. programmatic
+       value change). Run it now.
+    */
+
+    runSearchNow(
+      query
+    );
+  }
+
+  await currentSearchOperation;
+
+  return Boolean(
+    searchResults.length
+  );
 }
 
 /* ============================================================
@@ -4200,7 +4322,6 @@ async function showSearchResult(
 ){
 
   if(
-    searchBusy ||
     !searchResults.length
   ){
 
@@ -4234,6 +4355,24 @@ async function showSearchResult(
     searchResults[
       currentSearch
     ]
+  );
+}
+
+async function goToSearchResult(
+  direction
+){
+
+  const hasResults =
+    await ensureQuerySearched();
+
+  if(!hasResults){
+
+    return;
+  }
+
+  await showSearchResult(
+    currentSearch +
+    direction
   );
 }
 
@@ -4273,17 +4412,10 @@ searchBox.addEventListener(
 
       event.preventDefault();
 
-      if(
-        searchBusy
-      ){
-
-        return;
-      }
-
-      await showSearchResult(
+      await goToSearchResult(
         event.shiftKey
-          ? currentSearch - 1
-          : currentSearch + 1
+          ? -1
+          : 1
       );
     }
   }
@@ -4293,9 +4425,7 @@ searchBox.addEventListener(
    SEARCH ARROWS
 ============================================================ */
 
-document.getElementById(
-  "prevResult"
-).addEventListener(
+prevResultBtn.addEventListener(
   "click",
   async event => {
 
@@ -4303,16 +4433,14 @@ document.getElementById(
 
     event.stopPropagation();
 
-    await showSearchResult(
-      currentSearch - 1
+    await goToSearchResult(
+      -1
     );
 
   }
 );
 
-document.getElementById(
-  "nextResult"
-).addEventListener(
+nextResultBtn.addEventListener(
   "click",
   async event => {
 
@@ -4320,8 +4448,8 @@ document.getElementById(
 
     event.stopPropagation();
 
-    await showSearchResult(
-      currentSearch + 1
+    await goToSearchResult(
+      1
     );
 
   }
@@ -4493,15 +4621,11 @@ async function rescaleAndRender(){
         lastSearchQuery
       ){
 
-        searchGeneration++;
-
-        const generation =
-          searchGeneration;
-
-        await rebuildSearchHighlights(
-          lastSearchQuery,
-          generation
+        runSearchNow(
+          lastSearchQuery
         );
+
+        await currentSearchOperation;
       }
 
     }
