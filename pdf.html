@@ -245,6 +245,12 @@ input:focus-visible{
   border-radius:6px;
 }
 
+#searchButton{
+  width:32px;
+
+  padding:0;
+}
+
 .iconButton{
   width:32px;
   height:32px;
@@ -1074,6 +1080,12 @@ body.reading-mode #readingModeFloat{
     font-size:12px;
   }
 
+  #searchButton{
+    width:30px;
+
+    padding:0;
+  }
+
   .zoomControls{
     height:30px;
   }
@@ -1251,7 +1263,7 @@ body.reading-mode #readingModeFloat{
 <button id="fitPage" class="toolButton" title="Fit entire page">Page</button>
 
 <div class="pageControls">
-<label>Pg</label>
+<label>Page</label>
 <input id="pageNumber" value="1" inputmode="numeric" aria-label="Page number">
 <span id="pageCount">of 0</span>
 </div>
@@ -2816,15 +2828,14 @@ function scheduleSearch(){
   if(query.length < MIN_SEARCH_LENGTH){
 
     // Too short to search yet (need more than 2 letters). Don't
-    // touch the page, don't show "no results" — just wait for more
-    // typing.
+    // touch the page — just let the person know to keep going.
     searchBusy = false;
 
     searchBox.classList.remove("searching");
 
     currentSearchOperation = Promise.resolve();
 
-    updateSearchCounter();
+    searchResultsLabel.textContent = query.length > 0 ? "Keep typing…" : "0 of 0";
 
     return;
   }
