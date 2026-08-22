@@ -151,6 +151,23 @@ header{
   overscroll-behavior:contain;
 
   /*
+     Explicitly declaring pan-x pan-y (rather than leaving this
+     undeclared, which defaults to touch-action:auto) is what makes
+     single-finger scrolling smooth. With auto, the browser can't
+     commit a touch gesture to the fast compositor-thread scroll
+     path - it has to wait on every frame to see whether our pointer
+     handlers (used below for pinch detection) are about to call
+     preventDefault(). Declaring the allowed pan axes up front lets
+     it skip that check and start scrolling immediately, exactly
+     like the vertical-lock override below already did (which is
+     why only vertical mode felt smooth before). touch-action:none
+     while pinching is the deliberate exception - a real two-finger
+     gesture SHOULD be fully handed to JS, with no native scrolling
+     racing against it.
+  */
+  touch-action:pan-x pan-y;
+
+  /*
      The custom draggable #sideScroller is the only scrollbar we
      want visible - the browser's native one is hidden here so
      there's never a second, tiny, hard-to-grab slider alongside it.
