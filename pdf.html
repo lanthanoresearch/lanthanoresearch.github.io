@@ -235,6 +235,18 @@ input:focus-visible{
   text-decoration:none;
 }
 
+.toolButton.disabled{
+  opacity:.4;
+
+  cursor:default;
+
+  pointer-events:none;
+}
+
+.toolButton.disabled:hover{
+  background:#333;
+}
+
 .iconButton{
   width:32px;
   height:32px;
@@ -706,9 +718,10 @@ body.reading-mode #readingModeFloat{
   </button>
 
   <a
-    class="btn toolButton"
+    class="btn toolButton disabled"
     id="pdfButton"
-    style="display:none"
+    aria-disabled="true"
+    title="Looking for the matching PDF…"
   >
     PDF
   </a>
@@ -971,6 +984,35 @@ homeButton.addEventListener(
 
 /* ---------- Find PDF ---------- */
 
+const pdfButtonEl =
+    document.getElementById("pdfButton");
+
+
+/*
+    While disabled, clicking the button must not navigate
+    anywhere (it has no href yet, or an href left over
+    from a previous state). pointer-events:none on the
+    .disabled class already blocks mouse clicks, but this
+    guard also blocks keyboard-triggered activation
+    (Enter/Space on a focused link).
+*/
+
+pdfButtonEl.addEventListener(
+    "click",
+    event => {
+
+        if(
+            pdfButtonEl.classList.contains("disabled")
+        ){
+
+            event.preventDefault();
+
+        }
+
+    }
+);
+
+
 fetch("descriptions.json")
 .then(r => r.json())
 .then(data => {
@@ -1023,13 +1065,16 @@ fetch("descriptions.json")
             src
         );
 
+        pdfButtonEl.title =
+            "No matching PDF found for this image";
+
         return;
 
     }
 
 
     const pdfButton =
-        document.getElementById("pdfButton");
+        pdfButtonEl;
 
     /*
         Build the link to pdf.html.
@@ -1068,8 +1113,27 @@ fetch("descriptions.json")
     pdfButton.href =
         pdfUrl;
 
-    pdfButton.style.display =
-        "inline-flex";
+    pdfButton.classList.remove(
+        "disabled"
+    );
+
+    pdfButton.removeAttribute(
+        "aria-disabled"
+    );
+
+    pdfButton.title =
+        `Open ${paper.title} PDF`;
+
+})
+.catch(error => {
+
+    console.warn(
+        "PDF button: could not load descriptions.json",
+        error
+    );
+
+    pdfButtonEl.title =
+        "Could not check for a matching PDF";
 
 });
 
