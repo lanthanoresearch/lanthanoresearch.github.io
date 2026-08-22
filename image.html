@@ -235,6 +235,22 @@ input:focus-visible{
   text-decoration:none;
 }
 
+.toolButton.disabled{
+  background:#242424;
+
+  color:#888;
+
+  border:1px solid #3a3a3a;
+
+  cursor:default;
+
+  pointer-events:none;
+}
+
+.toolButton.disabled:hover{
+  background:#242424;
+}
+
 .iconButton{
   width:32px;
   height:32px;
@@ -706,10 +722,10 @@ body.reading-mode #readingModeFloat{
   </button>
 
   <a
-    class="btn toolButton"
+    class="btn toolButton disabled"
     id="pdfButton"
-    target="_blank"
-    style="display:none"
+    aria-disabled="true"
+    title="Looking for the matching PDF…"
   >
     PDF
   </a>
@@ -972,11 +988,83 @@ homeButton.addEventListener(
 
 /* ---------- Find PDF ---------- */
 
+const pdfButtonEl =
+    document.getElementById("pdfButton");
+
+
+/*
+    The button's own label doubles as an on-screen status
+    indicator, since checking the console isn't practical
+    on mobile. It should read one of:
+
+      "PDF…"      - still checking descriptions.json
+      "No PDF"    - checked, nothing referenced this image
+      "PDF (!)"   - descriptions.json couldn't be loaded
+      "PDF"       - match found, button is live
+*/
+
+pdfButtonEl.textContent =
+    "PDF…";
+
+
+/*
+    While disabled, clicking the button must not navigate
+    anywhere (it has no href yet, or an href left over
+    from a previous state). pointer-events:none on the
+    .disabled class already blocks mouse clicks, but this
+    guard also blocks keyboard-triggered activation
+    (Enter/Space on a focused link).
+*/
+
+pdfButtonEl.addEventListener(
+    "click",
+    event => {
+
+        if(
+            pdfButtonEl.classList.contains("disabled")
+        ){
+
+            event.preventDefault();
+
+        }
+
+    }
+);
+
+
 fetch("descriptions.json")
-.then(r => r.json())
+.then(response => {
+
+    if(!response.ok){
+
+        throw new Error(
+            `descriptions.json responded with ${response.status}`
+        );
+
+    }
+
+    return response.json();
+
+})
 .then(data => {
 
     let paper = null;
+
+    /*
+        Match by filename only, not the full path/string.
+
+        The "image" URL param may include a folder prefix
+        (e.g. "papername/Some Image.png") while
+        descriptions.json's "images" arrays list bare
+        filenames only ("Some Image.png"). An exact-string
+        match would silently fail in that case and never
+        show the PDF button, with no visible error.
+    */
+
+    const srcName =
+        src
+            .split("/")
+            .pop();
 
 
     Object.values(data).forEach(p => {
@@ -985,7 +1073,14 @@ fetch("descriptions.json")
             return;
 
 
-        if(p.images.includes(src)){
+        const match =
+            p.images.some(
+                image =>
+                    image.split("/").pop() === srcName
+            );
+
+
+        if(match){
 
             paper = p;
 
@@ -994,17 +1089,89 @@ fetch("descriptions.json")
     });
 
 
-    if(!paper)
+    if(!paper){
+
+        console.warn(
+            "PDF button: no descriptions.json entry references image",
+            src
+        );
+
+        pdfButtonEl.textContent =
+            "No PDF";
+
+        pdfButtonEl.title =
+            `No matching PDF found for "${srcName}"`;
+
         return;
 
+    }
 
-    const pdfButton =
-        document.getElementById("pdfButton");
 
-    pdfButton.href =
-        paper.url;
+    /*
+        Build the link to pdf.html.
 
-    /* PDF button is intentionally kept hidden */
+        file/paper/return are each wrapped in
+        encodeURIComponent twice, since pdf.html
+        reads them with a URLSearchParams .get()
+        (one automatic decode) followed by an
+        explicit decodeURIComponent() call (a
+        second decode) - matching the same
+        double-encode/double-decode convention
+        used for the "image"/"return" params on
+        this page.
+
+        The "return" value is this page's own
+        current URL (image + return params and
+        all), so that pressing Back inside
+        pdf.html lands right back on this exact
+        image.
+    */
+
+    const pdfUrl =
+        "pdf.html?file=" +
+        encodeURIComponent(
+            encodeURIComponent(paper.url)
+        ) +
+        "&paper=" +
+        encodeURIComponent(
+            encodeURIComponent(paper.title)
+        ) +
+        "&return=" +
+        encodeURIComponent(
+            encodeURIComponent(location.href)
+        );
+
+    pdfButtonEl.href =
+        pdfUrl;
+
+    pdfButtonEl.classList.remove(
+        "disabled"
+    );
+
+    pdfButtonEl.removeAttribute(
+        "aria-disabled"
+    );
+
+    pdfButtonEl.textContent =
+        "PDF";
+
+    pdfButtonEl.title =
+        `Open ${paper.title} PDF`;
+
+})
+.catch(error => {
+
+    console.warn(
+        "PDF button: could not load descriptions.json",
+        error
+    );
+
+    pdfButtonEl.textContent =
+        "PDF (!)";
+
+    pdfButtonEl.title =
+        "Could not check for a matching PDF: " +
+        (error?.message || "unknown error");
 
 });
 
