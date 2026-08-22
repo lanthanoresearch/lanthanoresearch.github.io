@@ -989,6 +989,21 @@ const pdfButtonEl =
 
 
 /*
+    The button's own label doubles as an on-screen status
+    indicator, since checking the console isn't practical
+    on mobile. It should read one of:
+
+      "PDF…"      - still checking descriptions.json
+      "No PDF"    - checked, nothing referenced this image
+      "PDF (!)"   - descriptions.json couldn't be loaded
+      "PDF"       - match found, button is live
+*/
+
+pdfButtonEl.textContent =
+    "PDF…";
+
+
+/*
     While disabled, clicking the button must not navigate
     anywhere (it has no href yet, or an href left over
     from a previous state). pointer-events:none on the
@@ -1014,7 +1029,19 @@ pdfButtonEl.addEventListener(
 
 
 fetch("descriptions.json")
-.then(r => r.json())
+.then(response => {
+
+    if(!response.ok){
+
+        throw new Error(
+            `descriptions.json responded with ${response.status}`
+        );
+
+    }
+
+    return response.json();
+
+})
 .then(data => {
 
     let paper = null;
@@ -1065,16 +1092,16 @@ fetch("descriptions.json")
             src
         );
 
+        pdfButtonEl.textContent =
+            "No PDF";
+
         pdfButtonEl.title =
-            "No matching PDF found for this image";
+            `No matching PDF found for "${srcName}"`;
 
         return;
 
     }
 
-
-    const pdfButton =
-        pdfButtonEl;
 
     /*
         Build the link to pdf.html.
@@ -1110,18 +1137,21 @@ fetch("descriptions.json")
             encodeURIComponent(location.href)
         );
 
-    pdfButton.href =
+    pdfButtonEl.href =
         pdfUrl;
 
-    pdfButton.classList.remove(
+    pdfButtonEl.classList.remove(
         "disabled"
     );
 
-    pdfButton.removeAttribute(
+    pdfButtonEl.removeAttribute(
         "aria-disabled"
     );
 
-    pdfButton.title =
+    pdfButtonEl.textContent =
+        "PDF";
+
+    pdfButtonEl.title =
         `Open ${paper.title} PDF`;
 
 })
@@ -1132,8 +1162,12 @@ fetch("descriptions.json")
         error
     );
 
+    pdfButtonEl.textContent =
+        "PDF (!)";
+
     pdfButtonEl.title =
-        "Could not check for a matching PDF";
+        "Could not check for a matching PDF: " +
+        (error?.message || "unknown error");
 
 });
 
