@@ -4726,6 +4726,10 @@ window.addEventListener("beforeunload", () => {
   }catch{}
 });
 
-</script>
-</body>
-</html>
+/*
+   Back-forward cache (bfcache) restore.
+
+   The browser's back button doesn't always do a real navigation -
+   it often freezes the page into bfcache instead, then resumes
+   that frozen snapshot with no script re-run. beforeunload above
+   still fires
