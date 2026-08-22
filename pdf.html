@@ -3,7 +3,7 @@
 <head>
 <link rel="icon" type="image/png" href="file_000000000c40722f92b1fe6758cb4855.png">
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <title>PDF Viewer</title>
 <style>
 
@@ -672,25 +672,23 @@ input:focus-visible{
 
 /* ============================================================
    TABLE OF CONTENTS POPUP
+
+   Covers the whole PDF-viewing area (not just a small dropdown):
+   the same footprint as #layout normally, or the entire screen
+   while in reading mode (see the reading-mode override below).
 ============================================================ */
 
 #tocPopup{
   position:fixed;
 
-  top:108px;
-  left:50%;
-
-  transform:translateX(-50%);
-
-  width:320px;
-
-  max-width:calc(100% - 20px);
+  top:var(--viewer-top);
+  left:0;
+  right:0;
 
   /*
      Bottom is pinned to the same dynamic gap the side scroller
      uses, so the panel always stops right above the title bar -
-     whatever height that bar currently is - instead of floating
-     over it or leaving a big gap underneath.
+     whatever height that bar currently is.
   */
   bottom:var(--content-bottom-gap);
 
@@ -699,40 +697,79 @@ input:focus-visible{
 
   /*
      The popup itself doesn't scroll - #tocContent (below) does,
-     so the "Table of Contents" heading stays pinned in view.
+     so the "Table of Contents" heading and close button stay
+     pinned in view.
   */
   overflow:hidden;
 
-  padding:10px;
+  padding:14px 16px;
 
-  background:#222;
+  background:#1b1b1b;
 
-  border:1px solid #444;
-
-  border-radius:9px;
+  border:0;
+  border-top:1px solid #333;
 
   box-shadow:
-    0 8px 20px rgba(0,0,0,.45);
+    0 -6px 24px rgba(0,0,0,.5);
 
   z-index:6500;
+}
+
+body.reading-mode #tocPopup{
+
+  top:0;
+  bottom:0;
+
+  border-top:0;
 }
 
 #tocPopup.hidden{
   display:none;
 }
 
-#tocPopup h3{
+#tocHeader{
   flex:0 0 auto;
 
-  margin:0 0 8px;
+  display:flex;
 
-  padding-bottom:6px;
+  align-items:center;
+  justify-content:space-between;
 
-  font-size:14px;
+  gap:10px;
 
-  color:#eee;
+  margin-bottom:10px;
+
+  padding-bottom:10px;
 
   border-bottom:1px solid #333;
+}
+
+#tocHeader h3{
+  margin:0;
+
+  padding:0;
+
+  font-size:16px;
+
+  color:#eee;
+}
+
+#tocCloseBtn{
+  width:32px;
+  height:32px;
+
+  padding:0;
+
+  display:flex;
+
+  align-items:center;
+  justify-content:center;
+
+  flex:0 0 auto;
+
+  border-radius:7px;
+
+  font-size:16px;
 }
 
 #tocContent{
@@ -740,8 +777,8 @@ input:focus-visible{
 
   /*
      min-height:0 is what actually lets a flex child shrink below
-     its content size instead of forcing the parent to grow - 
-     without it this would ignore the popup's max-height.
+     its content size instead of forcing the parent to grow -
+     without it this would ignore the popup's height.
   */
   min-height:0;
 
@@ -768,7 +805,7 @@ input:focus-visible{
 }
 
 .tocList ul{
-  padding-left:14px;
+  padding-left:16px;
 }
 
 .tocList li{
@@ -778,7 +815,15 @@ input:focus-visible{
 .tocList button{
   width:100%;
 
-  padding:6px 6px;
+  padding:9px 8px;
+
+  display:flex;
+
+  align-items:baseline;
+
+  justify-content:space-between;
+
+  gap:10px;
 
   text-align:left;
 
@@ -786,25 +831,45 @@ input:focus-visible{
 
   border:0;
 
-  border-radius:5px;
+  border-radius:6px;
 
   color:#ddd;
 
-  font-size:13px;
+  font-size:14px;
 
   cursor:pointer;
 }
 
 .tocList button:hover{
-  background:#333;
+  background:#2c2c2c;
+}
+
+.tocItemTitle{
+  flex:1 1 auto;
+
+  min-width:0;
+
+  overflow:hidden;
+
+  text-overflow:ellipsis;
+
+  white-space:nowrap;
+}
+
+.tocItemPage{
+  flex:0 0 auto;
+
+  color:#888;
+
+  font-size:12px;
 }
 
 .tocLabelOnly{
-  padding:6px 6px;
+  padding:9px 8px;
 
   color:#999;
 
-  font-size:13px;
+  font-size:14px;
 }
 
 /* ============================================================
@@ -820,7 +885,7 @@ input:focus-visible{
   position:fixed;
 
   top:calc(var(--viewer-top) + 10px);
-  left:8px;
+  left:4px;
   bottom:var(--content-bottom-gap);
 
   width:24px;
@@ -1162,11 +1227,15 @@ body.reading-mode #sideScroller{
 
   cursor:pointer;
 
-  background:
-    rgba(0,176,80,.12);
+  /*
+     Looks like an ordinary link - a thin blue underline, no fill -
+     rather than a highlighted block, since it's sitting on top of
+     text that's already rendered black by the page itself.
+  */
+  background:transparent;
 
   border:0;
-  border-bottom:1px solid rgba(0,150,70,.55);
+  border-bottom:1.5px solid rgba(59,130,246,.85);
 
   padding:0;
 
@@ -1177,7 +1246,7 @@ body.reading-mode #sideScroller{
 
 .email-link:hover{
   background:
-    rgba(0,176,80,.24);
+    rgba(59,130,246,.12);
 }
 
 /* ============================================================
@@ -1281,6 +1350,80 @@ body.reading-mode #sideScroller{
 }
 
 /* ============================================================
+   FLOATING TABLE OF CONTENTS
+
+   Stacked directly above the reading-mode button, in the same
+   circular-button style, and deliberately NOT inside #toolbar -
+   it stays visible (and tappable) even in reading mode, which is
+   the whole point: it's the only chrome that survives there.
+============================================================ */
+
+#tocButton{
+
+  position:fixed;
+
+  right:18px;
+
+  bottom:144px;
+
+  width:48px;
+  height:48px;
+
+  display:flex;
+
+  align-items:center;
+  justify-content:center;
+
+  padding:0;
+
+  border-radius:50%;
+
+  background:
+    rgba(40,40,40,.94);
+
+  border:1px solid #555;
+
+  color:#fff;
+
+  font-size:12px;
+  font-weight:bold;
+  letter-spacing:.5px;
+
+  box-shadow:
+    0 5px 18px rgba(0,0,0,.45);
+
+  z-index:9000;
+
+  cursor:pointer;
+
+  backdrop-filter:blur(6px);
+
+  transition:
+    transform .15s ease,
+    background .15s ease;
+}
+
+#tocButton:hover{
+  background:#3a3a3a;
+
+  transform:scale(1.05);
+}
+
+#tocButton:active{
+  transform:scale(.96);
+}
+
+body.reading-mode #tocButton{
+
+  right:16px;
+
+  bottom:74px;
+
+  background:
+    rgba(40,40,40,.88);
+}
+
+/* ============================================================
    READING MODE
 ============================================================ */
 
@@ -1294,7 +1437,6 @@ body.reading-mode header,
 body.reading-mode #toolbar,
 body.reading-mode #titleBar,
 body.reading-mode #searchPopup,
-body.reading-mode #tocPopup,
 body.reading-mode #menu{
 
   display:none !important;
@@ -1450,20 +1592,6 @@ body.reading-mode #readingModeFloat{
     min-width:80px;
   }
 
-  #tocPopup{
-
-    left:8px;
-    right:8px;
-
-    top:104px;
-
-    transform:none;
-
-    width:auto;
-
-    max-width:none;
-  }
-
   #sideScrollerTrack,
   #sideScrollerThumb{
 
@@ -1487,6 +1615,25 @@ body.reading-mode #readingModeFloat{
     right:12px;
 
     bottom:12px;
+  }
+
+  #tocButton{
+
+    right:14px;
+
+    bottom:144px;
+
+    width:46px;
+    height:46px;
+
+    font-size:11px;
+  }
+
+  body.reading-mode #tocButton{
+
+    right:12px;
+
+    bottom:68px;
   }
 
   .title-badges{
@@ -1561,7 +1708,6 @@ body.reading-mode #readingModeFloat{
 ========================================================== -->
 <div id="toolbar">
 <button id="searchButton" class="toolButton" title="Search PDF">⌕</button>
-<button id="tocButton" class="toolButton" title="Table of Contents">TOC</button>
 
 <div class="zoomControls">
 <button id="zoomOut" title="Zoom out">−</button>
@@ -1591,7 +1737,10 @@ body.reading-mode #readingModeFloat{
      TABLE OF CONTENTS
 ========================================================== -->
 <div id="tocPopup" class="hidden">
+<div id="tocHeader">
 <h3>Table of Contents</h3>
+<button id="tocCloseBtn" aria-label="Close table of contents" title="Close">✕</button>
+</div>
 <div id="tocContent"></div>
 </div>
 <!-- ==========================================================
@@ -1623,6 +1772,10 @@ body.reading-mode #readingModeFloat{
      FLOATING READING MODE
 ========================================================== -->
 <button id="readingModeFloat" aria-label="Toggle Reading Mode" title="Reading Mode">▣</button>
+<!-- ==========================================================
+     FLOATING TABLE OF CONTENTS
+========================================================== -->
+<button id="tocButton" aria-label="Table of Contents" title="Table of Contents">TOC</button>
 <!-- ==========================================================
      SIDE SCROLLER
 ========================================================== -->
@@ -1674,6 +1827,7 @@ const readingModeFloat = document.getElementById("readingModeFloat");
 const tocButton = document.getElementById("tocButton");
 const tocPopup = document.getElementById("tocPopup");
 const tocContent = document.getElementById("tocContent");
+const tocCloseBtn = document.getElementById("tocCloseBtn");
 const sideScroller = document.getElementById("sideScroller");
 const sideScrollerTrack = document.getElementById("sideScrollerTrack");
 const sideScrollerThumb = document.getElementById("sideScrollerThumb");
@@ -2236,6 +2390,19 @@ async function paintEmailLinks(view, generation){
         link.className = "email-link";
         link.href = `mailto:${TARGET_EMAIL}`;
         link.title = `Email ${TARGET_EMAIL}`;
+
+        /*
+           Without this, clicking navigates the CURRENT tab/frame to
+           a mailto: URI. In an embedded viewer that counts as a
+           top-level navigation attempt, which fires beforeunload -
+           the same cleanup that runs when actually leaving the
+           page - and that cleanup zeroes out every page's canvas,
+           which is what was turning the whole PDF black. Handing
+           it to a new context (same as the annotation links above)
+           avoids touching the current page at all.
+        */
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
 
         link.style.left = `${rect.left}px`;
         link.style.top = `${rect.top}px`;
@@ -3664,11 +3831,13 @@ document.addEventListener("pointerup", event => {
    TABLE OF CONTENTS
 
    Populated after the PDF loads (see LOAD PDF below), from
-   pdfDoc.getOutline(). The button is always visible: if the
-   document has an outline, clicking it opens a panel of
-   clickable links that jump to each destination; if it doesn't,
-   clicking it explains that plainly instead of doing nothing,
-   so the missing panel doesn't look like a bug.
+   pdfDoc.getOutline(). The button is always visible (floating,
+   outside the toolbar, so it survives reading mode too): if the
+   document has an outline, tapping it opens a full panel of
+   clickable links - each showing the page it jumps to - that
+   jump to each destination; if it doesn't, tapping it explains
+   that plainly instead of doing nothing, so the missing panel
+   doesn't look like a bug.
 ============================================================ */
 
 function renderTocList(items, container){
@@ -3686,7 +3855,18 @@ function renderTocList(items, container){
       const button = document.createElement("button");
 
       button.type = "button";
-      button.textContent = item.title || "Untitled section";
+
+      const titleSpan = document.createElement("span");
+
+      titleSpan.className = "tocItemTitle";
+      titleSpan.textContent = item.title || "Untitled section";
+
+      const pageSpan = document.createElement("span");
+
+      pageSpan.className = "tocItemPage";
+
+      button.appendChild(titleSpan);
+      button.appendChild(pageSpan);
 
       button.addEventListener("click", async () => {
         await openInternalDestination(item.dest);
@@ -3694,6 +3874,18 @@ function renderTocList(items, container){
       });
 
       li.appendChild(button);
+
+      // Resolving a destination to a page number is async (it may
+      // need pdfDoc.getDestination + getPageIndex), so it's kicked
+      // off without blocking the rest of the list from rendering -
+      // the page number just fills in a moment later.
+      resolveDestination(item.dest).then(pageIndex => {
+
+        if(pageIndex !== null){
+          pageSpan.textContent = String(pageIndex + 1);
+        }
+
+      });
 
     }else{
 
@@ -3737,6 +3929,11 @@ function setupTocButton(outlineItems){
   }
 }
 
+/*
+   Closing only ever toggles the hidden class - it never touches
+   scroll position, so whatever page you were reading stays right
+   where it was underneath.
+*/
 function closeToc(){
   tocPopup.classList.add("hidden");
 }
@@ -3753,6 +3950,11 @@ tocButton.addEventListener("click", event => {
     closeToc();
   }
 
+});
+
+tocCloseBtn.addEventListener("click", event => {
+  event.stopPropagation();
+  closeToc();
 });
 
 tocPopup.addEventListener("click", event => {
