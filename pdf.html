@@ -163,6 +163,26 @@ header{
   display:none;
 }
 
+/*
+   Vertical-lock mode: the movement lock button constrains free
+   panning/scrolling to the vertical axis only. Horizontal
+   overflow is hidden and touch-action is limited to vertical
+   panning so a diagonal swipe can't drag the page sideways.
+*/
+#viewer.vertical-lock{
+  overflow-x:hidden;
+  touch-action:pan-y;
+}
+
+/*
+   While a two-finger pinch is in progress, hand touch handling
+   entirely to our own pointer listeners rather than letting the
+   browser interpret it as a scroll/pan gesture.
+*/
+#viewer.pinching{
+  touch-action:none;
+}
+
 /* ============================================================
    PDF PAGE
 ============================================================ */
@@ -460,6 +480,8 @@ input:focus-visible{
   justify-content:center;
   align-items:center;
 
+  gap:14px;
+
   width:100%;
 
   text-align:center;
@@ -492,13 +514,15 @@ input:focus-visible{
 }
 
 .title-badges{
+  order:2;
+
   display:inline-flex;
 
   gap:8px;
 
-  margin-left:12px;
-
   vertical-align:middle;
+
+  flex-shrink:0;
 }
 
 .title-badge{
@@ -522,14 +546,10 @@ input:focus-visible{
 }
 
 .title-badge.new{
-  order:2;
-
   background:#00b050;
 }
 
 .title-badge.featured{
-  order:3;
-
   background:#2f7cff;
 }
 
@@ -857,15 +877,42 @@ body.reading-mode #tocPopup{
 
   border-radius:6px;
 
-  color:#ddd;
-
-  font-size:14px;
-
   cursor:pointer;
+
+  /*
+     Depth-tiered typography (see the nested overrides below):
+     top-level entries read as headings, and each deeper level of
+     nesting steps the size/weight/color down, so the outline's
+     hierarchy is visible at a glance without expand/collapse UI.
+  */
+  font-size:15px;
+  font-weight:600;
+  color:#f0f0f0;
 }
 
 .tocList button:hover{
   background:#2c2c2c;
+}
+
+/* Depth 2 */
+.tocList .tocList button{
+  font-size:13.5px;
+  font-weight:400;
+  color:#dcdcdc;
+}
+
+/* Depth 3 */
+.tocList .tocList .tocList button{
+  font-size:12.5px;
+  font-weight:400;
+  color:#b8b8b8;
+}
+
+/* Depth 4 and beyond */
+.tocList .tocList .tocList .tocList button{
+  font-size:11.5px;
+  font-weight:400;
+  color:#999;
 }
 
 .tocItemTitle{
@@ -893,7 +940,23 @@ body.reading-mode #tocPopup{
 
   color:#999;
 
-  font-size:14px;
+  font-size:15px;
+  font-weight:600;
+}
+
+.tocList .tocList .tocLabelOnly{
+  font-size:13.5px;
+  font-weight:400;
+}
+
+.tocList .tocList .tocList .tocLabelOnly{
+  font-size:12.5px;
+  font-weight:400;
+}
+
+.tocList .tocList .tocList .tocList .tocLabelOnly{
+  font-size:11.5px;
+  font-weight:400;
 }
 
 /* ============================================================
@@ -987,6 +1050,55 @@ body.reading-mode #sideScroller{
     rgba(255,255,255,.85);
 
   cursor:grabbing;
+}
+
+/* ============================================================
+   SIDE SCROLLER PAGE BADGE
+
+   Floats to the right of the draggable thumb while dragging (or
+   while pressing the track), showing which page you'd land on -
+   like a tooltip that tracks the thumb's vertical position.
+============================================================ */
+
+#sideScrollerPageBadge{
+  position:absolute;
+
+  left:100%;
+
+  margin-left:8px;
+
+  padding:5px 10px;
+
+  background:
+    rgba(30,30,30,.95);
+
+  border:1px solid #444;
+
+  border-radius:6px;
+
+  color:#fff;
+
+  font-size:13px;
+  font-weight:bold;
+
+  white-space:nowrap;
+
+  pointer-events:none;
+
+  opacity:0;
+
+  transform:translateY(-50%);
+
+  transition:opacity .12s ease;
+
+  z-index:4100;
+
+  box-shadow:
+    0 4px 12px rgba(0,0,0,.4);
+}
+
+#sideScrollerPageBadge.visible{
+  opacity:1;
 }
 
 /* ============================================================
@@ -1689,8 +1801,6 @@ body.reading-mode #readingModeFloat{
     justify-content:center;
 
     gap:8px;
-
-    margin:0 0 8px 0;
   }
 
   #title{
@@ -1704,7 +1814,7 @@ body.reading-mode #readingModeFloat{
 
   .title-text{
 
-    order:2;
+    order:1;
 
     width:100%;
 
@@ -1715,10 +1825,9 @@ body.reading-mode #readingModeFloat{
     text-overflow:ellipsis;
   }
 
-  .title-badge.new,
-  .title-badge.featured{
+  .title-badges{
 
-    order:1;
+    order:2;
   }
 }
 
@@ -1763,6 +1872,8 @@ body.reading-mode #readingModeFloat{
 
 <button id="fitWidth" class="toolButton" title="Fit page width">Width</button>
 <button id="fitPage" class="toolButton" title="Fit entire page">Page</button>
+
+<button id="lockButton" class="toolButton" title="Toggle movement mode">✣ Free</button>
 
 <div class="pageControls">
 <label>Page</label>
@@ -1828,6 +1939,7 @@ body.reading-mode #readingModeFloat{
 <div id="sideScroller" aria-hidden="true">
 <div id="sideScrollerTrack">
 <div id="sideScrollerThumb" title="Drag to scroll"></div>
+<div id="sideScrollerPageBadge"></div>
 </div>
 </div>
 
@@ -1877,7 +1989,9 @@ const tocCloseBtn = document.getElementById("tocCloseBtn");
 const sideScroller = document.getElementById("sideScroller");
 const sideScrollerTrack = document.getElementById("sideScrollerTrack");
 const sideScrollerThumb = document.getElementById("sideScrollerThumb");
+const sideScrollerPageBadge = document.getElementById("sideScrollerPageBadge");
 const titleBar = document.getElementById("titleBar");
+const lockButton = document.getElementById("lockButton");
 
 /* ============================================================
    CHROME HEIGHT
@@ -2000,14 +2114,23 @@ const paperKey = Object.keys(descriptions).find(key => descriptions[key].url ===
 
 const isNewest = Boolean(showNewestBadge && paperKey === newestKey);
 
+/*
+   title-text and title-badges are rendered as SIBLINGS (not
+   nested) inside #title, which is itself a flex row with a gap.
+   That gap is what actually creates the spacing between the
+   title and its badges - a nested structure previously fought
+   with the CSS's sibling-based layout rules and collapsed the
+   spacing down to almost nothing.
+*/
+
+const badgesHtml = `
+  ${isNewest ? `<span class="title-badge new">NEW</span>` : ""}
+  ${paper?.featured ? `<span class="title-badge featured">FEATURED</span>` : ""}
+`.trim();
+
 document.getElementById("title").innerHTML = `
-  <div class="title-text">
-    ${escapeHtml(title)}
-    <span class="title-badges">
-      ${isNewest ? `<span class="title-badge new">NEW</span>` : ""}
-      ${paper?.featured ? `<span class="title-badge featured">FEATURED</span>` : ""}
-    </span>
-  </div>
+  <span class="title-text">${escapeHtml(title)}</span>
+  ${badgesHtml ? `<span class="title-badges">${badgesHtml}</span>` : ""}
 `;
 
 /* ============================================================
@@ -2041,6 +2164,9 @@ function getFitPageScale(page){
 }
 
 const zoomLevels = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3];
+
+const MIN_ZOOM_LEVEL = zoomLevels[0];
+const MAX_ZOOM_LEVEL = zoomLevels[zoomLevels.length - 1];
 
 /* ============================================================
    PDF STATE
@@ -2846,6 +2972,43 @@ readingModeFloat.addEventListener("click", event => {
 });
 
 /* ============================================================
+   MOVEMENT LOCK (Free / Vertical)
+
+   Mirrors the lock button from image.html: cycling between a
+   free-panning mode (normal 2D scroll/pan) and a vertical-only
+   mode that constrains scrolling/panning to the Y axis. Only
+   these two states are offered here (no "horizontal" state,
+   since a PDF's natural reading direction is vertical).
+============================================================ */
+
+let movementMode = "free";
+
+function setMovementMode(mode){
+
+  movementMode = mode;
+
+  if(movementMode === "vertical"){
+
+    lockButton.textContent = "↕ Vertical";
+    lockButton.title = "Vertical-only scrolling (tap to switch to Free)";
+
+    viewer.classList.add("vertical-lock");
+
+  }else{
+
+    lockButton.textContent = "✣ Free";
+    lockButton.title = "Free scrolling (tap to switch to Vertical-only)";
+
+    viewer.classList.remove("vertical-lock");
+  }
+}
+
+lockButton.addEventListener("click", event => {
+  event.stopPropagation();
+  setMovementMode(movementMode === "free" ? "vertical" : "free");
+});
+
+/* ============================================================
    TAP TO READ
 ============================================================ */
 
@@ -2920,6 +3083,121 @@ viewer.addEventListener("pointerup", event => {
     setReadingMode(!readingMode);
   }
 });
+
+/* ============================================================
+   PINCH ZOOM
+
+   Drives the exact same zoomLevel/rescaleAndRender path used by
+   the +/- toolbar buttons and manual zoom box, so pinch, buttons,
+   and typed percentages all stay perfectly consistent with each
+   other. Only engages once a second touch point lands (a single
+   finger is left untouched for normal scrolling / tap-to-read /
+   text selection / the movement-lock panning above), and is
+   throttled to at most once per animation frame so a fast pinch
+   doesn't queue up a pile of redundant re-renders.
+============================================================ */
+
+const pinchPointers = new Map();
+
+let pinchStartDistance = 0;
+let pinchStartZoom = 1;
+let pinchActive = false;
+let pinchRenderQueued = false;
+
+function getPinchPointerDistance(){
+
+  const points = [...pinchPointers.values()];
+
+  if(points.length < 2){
+    return 0;
+  }
+
+  return Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
+}
+
+function queuePinchRender(){
+
+  if(pinchRenderQueued){
+    return;
+  }
+
+  pinchRenderQueued = true;
+
+  requestAnimationFrame(async () => {
+    pinchRenderQueued = false;
+    await rescaleAndRender();
+  });
+}
+
+viewer.addEventListener("pointerdown", event => {
+
+  if(event.pointerType !== "touch"){
+    return;
+  }
+
+  pinchPointers.set(event.pointerId, { x:event.clientX, y:event.clientY });
+
+  if(pinchPointers.size === 2){
+
+    pinchActive = true;
+
+    // A second finger landing mid-tap should cancel tap-to-read,
+    // not trigger it once the fingers lift.
+    tapState.active = false;
+
+    pinchStartDistance = getPinchPointerDistance();
+    pinchStartZoom = zoomLevel;
+
+    viewer.classList.add("pinching");
+  }
+
+});
+
+viewer.addEventListener("pointermove", event => {
+
+  if(!pinchActive || !pinchPointers.has(event.pointerId)){
+    return;
+  }
+
+  pinchPointers.set(event.pointerId, { x:event.clientX, y:event.clientY });
+
+  if(pinchPointers.size < 2 || pinchStartDistance <= 0){
+    return;
+  }
+
+  event.preventDefault();
+
+  const distance = getPinchPointerDistance();
+
+  const ratio = distance / pinchStartDistance;
+
+  zoomLevel = Math.max(MIN_ZOOM_LEVEL, Math.min(MAX_ZOOM_LEVEL, pinchStartZoom * ratio));
+
+  zoomBox.value = `${Math.round(zoomLevel * 100)}%`;
+
+  queuePinchRender();
+
+});
+
+function endPinchPointer(event){
+
+  if(!pinchPointers.has(event.pointerId)){
+    return;
+  }
+
+  pinchPointers.delete(event.pointerId);
+
+  if(pinchPointers.size < 2){
+
+    pinchActive = false;
+    pinchStartDistance = 0;
+
+    viewer.classList.remove("pinching");
+  }
+}
+
+viewer.addEventListener("pointerup", endPinchPointer);
+viewer.addEventListener("pointercancel", endPinchPointer);
 
 /* ============================================================
    SEARCH TEXT NODES
@@ -3895,6 +4173,12 @@ document.addEventListener("pointerup", event => {
    jump to each destination; if it doesn't, tapping it explains
    that plainly instead of doing nothing, so the missing panel
    doesn't look like a bug.
+
+   Nesting depth is expressed purely through CSS (see the
+   .tocList .tocList ... selectors in <style>): each list is
+   rendered with the exact same markup regardless of depth, and
+   the browser's own ancestor matching handles the size/weight/
+   color step-down automatically as renderTocList recurses.
 ============================================================ */
 
 function renderTocList(items, container){
@@ -4197,10 +4481,43 @@ pageInput.addEventListener("keydown", async event => {
    Keeps the draggable thumb's size/position in sync with the
    viewer's actual scroll state, and lets the person drag it (or
    tap the track) to scroll the document instead of using the
-   native scrollbar / touch-scrolling.
+   native scrollbar / touch-scrolling. While dragging (or pressing
+   the track), a small floating badge next to the thumb shows
+   which page that position corresponds to, so it's easy to "fly"
+   to the right spot without watching the document itself.
 ============================================================ */
 
 const MIN_SCROLLER_THUMB_HEIGHT = 34;
+
+function getNearestVisiblePage(){
+
+  if(!pageViews.length){
+    return 1;
+  }
+
+  const viewerRect = viewer.getBoundingClientRect();
+
+  let currentPage = 1;
+  let bestDistance = Infinity;
+
+  for(const view of pageViews){
+
+    if(!view){
+      continue;
+    }
+
+    const rect = view.pageDiv.getBoundingClientRect();
+
+    const distance = Math.abs(rect.top - viewerRect.top - 8);
+
+    if(distance < bestDistance){
+      bestDistance = distance;
+      currentPage = view.pageNumber;
+    }
+  }
+
+  return currentPage;
+}
 
 function updateSideScroller(){
 
@@ -4236,6 +4553,25 @@ function updateSideScroller(){
 }
 
 /*
+   Positions and refreshes the page-number badge to track the
+   thumb's current vertical position, using whatever page is
+   nearest the top of the viewer right now.
+*/
+function updateScrollerBadge(){
+
+  const thumbTop = sideScrollerThumb.offsetTop + sideScrollerThumb.offsetHeight / 2;
+
+  sideScrollerPageBadge.style.top = `${thumbTop}px`;
+
+  const pageNumber = getNearestVisiblePage();
+  const totalPages = pdfDoc?.numPages;
+
+  sideScrollerPageBadge.textContent = totalPages
+    ? `Page ${pageNumber} of ${totalPages}`
+    : `Page ${pageNumber}`;
+}
+
+/*
    Dragging the thumb: pointer capture keeps receiving move/up
    events even if the pointer strays off the thin thumb element,
    which matters a lot on touch.
@@ -4261,6 +4597,9 @@ sideScrollerThumb.addEventListener("pointerdown", event => {
   scrollerDrag.trackHeight = sideScrollerTrack.clientHeight;
 
   sideScrollerThumb.classList.add("dragging");
+  sideScrollerPageBadge.classList.add("visible");
+
+  updateScrollerBadge();
 
   try{
     sideScrollerThumb.setPointerCapture(event.pointerId);
@@ -4295,6 +4634,10 @@ sideScrollerThumb.addEventListener("pointermove", event => {
   // used to stay put until you let go and scrolled again.
   updateSideScroller();
 
+  // Keep the page-number badge glued to the thumb and current as
+  // the drag flies across pages.
+  updateScrollerBadge();
+
 });
 
 function endScrollerDrag(event){
@@ -4306,6 +4649,7 @@ function endScrollerDrag(event){
   scrollerDrag.active = false;
 
   sideScrollerThumb.classList.remove("dragging");
+  sideScrollerPageBadge.classList.remove("visible");
 
   try{
     sideScrollerThumb.releasePointerCapture(event.pointerId);
@@ -4317,7 +4661,9 @@ sideScrollerThumb.addEventListener("pointercancel", endScrollerDrag);
 
 /*
    Tapping the track itself (not the thumb) jumps the thumb -
-   and the document - to that position.
+   and the document - to that position. Briefly flashes the same
+   page-number badge so a tap-to-jump gives the same feedback a
+   drag does.
 */
 
 sideScrollerTrack.addEventListener("pointerdown", event => {
@@ -4345,6 +4691,18 @@ sideScrollerTrack.addEventListener("pointerdown", event => {
 
   viewer.scrollTop = (targetThumbTop / maxThumbTop) * maxScrollTop;
 
+  updateSideScroller();
+
+  sideScrollerPageBadge.classList.add("visible");
+
+  updateScrollerBadge();
+
+  clearTimeout(sideScrollerTrack._badgeHideTimer);
+
+    sideScrollerTrack._badgeHideTimer = setTimeout(() => {
+    sideScrollerPageBadge.classList.remove("visible");
+  }, 700);
+
 });
 
 /* ============================================================
@@ -4357,28 +4715,7 @@ viewer.addEventListener("scroll", () => {
     return;
   }
 
-  const viewerRect = viewer.getBoundingClientRect();
-
-  let currentPage = 1;
-  let bestDistance = Infinity;
-
-  for(const view of pageViews){
-
-    if(!view){
-      continue;
-    }
-
-    const rect = view.pageDiv.getBoundingClientRect();
-
-    const distance = Math.abs(rect.top - viewerRect.top - 8);
-
-    if(distance < bestDistance){
-      bestDistance = distance;
-      currentPage = view.pageNumber;
-    }
-  }
-
-  pageInput.value = String(currentPage);
+  pageInput.value = String(getNearestVisiblePage());
 
   renderNearbyPages();
 
@@ -4750,4 +5087,3 @@ window.addEventListener("pageshow", event => {
 </script>
 </body>
 </html>
-   
