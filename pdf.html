@@ -142,10 +142,6 @@ header{
 
   background:#111;
 
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-
   scroll-behavior:auto;
 
   overscroll-behavior:contain;
@@ -158,12 +154,10 @@ header{
      path - it has to wait on every frame to see whether our pointer
      handlers (used below for pinch detection) are about to call
      preventDefault(). Declaring the allowed pan axes up front lets
-     it skip that check and start scrolling immediately, exactly
-     like the vertical-lock override below already did (which is
-     why only vertical mode felt smooth before). touch-action:none
-     while pinching is the deliberate exception - a real two-finger
-     gesture SHOULD be fully handed to JS, with no native scrolling
-     racing against it.
+     it skip that check and start scrolling immediately. touch-
+     action:none while pinching (see .pinching below) is the
+     deliberate exception - a real two-finger gesture SHOULD be
+     fully handed to JS, with no native scrolling racing against it.
   */
   touch-action:pan-x pan-y;
 
@@ -178,6 +172,28 @@ header{
 
 #viewer::-webkit-scrollbar{
   display:none;
+}
+
+#viewer.pinching{
+  touch-action:none;
+}
+
+/*
+   #pagesWrapper carries the flex/centering layout that #viewer
+   used to apply directly. Splitting it out gives pinch zoom
+   something it can apply a live CSS transform to (scale only, no
+   layout cost, fully GPU-composited) without that transform having
+   to fight #viewer's own scroll/overflow box. #viewer itself never
+   gets a transform - it stays a plain scrollable frame throughout.
+*/
+#pagesWrapper{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+
+  width:100%;
+
+  transform-origin:0 0;
 }
 
 /*
@@ -1925,7 +1941,9 @@ body.reading-mode #readingModeFloat{
 <div class="spinner"></div>
 <div class="loadingText">Loading PDF...</div>
 </div>
-<div id="viewer"></div>
+<div id="viewer">
+<div id="pagesWrapper"></div>
+</div>
 </div>
 <!-- ==========================================================
      TITLE BAR
@@ -1987,6 +2005,7 @@ const returnPage = decodeURIComponent(params.get("return") || "index.html");
 const header = document.querySelector("header");
 const toolbar = document.getElementById("toolbar");
 const viewer = document.getElementById("viewer");
+const pagesWrapper = document.getElementById("pagesWrapper");
 const layout = document.getElementById("layout");
 const loadingOverlay = document.getElementById("loadingOverlay");
 const pageInput = document.getElementById("pageNumber");
@@ -2659,7 +2678,7 @@ function createPageShell(pageNumber, page){
   pageDiv.appendChild(linkLayerDiv);
   pageDiv.appendChild(emailLinkLayerDiv);
 
-  viewer.appendChild(pageDiv);
+  pagesWrapper.appendChild(pageDiv);
 
   const view = {
     pageNumber,
@@ -3104,22 +3123,53 @@ viewer.addEventListener("pointerup", event => {
 /* ============================================================
    PINCH ZOOM
 
-   Drives the exact same zoomLevel/rescaleAndRender path used by
-   the +/- toolbar buttons and manual zoom box, so pinch, buttons,
-   and typed percentages all stay perfectly consistent with each
-   other. Only engages once a second touch point lands (a single
-   finger is left untouched for normal scrolling / tap-to-read /
-   text selection / the movement-lock panning above), and is
-   throttled to at most once per animation frame so a fast pinch
-   doesn't queue up a pile of redundant re-renders.
+   Two phases, the same way native apps (and Adobe's own viewers)
+   do it:
+
+   1. LIVE PREVIEW - while fingers are actually moving, apply a
+      pure CSS transform:scale() to #pagesWrapper. This costs
+      nothing (no page re-layout, no re-render, fully
+      GPU-composited) so it tracks your fingers with zero lag,
+      but the underlying canvases are just being visually
+      stretched, so it can look soft mid-gesture - exactly like
+      every other touch PDF viewer.
+
+   2. COMMIT - the instant the pinch ends (second finger lifts),
+      the transform is removed and a single real re-layout runs
+      at the final zoom level, producing a crisp render again.
+
+   Both phases scale around the SAME fixed point - the center of
+   the viewer - which is what "zoom toward the center always"
+   means here: not the pinch midpoint (which would drift toward
+   whichever edge your fingers happen to be biased toward), but
+   the actual middle of the visible page area, every time,
+   whether you're pinching or tapping +/-. Because both the live
+   transform and the committed re-render share that same anchor,
+   there's no jump/snap when the transform is swapped out for the
+   real layout at the end.
+
+   Only engages once a second touch point lands - a single finger
+   is left untouched for normal scrolling / tap-to-read / text
+   selection / the movement-lock panning above.
 ============================================================ */
 
 const pinchPointers = new Map();
 
+let pinchGestureActive = false;
 let pinchStartDistance = 0;
-let pinchStartZoom = 1;
-let pinchActive = false;
-let pinchRenderQueued = false;
+let pinchStartZoomLevel = 1;
+let pinchLiveScale = 1;
+let pinchTransformQueued = false;
+
+function getViewportCenter(){
+
+  const viewerRect = viewer.getBoundingClientRect();
+
+  return {
+    x: viewerRect.left + viewerRect.width / 2,
+    y: viewerRect.top + viewerRect.height / 2
+  };
+}
 
 function getPinchPointerDistance(){
 
@@ -3132,17 +3182,17 @@ function getPinchPointerDistance(){
   return Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
 }
 
-function queuePinchRender(){
+function queuePinchTransform(){
 
-  if(pinchRenderQueued){
+  if(pinchTransformQueued){
     return;
   }
 
-  pinchRenderQueued = true;
+  pinchTransformQueued = true;
 
-  requestAnimationFrame(async () => {
-    pinchRenderQueued = false;
-    await rescaleAndRender();
+  requestAnimationFrame(() => {
+    pinchTransformQueued = false;
+    pagesWrapper.style.transform = `scale(${pinchLiveScale})`;
   });
 }
 
@@ -3156,14 +3206,28 @@ viewer.addEventListener("pointerdown", event => {
 
   if(pinchPointers.size === 2){
 
-    pinchActive = true;
+    pinchGestureActive = true;
 
     // A second finger landing mid-tap should cancel tap-to-read,
     // not trigger it once the fingers lift.
     tapState.active = false;
 
     pinchStartDistance = getPinchPointerDistance();
-    pinchStartZoom = zoomLevel;
+    pinchStartZoomLevel = zoomLevel;
+    pinchLiveScale = 1;
+
+    // Fix the transform-origin, in #pagesWrapper's own untransformed
+    // coordinate space, to wherever the viewer's center currently
+    // sits. #pagesWrapper carries no transform at gesture start, so
+    // getBoundingClientRect() here is a true, unscaled reference -
+    // scaling around this point keeps it visually locked in place
+    // for the whole live-preview phase, regardless of how tall the
+    // document is or how far it's scrolled.
+    const center = getViewportCenter();
+    const wrapperRect = pagesWrapper.getBoundingClientRect();
+
+    pagesWrapper.style.transformOrigin =
+      `${center.x - wrapperRect.left}px ${center.y - wrapperRect.top}px`;
 
     viewer.classList.add("pinching");
   }
@@ -3172,7 +3236,7 @@ viewer.addEventListener("pointerdown", event => {
 
 viewer.addEventListener("pointermove", event => {
 
-  if(!pinchActive || !pinchPointers.has(event.pointerId)){
+  if(!pinchGestureActive || !pinchPointers.has(event.pointerId)){
     return;
   }
 
@@ -3186,15 +3250,37 @@ viewer.addEventListener("pointermove", event => {
 
   const distance = getPinchPointerDistance();
 
-  const ratio = distance / pinchStartDistance;
+  const targetZoom = Math.max(MIN_ZOOM_LEVEL, Math.min(MAX_ZOOM_LEVEL, pinchStartZoomLevel * (distance / pinchStartDistance)));
 
-  zoomLevel = Math.max(MIN_ZOOM_LEVEL, Math.min(MAX_ZOOM_LEVEL, pinchStartZoom * ratio));
+  // Live-preview scale is always relative to the zoom level the
+  // gesture STARTED at, not the raw finger-distance ratio - this
+  // is what keeps the preview correctly clamped once either zoom
+  // limit is hit, instead of the transform continuing to grow (or
+  // shrink) past what a real commit would ever allow, which is
+  // what caused pinching out to get stuck at an unrecoverable
+  // scale before.
+  pinchLiveScale = targetZoom / pinchStartZoomLevel;
 
-  zoomBox.value = `${Math.round(zoomLevel * 100)}%`;
+  zoomBox.value = `${Math.round(targetZoom * 100)}%`;
 
-  queuePinchRender();
+  queuePinchTransform();
 
 });
+
+async function commitPinchZoom(){
+
+  const finalZoom = Math.max(MIN_ZOOM_LEVEL, Math.min(MAX_ZOOM_LEVEL, pinchStartZoomLevel * pinchLiveScale));
+
+  pagesWrapper.style.transform = "none";
+
+  zoomLevel = finalZoom;
+  pinchLiveScale = 1;
+
+  // Anchor the real re-render on the same viewport-center point the
+  // live transform was scaling around, so swapping the transform
+  // out for a true re-layout is seamless - no visual jump.
+  await rescaleAndRender(getViewportCenter());
+}
 
 function endPinchPointer(event){
 
@@ -3204,12 +3290,14 @@ function endPinchPointer(event){
 
   pinchPointers.delete(event.pointerId);
 
-  if(pinchPointers.size < 2){
+  if(pinchPointers.size < 2 && pinchGestureActive){
 
-    pinchActive = false;
+    pinchGestureActive = false;
     pinchStartDistance = 0;
 
     viewer.classList.remove("pinching");
+
+    void commitPinchZoom();
   }
 }
 
@@ -4336,9 +4424,29 @@ document.addEventListener("click", event => {
    ZOOM
 ============================================================ */
 
-async function rescaleAndRender(){
+/*
+   anchorPoint (optional): a viewport-space {x,y} point (e.g. from
+   getViewportCenter()) that should stay visually fixed across the
+   rescale. Defaults to the viewer's own center, so every zoom
+   action - toolbar +/-, manual %, fit width/page, and a committed
+   pinch - always zooms "toward the middle" instead of drifting
+   toward whichever edge the content happens to grow from.
+
+   This replaces the old vertical-only scroll-ratio approach (which
+   tracked where you were within the total scrollable range, not an
+   actual fixed point) with true two-axis anchoring: it converts the
+   anchor into a document-space coordinate, rescales that coordinate
+   by the same ratio the pages themselves just scaled by, and then
+   sets scrollLeft/scrollTop so that coordinate lands back under the
+   anchor point. That's what keeps a page centered horizontally even
+   once it's wider than the viewport, instead of pinning to the left
+   edge and pushing the right edge off-screen.
+*/
+async function rescaleAndRender(anchorPoint){
 
   renderGeneration++;
+
+  const previousScale = currentScale;
 
   currentScale = baseScale * zoomLevel;
 
@@ -4348,9 +4456,17 @@ async function rescaleAndRender(){
 
   zoomBox.value = `${Math.round(zoomLevel * 100)}%`;
 
-  const ratio = viewer.scrollHeight > viewer.clientHeight
-    ? viewer.scrollTop / (viewer.scrollHeight - viewer.clientHeight)
-    : 0;
+  const point = anchorPoint || getViewportCenter();
+
+  const viewerRect = viewer.getBoundingClientRect();
+
+  const anchorViewerX = point.x - viewerRect.left;
+  const anchorViewerY = point.y - viewerRect.top;
+
+  const scaleRatio = previousScale > 0 ? currentScale / previousScale : 1;
+
+  const newDocX = (anchorViewerX + viewer.scrollLeft) * scaleRatio;
+  const newDocY = (anchorViewerY + viewer.scrollTop) * scaleRatio;
 
   for(const view of pageViews){
 
@@ -4366,9 +4482,11 @@ async function rescaleAndRender(){
 
   requestAnimationFrame(async () => {
 
-    if(viewer.scrollHeight > viewer.clientHeight){
-      viewer.scrollTop = ratio * (viewer.scrollHeight - viewer.clientHeight);
-    }
+    const maxScrollLeft = Math.max(0, viewer.scrollWidth - viewer.clientWidth);
+    const maxScrollTop = Math.max(0, viewer.scrollHeight - viewer.clientHeight);
+
+    viewer.scrollLeft = Math.max(0, Math.min(maxScrollLeft, newDocX - anchorViewerX));
+    viewer.scrollTop = Math.max(0, Math.min(maxScrollTop, newDocY - anchorViewerY));
 
     if(lastSearchQuery){
 
@@ -4492,6 +4610,7 @@ pageInput.addEventListener("keydown", async event => {
   }
 });
 
+   
 /* ============================================================
    SIDE SCROLLER
 
@@ -4716,7 +4835,7 @@ sideScrollerTrack.addEventListener("pointerdown", event => {
 
   clearTimeout(sideScrollerTrack._badgeHideTimer);
 
-    sideScrollerTrack._badgeHideTimer = setTimeout(() => {
+  sideScrollerTrack._badgeHideTimer = setTimeout(() => {
     sideScrollerPageBadge.classList.remove("visible");
   }, 700);
 
