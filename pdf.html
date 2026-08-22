@@ -18,6 +18,7 @@
   --text:#eee;
   --muted:#aaa;
   --viewer-top:106px;
+  --content-bottom-gap:100px;
 }
 
 *{
@@ -130,6 +131,18 @@ header{
   scroll-behavior:auto;
 
   overscroll-behavior:contain;
+
+  /*
+     The custom draggable #sideScroller is the only scrollbar we
+     want visible - the browser's native one is hidden here so
+     there's never a second, tiny, hard-to-grab slider alongside it.
+  */
+  scrollbar-width:none;
+  -ms-overflow-style:none;
+}
+
+#viewer::-webkit-scrollbar{
+  display:none;
 }
 
 /* ============================================================
@@ -673,9 +686,22 @@ input:focus-visible{
 
   max-width:calc(100% - 20px);
 
-  max-height:60vh;
+  /*
+     Bottom is pinned to the same dynamic gap the side scroller
+     uses, so the panel always stops right above the title bar -
+     whatever height that bar currently is - instead of floating
+     over it or leaving a big gap underneath.
+  */
+  bottom:var(--content-bottom-gap);
 
-  overflow-y:auto;
+  display:flex;
+  flex-direction:column;
+
+  /*
+     The popup itself doesn't scroll - #tocContent (below) does,
+     so the "Table of Contents" heading stays pinned in view.
+  */
+  overflow:hidden;
 
   padding:10px;
 
@@ -696,6 +722,8 @@ input:focus-visible{
 }
 
 #tocPopup h3{
+  flex:0 0 auto;
+
   margin:0 0 8px;
 
   padding-bottom:6px;
@@ -705,6 +733,19 @@ input:focus-visible{
   color:#eee;
 
   border-bottom:1px solid #333;
+}
+
+#tocContent{
+  flex:1 1 auto;
+
+  /*
+     min-height:0 is what actually lets a flex child shrink below
+     its content size instead of forcing the parent to grow - 
+     without it this would ignore the popup's max-height.
+  */
+  min-height:0;
+
+  overflow-y:auto;
 }
 
 .tocEmptyMessage{
@@ -780,7 +821,7 @@ input:focus-visible{
 
   top:calc(var(--viewer-top) + 10px);
   left:8px;
-  bottom:100px;
+  bottom:var(--content-bottom-gap);
 
   width:24px;
 
@@ -1636,6 +1677,7 @@ const tocContent = document.getElementById("tocContent");
 const sideScroller = document.getElementById("sideScroller");
 const sideScrollerTrack = document.getElementById("sideScrollerTrack");
 const sideScrollerThumb = document.getElementById("sideScrollerThumb");
+const titleBar = document.getElementById("titleBar");
 
 /* ============================================================
    CHROME HEIGHT
@@ -1657,9 +1699,31 @@ function syncViewerTop(){
   loadingOverlay.style.top = `${total}px`;
 }
 
+/*
+   The title bar's height isn't fixed - a long title can wrap
+   onto a second line, and the NEW/FEATURED badges can add a row
+   on mobile. Both the side scroller and the TOC popup stop just
+   above it, tracking its real, current height (plus a small gap)
+   instead of a guessed constant, so they always land right above
+   the title bar no matter how tall it gets.
+*/
+function syncBottomGap(){
+
+  if(document.body.classList.contains("reading-mode")){
+    return;
+  }
+
+  const titleBarHeight = titleBar.getBoundingClientRect().height;
+
+  document.documentElement.style.setProperty("--content-bottom-gap", `${Math.ceil(titleBarHeight) + 16}px`);
+}
+
 function scheduleChromeSync(){
   requestAnimationFrame(() => {
-    requestAnimationFrame(syncViewerTop);
+    requestAnimationFrame(() => {
+      syncViewerTop();
+      syncBottomGap();
+    });
   });
 }
 
@@ -3966,6 +4030,12 @@ sideScrollerThumb.addEventListener("pointermove", event => {
     Math.min(maxScrollTop, scrollerDrag.startScrollTop + scrollDelta)
   );
 
+  // Reposition the thumb itself right away. Don't wait for the
+  // viewer's "scroll" event to do it - that event can lag behind
+  // (or get coalesced) during a fast drag, which is why the thumb
+  // used to stay put until you let go and scrolled again.
+  updateSideScroller();
+
 });
 
 function endScrollerDrag(event){
@@ -4053,9 +4123,7 @@ viewer.addEventListener("scroll", () => {
 
   renderNearbyPages();
 
-  if(!scrollerDrag.active){
-    updateSideScroller();
-  }
+  updateSideScroller();
 });
 
 /* ============================================================
@@ -4246,10 +4314,14 @@ window.addEventListener("resize", () => {
 
 if("ResizeObserver" in window){
 
-  const chromeObserver = new ResizeObserver(() => syncViewerTop());
+  const chromeObserver = new ResizeObserver(() => {
+    syncViewerTop();
+    syncBottomGap();
+  });
 
   chromeObserver.observe(header);
   chromeObserver.observe(toolbar);
+  chromeObserver.observe(titleBar);
 }
 
 scheduleChromeSync();
