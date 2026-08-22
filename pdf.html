@@ -2451,8 +2451,7 @@ async function paintEmailLinks(view, generation){
         /*
            Without this, clicking navigates the CURRENT tab/frame to
            a mailto: URI. In an embedded viewer that counts as a
-           top-level navigation attempt, which fires pagehide with
-           persisted:false (a real unload, not a bfcache freeze) -
+           top-level navigation attempt, which fires beforeunload -
            the same cleanup that runs when actually leaving the
            page - and that cleanup zeroes out every page's canvas,
            which is what was turning the whole PDF black. Handing
@@ -4697,15 +4696,40 @@ try{
    CLEANUP
 ============================================================ */
 
-/*
-   pagehide instead of beforeunload: pagehide fires on every way of
-   leaving the page, INCLUDING when the browser freezes it into
-   bfcache (e.g. for the back button) rather than truly destroying
-   it - and unlike beforeunload, event.persisted tells us which
-   case we're in.
+window.addEventListener("beforeunload", () => {
 
-   When persisted is true, this is a bfcache freeze, not a real
-   unload, so the teardown below is skipped entirely and the
-   canvases/pdfDoc are left exactly as they are. The browser then
-   resumes that intact snapshot on the way back in via back/forward
-   - nothing was destroyed, so the page isn't black. Only a gen
+  renderGeneration++;
+  searchGeneration++;
+
+  clearTimeout(searchTimer);
+
+  for(const view of pageViews){
+
+    if(!view){
+      continue;
+    }
+
+    try{
+      pageObserver.unobserve(view.pageDiv);
+    }catch{}
+
+    try{
+      view.canvas.width = 1;
+      view.canvas.height = 1;
+    }catch{}
+  }
+
+  try{
+    if(pdfDoc){
+      pdfDoc.destroy();
+    }
+  }catch{}
+});
+
+/*
+   Back-forward cache (bfcache) restore.
+
+   The browser's back button doesn't always do a real navigation -
+   it can freeze the page into bfcache instead, then resume that
+   frozen snapshot with no script re-run. beforeunload above still
+   fires rig
