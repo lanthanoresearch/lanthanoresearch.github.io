@@ -2451,7 +2451,8 @@ async function paintEmailLinks(view, generation){
         /*
            Without this, clicking navigates the CURRENT tab/frame to
            a mailto: URI. In an embedded viewer that counts as a
-           top-level navigation attempt, which fires beforeunload -
+           top-level navigation attempt, which fires pagehide with
+           persisted:false (a real unload, not a bfcache freeze) -
            the same cleanup that runs when actually leaving the
            page - and that cleanup zeroes out every page's canvas,
            which is what was turning the whole PDF black. Handing
@@ -4696,40 +4697,16 @@ try{
    CLEANUP
 ============================================================ */
 
-window.addEventListener("beforeunload", () => {
-
-  renderGeneration++;
-  searchGeneration++;
-
-  clearTimeout(searchTimer);
-
-  for(const view of pageViews){
-
-    if(!view){
-      continue;
-    }
-
-    try{
-      pageObserver.unobserve(view.pageDiv);
-    }catch{}
-
-    try{
-      view.canvas.width = 1;
-      view.canvas.height = 1;
-    }catch{}
-  }
-
-  try{
-    if(pdfDoc){
-      pdfDoc.destroy();
-    }
-  }catch{}
-});
-
 /*
-   Back-forward cache (bfcache) restore.
+   Using pagehide instead of beforeunload here on purpose: pagehide
+   fires on every way of leaving the page, INCLUDING when the
+   browser is about to freeze it into bfcache (e.g. for the back
+   button) rather than actually destroying it - and unlike
+   beforeunload, it tells you which case you're in via
+   event.persisted.
 
-   The browser's back button doesn't always do a real navigation -
-   it often freezes the page into bfcache instead, then resumes
-   that frozen snapshot with no script re-run. beforeunload above
-   still fires
+   That's the fix for the black-PDF-on-back-button bug: when
+   persisted is true, this is a bfcache freeze, not a real unload,
+   so we skip all teardown entirely and leave the canvases and
+   pdfDoc exactly as they are. The browser then resumes that intact
+   snapshot whe
