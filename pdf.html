@@ -977,6 +977,22 @@ fetch("descriptions.json")
 
     let paper = null;
 
+    /*
+        Match by filename only, not the full path/string.
+
+        The "image" URL param may include a folder prefix
+        (e.g. "papername/Some Image.png") while
+        descriptions.json's "images" arrays list bare
+        filenames only ("Some Image.png"). An exact-string
+        match would silently fail in that case and never
+        show the PDF button, with no visible error.
+    */
+
+    const srcName =
+        src
+            .split("/")
+            .pop();
+
 
     Object.values(data).forEach(p => {
 
@@ -984,7 +1000,14 @@ fetch("descriptions.json")
             return;
 
 
-        if(p.images.includes(src)){
+        const match =
+            p.images.some(
+                image =>
+                    image.split("/").pop() === srcName
+            );
+
+
+        if(match){
 
             paper = p;
 
@@ -993,8 +1016,16 @@ fetch("descriptions.json")
     });
 
 
-    if(!paper)
+    if(!paper){
+
+        console.warn(
+            "PDF button: no descriptions.json entry references image",
+            src
+        );
+
         return;
+
+    }
 
 
     const pdfButton =
