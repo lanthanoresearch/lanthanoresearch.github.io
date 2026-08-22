@@ -19,6 +19,7 @@
   --muted:#aaa;
   --viewer-top:106px;
   --content-bottom-gap:100px;
+  --title-bar-height:70px;
 }
 
 *{
@@ -703,13 +704,13 @@ input:focus-visible{
   right:0;
 
   /*
-     Runs all the way to the true bottom of the screen - the
-     title bar is just a floating overlay on top of the PDF area
-     (not a reserved strip below it), so this fills the exact
-     same footprint the PDF itself occupies, with no gap, and
-     covers the title bar while it's open.
+     Meets the title bar exactly, flush - no gap above it, but no
+     overlap either. The floating TOC/reading-mode buttons sit
+     further up (see their own title-bar-tracking offsets), so
+     they're still well within this panel's covered area and get
+     hidden underneath it regardless.
   */
-  bottom:0;
+  bottom:var(--title-bar-height);
 
   display:flex;
   flex-direction:column;
@@ -743,6 +744,7 @@ input:focus-visible{
 body.reading-mode #tocPopup{
 
   top:0;
+  bottom:0;
 
   border-top:0;
 }
@@ -1326,7 +1328,12 @@ body.reading-mode #sideScroller{
 
   right:18px;
 
-  bottom:86px;
+  /*
+     Tracks the title bar's actual current height (same variable
+     the side scroller uses) instead of a fixed guess, so it lines
+     up with the title bar whether it's one line or two.
+  */
+  bottom:var(--content-bottom-gap);
 
   width:48px;
   height:48px;
@@ -1388,7 +1395,12 @@ body.reading-mode #sideScroller{
 
   right:18px;
 
-  bottom:144px;
+  /*
+     Stacked directly above the reading-mode button: its own
+     bottom offset (the title-bar-tracking gap) plus that
+     button's height and a small spacer between them.
+  */
+  bottom:calc(var(--content-bottom-gap) + 58px);
 
   width:48px;
   height:48px;
@@ -1626,7 +1638,7 @@ body.reading-mode #readingModeFloat{
 
     right:14px;
 
-    bottom:88px;
+    bottom:var(--content-bottom-gap);
 
     width:46px;
     height:46px;
@@ -1645,7 +1657,7 @@ body.reading-mode #readingModeFloat{
 
     right:14px;
 
-    bottom:144px;
+    bottom:calc(var(--content-bottom-gap) + 56px);
 
     width:46px;
     height:46px;
@@ -1880,10 +1892,11 @@ function syncViewerTop(){
 /*
    The title bar's height isn't fixed - a long title can wrap
    onto a second line, and the NEW/FEATURED badges can add a row
-   on mobile. Both the side scroller and the TOC popup stop just
-   above it, tracking its real, current height (plus a small gap)
-   instead of a guessed constant, so they always land right above
-   the title bar no matter how tall it gets.
+   on mobile. The side scroller and the floating buttons stop
+   just above it (--content-bottom-gap, with a small buffer), and
+   the TOC popup meets it exactly flush with no gap and no overlap
+   (--title-bar-height, no buffer) - both track its real, current
+   height instead of a guessed constant.
 */
 function syncBottomGap(){
 
@@ -1894,6 +1907,7 @@ function syncBottomGap(){
   const titleBarHeight = titleBar.getBoundingClientRect().height;
 
   document.documentElement.style.setProperty("--content-bottom-gap", `${Math.ceil(titleBarHeight) + 16}px`);
+  document.documentElement.style.setProperty("--title-bar-height", `${Math.ceil(titleBarHeight)}px`);
 }
 
 function scheduleChromeSync(){
