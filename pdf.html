@@ -34,6 +34,23 @@ body{
   color:var(--text);
   font-family:Arial,sans-serif;
   overflow:hidden;
+
+  /*
+     overflow:hidden alone doesn't reliably stop a mobile browser
+     from natively panning the whole page when a touch-scroll
+     gesture starts inside a nested scrollable element (like
+     #viewer, which scrolls both directions once you're zoomed
+     in). That outer pan is what was dragging position:fixed
+     elements - the side scroller, the toolbar, the floating
+     buttons - off screen along with it. Pinning html/body in
+     place removes the outer page entirely as something that can
+     ever move: the only scrolling left possible is #viewer's own
+     contained overflow:auto box, and position:fixed elements have
+     nothing left to be dragged along with.
+  */
+  position:fixed;
+  top:0;
+  left:0;
 }
 
 /* ============================================================
@@ -686,11 +703,13 @@ input:focus-visible{
   right:0;
 
   /*
-     Bottom is pinned to the same dynamic gap the side scroller
-     uses, so the panel always stops right above the title bar -
-     whatever height that bar currently is.
+     Runs all the way to the true bottom of the screen - the
+     title bar is just a floating overlay on top of the PDF area
+     (not a reserved strip below it), so this fills the exact
+     same footprint the PDF itself occupies, with no gap, and
+     covers the title bar while it's open.
   */
-  bottom:var(--content-bottom-gap);
+  bottom:0;
 
   display:flex;
   flex-direction:column;
@@ -712,13 +731,18 @@ input:focus-visible{
   box-shadow:
     0 -6px 24px rgba(0,0,0,.5);
 
-  z-index:6500;
+  /*
+     Higher than the floating TOC/reading-mode buttons (z-index
+     9000), so the panel visually and functionally covers them
+     while it's open - they can't be tapped underneath it. The
+     only ways out are the X button or picking an entry.
+  */
+  z-index:9500;
 }
 
 body.reading-mode #tocPopup{
 
   top:0;
-  bottom:0;
 
   border-top:0;
 }
