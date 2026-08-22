@@ -418,19 +418,43 @@ input:focus-visible{
   margin:3px 0;
 }
 
-#menu a.btn{
+#menu a{
   display:block;
 
-  width:100%;
-
   box-sizing:border-box;
+
+  width:100%;
 
   margin:3px 0;
 
   text-align:left;
+
+  text-decoration:none;
+
+  background:#292929;
+
+  color:#fff;
+
+  border:1px solid #383838;
+
+  border-radius:6px;
+
+  padding:6px 9px;
+
+  font:inherit;
+
+  cursor:pointer;
 }
 
-#menu a.btn.disabled{
+#menu a:hover{
+  background:#353535;
+}
+
+#menu a:active{
+  background:#414141;
+}
+
+#menu a.disabled{
   background:#242424;
 
   color:#888;
@@ -440,7 +464,7 @@ input:focus-visible{
   pointer-events:none;
 }
 
-#menu a.btn.disabled:hover{
+#menu a.disabled:hover{
   background:#242424;
 }
 
@@ -813,12 +837,12 @@ body.reading-mode #readingModeFloat{
   </button>
 
   <a
-    class="btn disabled"
+    class="disabled"
     id="pdfButton"
     aria-disabled="true"
     title="Looking for the matching PDF…"
   >
-    PDF…
+    Looking for PDF…
   </a>
 
 </div>
@@ -1023,14 +1047,14 @@ const pdfButtonEl =
     indicator, since checking the console isn't practical
     on mobile. It should read one of:
 
-      "PDF…"      - still checking descriptions.json
-      "No PDF"    - checked, nothing referenced this image
-      "PDF (!)"   - descriptions.json couldn't be loaded
-      "PDF"       - match found, button is live
+      "Looking for PDF…"  - still checking descriptions.json
+      "No Parent PDF"     - checked, nothing referenced this image
+      "PDF Unavailable"   - descriptions.json couldn't be loaded
+      "Open Parent PDF"   - match found, button is live
 */
 
 pdfButtonEl.textContent =
-    "PDF…";
+    "Looking for PDF…";
 
 
 /*
@@ -1130,7 +1154,7 @@ fetch("descriptions.json")
         );
 
         pdfButtonEl.textContent =
-            "No PDF";
+            "No Parent PDF";
 
         pdfButtonEl.title =
             `No matching PDF found for "${srcName}"`;
@@ -1186,7 +1210,7 @@ fetch("descriptions.json")
     );
 
     pdfButtonEl.textContent =
-        "PDF";
+        "Open Parent PDF";
 
     pdfButtonEl.title =
         `Open ${paper.title} PDF`;
@@ -1200,7 +1224,7 @@ fetch("descriptions.json")
     );
 
     pdfButtonEl.textContent =
-        "PDF (!)";
+        "PDF Unavailable";
 
     pdfButtonEl.title =
         "Could not check for a matching PDF: " +
