@@ -8,7 +8,7 @@
 
 <meta
   name="viewport"
-  content="width=device-width,initial-scale=1.0"
+  content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"
 >
 
 <title>Image Viewer</title>
@@ -43,6 +43,7 @@ body{
   color:var(--text);
   font-family:Arial,sans-serif;
   overflow:hidden;
+  touch-action:none;
 }
 
 /* ============================================================
@@ -864,6 +865,78 @@ body.reading-mode #readingModeFloat{
 /* =========================================================
    IMAGE VIEWER
 ========================================================= */
+
+
+/* ---------- Disable Native/Browser Zoom ----------
+
+    The viewport meta tag and the page-wide
+    touch-action:none rule stop most pinch and
+    double-tap zooming. Safari still fires its own
+    gesture events for pinch zoom, and desktop
+    browsers zoom on ctrl+wheel (trackpad pinch),
+    so both are explicitly blocked here as well.
+    The viewer's own pinch/wheel handlers (below)
+    remain the only way to zoom.
+*/
+
+["gesturestart", "gesturechange", "gestureend"].forEach(
+    function(eventName){
+
+        document.addEventListener(
+            eventName,
+            function(event){
+
+                event.preventDefault();
+
+            },
+            {
+                passive:false
+            }
+        );
+
+    }
+);
+
+
+document.addEventListener(
+    "wheel",
+    function(event){
+
+        if(event.ctrlKey){
+
+            event.preventDefault();
+
+        }
+
+    },
+    {
+        passive:false
+    }
+);
+
+
+let lastTouchEnd = 0;
+
+document.addEventListener(
+    "touchend",
+    function(event){
+
+        const now =
+            Date.now();
+
+        if(now - lastTouchEnd <= 300){
+
+            event.preventDefault();
+
+        }
+
+        lastTouchEnd = now;
+
+    },
+    {
+        passive:false
+    }
+);
 
 
 /* ---------- URL Parameters ---------- */
