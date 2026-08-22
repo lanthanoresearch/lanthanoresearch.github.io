@@ -2896,6 +2896,93 @@ async function ensureQuerySearched(){
 }
 
 /* ============================================================
+   LIVE RESULT POSITION
+
+   Returns a result's current document-relative top position,
+   measured fresh against the viewer right now. This is
+   deliberately NOT the cached `result.docTop` from when
+   highlights were built - that snapshot can go stale (the
+   person may have scrolled, or layout may have settled
+   slightly differently) by the time they actually press an
+   arrow button, and navigating off a stale snapshot is what
+   made forward navigation from an unset state unreliable.
+============================================================ */
+
+function getLiveResultDocTop(result){
+
+  const element = result.elements?.[0];
+
+  if(!element){
+    return null;
+  }
+
+  const viewerRect = viewer.getBoundingClientRect();
+  const elementRect = element.getBoundingClientRect();
+
+  return (elementRect.top - viewerRect.top) + viewer.scrollTop;
+}
+
+/* ============================================================
+   FIND CLOSEST RESULT
+
+   Used the first time the person navigates after a fresh
+   search (currentSearch is still unset). Scans all results
+   using LIVE positions (not the build-time snapshot) and
+   picks:
+
+     - direction > 0 (next):     nearest match at/after the
+                                  current scroll position
+     - direction < 0 (previous): nearest match before it
+
+   If nothing qualifies (e.g. every match is already behind
+   us when going forward, or already ahead when going
+   backward), it wraps around to the outermost match in that
+   same direction, so navigation always lands somewhere.
+============================================================ */
+
+function findClosestResultIndex(direction){
+
+  const referenceTop = viewer.scrollTop;
+
+  let nearest = null;
+  let extreme = null;
+
+  for(let i = 0; i < searchResults.length; i++){
+
+    const docTop = getLiveResultDocTop(searchResults[i]);
+
+    if(docTop === null){
+      continue;
+    }
+
+    const isAhead = direction > 0
+      ? docTop >= referenceTop
+      : docTop < referenceTop;
+
+    if(isAhead){
+
+      if(
+        !nearest ||
+        (direction > 0 ? docTop < nearest.docTop : docTop > nearest.docTop)
+      ){
+        nearest = { index:i, docTop };
+      }
+    }
+
+    if(
+      !extreme ||
+      (direction > 0 ? docTop < extreme.docTop : docTop > extreme.docTop)
+    ){
+      extreme = { index:i, docTop };
+    }
+  }
+
+  const chosen = nearest || extreme;
+
+  return chosen ? chosen.index : -1;
+}
+
+/* ============================================================
    SEARCH NAVIGATION
 ============================================================ */
 
@@ -2933,12 +3020,18 @@ async function goToSearchResult(direction){
 
   if(currentSearch < 0){
 
-    // Nothing has been navigated to yet. Pressing "next" jumps to
-    // the nearest match at/after the current scroll position
-    // (index 0, per the ordering computed when highlighting ran).
-    // Pressing "previous" jumps to the nearest match before it
-    // (the last index, since that ordering wraps around).
-    await showSearchResult(direction > 0 ? 0 : searchResults.length - 1);
+    // Nothing has been navigated to yet. Find the nearest match
+    // in the requested direction using LIVE positions (see
+    // findClosestResultIndex) rather than trusting the ordering
+    // snapshot from when highlighting was built, which is what
+    // made "next" unreliable as the very first navigation action.
+    const index = findClosestResultIndex(direction);
+
+    if(index === -1){
+      return;
+    }
+
+    await showSearchResult(index);
 
   }else{
 
