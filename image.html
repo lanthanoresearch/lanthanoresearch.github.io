@@ -418,6 +418,32 @@ input:focus-visible{
   margin:3px 0;
 }
 
+#menu a.btn{
+  display:block;
+
+  width:100%;
+
+  box-sizing:border-box;
+
+  margin:3px 0;
+
+  text-align:left;
+}
+
+#menu a.btn.disabled{
+  background:#242424;
+
+  color:#888;
+
+  cursor:default;
+
+  pointer-events:none;
+}
+
+#menu a.btn.disabled:hover{
+  background:#242424;
+}
+
 /* ============================================================
    FLOATING READING MODE
 ============================================================ */
@@ -721,15 +747,6 @@ body.reading-mode #readingModeFloat{
     ✣ Free
   </button>
 
-  <a
-    class="btn toolButton disabled"
-    id="pdfButton"
-    aria-disabled="true"
-    title="Looking for the matching PDF…"
-  >
-    PDF
-  </a>
-
 </div>
 
 <!-- ==========================================================
@@ -794,6 +811,15 @@ body.reading-mode #readingModeFloat{
   <button id="fullscreenBtn">
     Fullscreen
   </button>
+
+  <a
+    class="btn disabled"
+    id="pdfButton"
+    aria-disabled="true"
+    title="Looking for the matching PDF…"
+  >
+    PDF…
+  </a>
 
 </div>
 
@@ -1013,7 +1039,9 @@ pdfButtonEl.textContent =
     from a previous state). pointer-events:none on the
     .disabled class already blocks mouse clicks, but this
     guard also blocks keyboard-triggered activation
-    (Enter/Space on a focused link).
+    (Enter/Space on a focused link). Once it's live, a
+    click navigates away to pdf.html, so tuck the menu
+    away first the same way the other menu actions do.
 */
 
 pdfButtonEl.addEventListener(
@@ -1026,7 +1054,12 @@ pdfButtonEl.addEventListener(
 
             event.preventDefault();
 
+            return;
+
         }
+
+        menu.style.display =
+            "none";
 
     }
 );
@@ -1789,6 +1822,7 @@ function setReadingMode(
     */
 
     draw();
+
 
 }
 
