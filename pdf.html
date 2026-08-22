@@ -4732,4 +4732,22 @@ window.addEventListener("beforeunload", () => {
    The browser's back button doesn't always do a real navigation -
    it can freeze the page into bfcache instead, then resume that
    frozen snapshot with no script re-run. beforeunload above still
-   fires rig
+   fires right before that freeze, so by the time the page is
+   resumed its canvases are already zeroed and pdfDoc already
+   destroyed - the PDF renders solid black because nothing
+   re-initializes it.
+
+   pageshow fires on both a normal load and a bfcache restore;
+   event.persisted is true only for the latter, so only then do we
+   force a full reload to get a clean, freshly-initialized page.
+*/
+window.addEventListener("pageshow", event => {
+  if(event.persisted){
+    location.reload();
+  }
+});
+
+</script>
+</body>
+</html>
+   
