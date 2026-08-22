@@ -650,6 +650,204 @@ input:focus-visible{
 }
 
 /* ============================================================
+   TABLE OF CONTENTS BUTTON
+============================================================ */
+
+#tocButton.toc-empty{
+  opacity:.55;
+}
+
+/* ============================================================
+   TABLE OF CONTENTS POPUP
+============================================================ */
+
+#tocPopup{
+  position:fixed;
+
+  top:108px;
+  left:50%;
+
+  transform:translateX(-50%);
+
+  width:320px;
+
+  max-width:calc(100% - 20px);
+
+  max-height:60vh;
+
+  overflow-y:auto;
+
+  padding:10px;
+
+  background:#222;
+
+  border:1px solid #444;
+
+  border-radius:9px;
+
+  box-shadow:
+    0 8px 20px rgba(0,0,0,.45);
+
+  z-index:6500;
+}
+
+#tocPopup.hidden{
+  display:none;
+}
+
+#tocPopup h3{
+  margin:0 0 8px;
+
+  padding-bottom:6px;
+
+  font-size:14px;
+
+  color:#eee;
+
+  border-bottom:1px solid #333;
+}
+
+.tocEmptyMessage{
+  padding:8px 4px;
+
+  color:#aaa;
+
+  font-size:13px;
+
+  line-height:1.4;
+}
+
+.tocList,
+.tocList ul{
+  margin:0;
+
+  padding-left:0;
+
+  list-style:none;
+}
+
+.tocList ul{
+  padding-left:14px;
+}
+
+.tocList li{
+  margin:2px 0;
+}
+
+.tocList button{
+  width:100%;
+
+  padding:6px 6px;
+
+  text-align:left;
+
+  background:transparent;
+
+  border:0;
+
+  border-radius:5px;
+
+  color:#ddd;
+
+  font-size:13px;
+
+  cursor:pointer;
+}
+
+.tocList button:hover{
+  background:#333;
+}
+
+.tocLabelOnly{
+  padding:6px 6px;
+
+  color:#999;
+
+  font-size:13px;
+}
+
+/* ============================================================
+   SIDE SCROLLER
+
+   A draggable scrollbar handle running down the left edge of
+   the screen. Only shown once the document is actually taller
+   than the viewport. Dragging the thumb scrolls the document
+   proportionally; clicking elsewhere on the track jumps there.
+============================================================ */
+
+#sideScroller{
+  position:fixed;
+
+  top:calc(var(--viewer-top) + 10px);
+  left:8px;
+  bottom:100px;
+
+  width:24px;
+
+  display:none;
+
+  align-items:stretch;
+  justify-content:center;
+
+  z-index:4000;
+
+  touch-action:none;
+}
+
+body.reading-mode #sideScroller{
+
+  top:16px;
+  bottom:16px;
+}
+
+#sideScrollerTrack{
+  position:relative;
+
+  width:10px;
+  height:100%;
+
+  background:
+    rgba(255,255,255,.06);
+
+  border-radius:5px;
+
+  cursor:pointer;
+}
+
+#sideScrollerThumb{
+  position:absolute;
+
+  left:0;
+
+  width:10px;
+
+  min-height:34px;
+
+  border-radius:5px;
+
+  background:
+    rgba(255,255,255,.32);
+
+  cursor:grab;
+
+  touch-action:none;
+
+  transition:background .12s ease;
+}
+
+#sideScrollerThumb:hover{
+  background:
+    rgba(255,255,255,.5);
+}
+
+#sideScrollerThumb.dragging{
+  background:
+    rgba(255,255,255,.65);
+
+  cursor:grabbing;
+}
+
+/* ============================================================
    PDF.JS TEXT LAYER
 ============================================================ */
 
@@ -893,6 +1091,55 @@ input:focus-visible{
 }
 
 /* ============================================================
+   EMAIL LINK LAYER
+
+   Overlays clickable mailto: links on top of any occurrence of
+   a specific email address found in the PDF's text layer. This
+   sits above the ordinary annotation link layer since it is
+   derived from plain text rather than a native PDF link
+   annotation.
+============================================================ */
+
+.emailLinkLayer{
+  position:absolute;
+
+  inset:0;
+
+  overflow:hidden;
+
+  z-index:5;
+
+  pointer-events:none;
+}
+
+.email-link{
+  position:absolute;
+
+  display:block;
+
+  pointer-events:auto;
+
+  cursor:pointer;
+
+  background:
+    rgba(0,176,80,.12);
+
+  border:0;
+  border-bottom:1px solid rgba(0,150,70,.55);
+
+  padding:0;
+
+  margin:0;
+
+  text-decoration:none;
+}
+
+.email-link:hover{
+  background:
+    rgba(0,176,80,.24);
+}
+
+/* ============================================================
    LOADING
 ============================================================ */
 
@@ -1006,6 +1253,7 @@ body.reading-mode header,
 body.reading-mode #toolbar,
 body.reading-mode #titleBar,
 body.reading-mode #searchPopup,
+body.reading-mode #tocPopup,
 body.reading-mode #menu{
 
   display:none !important;
@@ -1161,6 +1409,26 @@ body.reading-mode #readingModeFloat{
     min-width:80px;
   }
 
+  #tocPopup{
+
+    left:8px;
+    right:8px;
+
+    top:104px;
+
+    transform:none;
+
+    width:auto;
+
+    max-width:none;
+  }
+
+  #sideScrollerTrack,
+  #sideScrollerThumb{
+
+    width:14px;
+  }
+
   #readingModeFloat{
 
     right:14px;
@@ -1252,6 +1520,7 @@ body.reading-mode #readingModeFloat{
 ========================================================== -->
 <div id="toolbar">
 <button id="searchButton" class="toolButton" title="Search PDF">⌕</button>
+<button id="tocButton" class="toolButton" title="Table of Contents">TOC</button>
 
 <div class="zoomControls">
 <button id="zoomOut" title="Zoom out">−</button>
@@ -1276,6 +1545,13 @@ body.reading-mode #readingModeFloat{
 <button id="prevResult" class="searchNavButton" title="Previous result" aria-label="Previous search result">↑</button>
 <button id="nextResult" class="searchNavButton" title="Next result" aria-label="Next search result">↓</button>
 <span id="searchResults">0 of 0</span>
+</div>
+<!-- ==========================================================
+     TABLE OF CONTENTS
+========================================================== -->
+<div id="tocPopup" class="hidden">
+<h3>Table of Contents</h3>
+<div id="tocContent"></div>
 </div>
 <!-- ==========================================================
      LAYOUT
@@ -1306,6 +1582,14 @@ body.reading-mode #readingModeFloat{
      FLOATING READING MODE
 ========================================================== -->
 <button id="readingModeFloat" aria-label="Toggle Reading Mode" title="Reading Mode">▣</button>
+<!-- ==========================================================
+     SIDE SCROLLER
+========================================================== -->
+<div id="sideScroller" aria-hidden="true">
+<div id="sideScrollerTrack">
+<div id="sideScrollerThumb" title="Drag to scroll"></div>
+</div>
+</div>
 
 <script type="module">
 
@@ -1346,6 +1630,12 @@ const nextResultBtn = document.getElementById("nextResult");
 const menu = document.getElementById("menu");
 const menuButton = document.getElementById("menuBtn");
 const readingModeFloat = document.getElementById("readingModeFloat");
+const tocButton = document.getElementById("tocButton");
+const tocPopup = document.getElementById("tocPopup");
+const tocContent = document.getElementById("tocContent");
+const sideScroller = document.getElementById("sideScroller");
+const sideScrollerTrack = document.getElementById("sideScrollerTrack");
+const sideScrollerThumb = document.getElementById("sideScrollerThumb");
 
 /* ============================================================
    CHROME HEIGHT
@@ -1380,6 +1670,13 @@ function scheduleChromeSync(){
 const MAX_CANVAS_PIXELS = 8000000;
 const MAX_CANVAS_DIMENSION = 16384;
 const RENDER_MARGIN = "1400px";
+
+/*
+   Any occurrence of this email address anywhere in the PDF's
+   text layer gets turned into a clickable mailto: overlay. The
+   match is case-insensitive (see paintEmailLinks / findTextOccurrences).
+*/
+const TARGET_EMAIL = "lanthanoresearch@protonmail.com";
 
 /* ============================================================
    ESCAPE
@@ -1617,6 +1914,9 @@ function layoutPage(view, scale){
   view.linkLayerDiv.style.width = width;
   view.linkLayerDiv.style.height = height;
 
+  view.emailLinkLayerDiv.style.width = width;
+  view.emailLinkLayerDiv.style.height = height;
+
   const userUnit = view.page.userUnit || 1;
 
   view.textLayerDiv.style.setProperty("--scale-factor", String(viewport.scale));
@@ -1642,6 +1942,7 @@ function resetRenderedPage(view){
   view.textLayerDiv.replaceChildren();
   view.searchLayerDiv.replaceChildren();
   view.linkLayerDiv.replaceChildren();
+  view.emailLinkLayerDiv.replaceChildren();
 
   view.textLayer = null;
   view.textLayerEnd = null;
@@ -1841,6 +2142,56 @@ function renderLinkLayer(view){
 }
 
 /* ============================================================
+   EMAIL LINKS
+
+   Scans a page's text layer for any occurrence of TARGET_EMAIL
+   and overlays a clickable mailto: anchor on top of it, using
+   the same text-walking approach as search (see
+   findTextOccurrences below). Runs after the text layer has
+   been painted, since it needs the text layer's DOM nodes.
+============================================================ */
+
+async function paintEmailLinks(view, generation){
+
+  if(generation !== renderGeneration){
+    return;
+  }
+
+  try{
+
+    view.emailLinkLayerDiv.replaceChildren();
+
+    const matches = findTextOccurrences(view, TARGET_EMAIL);
+
+    for(const match of matches){
+
+      for(const rect of match.rects){
+
+        const link = document.createElement("a");
+
+        link.className = "email-link";
+        link.href = `mailto:${TARGET_EMAIL}`;
+        link.title = `Email ${TARGET_EMAIL}`;
+
+        link.style.left = `${rect.left}px`;
+        link.style.top = `${rect.top}px`;
+        link.style.width = `${rect.width}px`;
+        link.style.height = `${rect.height}px`;
+
+        link.addEventListener("click", event => {
+          event.stopPropagation();
+        });
+
+        view.emailLinkLayerDiv.appendChild(link);
+      }
+    }
+
+  }catch(error){
+    console.warn(`Email link layer failed on page ${view.pageNumber}:`, error);
+  }
+}
+
+/* ============================================================
    PAGE SHELL
 ============================================================ */
 
@@ -1867,10 +2218,15 @@ function createPageShell(pageNumber, page){
 
   linkLayerDiv.className = "linkLayer";
 
+  const emailLinkLayerDiv = document.createElement("div");
+
+  emailLinkLayerDiv.className = "emailLinkLayer";
+
   pageDiv.appendChild(canvas);
   pageDiv.appendChild(textLayerDiv);
   pageDiv.appendChild(searchLayerDiv);
   pageDiv.appendChild(linkLayerDiv);
+  pageDiv.appendChild(emailLinkLayerDiv);
 
   viewer.appendChild(pageDiv);
 
@@ -1882,6 +2238,7 @@ function createPageShell(pageNumber, page){
     textLayerDiv,
     searchLayerDiv,
     linkLayerDiv,
+    emailLinkLayerDiv,
     viewport:null,
     textContent:null,
     annotations:null,
@@ -1934,6 +2291,11 @@ async function renderPage(view){
         paintText(view, generation),
         paintLinks(view, generation)
       ]);
+
+      // Email links depend on the text layer's DOM nodes, so this
+      // must run after paintText has finished (not in the same
+      // Promise.all above).
+      await paintEmailLinks(view, generation);
 
     }catch(error){
       console.warn(`Page ${view.pageNumber} render failed:`, error);
@@ -2134,11 +2496,12 @@ function setReadingMode(enabled){
     menu.style.display = "none";
 
     /*
-       Reading mode closes the search popup,
+       Reading mode closes the search and TOC popups,
        but does not destroy the search data.
     */
 
     searchPopup.classList.add("hidden");
+    tocPopup.classList.add("hidden");
 
     /*
        Explicitly remove the normal chrome
@@ -2184,6 +2547,8 @@ function setReadingMode(enabled){
 
     renderNearbyPages();
 
+    updateSideScroller();
+
   });
 }
 
@@ -2208,6 +2573,7 @@ viewer.addEventListener("pointerdown", event => {
   if(
     event.target.closest(".textLayer") ||
     event.target.closest(".pdf-link") ||
+    event.target.closest(".email-link") ||
     event.target.closest(".searchHighlightLayer")
   ){
     tapState.active = false;
@@ -2256,6 +2622,7 @@ viewer.addEventListener("pointerup", event => {
   if(
     event.target.closest(".textLayer") ||
     event.target.closest(".pdf-link") ||
+    event.target.closest(".email-link") ||
     event.target.closest(".searchHighlightLayer")
   ){
     return;
@@ -2318,10 +2685,17 @@ function normalizeSearchText(value){
 }
 
 /* ============================================================
-   SEARCH RANGE HIGHLIGHT
+   RANGE -> LAYER-RELATIVE RECTS
+
+   Shared by search highlighting and email-link overlays: given a
+   DOM Range within a page's text layer, returns its client rects
+   translated into coordinates relative to that page's overlay
+   layers. All of a page's overlay layers (search, link, email)
+   are absolutely positioned at inset:0 over the same page, so a
+   single reference rect works for any of them.
 ============================================================ */
 
-function createHighlightForRange(view, startNode, startOffset, endNode, endOffset){
+function getRelativeRects(view, startNode, startOffset, endNode, endOffset){
 
   const range = document.createRange();
 
@@ -2336,7 +2710,7 @@ function createHighlightForRange(view, startNode, startOffset, endNode, endOffse
 
   const rects = Array.from(range.getClientRects());
 
-  const elements = [];
+  const relative = [];
 
   for(const rect of rects){
 
@@ -2344,28 +2718,27 @@ function createHighlightForRange(view, startNode, startOffset, endNode, endOffse
       continue;
     }
 
-    const highlight = document.createElement("div");
-
-    highlight.className = "search-highlight";
-
-    highlight.style.left = `${rect.left - layerRect.left}px`;
-    highlight.style.top = `${rect.top - layerRect.top}px`;
-    highlight.style.width = `${rect.width}px`;
-    highlight.style.height = `${rect.height}px`;
-
-    view.searchLayerDiv.appendChild(highlight);
-
-    elements.push(highlight);
+    relative.push({
+      left: rect.left - layerRect.left,
+      top: rect.top - layerRect.top,
+      width: rect.width,
+      height: rect.height
+    });
   }
 
-  return elements;
+  return relative;
 }
 
 /* ============================================================
-   SEARCH OCCURRENCES ON PAGE
+   FIND TEXT OCCURRENCES (generic)
+
+   Walks a page's text layer for every occurrence of `query`
+   (case-insensitive) and returns their layer-relative rects,
+   without creating any DOM elements itself. Used both for
+   search highlighting and for email-link overlays.
 ============================================================ */
 
-function findOccurrencesOnPage(view, query){
+function findTextOccurrences(view, query){
 
   if(!view || !query){
     return [];
@@ -2426,33 +2799,74 @@ function findOccurrencesOnPage(view, query){
 
     if(startInfo && endInfo){
 
-      const startOffset = matchStart - startInfo.start;
-      const endOffset = matchEnd - endInfo.start;
-
-      const elements = createHighlightForRange(
+      const rects = getRelativeRects(
         view,
         startInfo.node,
-        startOffset,
+        matchStart - startInfo.start,
         endInfo.node,
-        endOffset
+        matchEnd - endInfo.start
       );
 
-      if(elements.length){
+      if(rects.length){
 
-        // charStart is the match's character offset within this
-        // page's full text — combined with pageNumber it's a
-        // stable identity for this occurrence across rebuilds
-        // (e.g. re-searching after a zoom change).
         occurrences.push({
-          view,
           pageNumber: view.pageNumber,
-          elements,
-          charStart: matchStart
+          charStart: matchStart,
+          rects
         });
       }
     }
 
     searchAt = matchStart + Math.max(1, lowerQuery.length);
+  }
+
+  return occurrences;
+}
+
+/* ============================================================
+   SEARCH OCCURRENCES ON PAGE
+
+   Thin wrapper around findTextOccurrences that additionally
+   creates the visible highlight <div> elements in the page's
+   search layer (search needs the elements themselves so it can
+   mark the "current" one and scroll to it).
+============================================================ */
+
+function findOccurrencesOnPage(view, query){
+
+  const matches = findTextOccurrences(view, query);
+
+  const occurrences = [];
+
+  for(const match of matches){
+
+    const elements = [];
+
+    for(const rect of match.rects){
+
+      const highlight = document.createElement("div");
+
+      highlight.className = "search-highlight";
+
+      highlight.style.left = `${rect.left}px`;
+      highlight.style.top = `${rect.top}px`;
+      highlight.style.width = `${rect.width}px`;
+      highlight.style.height = `${rect.height}px`;
+
+      view.searchLayerDiv.appendChild(highlight);
+
+      elements.push(highlight);
+    }
+
+    if(elements.length){
+
+      occurrences.push({
+        view,
+        pageNumber: match.pageNumber,
+        elements,
+        charStart: match.charStart
+      });
+    }
   }
 
   return occurrences;
@@ -3085,6 +3499,8 @@ document.getElementById("searchButton").addEventListener("click", event => {
 
   event.stopPropagation();
 
+  closeToc();
+
   if(searchPopup.classList.contains("hidden")){
 
     searchPopup.classList.remove("hidden");
@@ -3181,6 +3597,118 @@ document.addEventListener("pointerup", event => {
 });
 
 /* ============================================================
+   TABLE OF CONTENTS
+
+   Populated after the PDF loads (see LOAD PDF below), from
+   pdfDoc.getOutline(). The button is always visible: if the
+   document has an outline, clicking it opens a panel of
+   clickable links that jump to each destination; if it doesn't,
+   clicking it explains that plainly instead of doing nothing,
+   so the missing panel doesn't look like a bug.
+============================================================ */
+
+function renderTocList(items, container){
+
+  const list = document.createElement("ul");
+
+  list.className = "tocList";
+
+  for(const item of items){
+
+    const li = document.createElement("li");
+
+    if(item.dest){
+
+      const button = document.createElement("button");
+
+      button.type = "button";
+      button.textContent = item.title || "Untitled section";
+
+      button.addEventListener("click", async () => {
+        await openInternalDestination(item.dest);
+        closeToc();
+      });
+
+      li.appendChild(button);
+
+    }else{
+
+      const label = document.createElement("div");
+
+      label.className = "tocLabelOnly";
+      label.textContent = item.title || "Untitled section";
+
+      li.appendChild(label);
+    }
+
+    if(Array.isArray(item.items) && item.items.length){
+      renderTocList(item.items, li);
+    }
+
+    list.appendChild(li);
+  }
+
+  container.appendChild(list);
+}
+
+function setupTocButton(outlineItems){
+
+  const hasToc = Array.isArray(outlineItems) && outlineItems.length > 0;
+
+  tocContent.innerHTML = "";
+
+  if(hasToc){
+
+    tocButton.classList.remove("toc-empty");
+    tocButton.title = "Table of Contents";
+
+    renderTocList(outlineItems, tocContent);
+
+  }else{
+
+    tocButton.classList.add("toc-empty");
+    tocButton.title = "No table of contents in this PDF";
+
+    tocContent.innerHTML = `<div class="tocEmptyMessage">This PDF doesn't have a table of contents.</div>`;
+  }
+}
+
+function closeToc(){
+  tocPopup.classList.add("hidden");
+}
+
+tocButton.addEventListener("click", event => {
+
+  event.stopPropagation();
+
+  closeSearch();
+
+  if(tocPopup.classList.contains("hidden")){
+    tocPopup.classList.remove("hidden");
+  }else{
+    closeToc();
+  }
+
+});
+
+tocPopup.addEventListener("click", event => {
+  event.stopPropagation();
+});
+
+document.addEventListener("click", event => {
+
+  if(tocPopup.classList.contains("hidden")){
+    return;
+  }
+
+  if(tocPopup.contains(event.target) || event.target.closest("#tocButton")){
+    return;
+  }
+
+  closeToc();
+});
+
+/* ============================================================
    ZOOM
 ============================================================ */
 
@@ -3227,6 +3755,8 @@ async function rescaleAndRender(){
 
       await currentSearchOperation;
     }
+
+    updateSideScroller();
 
   });
 }
@@ -3339,6 +3869,156 @@ pageInput.addEventListener("keydown", async event => {
 });
 
 /* ============================================================
+   SIDE SCROLLER
+
+   Keeps the draggable thumb's size/position in sync with the
+   viewer's actual scroll state, and lets the person drag it (or
+   tap the track) to scroll the document instead of using the
+   native scrollbar / touch-scrolling.
+============================================================ */
+
+const MIN_SCROLLER_THUMB_HEIGHT = 34;
+
+function updateSideScroller(){
+
+  if(!pageViews.length || viewer.scrollHeight <= viewer.clientHeight + 1){
+
+    sideScroller.style.display = "none";
+
+    return;
+  }
+
+  sideScroller.style.display = "flex";
+
+  const trackHeight = sideScrollerTrack.clientHeight;
+
+  if(trackHeight <= 0){
+    return;
+  }
+
+  const visibleRatio = viewer.clientHeight / viewer.scrollHeight;
+
+  const thumbHeight = Math.min(
+    trackHeight,
+    Math.max(MIN_SCROLLER_THUMB_HEIGHT, trackHeight * visibleRatio)
+  );
+
+  const maxScrollTop = viewer.scrollHeight - viewer.clientHeight;
+  const scrollRatio = maxScrollTop > 0 ? viewer.scrollTop / maxScrollTop : 0;
+
+  const maxThumbTop = trackHeight - thumbHeight;
+
+  sideScrollerThumb.style.height = `${thumbHeight}px`;
+  sideScrollerThumb.style.top = `${scrollRatio * maxThumbTop}px`;
+}
+
+/*
+   Dragging the thumb: pointer capture keeps receiving move/up
+   events even if the pointer strays off the thin thumb element,
+   which matters a lot on touch.
+*/
+
+let scrollerDrag = {
+  active:false,
+  startY:0,
+  startScrollTop:0,
+  thumbHeight:0,
+  trackHeight:0
+};
+
+sideScrollerThumb.addEventListener("pointerdown", event => {
+
+  event.preventDefault();
+  event.stopPropagation();
+
+  scrollerDrag.active = true;
+  scrollerDrag.startY = event.clientY;
+  scrollerDrag.startScrollTop = viewer.scrollTop;
+  scrollerDrag.thumbHeight = sideScrollerThumb.offsetHeight;
+  scrollerDrag.trackHeight = sideScrollerTrack.clientHeight;
+
+  sideScrollerThumb.classList.add("dragging");
+
+  try{
+    sideScrollerThumb.setPointerCapture(event.pointerId);
+  }catch{}
+
+});
+
+sideScrollerThumb.addEventListener("pointermove", event => {
+
+  if(!scrollerDrag.active){
+    return;
+  }
+
+  const maxThumbTop = scrollerDrag.trackHeight - scrollerDrag.thumbHeight;
+  const maxScrollTop = viewer.scrollHeight - viewer.clientHeight;
+
+  if(maxThumbTop <= 0 || maxScrollTop <= 0){
+    return;
+  }
+
+  const deltaY = event.clientY - scrollerDrag.startY;
+  const scrollDelta = (deltaY / maxThumbTop) * maxScrollTop;
+
+  viewer.scrollTop = Math.max(
+    0,
+    Math.min(maxScrollTop, scrollerDrag.startScrollTop + scrollDelta)
+  );
+
+});
+
+function endScrollerDrag(event){
+
+  if(!scrollerDrag.active){
+    return;
+  }
+
+  scrollerDrag.active = false;
+
+  sideScrollerThumb.classList.remove("dragging");
+
+  try{
+    sideScrollerThumb.releasePointerCapture(event.pointerId);
+  }catch{}
+}
+
+sideScrollerThumb.addEventListener("pointerup", endScrollerDrag);
+sideScrollerThumb.addEventListener("pointercancel", endScrollerDrag);
+
+/*
+   Tapping the track itself (not the thumb) jumps the thumb -
+   and the document - to that position.
+*/
+
+sideScrollerTrack.addEventListener("pointerdown", event => {
+
+  if(event.target === sideScrollerThumb){
+    return;
+  }
+
+  const trackRect = sideScrollerTrack.getBoundingClientRect();
+  const thumbHeight = sideScrollerThumb.offsetHeight;
+
+  const maxThumbTop = sideScrollerTrack.clientHeight - thumbHeight;
+  const maxScrollTop = viewer.scrollHeight - viewer.clientHeight;
+
+  if(maxThumbTop <= 0 || maxScrollTop <= 0){
+    return;
+  }
+
+  const clickY = event.clientY - trackRect.top;
+
+  const targetThumbTop = Math.max(
+    0,
+    Math.min(maxThumbTop, clickY - thumbHeight / 2)
+  );
+
+  viewer.scrollTop = (targetThumbTop / maxThumbTop) * maxScrollTop;
+
+});
+
+/* ============================================================
    CURRENT PAGE
 ============================================================ */
 
@@ -3372,6 +4052,10 @@ viewer.addEventListener("scroll", () => {
   pageInput.value = String(currentPage);
 
   renderNearbyPages();
+
+  if(!scrollerDrag.active){
+    updateSideScroller();
+  }
 });
 
 /* ============================================================
@@ -3551,6 +4235,8 @@ window.addEventListener("resize", () => {
 
     await rescaleAndRender();
 
+    updateSideScroller();
+
   }, 150);
 });
 
@@ -3590,6 +4276,21 @@ try{
 
   document.getElementById("pageCount").textContent = `of ${pdfDoc.numPages}`;
 
+  // Fetch the outline (table of contents) up front. A document
+  // with no outline resolves to null, not an error — either way
+  // the TOC button is set up so the person always gets a clear
+  // answer when they tap it.
+  let outlineItems = null;
+
+  try{
+    outlineItems = await pdfDoc.getOutline();
+  }catch(error){
+    console.warn("Could not load outline:", error);
+    outlineItems = null;
+  }
+
+  setupTocButton(outlineItems);
+
   const firstPage = await pdfDoc.getPage(1);
 
   baseScale = getFitWidthScale(firstPage);
@@ -3607,6 +4308,8 @@ try{
   await renderPage(firstView);
 
   loadingOverlay.style.display = "none";
+
+  updateSideScroller();
 
   void (async () => {
 
@@ -3632,6 +4335,8 @@ try{
         if(pageRect.top <= viewerRect.bottom + 1400){
           void renderPage(view);
         }
+
+        updateSideScroller();
 
         await new Promise(resolve => setTimeout(resolve, 0));
 
