@@ -3497,6 +3497,25 @@ document.addEventListener("selectionchange", () => {
 
 let resizeTimer = null;
 
+/*
+   Mobile browsers constantly fire "resize" events purely because
+   their address bar/toolbar shows or hides while the page is
+   scrolled - the viewport HEIGHT changes but the WIDTH (the only
+   thing that affects fit-width layout here) does not. Previously
+   every one of those benign resizes triggered a full
+   wipe-and-rebuild (rescaleAndRender -> resetRenderedPage for
+   every page), which throws away every page's canvas, text layer,
+   and search highlights and re-renders the whole document from
+   scratch. If a search was active, this meant scrolling the
+   document - completely unrelated to zoom or search - would wipe
+   the current highlight mid-navigation and leave it blank until
+   the person stopped scrolling long enough for a full rebuild to
+   finish. Tracking width separately lets us skip that entirely
+   when only the toolbar moved.
+*/
+
+let lastKnownInnerWidth = window.innerWidth;
+
 window.addEventListener("resize", () => {
 
   clearTimeout(resizeTimer);
@@ -3506,6 +3525,18 @@ window.addEventListener("resize", () => {
     syncViewerTop();
 
     if(!pageViews.length){
+      return;
+    }
+
+    const widthChanged = window.innerWidth !== lastKnownInnerWidth;
+
+    lastKnownInnerWidth = window.innerWidth;
+
+    if(!widthChanged){
+      // Height-only change (mobile chrome show/hide from scrolling,
+      // virtual keyboard, etc). Nothing that affects page layout
+      // actually changed, so don't touch rendered pages or search
+      // highlights.
       return;
     }
 
