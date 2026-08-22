@@ -941,6 +941,9 @@ body.reading-mode #sideScroller{
   background:
     rgba(255,255,255,.06);
 
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,.2);
+
   border-radius:5px;
 
   cursor:pointer;
@@ -958,7 +961,16 @@ body.reading-mode #sideScroller{
   border-radius:5px;
 
   background:
-    rgba(255,255,255,.32);
+    rgba(255,255,255,.5);
+
+  /*
+     A dark outline + shadow so the thumb reads against light PDF
+     pages too - plain translucent white alone washes out over a
+     white page and the bar effectively disappears.
+  */
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,.45),
+    0 1px 3px rgba(0,0,0,.35);
 
   cursor:grab;
 
@@ -969,12 +981,12 @@ body.reading-mode #sideScroller{
 
 #sideScrollerThumb:hover{
   background:
-    rgba(255,255,255,.5);
+    rgba(255,255,255,.7);
 }
 
 #sideScrollerThumb.dragging{
   background:
-    rgba(255,255,255,.65);
+    rgba(255,255,255,.85);
 
   cursor:grabbing;
 }
@@ -1907,7 +1919,16 @@ function syncBottomGap(){
   const titleBarHeight = titleBar.getBoundingClientRect().height;
 
   document.documentElement.style.setProperty("--content-bottom-gap", `${Math.ceil(titleBarHeight) + 16}px`);
-  document.documentElement.style.setProperty("--title-bar-height", `${Math.ceil(titleBarHeight)}px`);
+
+  /*
+     Floored, not ceil'd: this offset is how far the TOC popup's
+     bottom edge sits from the viewport bottom. Rounding up can
+     push that edge a fraction of a pixel above the title bar's
+     real top edge, exposing a hairline gap. Rounding down instead
+     lands it at-or-inside the title bar, which is invisible since
+     the title bar's z-index is far below the popup's.
+  */
+  document.documentElement.style.setProperty("--title-bar-height", `${Math.floor(titleBarHeight)}px`);
 }
 
 function scheduleChromeSync(){
