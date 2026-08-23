@@ -4519,7 +4519,7 @@ function setupTocButton(outlineItems){
 
 /*
    Closing only ever toggles the hidden class - it never touches
-   scrll position, so whatever page you were reading stays right
+   scroll position, so whatever page you were reading stays right
    where it was underneath.
 */
 function closeToc(){
@@ -4605,14 +4605,32 @@ async function rescaleAndRender(anchorPoint){
   const anchorViewerX = point.x - viewerRect.left;
   const anchorViewerY = point.y - viewerRect.top;
 
+  /*
+     anchorViewerX/Y + scrollLeft/Top measures from #viewer's
+     padding-box edge, not from pagesWrapper's own edge - the
+     viewer's CSS padding (30px 30px 90px) sits in between and,
+     unlike the page itself, never scales with zoom. Left out of
+     this math it still gets multiplied by scaleRatio below like it
+     was page content, which is a fixed-size error that grows with
+     the zoom ratio and shows up as a jump (left horizontally, up
+     vertically - same padding value on both edges) right when a
+     zoom gesture commits. Subtracting it here, and adding the same
+     constant back after scaling (not scaled itself), keeps it out
+     of the anchor math entirely.
+  */
+  const viewerStyles = getComputedStyle(viewer);
+  const viewerPaddingLeft = parseFloat(viewerStyles.paddingLeft) || 0;
+  const viewerPaddingTop = parseFloat(viewerStyles.paddingTop) || 0;
+
   const scaleRatio = previousScale > 0 ? currentScale / previousScale : 1;
 
   /*
-     Horizontal: when the page is narrower than the viewer,
-     pagesWrapper is padded out to the viewer's width and the page
-     sits centered inside it - so some of anchorViewerX + scrollLeft
-     is just that centering offset, not page content, and it must
-     NOT be scaled along with the page (the offset itself shrinks
+     Horizontal, on top of the viewer-padding correction above: when
+     the page is narrower than the viewer, pagesWrapper is padded
+     out to the viewer's width and the page sits centered inside it
+     - so some of what's left after removing viewer padding is
+     STILL just centering offset, not page content, and it must NOT
+     be scaled along with the page either (the offset itself shrinks
      non-proportionally as the page grows, down to zero once the
      page is as wide as the viewer). Subtract it before scaling,
      then add back whatever the NEW offset is after re-layout, so
@@ -4622,9 +4640,8 @@ async function rescaleAndRender(anchorPoint){
      of drifting right at that boundary.
   */
   const oldOffsetX = Math.max(0, (getViewerInnerWidth() - wrapperContentWidth) / 2);
-  const docXFromPageOrigin = (anchorViewerX + viewer.scrollLeft - oldOffsetX) * scaleRatio;
-
-  const newDocY = (anchorViewerY + viewer.scrollTop) * scaleRatio;
+  const docXFromPageOrigin = (anchorViewerX + viewer.scrollLeft - viewerPaddingLeft - oldOffsetX) * scaleRatio;
+  const docYFromPageOrigin = (anchorViewerY + viewer.scrollTop - viewerPaddingTop) * scaleRatio;
 
   for(const view of pageViews){
 
@@ -4647,7 +4664,8 @@ async function rescaleAndRender(anchorPoint){
     const maxScrollTop = Math.max(0, viewer.scrollHeight - viewer.clientHeight);
 
     const newOffsetX = Math.max(0, (getViewerInnerWidth() - newContentWidth) / 2);
-    const newDocX = newOffsetX + docXFromPageOrigin;
+    const newDocX = viewerPaddingLeft + newOffsetX + docXFromPageOrigin;
+    const newDocY = viewerPaddingTop + docYFromPageOrigin;
 
     viewer.scrollLeft = Math.max(0, Math.min(maxScrollLeft, newDocX - anchorViewerX));
     viewer.scrollTop = Math.max(0, Math.min(maxScrollTop, newDocY - anchorViewerY));
