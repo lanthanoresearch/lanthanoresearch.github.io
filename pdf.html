@@ -2202,19 +2202,16 @@ function getViewerInnerHeight(){
 }
 
 /*
-   Tracks the actual (unclamped) width of the widest page -
-   NOT #pagesWrapper's own CSS width, which is clamped up to at
-   least the viewer's width so the box never shrinks smaller than
-   the viewport (see the CSS comment on #pagesWrapper). Those two
-   numbers are different on purpose whenever a page is narrower
-   than the viewer, and rescaleAndRender's centering-offset math
-   needs the real, unclamped page width - using the clamped one
-   there would always compute a zero offset for a page that fits,
-   even though it's actually sitting centered with real space on
-   either side, which throws the zoom anchor off.
+   Sizes #pagesWrapper explicitly (in px) to the widest page's width
+   (or the viewer's own width, whichever is bigger) rather than
+   leaving it at a flex-centered 100%. A flex container centering a
+   child wider than itself silently falls back to flex-start
+   alignment (CSS's "safe alignment" overflow rule), which used to
+   make a page snap from centered to flush-left right as it grew
+   past the viewer's width - giving pagesWrapper an explicit width
+   means .page's own margin:auto centers it in an ordinary,
+   non-overflowing block box instead, with no such fallback possible.
 */
-let wrapperContentWidth = 0;
-
 function updateWrapperWidth(){
 
   let maxPageWidth = 0;
@@ -2226,8 +2223,6 @@ function updateWrapperWidth(){
   }
 
   pagesWrapper.style.width = `${Math.max(getViewerInnerWidth(), maxPageWidth)}px`;
-
-  return maxPageWidth;
 }
 
 function getFitWidthScale(page){
@@ -4574,21 +4569,74 @@ document.addEventListener("click", event => {
    pinch - always zooms "toward the middle" instead of drifting
    toward whichever edge the content happens to grow from.
 
-   This replaces the old vertical-only scroll-ratio approach (which
-   tracked where you were within the total scrollable range, not an
-   actual fixed point) with true two-axis anchoring: it converts the
-   anchor into a document-space coordinate, rescales that coordinate
-   by the same ratio the pages themselves just scaled by, and then
-   sets scrollLeft/scrollTop so that coordinate lands back under the
-   anchor point. That's what keeps a page centered horizontally even
-   once it's wider than the viewport, instead of pinning to the left
-   edge and pushing the right edge off-screen.
+   The anchor is tracked as a FRACTION of whichever page it's
+   currently sitting over (findAnchorPage), not as a raw scroll-
+   space pixel coordinate. A pixel-math approach has to separately
+   account for every source of "space that doesn't scale with the
+   page" - the viewer's own padding, the centering gap around a page
+   narrower than the viewport, and the fixed 20px margin between
+   every pair of stacked pages - and that last one accumulates once
+   per page above the anchor, so any small mistake gets worse the
+   further down the document you are. Anchoring to a fraction of a
+   specific page's box sidesteps all of that: offsetLeft/offsetTop
+   (read after the pages have been re-laid-out at the new scale) are
+   the browser's own computed position of that page within #viewer's
+   scrollable content, already correctly accounting for every page
+   above it, however many there are.
 */
+
+function findAnchorPage(point){
+
+  let fallback = null;
+  let fallbackDistance = Infinity;
+
+  for(const view of pageViews){
+
+    if(!view){
+      continue;
+    }
+
+    const rect = view.pageDiv.getBoundingClientRect();
+
+    if(rect.width <= 0 || rect.height <= 0){
+      continue;
+    }
+
+    const withinX = point.x >= rect.left && point.x <= rect.right;
+    const withinY = point.y >= rect.top && point.y <= rect.bottom;
+
+    if(withinX && withinY){
+      return {
+        view,
+        fracX: (point.x - rect.left) / rect.width,
+        fracY: (point.y - rect.top) / rect.height
+      };
+    }
+
+    // The anchor can land in the 20px gap between pages (or above
+    // the first / below the last) - fall back to whichever page is
+    // vertically closest, clamped to its own box, rather than
+    // giving up on anchoring entirely.
+    const distance = point.y < rect.top ? rect.top - point.y : point.y > rect.bottom ? point.y - rect.bottom : 0;
+
+    if(distance < fallbackDistance){
+
+      fallbackDistance = distance;
+
+      fallback = {
+        view,
+        fracX: Math.max(0, Math.min(1, (point.x - rect.left) / rect.width)),
+        fracY: Math.max(0, Math.min(1, (point.y - rect.top) / rect.height))
+      };
+    }
+  }
+
+  return fallback;
+}
+
 async function rescaleAndRender(anchorPoint){
 
   renderGeneration++;
-
-  const previousScale = currentScale;
 
   currentScale = baseScale * zoomLevel;
 
@@ -4605,43 +4653,10 @@ async function rescaleAndRender(anchorPoint){
   const anchorViewerX = point.x - viewerRect.left;
   const anchorViewerY = point.y - viewerRect.top;
 
-  /*
-     anchorViewerX/Y + scrollLeft/Top measures from #viewer's
-     padding-box edge, not from pagesWrapper's own edge - the
-     viewer's CSS padding (30px 30px 90px) sits in between and,
-     unlike the page itself, never scales with zoom. Left out of
-     this math it still gets multiplied by scaleRatio below like it
-     was page content, which is a fixed-size error that grows with
-     the zoom ratio and shows up as a jump (left horizontally, up
-     vertically - same padding value on both edges) right when a
-     zoom gesture commits. Subtracting it here, and adding the same
-     constant back after scaling (not scaled itself), keeps it out
-     of the anchor math entirely.
-  */
-  const viewerStyles = getComputedStyle(viewer);
-  const viewerPaddingLeft = parseFloat(viewerStyles.paddingLeft) || 0;
-  const viewerPaddingTop = parseFloat(viewerStyles.paddingTop) || 0;
-
-  const scaleRatio = previousScale > 0 ? currentScale / previousScale : 1;
-
-  /*
-     Horizontal, on top of the viewer-padding correction above: when
-     the page is narrower than the viewer, pagesWrapper is padded
-     out to the viewer's width and the page sits centered inside it
-     - so some of what's left after removing viewer padding is
-     STILL just centering offset, not page content, and it must NOT
-     be scaled along with the page either (the offset itself shrinks
-     non-proportionally as the page grows, down to zero once the
-     page is as wide as the viewer). Subtract it before scaling,
-     then add back whatever the NEW offset is after re-layout, so
-     the anchor point stays locked to the same spot on the actual
-     page throughout - including the moment the page crosses from
-     "fits, centered" to "wider than viewer, flush left" - instead
-     of drifting right at that boundary.
-  */
-  const oldOffsetX = Math.max(0, (getViewerInnerWidth() - wrapperContentWidth) / 2);
-  const docXFromPageOrigin = (anchorViewerX + viewer.scrollLeft - viewerPaddingLeft - oldOffsetX) * scaleRatio;
-  const docYFromPageOrigin = (anchorViewerY + viewer.scrollTop - viewerPaddingTop) * scaleRatio;
+  // Read BEFORE the layout loop below resizes every page div - the
+  // bounding rects here still reflect the current (pre-rescale)
+  // layout.
+  const anchor = findAnchorPage(point);
 
   for(const view of pageViews){
 
@@ -4653,8 +4668,7 @@ async function rescaleAndRender(anchorPoint){
     resetRenderedPage(view);
   }
 
-  const newContentWidth = updateWrapperWidth();
-  wrapperContentWidth = newContentWidth;
+  updateWrapperWidth();
 
   renderNearbyPages();
 
@@ -4663,12 +4677,14 @@ async function rescaleAndRender(anchorPoint){
     const maxScrollLeft = Math.max(0, viewer.scrollWidth - viewer.clientWidth);
     const maxScrollTop = Math.max(0, viewer.scrollHeight - viewer.clientHeight);
 
-    const newOffsetX = Math.max(0, (getViewerInnerWidth() - newContentWidth) / 2);
-    const newDocX = viewerPaddingLeft + newOffsetX + docXFromPageOrigin;
-    const newDocY = viewerPaddingTop + docYFromPageOrigin;
+    if(anchor){
 
-    viewer.scrollLeft = Math.max(0, Math.min(maxScrollLeft, newDocX - anchorViewerX));
-    viewer.scrollTop = Math.max(0, Math.min(maxScrollTop, newDocY - anchorViewerY));
+      const targetX = anchor.view.pageDiv.offsetLeft + anchor.fracX * anchor.view.pageDiv.offsetWidth;
+      const targetY = anchor.view.pageDiv.offsetTop + anchor.fracY * anchor.view.pageDiv.offsetHeight;
+
+      viewer.scrollLeft = Math.max(0, Math.min(maxScrollLeft, targetX - anchorViewerX));
+      viewer.scrollTop = Math.max(0, Math.min(maxScrollTop, targetY - anchorViewerY));
+    }
 
     if(lastSearchQuery){
 
@@ -5286,7 +5302,7 @@ try{
   const firstView = createPageShell(1, firstPage);
 
   layoutPage(firstView, currentScale);
-  wrapperContentWidth = updateWrapperWidth();
+  updateWrapperWidth();
 
   pageObserver.observe(firstView.pageDiv);
 
@@ -5313,7 +5329,7 @@ try{
         const view = createPageShell(pageNumber, page);
 
         layoutPage(view, currentScale);
-        wrapperContentWidth = updateWrapperWidth();
+        updateWrapperWidth();
 
         pageObserver.observe(view.pageDiv);
 
