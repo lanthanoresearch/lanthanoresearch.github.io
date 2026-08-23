@@ -2202,13 +2202,16 @@ function getViewerInnerHeight(){
 }
 
 /*
-   Tracks #pagesWrapper's current explicit width (see the CSS
-   comment on #pagesWrapper for why it's explicit rather than
-   100%). rescaleAndRender reads this BEFORE re-laying-out pages to
-   know what the horizontal centering offset used to be, so it can
-   keep the zoom anchor mapped correctly across the moment a page
-   crosses from "fits, centered" to "wider than viewer, flush left"
-   (or back).
+   Tracks the actual (unclamped) width of the widest page -
+   NOT #pagesWrapper's own CSS width, which is clamped up to at
+   least the viewer's width so the box never shrinks smaller than
+   the viewport (see the CSS comment on #pagesWrapper). Those two
+   numbers are different on purpose whenever a page is narrower
+   than the viewer, and rescaleAndRender's centering-offset math
+   needs the real, unclamped page width - using the clamped one
+   there would always compute a zero offset for a page that fits,
+   even though it's actually sitting centered with real space on
+   either side, which throws the zoom anchor off.
 */
 let wrapperContentWidth = 0;
 
@@ -2222,11 +2225,9 @@ function updateWrapperWidth(){
     }
   }
 
-  const width = Math.max(getViewerInnerWidth(), maxPageWidth);
+  pagesWrapper.style.width = `${Math.max(getViewerInnerWidth(), maxPageWidth)}px`;
 
-  pagesWrapper.style.width = `${width}px`;
-
-  return width;
+  return maxPageWidth;
 }
 
 function getFitWidthScale(page){
@@ -3410,7 +3411,22 @@ viewer.addEventListener("wheel", event => {
   // sign is flipped: exp() keeps repeated small ticks compounding
   // smoothly rather than linearly, matching how trackpad pinch
   // deltas actually feel.
-  const factor = Math.exp(-event.deltaY * WHEEL_ZOOM_SENSITIVITY);
+  //
+  // The raw factor is clamped to +/-12% PER EVENT before it's
+  // applied, regardless of how big deltaY was. This matters because
+  // browsers don't agree on what deltaY means for ctrl+wheel:
+  // Chrome deliberately amplifies it (sometimes to several hundred)
+  // since it assumes you want its own fast native zoom speed, while
+  // a plain mouse's deltaMode can report in "lines" rather than
+  // pixels. Without the clamp, one of those inflated deltas fed
+  // straight into exp() could jump the zoom level from 100% to the
+  // 25% floor (or the 300% ceiling) on a single tick. Clamping the
+  // per-tick change keeps every event feeling like a normal
+  // incremental step no matter which of those a given device/browser
+  // sends - a real gesture is many events in a row anyway, so it
+  // still reaches full speed almost immediately.
+  const rawFactor = Math.exp(-event.deltaY * WHEEL_ZOOM_SENSITIVITY);
+  const factor = Math.max(0.88, Math.min(1.12, rawFactor));
 
   const liveZoom = pinchStartZoomLevel * pinchLiveScale;
   const targetZoom = Math.max(MIN_ZOOM_LEVEL, Math.min(MAX_ZOOM_LEVEL, liveZoom * factor));
@@ -4503,7 +4519,7 @@ function setupTocButton(outlineItems){
 
 /*
    Closing only ever toggles the hidden class - it never touches
-   scroll position, so whatever page you were reading stays right
+   scrll position, so whatever page you were reading stays right
    where it was underneath.
 */
 function closeToc(){
@@ -4547,7 +4563,7 @@ document.addEventListener("click", event => {
 });
 
 /* ============================================================
-      ZOOM
+   ZOOM
 ============================================================ */
 
 /*
