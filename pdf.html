@@ -3198,6 +3198,7 @@ let pinchStartDistance = 0;
 let pinchStartZoomLevel = 1;
 let pinchLiveScale = 1;
 let pinchTransformQueued = false;
+let pinchPointerIds = [];
 
 function getViewportCenter(){
 
@@ -3211,13 +3212,18 @@ function getViewportCenter(){
 
 function getPinchPointerDistance(){
 
-  const points = [...pinchPointers.values()];
-
-  if(points.length < 2){
+  if(pinchPointerIds.length < 2){
     return 0;
   }
 
-  return Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
+  const a = pinchPointers.get(pinchPointerIds[0]);
+  const b = pinchPointers.get(pinchPointerIds[1]);
+
+  if(!a || !b){
+    return 0;
+  }
+
+  return Math.hypot(a.x - b.x, a.y - b.y);
 }
 
 function queuePinchTransform(){
@@ -3240,11 +3246,21 @@ viewer.addEventListener("pointerdown", event => {
     return;
   }
 
+  // Lock this pointer to #viewer for its whole lifetime. Without this,
+  // a finger that drifts near the edge of #viewer mid-pinch can end up
+  // delivering its pointerup/pointercancel to a different element,
+  // which never reaches this handler - the pointer then stays stuck
+  // in pinchPointers forever, corrupting the next gesture's distance
+  // calc and flipping zoom direction.
+  viewer.setPointerCapture(event.pointerId);
+
   pinchPointers.set(event.pointerId, { x:event.clientX, y:event.clientY });
 
   if(pinchPointers.size === 2){
 
     pinchGestureActive = true;
+
+    pinchPointerIds = [...pinchPointers.keys()];
 
     // A second finger landing mid-tap should cancel tap-to-read,
     // not trigger it once the fingers lift.
@@ -3274,13 +3290,15 @@ viewer.addEventListener("pointerdown", event => {
 
 viewer.addEventListener("pointermove", event => {
 
-  if(!pinchGestureActive || !pinchPointers.has(event.pointerId)){
+   viewer.addEventListener("pointermove", event => {
+
+  if(!pinchGestureActive || !pinchPointerIds.includes(event.pointerId)){
     return;
   }
 
   pinchPointers.set(event.pointerId, { x:event.clientX, y:event.clientY });
 
-  if(pinchPointers.size < 2 || pinchStartDistance <= 0){
+  if(pinchStartDistance <= 0){
     return;
   }
 
@@ -3322,23 +3340,31 @@ async function commitPinchZoom(){
 
 function endPinchPointer(event){
 
+
+   function endPinchPointer(event){
+
   if(!pinchPointers.has(event.pointerId)){
     return;
   }
 
   pinchPointers.delete(event.pointerId);
 
-  if(pinchPointers.size < 2 && pinchGestureActive){
+  if(pinchPointerIds.includes(event.pointerId) && pinchGestureActive){
 
     pinchGestureActive = false;
     pinchStartDistance = 0;
+    pinchPointerIds = [];
+
+    // Clear out any stray/extra pointers (e.g. a resting third
+    // finger) so they can't pollute the next gesture.
+    pinchPointers.clear();
 
     viewer.classList.remove("pinching");
 
     void commitPinchZoom();
   }
-}
-
+   }
+   
 viewer.addEventListener("pointerup", endPinchPointer);
 viewer.addEventListener("pointercancel", endPinchPointer);
 
