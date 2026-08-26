@@ -3288,7 +3288,7 @@ viewer.addEventListener("pointerdown", event => {
 
 });
 
-viewer.addEventListener("pointermove", event => {
+
 
    viewer.addEventListener("pointermove", event => {
 
@@ -3338,7 +3338,7 @@ async function commitPinchZoom(){
   await rescaleAndRender(getViewportCenter());
 }
 
-function endPinchPointer(event){
+
 
 
    function endPinchPointer(event){
@@ -3363,7 +3363,7 @@ function endPinchPointer(event){
 
     void commitPinchZoom();
   }
-   }
+   
    
 viewer.addEventListener("pointerup", endPinchPointer);
 viewer.addEventListener("pointercancel", endPinchPointer);
