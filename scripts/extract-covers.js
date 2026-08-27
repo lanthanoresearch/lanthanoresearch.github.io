@@ -20,12 +20,14 @@
  * - Clear per-item log line so failures are visible in Action logs.
  */
 
-"use strict";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath, pathToFileURL } from "url";
+import { createRequire } from "module";
+import { createCanvas } from "canvas";
+import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
 
-const fs = require("fs");
-const path = require("path");
-const { createCanvas } = require("canvas");
-const pdfjsLib = require("pdfjs-dist/legacy/build/pdf.js");
+const require = createRequire(import.meta.url);
 
 // ---- Configuration ------------------------------------------------------
 
@@ -34,14 +36,13 @@ const OUTPUT_DIR = process.env.COVERS_OUTPUT_DIR || "covers";
 const PDF_BASE_URL = (process.env.PDF_BASE_URL || "").replace(/\/+$/, "");
 const MAX_WIDTH = parseInt(process.env.COVER_MAX_WIDTH || "1000", 10);
 
-const CMAP_URL = path.join(
-  path.dirname(require.resolve("pdfjs-dist/package.json")),
-  "cmaps/"
-);
-const STANDARD_FONT_DATA_URL = path.join(
-  path.dirname(require.resolve("pdfjs-dist/package.json")),
-  "standard_fonts/"
-);
+const pdfjsDistPkgPath = require.resolve("pdfjs-dist/package.json");
+const pdfjsDistDir = path.dirname(pdfjsDistPkgPath);
+
+const CMAP_URL = pathToFileURL(path.join(pdfjsDistDir, "cmaps/")).href;
+const STANDARD_FONT_DATA_URL = pathToFileURL(
+  path.join(pdfjsDistDir, "standard_fonts/")
+).href;
 
 function log(msg) {
   console.log(msg);
