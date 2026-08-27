@@ -152,22 +152,17 @@ h1{
 
 .card-cover{
     display:block;
-    float:right;
-    width:clamp(80px, 28vw, 130px);
+    width:100%;
     aspect-ratio:3/4;
     object-fit:cover;
-    border-radius:6px;
+    border-radius:8px;
     background:#141414;
-    margin:4px 0 6px 14px;
+    margin:4px 0 15px 0;
     box-shadow:0 2px 6px rgba(0,0,0,.4);
 }
 
 .card-body{
     min-width:0;
-}
-
-.card-clear{
-    clear:both;
 }
 
 
@@ -231,6 +226,14 @@ h1{
 
 .button:hover{
     background:#444;
+}
+
+.button.pdf-link{
+    display:block;
+    width:100%;
+    box-sizing:border-box;
+    text-align:center;
+    margin-right:0;
 }
 
 .gallery{
@@ -657,8 +660,6 @@ paper.updated.split("-")[0]}
     ${Number(pageCounts[key]) || 0} ${(Number(pageCounts[key]) || 0) === 1 ? "page" : "pages"}
 </p>
 
-                <div class="card-clear"></div>
-
                    <div id="warning-${key}">
 
                    <div style="
@@ -699,14 +700,8 @@ paper.updated.split("-")[0]}
 
                   <a class="button pdf-link"
    href="pdf.html?file=${encodeURIComponent(paper.url)}&paper=${encodeURIComponent(paper.title)}&return=${encodeURIComponent(window.location.href)}">
-   Read PDF
+   Read Research
 </a>
-
-                    <a class="button"
-                       href="${paper.url}"
-                       download>
-                       Download PDF
-                    </a>
 
                     ${galleryHtml}
 
@@ -757,18 +752,10 @@ paper.updated.split("-")[0]}
     ${Number(pageCounts[key]) || 0} ${(Number(pageCounts[key]) || 0) === 1 ? "page" : "pages"}
 </p>
 
-                <div class="card-clear"></div>
-
               <a class="button pdf-link"
    href="pdf.html?file=${encodeURIComponent(paper.url)}&paper=${encodeURIComponent(paper.title)}&return=${encodeURIComponent(window.location.href)}">
-   Read PDF
+   Read Research
 </a>
-
-                <a class="button"
-                   href="${paper.url}"
-                   download>
-                   Download PDF
-                </a>
 
                 ${galleryHtml}
 
