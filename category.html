@@ -152,36 +152,22 @@ h1{
 
 .card-cover{
     display:block;
-    width:100%;
+    float:left;
+    width:clamp(48px, 14vw, 64px);
     aspect-ratio:3/4;
     object-fit:cover;
-    border-radius:8px;
-    margin-bottom:15px;
+    border-radius:6px;
     background:#141414;
+    margin:4px 12px 6px 0;
+    box-shadow:0 2px 6px rgba(0,0,0,.4);
 }
 
 .card-body{
     min-width:0;
 }
 
-@media (min-width:700px){
-
-    .card{
-        display:flex;
-        align-items:flex-start;
-        gap:20px;
-    }
-
-    .card-cover{
-        flex:0 0 200px;
-        width:200px;
-        margin-bottom:0;
-    }
-
-    .card-body{
-        flex:1 1 auto;
-    }
-
+.card-clear{
+    clear:both;
 }
 
 
@@ -646,16 +632,16 @@ ${isFavorite(key) ? "★" : "☆"}
 </span>
 ${getPaperBadge(key, paper)}
 
+                <div class="card-body">
+
+                <h2>${paper.title}</h2>
+
                 <img
                     class="card-cover"
                     src="covers/${key}.png"
                     alt="${paper.title} cover"
                     loading="lazy"
                     onerror="this.remove()">
-
-                <div class="card-body">
-
-                <h2>${paper.title}</h2>
 
                 <p class="card-description">
                     ${paper.description}
@@ -670,6 +656,8 @@ paper.updated.split("-")[0]}
 <p class="card-pages">
     ${Number(pageCounts[key]) || 0} ${(Number(pageCounts[key]) || 0) === 1 ? "page" : "pages"}
 </p>
+
+                <div class="card-clear"></div>
 
                    <div id="warning-${key}">
 
@@ -744,16 +732,16 @@ ${isFavorite(key) ? "★" : "☆"}
 </span>
 ${getPaperBadge(key, paper)}
 
+                <div class="card-body">
+
+                <h2>${paper.title}</h2>
+
                 <img
                     class="card-cover"
                     src="covers/${key}.png"
                     alt="${paper.title} cover"
                     loading="lazy"
                     onerror="this.remove()">
-
-                <div class="card-body">
-
-                <h2>${paper.title}</h2>
 
                 <p class="card-description">
                     ${paper.description}
@@ -768,6 +756,8 @@ paper.updated.split("-")[0]}
 <p class="card-pages">
     ${Number(pageCounts[key]) || 0} ${(Number(pageCounts[key]) || 0) === 1 ? "page" : "pages"}
 </p>
+
+                <div class="card-clear"></div>
 
               <a class="button pdf-link"
    href="pdf.html?file=${encodeURIComponent(paper.url)}&paper=${encodeURIComponent(paper.title)}&return=${encodeURIComponent(window.location.href)}">
