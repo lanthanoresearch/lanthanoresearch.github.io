@@ -2,9 +2,10 @@
 /**
  * extract-covers.js
  *
- * Reads description.json (a map of key -> PDF metadata, including a
- * relative "url" field), downloads each PDF from PDF_BASE_URL + url,
- * renders ONLY page 1 to a PNG, and saves it to covers/<key>.png.
+ * Reads descriptions.json (a map of key -> PDF metadata, including a
+ * relative "url" field), reads each PDF straight from disk (it's already
+ * in this repo, checked out alongside this script), renders ONLY page 1
+ * to a PNG, and saves it to covers/<key>.png.
  *
  * Note: rather than trying to pull out an embedded image object (fragile
  * in Node -- there's no great PyMuPDF equivalent), this rasterizes the
@@ -14,7 +15,7 @@
  * Design goals:
  * - Runs unattended (cron via GitHub Actions).
  * - Never crashes the whole run because one PDF is missing/broken.
- * - If a PDF can't be fetched or rendered, it is SKIPPED and the existing
+ * - If a PDF can't be read or rendered, it is SKIPPED and the existing
  *   cover file (if any) is left untouched -- no broken output, no deleted
  *   images, no hard failure.
  * - Clear per-item log line so failures are visible in Action logs.
@@ -22,7 +23,7 @@
 
 import fs from "fs";
 import path from "path";
-import { fileURLToPath, pathToFileURL } from "url";
+import { pathToFileURL } from "url";
 import { createRequire } from "module";
 import { createCanvas } from "canvas";
 import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
@@ -31,9 +32,11 @@ const require = createRequire(import.meta.url);
 
 // ---- Configuration ------------------------------------------------------
 
-const DESC_JSON_PATH = process.env.DESC_JSON_PATH || "description.json";
+const DESC_JSON_PATH = process.env.DESC_JSON_PATH || "descriptions.json";
 const OUTPUT_DIR = process.env.COVERS_OUTPUT_DIR || "covers";
-const PDF_BASE_URL = (process.env.PDF_BASE_URL || "").replace(/\/+$/, "");
+// Folder where the actual PDF files live. Since descriptions.json stores
+// bare filenames (e.g. "9-11.pdf"), this is the folder they're joined onto.
+const PDF_DIR = process.env.PDF_DIR || ".";
 const MAX_WIDTH = parseInt(process.env.COVER_MAX_WIDTH || "1000", 10);
 
 const pdfjsDistPkgPath = require.resolve("pdfjs-dist/package.json");
@@ -46,24 +49,6 @@ const STANDARD_FONT_DATA_URL = pathToFileURL(
 
 function log(msg) {
   console.log(msg);
-}
-
-function buildPdfUrl(relativeUrl) {
-  const encodedName = encodeURIComponent(relativeUrl);
-  if (PDF_BASE_URL) {
-    return `${PDF_BASE_URL}/${encodedName}`;
-  }
-  // No base URL configured -- assume the "url" field is already a full URL.
-  return relativeUrl;
-}
-
-async function downloadPdf(url) {
-  const resp = await fetch(url);
-  if (!resp.ok) {
-    throw new Error(`HTTP ${resp.status} ${resp.statusText}`);
-  }
-  const arrayBuffer = await resp.arrayBuffer();
-  return new Uint8Array(arrayBuffer);
 }
 
 class NodeCanvasFactory {
@@ -134,18 +119,18 @@ async function renderFirstPageToPng(pdfBytes, outPath) {
 async function processEntry(key, entry) {
   const relativeUrl = entry.url;
   if (!relativeUrl) {
-    log(`[skip] ${key}: no "url" field in description.json`);
+    log(`[skip] ${key}: no "url" field in descriptions.json`);
     return "skipped";
   }
 
   const outPath = path.join(OUTPUT_DIR, `${key}.png`);
-  const pdfUrl = buildPdfUrl(relativeUrl);
+  const pdfPath = path.join(PDF_DIR, relativeUrl);
 
   let pdfBytes;
   try {
-    pdfBytes = await downloadPdf(pdfUrl);
+    pdfBytes = fs.readFileSync(pdfPath);
   } catch (err) {
-    log(`[skip] ${key}: could not download PDF (${pdfUrl}) -- ${err.message}`);
+    log(`[skip] ${key}: could not read PDF (${pdfPath}) -- ${err.message}`);
     return "skipped";
   }
 
@@ -169,14 +154,6 @@ async function main() {
   const data = JSON.parse(fs.readFileSync(DESC_JSON_PATH, "utf-8"));
   fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 
-  if (!PDF_BASE_URL) {
-    log(
-      "NOTE: PDF_BASE_URL is not set -- treating each 'url' field as a " +
-        "full URL. Set the PDF_BASE_URL repo variable if your JSON only " +
-        "has relative filenames."
-    );
-  }
-
   const counts = { ok: 0, skipped: 0 };
   for (const [key, entry] of Object.entries(data)) {
     const result = await processEntry(key, entry);
@@ -191,7 +168,7 @@ async function main() {
 }
 
 main().catch((err) => {
-  // Even a top-level failure (e.g. malformed description.json) should not
+  // Even a top-level failure (e.g. malformed descriptions.json) should not
   // wipe out existing covers -- it just means no update happened this run.
   console.error("Fatal error, no covers were touched this run:", err);
   process.exit(0);
