@@ -25,7 +25,7 @@ import fs from "fs";
 import path from "path";
 import { pathToFileURL } from "url";
 import { createRequire } from "module";
-import { createCanvas } from "canvas";
+import { createCanvas } from "@napi-rs/canvas";
 import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
 
 const require = createRequire(import.meta.url);
@@ -34,8 +34,6 @@ const require = createRequire(import.meta.url);
 
 const DESC_JSON_PATH = process.env.DESC_JSON_PATH || "descriptions.json";
 const OUTPUT_DIR = process.env.COVERS_OUTPUT_DIR || "covers";
-// Folder where the actual PDF files live. Since descriptions.json stores
-// bare filenames (e.g. "9-11.pdf"), this is the folder they're joined onto.
 const PDF_DIR = process.env.PDF_DIR || ".";
 const MAX_WIDTH = parseInt(process.env.COVER_MAX_WIDTH || "1000", 10);
 
@@ -100,16 +98,9 @@ async function renderFirstPageToPng(pdfBytes, outPath) {
       canvasFactory,
     }).promise;
 
+    const pngBuffer = canvasAndContext.canvas.toBuffer("image/png");
     const tmpPath = `${outPath}.tmp`;
-    const out = fs.createWriteStream(tmpPath);
-    const stream = canvasAndContext.canvas.createPNGStream();
-
-    await new Promise((resolve, reject) => {
-      stream.pipe(out);
-      out.on("finish", resolve);
-      out.on("error", reject);
-    });
-
+    fs.writeFileSync(tmpPath, pngBuffer);
     fs.renameSync(tmpPath, outPath); // atomic-ish swap, avoids half-written files
   } finally {
     await doc.destroy();
@@ -168,8 +159,6 @@ async function main() {
 }
 
 main().catch((err) => {
-  // Even a top-level failure (e.g. malformed descriptions.json) should not
-  // wipe out existing covers -- it just means no update happened this run.
   console.error("Fatal error, no covers were touched this run:", err);
   process.exit(0);
 });
