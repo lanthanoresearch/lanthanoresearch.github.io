@@ -2,6 +2,7 @@
   "name": "pdf-cover-extractor",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "description": "Weekly job that rasterizes page 1 of each PDF into a cover image",
   "main": "extract-covers.js",
   "scripts": {
