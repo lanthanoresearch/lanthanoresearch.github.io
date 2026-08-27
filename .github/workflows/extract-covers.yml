@@ -32,7 +32,7 @@ jobs:
           # Set PDF_BASE_URL as a repo Variable (Settings -> Secrets and
           # variables -> Actions -> Variables), e.g. https://yoursite.com/pdfs
           PDF_BASE_URL: ${{ vars.PDF_BASE_URL }}
-          DESC_JSON_PATH: ../description.json
+          DESC_JSON_PATH: ../descriptions.json
           COVERS_OUTPUT_DIR: ../covers
         run: node extract-covers.js
 
