@@ -1,0 +1,49 @@
+name: Extract PDF Covers
+
+on:
+  schedule:
+    # Every Sunday at 06:00 UTC. Adjust the cron if you want Saturday or a
+    # different time -- GitHub Actions cron only accepts UTC.
+    - cron: "0 6 * * 0"
+  workflow_dispatch: {}  # lets you trigger it manually from the Actions tab
+
+permissions:
+  contents: write  # needed so the workflow can commit updated cover images
+
+jobs:
+  extract-covers:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        working-directory: scripts
+        run: npm install
+
+      - name: Extract covers
+        working-directory: scripts
+        env:
+          # Set PDF_BASE_URL as a repo Variable (Settings -> Secrets and
+          # variables -> Actions -> Variables), e.g. https://yoursite.com/pdfs
+          PDF_BASE_URL: ${{ vars.PDF_BASE_URL }}
+          DESC_JSON_PATH: ../description.json
+          COVERS_OUTPUT_DIR: ../covers
+        run: node extract-covers.js
+
+      - name: Commit and push if anything changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add covers/
+          if git diff --cached --quiet; then
+            echo "No cover changes -- nothing to commit."
+          else
+            git commit -m "chore: update PDF cover images [automated]"
+            git push
+          fi
