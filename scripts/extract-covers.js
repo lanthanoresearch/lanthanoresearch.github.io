@@ -128,7 +128,7 @@ async function processEntry(key, entry) {
 
   let pdfBytes;
   try {
-    pdfBytes = fs.readFileSync(pdfPath);
+    pdfBytes = new Uint8Array(fs.readFileSync(pdfPath));
   } catch (err) {
     log(`[skip] ${key}: could not read PDF (${pdfPath}) -- ${err.message}`);
     return "skipped";
