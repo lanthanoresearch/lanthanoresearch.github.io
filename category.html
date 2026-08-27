@@ -150,6 +150,16 @@ h1{
     border-radius:10px;
 }
 
+.card-cover{
+    display:block;
+    width:100%;
+    aspect-ratio:3/4;
+    object-fit:cover;
+    border-radius:8px;
+    margin-bottom:15px;
+    background:#141414;
+}
+
 
     
     .paper-badge{
@@ -612,6 +622,13 @@ ${isFavorite(key) ? "★" : "☆"}
 </span>
 ${getPaperBadge(key, paper)}
 
+                <img
+                    class="card-cover"
+                    src="covers/${key}.png"
+                    alt="${paper.title} cover"
+                    loading="lazy"
+                    onerror="this.remove()">
+
                 <h2>${paper.title}</h2>
                 
 
@@ -699,6 +716,13 @@ toggleFavorite('${key}');
 ${isFavorite(key) ? "★" : "☆"}
 </span>
 ${getPaperBadge(key, paper)}
+
+                <img
+                    class="card-cover"
+                    src="covers/${key}.png"
+                    alt="${paper.title} cover"
+                    loading="lazy"
+                    onerror="this.remove()">
 
 
                 <h2>${paper.title}</h2>
