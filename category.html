@@ -153,16 +153,19 @@ h1{
 .card-cover{
     display:block;
     width:100%;
-    aspect-ratio:3/4;
+    height:100%;
     object-fit:cover;
-    border-radius:8px;
+    border-radius:6px;
     background:#141414;
-    margin:4px 0 15px 0;
     box-shadow:0 2px 6px rgba(0,0,0,.4);
 }
 
 .card-body{
     min-width:0;
+}
+
+.card-clear{
+    clear:both;
 }
 
 
@@ -228,12 +231,22 @@ h1{
     background:#444;
 }
 
-.button.pdf-link{
+.read-btn{
     display:block;
     width:100%;
     box-sizing:border-box;
     text-align:center;
     margin-right:0;
+    cursor:pointer;
+}
+
+.card-cover-link{
+    display:block;
+    float:right;
+    width:clamp(80px, 28vw, 130px);
+    aspect-ratio:3/4;
+    margin:4px 0 6px 14px;
+    cursor:pointer;
 }
 
 .gallery{
@@ -639,12 +652,16 @@ ${getPaperBadge(key, paper)}
 
                 <h2>${paper.title}</h2>
 
+                <a
+                    class="card-cover-link pdf-link"
+                    href="pdf.html?file=${encodeURIComponent(paper.url)}&paper=${encodeURIComponent(paper.title)}&return=${encodeURIComponent(window.location.href)}">
                 <img
                     class="card-cover"
                     src="covers/${key}.png"
                     alt="${paper.title} cover"
                     loading="lazy"
-                    onerror="this.remove()">
+                    onerror="this.closest('a').remove()">
+                </a>
 
                 <p class="card-description">
                     ${paper.description}
@@ -659,6 +676,8 @@ paper.updated.split("-")[0]}
 <p class="card-pages">
     ${Number(pageCounts[key]) || 0} ${(Number(pageCounts[key]) || 0) === 1 ? "page" : "pages"}
 </p>
+
+                <div class="card-clear"></div>
 
                    <div id="warning-${key}">
 
@@ -698,7 +717,7 @@ paper.updated.split("-")[0]}
                 <div id="content-${key}"
      style="display:none;">
 
-                  <a class="button pdf-link"
+                  <a class="button pdf-link read-btn"
    href="pdf.html?file=${encodeURIComponent(paper.url)}&paper=${encodeURIComponent(paper.title)}&return=${encodeURIComponent(window.location.href)}">
    Read Research
 </a>
@@ -731,12 +750,16 @@ ${getPaperBadge(key, paper)}
 
                 <h2>${paper.title}</h2>
 
+                <a
+                    class="card-cover-link pdf-link"
+                    href="pdf.html?file=${encodeURIComponent(paper.url)}&paper=${encodeURIComponent(paper.title)}&return=${encodeURIComponent(window.location.href)}">
                 <img
                     class="card-cover"
                     src="covers/${key}.png"
                     alt="${paper.title} cover"
                     loading="lazy"
-                    onerror="this.remove()">
+                    onerror="this.closest('a').remove()">
+                </a>
 
                 <p class="card-description">
                     ${paper.description}
@@ -752,7 +775,9 @@ paper.updated.split("-")[0]}
     ${Number(pageCounts[key]) || 0} ${(Number(pageCounts[key]) || 0) === 1 ? "page" : "pages"}
 </p>
 
-              <a class="button pdf-link"
+                <div class="card-clear"></div>
+
+              <a class="button pdf-link read-btn"
    href="pdf.html?file=${encodeURIComponent(paper.url)}&paper=${encodeURIComponent(paper.title)}&return=${encodeURIComponent(window.location.href)}">
    Read Research
 </a>
