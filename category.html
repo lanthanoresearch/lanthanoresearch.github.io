@@ -160,6 +160,30 @@ h1{
     background:#141414;
 }
 
+.card-body{
+    min-width:0;
+}
+
+@media (min-width:700px){
+
+    .card{
+        display:flex;
+        align-items:flex-start;
+        gap:20px;
+    }
+
+    .card-cover{
+        flex:0 0 200px;
+        width:200px;
+        margin-bottom:0;
+    }
+
+    .card-body{
+        flex:1 1 auto;
+    }
+
+}
+
 
     
     .paper-badge{
@@ -629,8 +653,9 @@ ${getPaperBadge(key, paper)}
                     loading="lazy"
                     onerror="this.remove()">
 
+                <div class="card-body">
+
                 <h2>${paper.title}</h2>
-                
 
                 <p class="card-description">
                     ${paper.description}
@@ -646,7 +671,7 @@ paper.updated.split("-")[0]}
     ${Number(pageCounts[key]) || 0} ${(Number(pageCounts[key]) || 0) === 1 ? "page" : "pages"}
 </p>
 
-                <div id="warning-${key}">
+                   <div id="warning-${key}">
 
                    <div style="
     text-align:center;
@@ -699,6 +724,8 @@ paper.updated.split("-")[0]}
 
                 </div>
 
+                </div>
+
             </div>
             `;
 
@@ -724,6 +751,7 @@ ${getPaperBadge(key, paper)}
                     loading="lazy"
                     onerror="this.remove()">
 
+                <div class="card-body">
 
                 <h2>${paper.title}</h2>
 
@@ -753,6 +781,8 @@ paper.updated.split("-")[0]}
                 </a>
 
                 ${galleryHtml}
+
+                </div>
 
             </div>
             `;
