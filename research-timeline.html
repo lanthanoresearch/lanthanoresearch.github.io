@@ -395,6 +395,24 @@ h1{
   z-index:100;
   box-shadow:0 12px 30px rgba(0,0,0,.65);
   transition:.15s ease;
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+}
+
+.paper-cover{
+  flex:0 0 auto;
+  width:64px;
+  aspect-ratio:3/4;
+  object-fit:cover;
+  border-radius:6px;
+  background:#000;
+  box-shadow:0 2px 8px rgba(0,0,0,.5);
+}
+
+.paper-description-body{
+  flex:1 1 auto;
+  min-width:0;
 }
 
 .paper:hover{
@@ -644,7 +662,7 @@ h1{
   }
 
   .paper-card.expanded .paper-description{
-    display:block;
+    display:flex;
     opacity:1;
     visibility:visible;
     pointer-events:auto;
@@ -671,7 +689,7 @@ h1{
   }
 
   .paper-card.expanded:hover .paper-description{
-    display:block;
+    display:flex;
     opacity:1;
     visibility:visible;
     pointer-events:auto;
@@ -779,7 +797,7 @@ h1{
       translateX(var(--popup-left,0px))
       translateY(8px);
     margin:0;
-    display:block;
+    display:flex;
     opacity:0;
     visibility:hidden;
     pointer-events:none;
@@ -789,7 +807,7 @@ h1{
   .paper.popup-open .paper-description,
   .paper:hover .paper-description,
   .paper-description:hover{
-    display:block !important;
+    display:flex !important;
     opacity:1 !important;
     visibility:visible !important;
     pointer-events:auto !important;
@@ -916,6 +934,11 @@ h1{
     padding:9px 10px;
     line-height:1.35;
     box-sizing:border-box;
+    gap:8px;
+  }
+
+  .paper .paper-cover{
+    width:44px;
   }
 
   .paper .description-label{
@@ -1634,31 +1657,42 @@ function render(){
 
         <div class="paper-description">
 
-          <div class="description-label">
-            About this paper
-          </div>
+          <img
+            class="paper-cover"
+            src="covers/${escapeHtml(p.key)}.png"
+            alt=""
+            loading="lazy"
+            onerror="this.remove()">
 
-          <div>
-            ${escapeHtml(
-              p.description ||
-              "No description available."
-            )}
-          </div>
+          <div class="paper-description-body">
 
-          ${
-            p.url
-              ?
-              `<a
-                class="paper-link"
-                href="${escapeHtml(p.url)}"
-                data-paper-title="${escapeHtml(p.title)}"
-              >
-                Read Research
-                <span>→</span>
-              </a>`
-              :
-              ""
-          }
+            <div class="description-label">
+              About this paper
+            </div>
+
+            <div>
+              ${escapeHtml(
+                p.description ||
+                "No description available."
+              )}
+            </div>
+
+            ${
+              p.url
+                ?
+                `<a
+                  class="paper-link"
+                  href="${escapeHtml(p.url)}"
+                  data-paper-title="${escapeHtml(p.title)}"
+                >
+                  Read Research
+                  <span>→</span>
+                </a>`
+                :
+                ""
+            }
+
+          </div>
 
         </div>
 
