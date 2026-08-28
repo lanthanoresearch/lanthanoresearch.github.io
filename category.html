@@ -674,9 +674,7 @@ function withPreservedState(fn){
     fn();
 
     document.querySelectorAll(".image-details").forEach(details => {
-        if(openKeys.includes(details.dataset.paper)){
-            details.open = true;
-        }
+        details.open = openKeys.includes(details.dataset.paper);
     });
 
     window.scrollTo(0, scrollY);
