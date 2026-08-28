@@ -129,7 +129,7 @@ h1{
 
 .top-settings{
     position:absolute;
-    top:40px;
+    top:28px;
     right:20px;
     z-index:1600;
 }
@@ -148,16 +148,34 @@ h1{
     cursor:pointer;
     display:flex;
     align-items:center;
-    gap:8px;
+    justify-content:space-between;
+    gap:10px;
+    width:150px;
 }
 
 .sort-btn:hover{
     background:#262626;
 }
 
+.sort-btn-label{
+    overflow:hidden;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+    min-width:0;
+}
+
 .sort-caret{
-    font-size:.75em;
-    color:#999;
+    flex-shrink:0;
+    width:0;
+    height:0;
+    border-left:6px solid transparent;
+    border-right:6px solid transparent;
+    border-top:7px solid #999;
+    transition:transform .15s ease;
+}
+
+.sort-dropdown.open .sort-caret{
+    transform:rotate(180deg);
 }
 
 .sort-panel{
@@ -628,8 +646,8 @@ summary:hover{
 <div class="sort-dropdown" id="sortDropdown">
 
 <button class="sort-btn" id="sortButton" type="button" aria-label="Sort">
-    <span id="sortButtonLabel">A-Z</span>
-    <span class="sort-caret">▾</span>
+    <span class="sort-btn-label" id="sortButtonLabel">A-Z</span>
+    <span class="sort-caret" aria-hidden="true"></span>
 </button>
 
 <div class="sort-panel" id="sortPanel">
@@ -795,10 +813,13 @@ const sortButton =
     document.getElementById("sortButton");
 const sortPanel =
     document.getElementById("sortPanel");
+const sortDropdown =
+    document.getElementById("sortDropdown");
 
 function closeMenus(){
     settingsPanel.classList.remove("open");
     sortPanel.classList.remove("open");
+    sortDropdown.classList.remove("open");
 }
 
 settingsButton.addEventListener("click", (e) => {
@@ -812,7 +833,10 @@ sortButton.addEventListener("click", (e) => {
     e.stopPropagation();
     const willOpen = !sortPanel.classList.contains("open");
     closeMenus();
-    if(willOpen) sortPanel.classList.add("open");
+    if(willOpen){
+        sortPanel.classList.add("open");
+        sortDropdown.classList.add("open");
+    }
 });
 
 // Tapping/clicking anywhere outside either menu closes whichever
@@ -831,6 +855,7 @@ document.addEventListener("click", (e) => {
         e.target !== sortButton
     ){
         sortPanel.classList.remove("open");
+        sortDropdown.classList.remove("open");
     }
 });
 
@@ -885,6 +910,7 @@ document
                 document.getElementById("sortButtonLabel").textContent =
                     sortLabels[sortType] || "Sort";
                 sortPanel.classList.remove("open");
+                sortDropdown.classList.remove("open");
                 withPreservedState(renderPapers);
             }
         });
