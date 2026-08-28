@@ -357,11 +357,13 @@ details{
 
 summary{
     cursor:pointer;
-    font-size:1.1em;
-    font-weight:bold;
-    padding:12px;
+    font-size:1em;
+    font-weight:normal;
+    font-style:italic;
+    font-family:Arial,sans-serif;
+    padding:10px 12px;
     background:#222;
-    border-radius:8px;
+    border-radius:6px;
 }
 
 summary:hover{
@@ -457,17 +459,26 @@ summary:hover{
 
 .view-compact summary,
 .view-comfy summary{
-    font-size:0.85em;
-    padding:8px 10px;
+    font-size:0.82em;
+    padding:7px 10px;
 }
 
-.view-compact .gallery,
+/* Comfy: one extra column, smaller images */
 .view-comfy .gallery{
+    grid-template-columns:repeat(4,1fr);
     gap:6px;
+    margin-top:10px;
+}
+
+/* Compact: even more columns, even smaller images */
+.view-compact .gallery{
+    grid-template-columns:repeat(5,1fr);
+    gap:5px;
     margin-top:10px;
 }
 </style>
 </head>
+
 
 <body>
 
@@ -501,11 +512,11 @@ summary:hover{
     <hr class="settings-divider">
 
     <div class="settings-group">
-        <h3>Images</h3>
+        <h3>Supporting Images</h3>
 
         <label class="settings-option">
             <input type="checkbox" id="imagesDefaultOpen">
-            Open images by default
+            Show supporting images by default
         </label>
     </div>
 
