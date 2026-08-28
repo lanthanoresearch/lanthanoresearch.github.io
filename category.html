@@ -104,15 +104,26 @@ h1{
     align-items:center;
     margin-top:-20px;
     margin-bottom:35px;
+    gap:10px;
+    flex-wrap:wrap;
 }
 
 #paperCount{
     margin:0;
     color:#777;
 }
-.sort-container{
-    text-align:center;
-    margin-bottom:30px;
+
+.info-bar-right{
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.top-settings{
+    position:fixed;
+    top:20px;
+    right:20px;
+    z-index:1600;
 }
 
 #sortSelect{
@@ -132,6 +143,76 @@ h1{
 #sortSelect:focus{
     outline:none;
     border-color:#555;
+}
+
+.settings-btn{
+    background:#222;
+    color:#eee;
+    border:none;
+    border-radius:8px;
+    padding:10px 14px;
+    font-size:1.05em;
+    cursor:pointer;
+    line-height:1;
+}
+
+.settings-btn:hover{
+    background:#262626;
+}
+
+.settings-panel{
+    display:none;
+    position:absolute;
+    top:calc(100% + 10px);
+    right:0;
+    background:#1d1d1d;
+    border:1px solid #2c2c2c;
+    border-radius:10px;
+    padding:18px;
+    width:230px;
+    box-shadow:0 6px 18px rgba(0,0,0,.5);
+    z-index:1600;
+    text-align:left;
+}
+
+.settings-panel.open{
+    display:block;
+}
+
+.settings-panel h3{
+    margin:0 0 12px 0;
+    font-size:.95em;
+    color:#ccc;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+}
+
+.settings-group{
+    margin-bottom:16px;
+}
+
+.settings-group:last-child{
+    margin-bottom:0;
+}
+
+.settings-option{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:6px 0;
+    font-size:.92em;
+    color:#ddd;
+    cursor:pointer;
+}
+
+.settings-option input{
+    cursor:pointer;
+}
+
+.settings-divider{
+    border:none;
+    border-top:1px solid #2c2c2c;
+    margin:14px 0;
 }
 
     
@@ -287,6 +368,46 @@ summary:hover{
 
 <section>
 
+<div class="top-settings">
+
+<button class="settings-btn" id="settingsButton" type="button" aria-label="Settings">⚙</button>
+
+<div class="settings-panel" id="settingsPanel">
+
+    <div class="settings-group">
+        <h3>Viewing Option</h3>
+
+        <label class="settings-option">
+            <input type="radio" name="viewMode" value="compact">
+            Compact (name &amp; read button)
+        </label>
+
+        <label class="settings-option">
+            <input type="radio" name="viewMode" value="comfy">
+            Comfy (name, description &amp; image)
+        </label>
+
+        <label class="settings-option">
+            <input type="radio" name="viewMode" value="detailed">
+            Detailed (full info)
+        </label>
+    </div>
+
+    <hr class="settings-divider">
+
+    <div class="settings-group">
+        <h3>Images</h3>
+
+        <label class="settings-option">
+            <input type="checkbox" id="imagesDefaultOpen">
+            Open images by default
+        </label>
+    </div>
+
+</div>
+
+</div>
+
 <a class="back" href="index.html">◀ Home</a>
 
     <h1 id="pageTitle">Loading...</h1>
@@ -294,6 +415,8 @@ summary:hover{
 <div class="info-bar">
 
 <p id="paperCount"></p>
+
+<div class="info-bar-right">
 
 <select id="sortSelect">
 
@@ -307,6 +430,8 @@ summary:hover{
 <option value="leastimages">Least Images</option>
 
 </select>
+
+</div>
 
 </div>
 
@@ -346,6 +471,72 @@ function isFavorite(key){
     return favoritePapers.includes(key);
 
 }
+
+// ---- Settings (view mode + default image state) ----
+
+let viewMode =
+    localStorage.getItem("viewMode") || "detailed";
+
+let imagesDefaultOpen =
+    localStorage.getItem("imagesDefaultOpen") === "true";
+
+function applySettingsUI(){
+
+    document
+        .querySelectorAll('input[name="viewMode"]')
+        .forEach(input => {
+            input.checked = input.value === viewMode;
+        });
+
+    document.getElementById("imagesDefaultOpen").checked =
+        imagesDefaultOpen;
+
+}
+
+const settingsButton =
+    document.getElementById("settingsButton");
+const settingsPanel =
+    document.getElementById("settingsPanel");
+
+settingsButton.addEventListener("click", (e) => {
+    e.stopPropagation();
+    settingsPanel.classList.toggle("open");
+});
+
+document.addEventListener("click", (e) => {
+    if(
+        settingsPanel.classList.contains("open") &&
+        !settingsPanel.contains(e.target) &&
+        e.target !== settingsButton
+    ){
+        settingsPanel.classList.remove("open");
+    }
+});
+
+document
+    .querySelectorAll('input[name="viewMode"]')
+    .forEach(input => {
+        input.addEventListener("change", () => {
+            if(input.checked){
+                viewMode = input.value;
+                localStorage.setItem("viewMode", viewMode);
+                renderPapers();
+            }
+        });
+    });
+
+document
+    .getElementById("imagesDefaultOpen")
+    .addEventListener("change", (e) => {
+        imagesDefaultOpen = e.target.checked;
+        localStorage.setItem(
+            "imagesDefaultOpen",
+            imagesDefaultOpen
+        );
+        renderPapers();
+    });
+
+applySettingsUI();
 
 
 
@@ -481,6 +672,42 @@ function getPaperBadge(key, paper){
 
     return html;
 }
+
+// Builds the gallery markup for a paper (used across all view modes)
+function buildGalleryHtml(key, paper){
+
+    const visibleImages = (paper.images || []).filter(image =>
+        typeof image === "string" &&
+        !image.trim().startsWith("#$")
+    );
+
+    if(!visibleImages.length) return "";
+
+    const openAttr = imagesDefaultOpen ? " open" : "";
+
+    return `
+        <details class="image-details" data-paper="${key}"${openAttr}>
+            <summary>Supporting Images (${visibleImages.length})</summary>
+
+            <div class="gallery">
+
+             ${visibleImages.map(image => `
+<a
+    href="image.html?image=${encodeURIComponent(image)}&paper=${encodeURIComponent(paper.title)}&return=${encodeURIComponent(window.location.href)}"
+    class="gallery-image"
+    data-scroll-key="${scrollKey}"
+>
+    <img
+        src="${image}"
+        loading="lazy">
+</a>
+`).join("")}
+
+            </div>
+        </details>
+    `;
+}
+
     
 function renderPapers(){
 loadFavorites();
@@ -594,36 +821,69 @@ document.getElementById("paperCount").textContent =
 
 filteredPapers.forEach(([key,paper]) => {
 
-        let galleryHtml = "";
+        const galleryHtml = buildGalleryHtml(key, paper);
 
-       const visibleImages = (paper.images || []).filter(image =>
-    typeof image === "string" &&
-    !image.trim().startsWith("#$")
-);
+        const starHtml = `
+<span
+class="favorite-star
+${isFavorite(key) ? " active" : ""}"
+onclick="
+event.stopPropagation();
+toggleFavorite('${key}');
+">
+${isFavorite(key) ? "★" : "☆"}
+</span>`;
 
-if(visibleImages.length){
-    galleryHtml = `
-        <details class="image-details" data-paper="${key}">
-            <summary>Supporting Images (${visibleImages.length})</summary>
+        const coverHtml = `
+                <a
+                    class="card-cover-link pdf-link"
+                    href="pdf.html?file=${encodeURIComponent(paper.url)}&paper=${encodeURIComponent(paper.title)}&return=${encodeURIComponent(window.location.href)}">
+                <img
+                    class="card-cover"
+                    src="covers/${key}.png"
+                    alt="${paper.title} cover"
+                    loading="lazy"
+                    onerror="this.closest('a').remove()">
+                </a>`;
 
-            <div class="gallery">
+        const descHtml = `
+                <p class="card-description">
+                    ${paper.description}
+                </p>`;
 
-             ${visibleImages.map(image => `
-<a
-    href="image.html?image=${encodeURIComponent(image)}&paper=${encodeURIComponent(paper.title)}&return=${encodeURIComponent(window.location.href)}"
-    class="gallery-image"
-    data-scroll-key="${scrollKey}"
->
-    <img
-        src="${image}"
-        loading="lazy">
-</a>
-`).join("")}
+        const dateHtml = `
+                <p class="card-date">
+    Created: ${parseInt(paper.updated.split("-")[1])}-${
+parseInt(paper.updated.split("-")[2])}-${
+paper.updated.split("-")[0]}
+</p>`;
 
-            </div>
-        </details>
-    `;
-}
+        const pagesHtml = `
+<p class="card-pages">
+    ${Number(pageCounts[key]) || 0} ${(Number(pageCounts[key]) || 0) === 1 ? "page" : "pages"}
+</p>`;
+
+        const readBtnHtml = `
+                  <a class="button pdf-link read-btn"
+   href="pdf.html?file=${encodeURIComponent(paper.url)}&paper=${encodeURIComponent(paper.title)}&return=${encodeURIComponent(window.location.href)}">
+   Read Research
+</a>`;
+
+        // Header markup (title + whatever the view mode includes),
+        // always visible regardless of the warning gate.
+        let headerHtml = `<h2>${paper.title}</h2>`;
+
+        if(viewMode === "comfy"){
+
+            headerHtml += coverHtml + descHtml + `<div class="card-clear"></div>`;
+
+        }else if(viewMode === "detailed"){
+
+            headerHtml += coverHtml + descHtml + dateHtml + pagesHtml + `<div class="card-clear"></div>`;
+
+        }
+        // compact: title only, nothing added
+
         let cardHtml = "";
 const warningAccepted =
     sessionStorage.getItem(
@@ -637,47 +897,12 @@ if(
 ){
             cardHtml = `
             <div class="card">
-            <span
-class="favorite-star
-${isFavorite(key) ? " active" : ""}"
-onclick="
-event.stopPropagation();
-toggleFavorite('${key}');
-">
-${isFavorite(key) ? "★" : "☆"}
-</span>
+            ${starHtml}
 ${getPaperBadge(key, paper)}
 
                 <div class="card-body">
 
-                <h2>${paper.title}</h2>
-
-                <a
-                    class="card-cover-link pdf-link"
-                    href="pdf.html?file=${encodeURIComponent(paper.url)}&paper=${encodeURIComponent(paper.title)}&return=${encodeURIComponent(window.location.href)}">
-                <img
-                    class="card-cover"
-                    src="covers/${key}.png"
-                    alt="${paper.title} cover"
-                    loading="lazy"
-                    onerror="this.closest('a').remove()">
-                </a>
-
-                <p class="card-description">
-                    ${paper.description}
-                </p>
-
-                <p class="card-date">
-    Created: ${parseInt(paper.updated.split("-")[1])}-${
-parseInt(paper.updated.split("-")[2])}-${
-paper.updated.split("-")[0]}
-</p>
-
-<p class="card-pages">
-    ${Number(pageCounts[key]) || 0} ${(Number(pageCounts[key]) || 0) === 1 ? "page" : "pages"}
-</p>
-
-                <div class="card-clear"></div>
+                ${headerHtml}
 
                    <div id="warning-${key}">
 
@@ -717,10 +942,7 @@ paper.updated.split("-")[0]}
                 <div id="content-${key}"
      style="display:none;">
 
-                  <a class="button pdf-link read-btn"
-   href="pdf.html?file=${encodeURIComponent(paper.url)}&paper=${encodeURIComponent(paper.title)}&return=${encodeURIComponent(window.location.href)}">
-   Read Research
-</a>
+                  ${readBtnHtml}
 
                     ${galleryHtml}
 
@@ -735,52 +957,14 @@ paper.updated.split("-")[0]}
 
             cardHtml = `
             <div class="card">
-            <span
-class="favorite-star
-${isFavorite(key) ? " active" : ""}"
-onclick="
-event.stopPropagation();
-toggleFavorite('${key}');
-">
-${isFavorite(key) ? "★" : "☆"}
-</span>
+            ${starHtml}
 ${getPaperBadge(key, paper)}
 
                 <div class="card-body">
 
-                <h2>${paper.title}</h2>
+                ${headerHtml}
 
-                <a
-                    class="card-cover-link pdf-link"
-                    href="pdf.html?file=${encodeURIComponent(paper.url)}&paper=${encodeURIComponent(paper.title)}&return=${encodeURIComponent(window.location.href)}">
-                <img
-                    class="card-cover"
-                    src="covers/${key}.png"
-                    alt="${paper.title} cover"
-                    loading="lazy"
-                    onerror="this.closest('a').remove()">
-                </a>
-
-                <p class="card-description">
-                    ${paper.description}
-                </p>
-
-                <p class="card-date">
-    Created: ${parseInt(paper.updated.split("-")[1])}-${
-parseInt(paper.updated.split("-")[2])}-${
-paper.updated.split("-")[0]}
-</p>
-
-<p class="card-pages">
-    ${Number(pageCounts[key]) || 0} ${(Number(pageCounts[key]) || 0) === 1 ? "page" : "pages"}
-</p>
-
-                <div class="card-clear"></div>
-
-              <a class="button pdf-link read-btn"
-   href="pdf.html?file=${encodeURIComponent(paper.url)}&paper=${encodeURIComponent(paper.title)}&return=${encodeURIComponent(window.location.href)}">
-   Read Research
-</a>
+              ${readBtnHtml}
 
                 ${galleryHtml}
 
