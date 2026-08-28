@@ -149,11 +149,16 @@ h1{
     background:#222;
     color:#eee;
     border:none;
-    border-radius:8px;
-    padding:10px 14px;
-    font-size:1.05em;
+    border-radius:50%;
+    width:44px;
+    height:44px;
+    padding:0;
+    font-size:1.15em;
     cursor:pointer;
     line-height:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
 }
 
 .settings-btn:hover{
@@ -289,12 +294,13 @@ h1{
     color:#777;
     font-size:0.8em;
     margin-top:10px;
+    margin-bottom:1px;
 }
 
     .card-pages{
     color:#777;
     font-size:0.8em;
-    margin-top:4px;
+    margin-top:1px;
 }
     
 .button{
@@ -361,6 +367,57 @@ summary{
 summary:hover{
     background:#2a2a2a;
 }
+
+/* ---- Compact view ---- */
+
+.compact-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+}
+
+.compact-title{
+    margin:0;
+    font-size:1.05em;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    min-width:0;
+    flex:1;
+}
+
+.compact-read-btn{
+    flex-shrink:0;
+    margin:0;
+}
+
+/* ---- Comfy view ---- */
+
+.view-comfy .card{
+    padding:14px 16px;
+}
+
+.view-comfy .card h2{
+    font-size:1.05em;
+    margin:0 0 2px 0;
+}
+
+.view-comfy .card-description{
+    font-size:0.82em;
+    margin-top:6px;
+    line-height:1.35;
+}
+
+.view-comfy .card-cover-link{
+    width:clamp(60px, 22vw, 95px);
+    margin:2px 0 4px 12px;
+}
+
+.view-comfy .button{
+    padding:8px 12px;
+    font-size:0.9em;
+}
 </style>
 </head>
 
@@ -379,17 +436,17 @@ summary:hover{
 
         <label class="settings-option">
             <input type="radio" name="viewMode" value="compact">
-            Compact (name &amp; read button)
+            Compact
         </label>
 
         <label class="settings-option">
             <input type="radio" name="viewMode" value="comfy">
-            Comfy (name, description &amp; image)
+            Comfy
         </label>
 
         <label class="settings-option">
             <input type="radio" name="viewMode" value="detailed">
-            Detailed (full info)
+            Detailed
         </label>
     </div>
 
@@ -479,6 +536,10 @@ let viewMode =
 
 let imagesDefaultOpen =
     localStorage.getItem("imagesDefaultOpen") === "true";
+
+// Assigned once papers finish loading; declared here (outer scope)
+// so the settings controls below can call it immediately on change.
+let renderPapers = function(){};
 
 function applySettingsUI(){
 
@@ -709,8 +770,9 @@ function buildGalleryHtml(key, paper){
 }
 
     
-function renderPapers(){
+renderPapers = function(){
 loadFavorites();
+container.className = "view-" + viewMode;
 container.innerHTML = "";
 
 let filteredPapers = papers.filter(([key,paper]) =>
@@ -869,20 +931,30 @@ paper.updated.split("-")[0]}
    Read Research
 </a>`;
 
+        const readBtnInlineHtml = `
+<a class="button pdf-link compact-read-btn"
+   href="pdf.html?file=${encodeURIComponent(paper.url)}&paper=${encodeURIComponent(paper.title)}&return=${encodeURIComponent(window.location.href)}">
+   Read Research
+</a>`;
+
+        const titleHtml = `<h2>${paper.title}</h2>`;
+        const titleCompactHtml = `<h2 class="compact-title">${paper.title}</h2>`;
+
         // Header markup (title + whatever the view mode includes),
         // always visible regardless of the warning gate.
-        let headerHtml = `<h2>${paper.title}</h2>`;
+        // Compact handles its title separately (merged on the same
+        // line as the Read button), so headerHtml stays empty there.
+        let headerHtml = "";
 
         if(viewMode === "comfy"){
 
-            headerHtml += coverHtml + descHtml + `<div class="card-clear"></div>`;
+            headerHtml = titleHtml + coverHtml + descHtml + `<div class="card-clear"></div>`;
 
         }else if(viewMode === "detailed"){
 
-            headerHtml += coverHtml + descHtml + dateHtml + pagesHtml + `<div class="card-clear"></div>`;
+            headerHtml = titleHtml + coverHtml + descHtml + dateHtml + pagesHtml + `<div class="card-clear"></div>`;
 
         }
-        // compact: title only, nothing added
 
         let cardHtml = "";
 const warningAccepted =
@@ -902,7 +974,7 @@ ${getPaperBadge(key, paper)}
 
                 <div class="card-body">
 
-                ${headerHtml}
+                ${viewMode === "compact" ? titleCompactHtml : headerHtml}
 
                    <div id="warning-${key}">
 
@@ -947,6 +1019,27 @@ ${getPaperBadge(key, paper)}
                     ${galleryHtml}
 
                 </div>
+
+                </div>
+
+            </div>
+            `;
+
+        }else if(viewMode === "compact"){
+
+            cardHtml = `
+            <div class="card">
+            ${starHtml}
+${getPaperBadge(key, paper)}
+
+                <div class="card-body">
+
+                <div class="compact-row">
+                ${titleCompactHtml}
+                ${readBtnInlineHtml}
+                </div>
+
+                ${galleryHtml}
 
                 </div>
 
