@@ -78,23 +78,107 @@ h1{
   font-size:1em;
 }
 
-#categoryFilter{
-  background:#222;
-  color:#eee;
-  border:none;
-  border-radius:8px;
-  padding:10px 18px;
-  font-size:.95em;
-  cursor:pointer;
-  min-height:40px;
+.category-dropdown{
+  position:relative;
+  flex-shrink:0;
 }
 
-#categoryFilter:hover{
+.category-btn{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  width:190px;
+  background:#222;
+  color:#eee;
+  border:1px solid #333;
+  border-radius:8px;
+  padding:10px 14px;
+  font-size:.95em;
+  font-family:inherit;
+  cursor:pointer;
+  min-height:40px;
+  text-align:left;
+  box-sizing:border-box;
+}
+
+.category-btn:hover{
   background:#262626;
 }
 
-#categoryFilter:focus{
+.category-btn:focus{
   outline:none;
+  border-color:#555;
+}
+
+.category-btn-label{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  flex:1;
+  min-width:0;
+}
+
+.category-caret{
+  flex-shrink:0;
+  width:0;
+  height:0;
+  border-left:6px solid transparent;
+  border-right:6px solid transparent;
+  border-top:7px solid #999;
+  transition:transform .15s ease;
+}
+
+.category-dropdown.open .category-caret{
+  transform:rotate(180deg);
+}
+
+.category-panel{
+  display:none;
+  position:absolute;
+  top:calc(100% + 10px);
+  right:0;
+  background:#1d1d1d;
+  border:1px solid #2c2c2c;
+  border-radius:10px;
+  padding:10px;
+  width:190px;
+  max-height:320px;
+  overflow-y:auto;
+  box-sizing:border-box;
+  box-shadow:0 6px 18px rgba(0,0,0,.5);
+  z-index:1600;
+  text-align:left;
+}
+
+.category-panel.open{
+  display:block;
+}
+
+.category-option{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 8px;
+  border-radius:6px;
+  font-size:.92em;
+  color:#ddd;
+  cursor:pointer;
+}
+
+.category-option:hover{
+  background:#262626;
+}
+
+.category-option input{
+  cursor:pointer;
+  flex-shrink:0;
+}
+
+.category-option span{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
 }
 
 @media (max-width:600px){
@@ -847,9 +931,14 @@ h1{
     gap:14px;
   }
 
-  #categoryFilter{
-    padding:10px 18px;
+  .category-btn{
+    padding:10px 14px;
     min-height:40px;
+    width:170px;
+  }
+
+  .category-panel{
+    width:170px;
   }
 
   .timeline{
@@ -974,7 +1063,22 @@ h1{
 
 <div class="controls">
   <p id="paperCount" class="paper-count">—</p>
-  <select id="categoryFilter" aria-label="Filter research by category"></select>
+
+  <div class="category-dropdown" id="categoryDropdown">
+
+    <button
+      class="category-btn"
+      id="categoryButton"
+      type="button"
+      aria-label="Filter research by category"
+    >
+      <span class="category-btn-label" id="categoryButtonLabel">All Research</span>
+      <span class="category-caret" aria-hidden="true"></span>
+    </button>
+
+    <div class="category-panel" id="categoryPanel"></div>
+
+  </div>
 </div>
 
 <div class="timeline-wrap">
@@ -996,10 +1100,14 @@ h1{
 const DATA_FILE = "./descriptions.json";
 
 const timeline = document.getElementById("timeline");
-const categoryFilter = document.getElementById("categoryFilter");
 const legend = document.getElementById("legend");
 const stats = document.getElementById("stats");
 const axisLabels = document.getElementById("axisLabels");
+
+const categoryDropdown = document.getElementById("categoryDropdown");
+const categoryButton = document.getElementById("categoryButton");
+const categoryButtonLabel = document.getElementById("categoryButtonLabel");
+const categoryPanel = document.getElementById("categoryPanel");
 
 let papers = [];
 let activeFilter = "all";
@@ -2376,12 +2484,24 @@ function buildControls(){
       )
     ].sort();
 
-  categoryFilter.innerHTML =
-    `<option value="all">All Research</option>` +
-    categories
+  const options = [
+    { value:"all", label:"All Research" },
+    ...categories.map(c => ({
+      value:c,
+      label:categoryLabel(c)
+    }))
+  ];
+
+  categoryPanel.innerHTML =
+    options
       .map(
-        c =>
-          `<option value="${escapeHtml(c)}">${escapeHtml(categoryLabel(c))}</option>`
+        opt =>
+          `
+          <label class="category-option">
+            <input type="radio" name="categoryOption" value="${escapeHtml(opt.value)}">
+            <span>${escapeHtml(opt.label)}</span>
+          </label>
+          `
       )
       .join("");
 
@@ -2404,24 +2524,58 @@ function buildControls(){
       savedFilter;
   }
 
-  categoryFilter.value =
-    activeFilter;
+  function applyCategoryUI(){
 
-  categoryFilter.addEventListener(
-    "change",
-    () => {
+    const selected =
+      options.find(
+        opt => opt.value === activeFilter
+      ) || options[0];
 
-      activeFilter =
-        categoryFilter.value;
+    categoryButtonLabel.textContent =
+      selected.label;
 
-      localStorage.setItem(
-        "timelineFilter",
-        activeFilter
+    categoryPanel
+      .querySelectorAll(
+        'input[name="categoryOption"]'
+      )
+      .forEach(input => {
+        input.checked =
+          input.value === activeFilter;
+      });
+  }
+
+  applyCategoryUI();
+
+  categoryPanel
+    .querySelectorAll(
+      'input[name="categoryOption"]'
+    )
+    .forEach(input => {
+
+      input.addEventListener(
+        "change",
+        () => {
+
+          if(!input.checked){
+            return;
+          }
+
+          activeFilter =
+            input.value;
+
+          localStorage.setItem(
+            "timelineFilter",
+            activeFilter
+          );
+
+          applyCategoryUI();
+
+          closeCategoryDropdown();
+
+          render();
+        }
       );
-
-      render();
-    }
-  );
+    });
 
   legend.innerHTML =
     categories
@@ -2436,6 +2590,45 @@ function buildControls(){
       )
       .join("");
 }
+
+
+function openCategoryDropdown(){
+  categoryDropdown.classList.add("open");
+  categoryPanel.classList.add("open");
+}
+
+function closeCategoryDropdown(){
+  categoryDropdown.classList.remove("open");
+  categoryPanel.classList.remove("open");
+}
+
+categoryButton.addEventListener("click", (e) => {
+  e.stopPropagation();
+  if(categoryPanel.classList.contains("open")){
+    closeCategoryDropdown();
+  }else{
+    openCategoryDropdown();
+  }
+});
+
+// Tapping anywhere outside the panel closes it.
+document.addEventListener("click", (e) => {
+  if(
+    categoryPanel.classList.contains("open") &&
+    !categoryPanel.contains(e.target) &&
+    e.target !== categoryButton &&
+    !categoryButton.contains(e.target)
+  ){
+    closeCategoryDropdown();
+  }
+});
+
+// Scrolling the page also closes it, same as tapping outside.
+window.addEventListener(
+  "scroll",
+  () => closeCategoryDropdown(),
+  { passive:true }
+);
 
 
 async function load(){
