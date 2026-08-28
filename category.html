@@ -370,16 +370,21 @@ summary:hover{
 
 /* ---- Compact view ---- */
 
+.view-compact .card{
+    padding:10px 14px 12px 14px;
+    padding-top:34px;
+}
+
 .compact-row{
     display:flex;
     align-items:center;
     justify-content:space-between;
-    gap:12px;
+    gap:8px;
 }
 
 .compact-title{
     margin:0;
-    font-size:1.05em;
+    font-size:0.92em;
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;
@@ -390,33 +395,76 @@ summary:hover{
 .compact-read-btn{
     flex-shrink:0;
     margin:0;
+    padding:6px 10px;
+    font-size:0.8em;
 }
 
 /* ---- Comfy view ---- */
 
 .view-comfy .card{
-    padding:14px 16px;
+    padding:12px 16px 14px 16px;
+    padding-top:34px;
 }
 
 .view-comfy .card h2{
-    font-size:1.05em;
+    font-size:0.98em;
     margin:0 0 2px 0;
 }
 
 .view-comfy .card-description{
-    font-size:0.82em;
-    margin-top:6px;
-    line-height:1.35;
+    font-size:0.78em;
+    margin-top:5px;
+    line-height:1.32;
 }
 
 .view-comfy .card-cover-link{
-    width:clamp(60px, 22vw, 95px);
-    margin:2px 0 4px 12px;
+    width:clamp(50px, 18vw, 78px);
+    margin:2px 0 4px 10px;
 }
 
 .view-comfy .button{
-    padding:8px 12px;
-    font-size:0.9em;
+    padding:6px 10px;
+    font-size:0.8em;
+}
+
+/* ---- Shared: keep the favorite star & badges clear of the
+   compact/comfy header line instead of overlapping it ---- */
+
+.view-compact .favorite-star,
+.view-comfy .favorite-star{
+    font-size:1.35rem;
+    top:7px;
+    right:10px;
+}
+
+.view-compact .paper-badge,
+.view-comfy .paper-badge{
+    font-size:0.6em;
+    padding:4px 8px;
+    top:9px;
+    right:36px;
+}
+
+.view-compact .paper-badge.newest.with-featured,
+.view-comfy .paper-badge.newest.with-featured{
+    right:104px;
+}
+
+.view-compact details,
+.view-comfy details{
+    margin-top:10px;
+}
+
+.view-compact summary,
+.view-comfy summary{
+    font-size:0.85em;
+    padding:8px 10px;
+}
+
+.view-compact .gallery,
+.view-comfy .gallery{
+    gap:6px;
+    margin-top:10px;
 }
 </style>
 </head>
