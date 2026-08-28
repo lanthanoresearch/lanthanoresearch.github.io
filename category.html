@@ -197,13 +197,36 @@ h1{
     display:block;
 }
 
-.sort-panel .settings-option{
+.sort-option{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    width:100%;
+    background:none;
+    border:none;
+    color:#ddd;
+    font-size:.92em;
+    font-family:inherit;
     padding:8px 8px;
     border-radius:6px;
+    cursor:pointer;
+    text-align:left;
 }
 
-.sort-panel .settings-option:hover{
+.sort-option:hover{
     background:#262626;
+}
+
+.sort-option.active{
+    background:#262626;
+    color:#fff;
+}
+
+.sort-option-arrow{
+    color:#999;
+    font-size:.9em;
+    min-width:14px;
+    text-align:center;
 }
 
 .settings-btn{
@@ -652,35 +675,25 @@ summary:hover{
 
 <div class="sort-panel" id="sortPanel">
 
-    <label class="settings-option">
-        <input type="radio" name="sortType" value="az">
-        A-Z
-    </label>
+    <button type="button" class="sort-option" data-group="title">
+        <span class="sort-option-label">Title</span>
+        <span class="sort-option-arrow" aria-hidden="true"></span>
+    </button>
 
-    <label class="settings-option">
-        <input type="radio" name="sortType" value="za">
-        Z-A
-    </label>
+    <button type="button" class="sort-option" data-group="date">
+        <span class="sort-option-label">Date</span>
+        <span class="sort-option-arrow" aria-hidden="true"></span>
+    </button>
 
-    <label class="settings-option">
-        <input type="radio" name="sortType" value="newest">
-        Newest
-    </label>
+    <button type="button" class="sort-option" data-group="images">
+        <span class="sort-option-label">Images</span>
+        <span class="sort-option-arrow" aria-hidden="true"></span>
+    </button>
 
-    <label class="settings-option">
-        <input type="radio" name="sortType" value="oldest">
-        Oldest
-    </label>
-
-    <label class="settings-option">
-        <input type="radio" name="sortType" value="mostimages">
-        Most Images
-    </label>
-
-    <label class="settings-option">
-        <input type="radio" name="sortType" value="leastimages">
-        Least Images
-    </label>
+    <button type="button" class="sort-option" data-group="readtime">
+        <span class="sort-option-label">Reading Time</span>
+        <span class="sort-option-arrow" aria-hidden="true"></span>
+    </button>
 
 </div>
 
@@ -748,8 +761,31 @@ const sortLabels = {
     newest: "Newest",
     oldest: "Oldest",
     mostimages: "Most Images",
-    leastimages: "Least Images"
+    leastimages: "Least Images",
+    mostreadtime: "Longest Read",
+    leastreadtime: "Shortest Read"
 };
+
+// Each group pairs an ascending and descending sort value. Clicking
+// a group's button in the sort panel toggles between the two instead
+// of needing two separate list entries.
+const SORT_GROUPS = {
+    title:    { label: "Title",        asc: "az",           desc: "za" },
+    date:     { label: "Date",         asc: "oldest",        desc: "newest" },
+    images:   { label: "Images",       asc: "leastimages",   desc: "mostimages" },
+    readtime: { label: "Reading Time", asc: "leastreadtime", desc: "mostreadtime" }
+};
+
+function getActiveSortGroup(){
+
+    for(const [key, group] of Object.entries(SORT_GROUPS)){
+        if(sortType === group.asc) return { key, direction: "asc" };
+        if(sortType === group.desc) return { key, direction: "desc" };
+    }
+
+    return { key: null, direction: null };
+
+}
 
 let sortType =
     localStorage.getItem("paperSort") || "az";
@@ -793,11 +829,30 @@ function applySettingsUI(){
             input.checked = input.value === readingLevel;
         });
 
-    document
-        .querySelectorAll('input[name="sortType"]')
-        .forEach(input => {
-            input.checked = input.value === sortType;
-        });
+    applySortUI();
+
+}
+
+function applySortUI(){
+
+    const active = getActiveSortGroup();
+
+    document.querySelectorAll(".sort-option").forEach(btn => {
+
+        const groupKey = btn.dataset.group;
+        const group = SORT_GROUPS[groupKey];
+        const isActive = groupKey === active.key;
+
+        btn.classList.toggle("active", isActive);
+
+        const direction =
+            isActive ? active.direction : "asc";
+
+        const arrow = btn.querySelector(".sort-option-arrow");
+        arrow.textContent = direction === "desc" ? "↓" : "↑";
+        arrow.style.visibility = isActive ? "visible" : "hidden";
+
+    });
 
     document.getElementById("sortButtonLabel").textContent =
         sortLabels[sortType] || "Sort";
@@ -901,18 +956,25 @@ document
     });
 
 document
-    .querySelectorAll('input[name="sortType"]')
-    .forEach(input => {
-        input.addEventListener("change", () => {
-            if(input.checked){
-                sortType = input.value;
-                localStorage.setItem("paperSort", sortType);
-                document.getElementById("sortButtonLabel").textContent =
-                    sortLabels[sortType] || "Sort";
-                sortPanel.classList.remove("open");
-                sortDropdown.classList.remove("open");
-                withPreservedState(renderPapers);
-            }
+    .querySelectorAll(".sort-option")
+    .forEach(btn => {
+        btn.addEventListener("click", () => {
+
+            const groupKey = btn.dataset.group;
+            const group = SORT_GROUPS[groupKey];
+            const active = getActiveSortGroup();
+
+            sortType =
+                active.key === groupKey
+                    ? (active.direction === "asc" ? group.desc : group.asc)
+                    : group.asc;
+
+            localStorage.setItem("paperSort", sortType);
+            applySortUI();
+            sortPanel.classList.remove("open");
+            sortDropdown.classList.remove("open");
+            withPreservedState(renderPapers);
+
         });
     });
 
@@ -1137,7 +1199,7 @@ function formatReadTime(totalMinutes){
 
 }
 
-function buildReadTimeHtml(key, paper){
+function getReadMinutes(key, paper){
 
     const pages = getContentPageCount(key, paper);
 
@@ -1145,10 +1207,15 @@ function buildReadTimeHtml(key, paper){
         READING_MINUTES_PER_PAGE[readingLevel] ||
         READING_MINUTES_PER_PAGE.average;
 
-    const minutes =
-        pages > 0
-            ? Math.max(1, Math.round(pages * minutesPerPage))
-            : 0;
+    return pages > 0
+        ? Math.max(1, Math.round(pages * minutesPerPage))
+        : 0;
+
+}
+
+function buildReadTimeHtml(key, paper){
+
+    const minutes = getReadMinutes(key, paper);
 
     if(!minutes) return "";
 
@@ -1230,6 +1297,22 @@ else if(sortType === "leastimages"){
     filteredPapers.sort((a,b)=>
         getVisibleImageCount(a[1]) -
         getVisibleImageCount(b[1])
+    );
+
+}
+else if(sortType === "mostreadtime"){
+
+    filteredPapers.sort((a,b)=>
+        getReadMinutes(b[0], b[1]) -
+        getReadMinutes(a[0], a[1])
+    );
+
+}
+else if(sortType === "leastreadtime"){
+
+    filteredPapers.sort((a,b)=>
+        getReadMinutes(a[0], a[1]) -
+        getReadMinutes(b[0], b[1])
     );
 
 }
