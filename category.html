@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -89,6 +90,7 @@ html{
 
     
 section{
+    position:relative;
     max-width:1000px;
     margin:auto;
     padding:40px 20px;
@@ -119,9 +121,16 @@ h1{
     gap:10px;
 }
 
+.page-top-bar{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    margin-bottom:20px;
+}
+
 .top-settings{
-    position:fixed;
-    top:28px;
+    position:absolute;
+    top:40px;
     right:20px;
     z-index:1600;
 }
@@ -232,6 +241,7 @@ h1{
 
     background:#1d1d1d;
     padding:20px;
+    padding-top:36px;
     margin:15px 0;
     border-radius:10px;
 }
@@ -283,6 +293,12 @@ h1{
 
 
     
+.read-time-line{
+    color:#888;
+    font-size:0.78em;
+    margin:0 0 6px 0;
+}
+
 .card-description{
     color:#aaa;
     font-size:0.9em;
@@ -439,7 +455,8 @@ summary:hover{
 .view-comfy .favorite-star{
     font-size:1.35rem;
     top:7px;
-    right:10px;
+    left:10px;
+    right:auto;
 }
 
 .view-compact .paper-badge,
@@ -447,12 +464,14 @@ summary:hover{
     font-size:0.6em;
     padding:4px 8px;
     top:9px;
-    right:36px;
+    left:36px;
+    right:auto;
 }
 
 .view-compact .paper-badge.newest.with-featured,
 .view-comfy .paper-badge.newest.with-featured{
-    right:104px;
+    left:104px;
+    right:auto;
 }
 
 .view-compact details,
@@ -486,6 +505,10 @@ summary:hover{
 <body>
 
 <section>
+
+<div class="page-top-bar">
+
+<a class="back" href="index.html">◀ Home</a>
 
 <div class="top-settings">
 
@@ -523,11 +546,32 @@ summary:hover{
         </label>
     </div>
 
-</div>
+    <hr class="settings-divider">
+
+    <div class="settings-group">
+        <h3>Reading Speed</h3>
+
+        <label class="settings-option">
+            <input type="radio" name="readingLevel" value="slow">
+            Slow
+        </label>
+
+        <label class="settings-option">
+            <input type="radio" name="readingLevel" value="average">
+            Average
+        </label>
+
+        <label class="settings-option">
+            <input type="radio" name="readingLevel" value="fast">
+            Fast
+        </label>
+    </div>
 
 </div>
 
-<a class="back" href="index.html">◀ Home</a>
+</div>
+
+</div>
 
     <h1 id="pageTitle">Loading...</h1>
 
@@ -603,6 +647,33 @@ let imagesDefaultOpen =
 // so the settings controls below can call it immediately on change.
 let renderPapers = function(){};
 
+let readingLevel =
+    localStorage.getItem("readingLevel") || "average";
+
+// Re-runs a render while keeping the current scroll position and
+// which "Supporting Images" panels were open (e.g. after starring
+// a paper), instead of jumping back to the top with everything closed.
+function withPreservedState(fn){
+
+    const openKeys = Array.from(
+        document.querySelectorAll(".image-details")
+    ).filter(details => details.open)
+     .map(details => details.dataset.paper);
+
+    const scrollY = window.scrollY;
+
+    fn();
+
+    document.querySelectorAll(".image-details").forEach(details => {
+        if(openKeys.includes(details.dataset.paper)){
+            details.open = true;
+        }
+    });
+
+    window.scrollTo(0, scrollY);
+
+}
+
 function applySettingsUI(){
 
     document
@@ -613,6 +684,12 @@ function applySettingsUI(){
 
     document.getElementById("imagesDefaultOpen").checked =
         imagesDefaultOpen;
+
+    document
+        .querySelectorAll('input[name="readingLevel"]')
+        .forEach(input => {
+            input.checked = input.value === readingLevel;
+        });
 
 }
 
@@ -643,7 +720,7 @@ document
             if(input.checked){
                 viewMode = input.value;
                 localStorage.setItem("viewMode", viewMode);
-                renderPapers();
+                withPreservedState(renderPapers);
             }
         });
     });
@@ -656,7 +733,19 @@ document
             "imagesDefaultOpen",
             imagesDefaultOpen
         );
-        renderPapers();
+        withPreservedState(renderPapers);
+    });
+
+document
+    .querySelectorAll('input[name="readingLevel"]')
+    .forEach(input => {
+        input.addEventListener("change", () => {
+            if(input.checked){
+                readingLevel = input.value;
+                localStorage.setItem("readingLevel", readingLevel);
+                withPreservedState(renderPapers);
+            }
+        });
     });
 
 applySettingsUI();
@@ -703,9 +792,10 @@ document.title = `Lanthano Research - ${pageTitle}`;
     
 Promise.all([
     fetch("descriptions.json").then(response => response.json()),
-    fetch("page-counts.json").then(response => response.json())
+    fetch("page-counts.json").then(response => response.json()),
+    fetch("content-pages.json").then(response => response.json()).catch(() => ({}))
 ])
-.then(([data, pageCounts]) => {
+.then(([data, pageCounts, contentPageCounts]) => {
 
 
     
@@ -756,7 +846,7 @@ showNewestBadge = newestDate >= oneYearAgo;
         JSON.stringify(favoritePapers)
     );
 
-    renderPapers();
+    withPreservedState(renderPapers);
 
 }
 
@@ -829,6 +919,56 @@ function buildGalleryHtml(key, paper){
             </div>
         </details>
     `;
+}
+
+// Pages to count toward reading time: everything before the Sources
+// section. Computed ahead of time from each PDF's extracted text and
+// served as content-pages.json, keyed by the paper's PDF filename
+// (paper.url) since that's stable regardless of the descriptions.json
+// key. A per-paper `contentPages` field in descriptions.json can
+// override it manually; if neither is available, this falls back to
+// the paper's total page count from page-counts.json.
+function getContentPageCount(key, paper){
+
+    if(typeof paper.contentPages === "number"){
+        return paper.contentPages;
+    }
+
+    if(
+        paper.url &&
+        typeof contentPageCounts[paper.url] === "number"
+    ){
+        return contentPageCounts[paper.url];
+    }
+
+    return Number(pageCounts[key]) || 0;
+
+}
+
+// Rough reading pace for a research paper, in minutes per page.
+const READING_MINUTES_PER_PAGE = {
+    slow: 3.5,
+    average: 2.5,
+    fast: 1.5
+};
+
+function buildReadTimeHtml(key, paper){
+
+    const pages = getContentPageCount(key, paper);
+
+    const minutesPerPage =
+        READING_MINUTES_PER_PAGE[readingLevel] ||
+        READING_MINUTES_PER_PAGE.average;
+
+    const minutes =
+        pages > 0
+            ? Math.max(1, Math.round(pages * minutesPerPage))
+            : 0;
+
+    if(!minutes) return "";
+
+    return `<p class="read-time-line">Read time: ${minutes} min</p>`;
+
 }
 
     
@@ -1001,6 +1141,7 @@ paper.updated.split("-")[0]}
 
         const titleHtml = `<h2>${paper.title}</h2>`;
         const titleCompactHtml = `<h2 class="compact-title">${paper.title}</h2>`;
+        const readTimeHtml = buildReadTimeHtml(key, paper);
 
         // Header markup (title + whatever the view mode includes),
         // always visible regardless of the warning gate.
@@ -1035,6 +1176,8 @@ if(
 ${getPaperBadge(key, paper)}
 
                 <div class="card-body">
+
+                ${readTimeHtml}
 
                 ${viewMode === "compact" ? titleCompactHtml : headerHtml}
 
@@ -1096,6 +1239,8 @@ ${getPaperBadge(key, paper)}
 
                 <div class="card-body">
 
+                ${readTimeHtml}
+
                 <div class="compact-row">
                 ${titleCompactHtml}
                 ${readBtnInlineHtml}
@@ -1116,6 +1261,8 @@ ${getPaperBadge(key, paper)}
 ${getPaperBadge(key, paper)}
 
                 <div class="card-body">
+
+                ${readTimeHtml}
 
                 ${headerHtml}
 
