@@ -134,23 +134,58 @@ h1{
     z-index:1600;
 }
 
-#sortSelect{
+.sort-dropdown{
+    position:relative;
+}
+
+.sort-btn{
     background:#222;
     color:#eee;
     border:none;
     border-radius:8px;
-    padding:10px 18px;
+    padding:10px 16px;
     font-size:.95em;
     cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:8px;
 }
 
-#sortSelect:hover{
+.sort-btn:hover{
     background:#262626;
 }
 
-#sortSelect:focus{
-    outline:none;
-    border-color:#555;
+.sort-caret{
+    font-size:.75em;
+    color:#999;
+}
+
+.sort-panel{
+    display:none;
+    position:absolute;
+    top:calc(100% + 10px);
+    right:0;
+    background:#1d1d1d;
+    border:1px solid #2c2c2c;
+    border-radius:10px;
+    padding:10px;
+    width:180px;
+    box-shadow:0 6px 18px rgba(0,0,0,.5);
+    z-index:1600;
+    text-align:left;
+}
+
+.sort-panel.open{
+    display:block;
+}
+
+.sort-panel .settings-option{
+    padding:8px 8px;
+    border-radius:6px;
+}
+
+.sort-panel .settings-option:hover{
+    background:#262626;
 }
 
 .settings-btn{
@@ -590,18 +625,48 @@ summary:hover{
 
 <div class="info-bar-right">
 
-<select id="sortSelect">
+<div class="sort-dropdown" id="sortDropdown">
 
-<option value="az">A-Z</option>
-<option value="za">Z-A</option>
+<button class="sort-btn" id="sortButton" type="button" aria-label="Sort">
+    <span id="sortButtonLabel">A-Z</span>
+    <span class="sort-caret">▾</span>
+</button>
 
-<option value="newest">Newest</option>
-<option value="oldest">Oldest</option>
+<div class="sort-panel" id="sortPanel">
 
-<option value="mostimages">Most Images</option>
-<option value="leastimages">Least Images</option>
+    <label class="settings-option">
+        <input type="radio" name="sortType" value="az">
+        A-Z
+    </label>
 
-</select>
+    <label class="settings-option">
+        <input type="radio" name="sortType" value="za">
+        Z-A
+    </label>
+
+    <label class="settings-option">
+        <input type="radio" name="sortType" value="newest">
+        Newest
+    </label>
+
+    <label class="settings-option">
+        <input type="radio" name="sortType" value="oldest">
+        Oldest
+    </label>
+
+    <label class="settings-option">
+        <input type="radio" name="sortType" value="mostimages">
+        Most Images
+    </label>
+
+    <label class="settings-option">
+        <input type="radio" name="sortType" value="leastimages">
+        Least Images
+    </label>
+
+</div>
+
+</div>
 
 </div>
 
@@ -659,6 +724,18 @@ let renderPapers = function(){};
 let readingLevel =
     localStorage.getItem("readingLevel") || "average";
 
+const sortLabels = {
+    az: "A-Z",
+    za: "Z-A",
+    newest: "Newest",
+    oldest: "Oldest",
+    mostimages: "Most Images",
+    leastimages: "Least Images"
+};
+
+let sortType =
+    localStorage.getItem("paperSort") || "az";
+
 // Re-runs a render while keeping the current scroll position and
 // which "Supporting Images" panels were open (e.g. after starring
 // a paper), instead of jumping back to the top with everything closed.
@@ -698,6 +775,15 @@ function applySettingsUI(){
             input.checked = input.value === readingLevel;
         });
 
+    document
+        .querySelectorAll('input[name="sortType"]')
+        .forEach(input => {
+            input.checked = input.value === sortType;
+        });
+
+    document.getElementById("sortButtonLabel").textContent =
+        sortLabels[sortType] || "Sort";
+
 }
 
 const settingsButton =
@@ -705,11 +791,32 @@ const settingsButton =
 const settingsPanel =
     document.getElementById("settingsPanel");
 
+const sortButton =
+    document.getElementById("sortButton");
+const sortPanel =
+    document.getElementById("sortPanel");
+
+function closeMenus(){
+    settingsPanel.classList.remove("open");
+    sortPanel.classList.remove("open");
+}
+
 settingsButton.addEventListener("click", (e) => {
     e.stopPropagation();
-    settingsPanel.classList.toggle("open");
+    const willOpen = !settingsPanel.classList.contains("open");
+    closeMenus();
+    if(willOpen) settingsPanel.classList.add("open");
 });
 
+sortButton.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const willOpen = !sortPanel.classList.contains("open");
+    closeMenus();
+    if(willOpen) sortPanel.classList.add("open");
+});
+
+// Tapping/clicking anywhere outside either menu closes whichever
+// one is open.
 document.addEventListener("click", (e) => {
     if(
         settingsPanel.classList.contains("open") &&
@@ -718,7 +825,20 @@ document.addEventListener("click", (e) => {
     ){
         settingsPanel.classList.remove("open");
     }
+    if(
+        sortPanel.classList.contains("open") &&
+        !sortPanel.contains(e.target) &&
+        e.target !== sortButton
+    ){
+        sortPanel.classList.remove("open");
+    }
 });
+
+// Scrolling the page also closes either open menu, matching the
+// tap-outside-to-close behavior.
+window.addEventListener("scroll", () => {
+    closeMenus();
+}, { passive: true });
 
 document
     .querySelectorAll('input[name="viewMode"]')
@@ -750,6 +870,21 @@ document
             if(input.checked){
                 readingLevel = input.value;
                 localStorage.setItem("readingLevel", readingLevel);
+                withPreservedState(renderPapers);
+            }
+        });
+    });
+
+document
+    .querySelectorAll('input[name="sortType"]')
+    .forEach(input => {
+        input.addEventListener("change", () => {
+            if(input.checked){
+                sortType = input.value;
+                localStorage.setItem("paperSort", sortType);
+                document.getElementById("sortButtonLabel").textContent =
+                    sortLabels[sortType] || "Sort";
+                sortPanel.classList.remove("open");
                 withPreservedState(renderPapers);
             }
         });
@@ -1027,9 +1162,6 @@ let filteredPapers = papers.filter(([key,paper]) =>
     )
 
 );
-
-const sortType =
-    document.getElementById("sortSelect").value;
 
 if(sortType === "az"){
 
@@ -1367,33 +1499,9 @@ document.querySelectorAll(".pdf-link").forEach(link=>{
 
     
 
-const sortSelect =
-    document.getElementById("sortSelect");
-
-const savedSort =
-    localStorage.getItem("paperSort");
-
-if(savedSort){
-    sortSelect.value = savedSort;
-}
-
 loadFavorites();
 
 renderPapers();
-
-
-
-sortSelect.addEventListener("change", () => {
-
-    localStorage.setItem(
-        "paperSort",
-        sortSelect.value
-    );
-
-    renderPapers();
-
-});
-    
 
 
 
