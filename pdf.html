@@ -2761,6 +2761,25 @@ function renderLinkLayer(view){
 
 const MIN_IMAGE_HIT_PDF_UNITS = 24;
 
+/*
+   A small self-contained point transform, deliberately not relying
+   on Util.applyTransform - real-world testing against pdf.js
+   5.6.205 found that this method's behavior differs from what
+   older pdf.js releases (and most documentation examples) do: this
+   version mutates the array in place and returns nothing, rather
+   than returning a new [x,y] point. Depending on a return value
+   silently broke image detection completely (every region came
+   back as undefined and got dropped). This has no such ambiguity:
+   a PDF matrix [a,b,c,d,e,f] applied to point (x,y) is always
+   (a*x + c*y + e, b*x + d*y + f), independent of library version.
+*/
+function transformPoint(x, y, m){
+  return [
+    x * m[0] + y * m[2] + m[4],
+    x * m[1] + y * m[3] + m[5]
+  ];
+}
+
 async function extractPageImages(page){
 
   let opList;
@@ -2809,10 +2828,10 @@ async function extractPageImages(page){
       }
 
       const corners = [
-        Util.applyTransform([0, 0], ctm),
-        Util.applyTransform([1, 0], ctm),
-        Util.applyTransform([0, 1], ctm),
-        Util.applyTransform([1, 1], ctm)
+        transformPoint(0, 0, ctm),
+        transformPoint(1, 0, ctm),
+        transformPoint(0, 1, ctm),
+        transformPoint(1, 1, ctm)
       ];
 
       const xs = corners.map(point => point[0]);
@@ -4487,7 +4506,7 @@ async function ensureQuerySearched(){
    deliberately NOT the cached `result.docTop` from when
    highlights were built - that snapshot can go stale (the
    person may have scrolled, or layout may have settled
-   slightly differently) by the time they actually press an
+   slightly different) by the time they actually press an
    arrow button, and navigating off a stale snapshot is what
    made forward navigation from an unset state unreliable.
 ============================================================ */
@@ -5703,9 +5722,20 @@ function buildSelfReturnUrl(){
 
   const selfParams = new URLSearchParams();
 
-  selfParams.set("file", file);
-  selfParams.set("paper", title);
-  selfParams.set("return", returnPage);
+  /*
+     file/paper/return are read back (here and everywhere else in
+     this app) as decodeURIComponent(params.get(x)) - one decode
+     from URLSearchParams itself plus one manual decode. Matching
+     that means encoding them manually once here, so
+     URLSearchParams' own automatic encoding becomes the second
+     layer. Skipping this "pre-encode" works fine right up until a
+     filename or title contains a literal "%" (e.g. "100%
+     Complete.pdf"), at which point the extra unmatched decode
+     throws URIError: URI malformed instead of just misreading it.
+  */
+  selfParams.set("file", encodeURIComponent(file));
+  selfParams.set("paper", encodeURIComponent(title));
+  selfParams.set("return", encodeURIComponent(returnPage));
   selfParams.set("page", String(pageNumber));
   selfParams.set("zoom", String(zoomLevel));
   selfParams.set("scrollTop", String(Math.round(viewer.scrollTop)));
@@ -5727,7 +5757,10 @@ function openImageInViewer(dataUrl, filename){
   const imageParams = new URLSearchParams();
 
   imageParams.set("image", "session:pdfImageExport");
-  imageParams.set("return", selfUrl);
+
+  // Same double-encode reasoning as buildSelfReturnUrl above -
+  // selfUrl itself is read back with decodeURIComponent(params.get(...)).
+  imageParams.set("return", encodeURIComponent(selfUrl));
 
   window.location.assign(`image.html?${imageParams.toString()}`);
 }
