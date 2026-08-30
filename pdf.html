@@ -2132,6 +2132,19 @@ const initialZoomParam = parseFloat(params.get("zoom") || "");
 const initialScrollTopParam = parseFloat(params.get("scrollTop") || "");
 const initialScrollLeftParam = parseFloat(params.get("scrollLeft") || "");
 
+/*
+   Set when this PDF was opened from an ordinary catalog image
+   (image.html's "Open Parent PDF" button, reached WITHOUT having
+   come from the PDF's own image-click flow) - carries that
+   image's own URL so this viewer can search its rendered pages
+   for a visual match and jump straight to whichever page it's
+   actually on, instead of always landing on page 1. See
+   searchForImageAcrossPages, invoked from the LOAD PDF section.
+*/
+const findImageParam = params.get("findImage") ?
+  decodeURIComponent(params.get("findImage")) :
+  "";
+
 /* ============================================================
    ELEMENTS
 ============================================================ */
@@ -2372,6 +2385,14 @@ const MAX_ZOOM_LEVEL = zoomLevels[zoomLevels.length - 1];
 let pdfDoc = null;
 const pageViews = [];
 let renderGeneration = 0;
+
+/*
+   The document's outline (table of contents), populated once the
+   PDF loads (see LOAD PDF at the bottom). Used both for the TOC
+   popup and, further down, to work out which section heading an
+   extracted image falls under.
+*/
+let outlineItems = null;
 
 /* ============================================================
    SEARCH STATE
@@ -3261,6 +3282,178 @@ async function resolveDestination(destination){
   }catch{
     return null;
   }
+}
+
+/* ============================================================
+   OUTLINE POSITIONS (for naming extracted images by section)
+
+   Flattens the document's outline (table of contents, which is
+   naturally nested/hierarchical) into a single ordered list of
+   {pageIndex, y, title} entries, resolving each entry's
+   destination the same way resolveDestination does above but
+   keeping the raw destination array too, since that's where a
+   heading's vertical position on its page lives.
+
+   PDF explicit destinations come in a few shapes; the two common
+   ones that carry a usable Y coordinate are XYZ ([ref,{name:
+   "XYZ"},left,top,zoom]) and FitH/FitBH ([ref,{name:"FitH"},top]).
+   Anything else (Fit, FitB, FitR, ...) has no Y to read, so that
+   heading is treated as sitting at the very top of its page -
+   ASSUMED_TOP_Y is comfortably taller than any realistic page.
+============================================================ */
+
+const ASSUMED_TOP_Y = 100000;
+const PAGE_ORDER_MULTIPLIER = 1000000;
+
+let flattenedOutlineCache = null;
+
+async function getFlattenedOutline(){
+
+  if(flattenedOutlineCache){
+    return flattenedOutlineCache;
+  }
+
+  const entries = [];
+
+  async function walk(items){
+
+    if(!Array.isArray(items)){
+      return;
+    }
+
+    for(const item of items){
+
+      try{
+
+        let dest = item.dest;
+
+        if(typeof dest === "string"){
+          dest = await pdfDoc.getDestination(dest);
+        }
+
+        if(Array.isArray(dest) && dest.length){
+
+          const pageRef = dest[0];
+
+          let pageIndex = -1;
+
+          try{
+            pageIndex = await pdfDoc.getPageIndex(pageRef);
+          }catch{
+            if(typeof pageRef === "number"){
+              pageIndex = pageRef;
+            }
+          }
+
+          if(pageIndex >= 0){
+
+            let y = ASSUMED_TOP_Y;
+
+            const kind = dest[1]?.name;
+
+            if(kind === "XYZ" && typeof dest[3] === "number"){
+              y = dest[3];
+            }else if((kind === "FitH" || kind === "FitBH") && typeof dest[2] === "number"){
+              y = dest[2];
+            }
+
+            entries.push({
+              pageIndex,
+              y,
+              title:(item.title || "").trim()
+            });
+          }
+        }
+
+      }catch(error){
+        console.warn("Could not resolve outline entry:", error);
+      }
+
+      if(item.items && item.items.length){
+        await walk(item.items);
+      }
+    }
+  }
+
+  await walk(outlineItems);
+
+  flattenedOutlineCache = entries;
+
+  return entries;
+}
+
+/*
+   Finds the outline entry an image visually falls under: the
+   closest heading that comes at-or-before the image's position,
+   comparing page and Y together (PDF Y grows upward, so a
+   larger Y is higher up the page - region.maxY is therefore the
+   image's own visual top edge).
+*/
+async function findHeaderForImage(pageNumber, region){
+
+  const outline = await getFlattenedOutline();
+
+  if(!outline.length){
+    return null;
+  }
+
+  const imagePos = (pageNumber - 1) * PAGE_ORDER_MULTIPLIER - region.maxY;
+
+  let best = null;
+  let bestPos = -Infinity;
+
+  for(const entry of outline){
+
+    const pos = entry.pageIndex * PAGE_ORDER_MULTIPLIER - entry.y;
+
+    if(pos <= imagePos && pos > bestPos){
+      bestPos = pos;
+      best = entry;
+    }
+  }
+
+  return best;
+}
+
+function toTitleCase(str){
+
+  return String(str).replace(/\w\S*/g, word => word.charAt(0).toUpperCase() + word.slice(1));
+}
+
+/*
+   The display/file name for an extracted image: the section
+   heading it visually falls under (if the document has an
+   outline and the image falls under one), title-cased, with
+   " Extracted Image" appended - falling back to the document's
+   own title when there's no usable heading.
+*/
+async function buildImageNames(pageNumber, region){
+
+  let baseText = title || "Document";
+
+  try{
+
+    const header = await findHeaderForImage(pageNumber, region);
+
+    if(header?.title){
+      baseText = header.title;
+    }
+
+  }catch(error){
+    console.warn("Could not determine heading for image:", error);
+  }
+
+  baseText = baseText.trim().replace(/\s+/g, " ") || "Document";
+
+  const displayName = `${toTitleCase(baseText)} Extracted Image`;
+
+  const filenameBase = displayName
+    .replace(/[^\w\- ]+/g, "")
+    .trim()
+    .replace(/\s+/g, "_")
+    .slice(0, 80) || "extracted_image";
+
+  return { displayName, filename:`${filenameBase}.png` };
 }
 
 async function scrollToView(view){
@@ -5762,15 +5955,333 @@ function canvasToDataUrl(canvas){
   });
 }
 
-function buildImageFilename(pageNumber){
+/* ============================================================
+   CATALOG IMAGE MATCHING
 
-  const base = (title || "document")
-    .replace(/[^\w\- ]+/g, "")
-    .trim()
-    .replace(/\s+/g, "_")
-    .slice(0, 60) || "document";
+   Before showing our own extracted crop, check whether
+   descriptions.json already lists a proper standalone copy of
+   this same picture for the current PDF - if so, that's very
+   likely a cleaner, unmodified source than a screenshot-style
+   crop of a rendered page, so it's worth showing that instead.
+   Matching compares small RGB thumbnails ("fingerprints") of
+   each image - color, not just grayscale luminance, since two
+   very differently-colored images (e.g. a flat red vs. a flat
+   blue) can land on nearly the same brightness and would
+   otherwise falsely "match" if only brightness were compared.
+   Comparing our crop's thumbnail rotated all four ways against
+   each candidate's own natural orientation makes the match
+   rotation-independent without needing to guess which way is
+   "up" for either side.
+============================================================ */
 
-  return `${base}_page${pageNumber}_image.png`;
+const FINGERPRINT_SIZE = 16;
+const IMAGE_MATCH_THRESHOLD = 20;
+
+function computeFingerprint(source){
+
+  const canvas = document.createElement("canvas");
+
+  canvas.width = FINGERPRINT_SIZE;
+  canvas.height = FINGERPRINT_SIZE;
+
+  const ctx = canvas.getContext("2d");
+
+  ctx.drawImage(source, 0, 0, FINGERPRINT_SIZE, FINGERPRINT_SIZE);
+
+  const data = ctx.getImageData(0, 0, FINGERPRINT_SIZE, FINGERPRINT_SIZE).data;
+
+  // R, G, B per pixel (alpha dropped) - keeping all three channels,
+  // rather than collapsing to a single luminance value, is what
+  // lets this tell apart images that happen to share a brightness
+  // but not a color.
+  const rgb = new Float32Array(FINGERPRINT_SIZE * FINGERPRINT_SIZE * 3);
+
+  for(let i = 0; i < FINGERPRINT_SIZE * FINGERPRINT_SIZE; i++){
+    rgb[i * 3] = data[i * 4];
+    rgb[i * 3 + 1] = data[i * 4 + 1];
+    rgb[i * 3 + 2] = data[i * 4 + 2];
+  }
+
+  return rgb;
+}
+
+function rotateFingerprint90(rgb){
+
+  const size = FINGERPRINT_SIZE;
+  const out = new Float32Array(size * size * 3);
+
+  for(let y = 0; y < size; y++){
+    for(let x = 0; x < size; x++){
+
+      const srcIndex = ((size - 1 - x) * size + y) * 3;
+      const dstIndex = (y * size + x) * 3;
+
+      out[dstIndex] = rgb[srcIndex];
+      out[dstIndex + 1] = rgb[srcIndex + 1];
+      out[dstIndex + 2] = rgb[srcIndex + 2];
+    }
+  }
+
+  return out;
+}
+
+function fingerprintAllRotations(source){
+
+  const base = computeFingerprint(source);
+  const r90 = rotateFingerprint90(base);
+  const r180 = rotateFingerprint90(r90);
+  const r270 = rotateFingerprint90(r180);
+
+  return [base, r90, r180, r270];
+}
+
+function fingerprintDistance(a, b){
+
+  let sum = 0;
+
+  for(let i = 0; i < a.length; i++){
+    sum += Math.abs(a[i] - b[i]);
+  }
+
+  return sum / a.length;
+}
+
+function loadImageElement(src){
+
+  return new Promise((resolve, reject) => {
+
+    const img = new Image();
+
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error(`Could not load ${src}`));
+
+    img.src = src;
+  });
+}
+
+let descriptionsCache = null;
+
+async function getDescriptions(){
+
+  if(descriptionsCache){
+    return descriptionsCache;
+  }
+
+  try{
+
+    const response = await fetch("descriptions.json");
+
+    if(!response.ok){
+      throw new Error(`descriptions.json responded with ${response.status}`);
+    }
+
+    descriptionsCache = await response.json();
+
+  }catch(error){
+    console.warn("Could not load descriptions.json:", error);
+    descriptionsCache = {};
+  }
+
+  return descriptionsCache;
+}
+
+async function getCurrentPaperEntry(){
+
+  const data = await getDescriptions();
+
+  return Object.values(data).find(entry => entry.url === file) || null;
+}
+
+/*
+   Compares our extracted crop against every image listed for
+   this PDF in descriptions.json, accounting for rotation, and
+   returns the best match's path if it's a close enough visual
+   match - or null if nothing lines up (in which case the
+   caller falls back to our own crop).
+*/
+async function findMatchingCatalogImage(cropCanvas){
+
+  let paper;
+
+  try{
+    paper = await getCurrentPaperEntry();
+  }catch(error){
+    console.warn("Could not look up catalog images:", error);
+    return null;
+  }
+
+  const candidates = paper?.images;
+
+  if(!Array.isArray(candidates) || !candidates.length){
+    return null;
+  }
+
+  const cropFingerprints = fingerprintAllRotations(cropCanvas);
+
+  let best = null;
+  let bestDistance = Infinity;
+
+  for(const imagePath of candidates){
+
+    try{
+
+      const img = await loadImageElement(imagePath);
+      const fingerprint = computeFingerprint(img);
+
+      let distance = Infinity;
+
+      for(const cropFp of cropFingerprints){
+        distance = Math.min(distance, fingerprintDistance(cropFp, fingerprint));
+      }
+
+      if(distance < bestDistance){
+        bestDistance = distance;
+        best = imagePath;
+      }
+
+    }catch(error){
+      console.warn("Could not check candidate image", imagePath, error);
+    }
+  }
+
+  return bestDistance <= IMAGE_MATCH_THRESHOLD ? best : null;
+}
+
+/* ============================================================
+   SEARCH PAGES FOR A GIVEN IMAGE
+
+   The reverse direction of findMatchingCatalogImage: given a
+   known image URL (from image.html's "Open Parent PDF" on a
+   regular catalog image), scans the document's pages looking for
+   a visual match, so the reader can be dropped straight onto the
+   page it actually appears on. Deliberately lighter-weight than
+   the high-quality export path (extractImageCanvas) - renders
+   each page at a modest, fixed scale purely for comparison,
+   since this may need to check many pages before finding (or
+   failing to find) a match. Stops at the first match, scanning
+   in page order, and gives up gracefully - and silently - if
+   nothing turns up within a reasonable page budget.
+============================================================ */
+
+const FIND_IMAGE_MAX_PAGES = 60;
+
+async function searchForImageAcrossPages(targetUrl){
+
+  let targetImg;
+
+  try{
+    targetImg = await loadImageElement(targetUrl);
+  }catch(error){
+    console.warn("Could not load target image for search:", error);
+    return null;
+  }
+
+  const targetFingerprints = fingerprintAllRotations(targetImg);
+
+  const pageLimit = Math.min(pdfDoc.numPages, FIND_IMAGE_MAX_PAGES);
+
+  for(let pageNumber = 1; pageNumber <= pageLimit; pageNumber++){
+
+    let view;
+
+    try{
+      view = await ensurePageView(pageNumber);
+    }catch{
+      continue;
+    }
+
+    if(!view){
+      continue;
+    }
+
+    if(!view.imageRegions){
+
+      try{
+        view.imageRegions = await extractPageImages(view.page);
+      }catch{
+        continue;
+      }
+    }
+
+    if(!view.imageRegions.length){
+      continue;
+    }
+
+    let searchViewport;
+    let pageCanvas;
+
+    try{
+
+      const naturalViewport = view.page.getViewport({ scale:1 });
+
+      const safeScale = Math.min(
+        1,
+        MAX_CANVAS_DIMENSION / naturalViewport.width,
+        MAX_CANVAS_DIMENSION / naturalViewport.height
+      );
+
+      searchViewport = view.page.getViewport({ scale:safeScale });
+
+      pageCanvas = document.createElement("canvas");
+      pageCanvas.width = Math.max(1, Math.ceil(searchViewport.width));
+      pageCanvas.height = Math.max(1, Math.ceil(searchViewport.height));
+
+      const ctx = pageCanvas.getContext("2d", { alpha:false });
+
+      await view.page.render({ canvasContext:ctx, viewport:searchViewport }).promise;
+
+    }catch(error){
+      console.warn(`Could not render page ${pageNumber} for image search:`, error);
+      continue;
+    }
+
+    for(const region of view.imageRegions){
+
+      try{
+
+        const rect = searchViewport.convertToViewportRectangle(
+          [region.minX, region.minY, region.maxX, region.maxY]
+        );
+
+        const left = Math.max(0, Math.min(rect[0], rect[2]));
+        const top = Math.max(0, Math.min(rect[1], rect[3]));
+        const width = Math.min(pageCanvas.width - left, Math.abs(rect[2] - rect[0]));
+        const height = Math.min(pageCanvas.height - top, Math.abs(rect[3] - rect[1]));
+
+        if(width < 4 || height < 4){
+          continue;
+        }
+
+        const cropCanvas = document.createElement("canvas");
+
+        cropCanvas.width = Math.max(1, Math.round(width));
+        cropCanvas.height = Math.max(1, Math.round(height));
+
+        cropCanvas.getContext("2d").drawImage(
+          pageCanvas,
+          left, top, width, height,
+          0, 0, cropCanvas.width, cropCanvas.height
+        );
+
+        const fingerprint = computeFingerprint(cropCanvas);
+
+        let distance = Infinity;
+
+        for(const fp of targetFingerprints){
+          distance = Math.min(distance, fingerprintDistance(fp, fingerprint));
+        }
+
+        if(distance <= IMAGE_MATCH_THRESHOLD){
+          return pageNumber;
+        }
+
+      }catch(error){
+        console.warn("Could not compare a region during image search:", error);
+      }
+    }
+  }
+
+  return null;
 }
 
 /*
@@ -5807,23 +6318,68 @@ function buildSelfReturnUrl(){
   return `${location.pathname}?${selfParams.toString()}`;
 }
 
-function openImageInViewer(dataUrl, filename){
+function openImageInViewer(dataUrl, filename, displayName){
 
   const selfUrl = buildSelfReturnUrl();
 
+  /*
+     A unique-per-click storage key/URL, rather than the fixed
+     "pdfImageExport" used before. Two DIFFERENT images clicked
+     without the PDF's own page/zoom/scroll changing in between
+     produce an otherwise byte-identical image.html URL (that
+     URL only encodes the PDF's current viewing state, not which
+     image was tapped) - and some mobile browsers, on navigating
+     to a URL that already exists earlier in the tab's session
+     history, resume a cached instance of that earlier page
+     instead of truly loading it fresh. That cached instance
+     still has the FIRST image's data baked into it, which is
+     exactly "view image A, then a different one, still shows
+     A". Making both the key and the URL unique every time
+     removes the identical-URL coincidence that makes that
+     possible, regardless of which specific caching behavior a
+     given browser applies to it.
+  */
+  const exportId = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  const storageKey = `pdfImageExport_${exportId}`;
+
   try{
-    sessionStorage.setItem("pdfImageExport", JSON.stringify({ dataUrl, filename }));
+    sessionStorage.setItem(storageKey, JSON.stringify({ dataUrl, filename, displayName }));
   }catch(error){
     console.warn("Could not stash extracted image for the image viewer:", error);
   }
 
   const imageParams = new URLSearchParams();
 
-  imageParams.set("image", "session:pdfImageExport");
+  imageParams.set("image", `session:${storageKey}`);
 
   // Same double-encode reasoning as buildSelfReturnUrl above -
   // selfUrl itself is read back with decodeURIComponent(params.get(...)).
   imageParams.set("return", encodeURIComponent(selfUrl));
+
+  window.location.assign(`image.html?${imageParams.toString()}`);
+}
+
+/*
+   Same idea as openImageInViewer, but for the case where a
+   visual match was found in descriptions.json - opens that
+   catalog image directly (a real file, not a data URL) while
+   still wiring "return" up to jump straight back to the exact
+   page/zoom/scroll this was opened from. viewedFromPdf=1 tells
+   image.html to treat its own "Open Parent PDF" button the same
+   way as Back for this image too, rather than running its usual
+   catalog search-and-jump logic - we already know precisely
+   where to go back to, since we just came from there.
+*/
+function openCatalogImageInViewer(imagePath, displayName){
+
+  const selfUrl = buildSelfReturnUrl();
+
+  const imageParams = new URLSearchParams();
+
+  imageParams.set("image", encodeURIComponent(imagePath));
+  imageParams.set("return", encodeURIComponent(selfUrl));
+  imageParams.set("viewedFromPdf", "1");
+  imageParams.set("displayName", encodeURIComponent(displayName));
 
   window.location.assign(`image.html?${imageParams.toString()}`);
 }
@@ -5860,15 +6416,33 @@ async function handleImageMenuAction(action){
   try{
 
     const canvas = await extractImageCanvas(target.view, target.region);
-    const dataUrl = await canvasToDataUrl(canvas);
-    const filename = buildImageFilename(target.view.pageNumber);
+    const { displayName, filename } = await buildImageNames(target.view.pageNumber, target.region);
+
+    if(action === "download"){
+
+      // Download always saves our own crop of exactly what was
+      // tapped - a separately-hosted catalog copy might be
+      // cropped, edited, or simply a different file than what's
+      // literally sitting in this PDF, and download intent is
+      // "give me this picture", not "find me a similar one".
+      const dataUrl = await canvasToDataUrl(canvas);
+
+      closeImageContextMenu();
+
+      downloadExtractedImage(dataUrl, filename);
+
+      return;
+    }
+
+    const matchedPath = await findMatchingCatalogImage(canvas);
 
     closeImageContextMenu();
 
-    if(action === "view"){
-      openImageInViewer(dataUrl, filename);
+    if(matchedPath){
+      openCatalogImageInViewer(matchedPath, displayName);
     }else{
-      downloadExtractedImage(dataUrl, filename);
+      const dataUrl = await canvasToDataUrl(canvas);
+      openImageInViewer(dataUrl, filename, displayName);
     }
 
   }catch(error){
@@ -6013,7 +6587,7 @@ try{
   // with no outline resolves to null, not an error — either way
   // the TOC button is set up so the person always gets a clear
   // answer when they tap it.
-  let outlineItems = null;
+  outlineItems = null;
 
   try{
     outlineItems = await pdfDoc.getOutline();
@@ -6108,6 +6682,54 @@ try{
     }catch(error){
       console.warn("Could not restore saved page position:", error);
     }
+  }
+
+  /*
+     Opened from a regular catalog image (not the PDF's own
+     image-click flow, which already supplies exact page/zoom/
+     scroll above) - search the pages for a visual match and jump
+     to it if one turns up. Runs in the background rather than
+     blocking on it: the reader already has page 1 in front of
+     them, and this may need to check quite a few pages before it
+     either finds a match or gives up.
+  */
+  if(findImageParam && targetPage === 1){
+
+    void (async () => {
+
+      try{
+
+        const foundPage = await searchForImageAcrossPages(findImageParam);
+
+        if(!foundPage){
+          return;
+        }
+
+        const view = await ensurePageView(foundPage);
+
+        if(!view){
+          return;
+        }
+
+        updateWrapperWidth();
+
+        await renderPage(view);
+
+        const viewerRect = viewer.getBoundingClientRect();
+        const pageRect = view.pageDiv.getBoundingClientRect();
+        const targetOffset = pageRect.top - viewerRect.top + viewer.scrollTop;
+
+        viewer.scrollTop = Math.max(0, targetOffset - 8);
+
+        pageInput.value = String(foundPage);
+
+        updateSideScroller();
+
+      }catch(error){
+        console.warn("Image search across pages failed:", error);
+      }
+
+    })();
   }
 
   void (async () => {
