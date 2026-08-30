@@ -263,6 +263,16 @@ input:focus-visible{
   background:#242424;
 }
 
+.rotateIcon{
+  position:relative;
+
+  top:-1px;
+
+  margin-right:2px;
+
+  font-size:15px;
+}
+
 .iconButton{
   width:32px;
   height:32px;
@@ -741,6 +751,14 @@ body.reading-mode #readingModeFloat{
 
 <div id="toolbar">
 
+  <button
+    id="fit"
+    class="toolButton"
+    title="Reset view"
+  >
+    Reset
+  </button>
+
   <div class="zoomControls">
 
     <button
@@ -766,11 +784,12 @@ body.reading-mode #readingModeFloat{
   </div>
 
   <button
-    id="fit"
+    id="rotate"
     class="toolButton"
-    title="Reset view"
+    title="Rotate clockwise"
+    aria-label="Rotate clockwise"
   >
-    Reset
+    <span class="rotateIcon">⟳</span> Rotate
   </button>
 
   <button
@@ -970,6 +989,10 @@ const title =
 
 const fitButton =
     document.getElementById("fit");
+
+
+const rotateButton =
+    document.getElementById("rotate");
 
 
 const lockButton =
@@ -1467,6 +1490,16 @@ let offsetX = 0;
 
 let offsetY = 0;
 
+/*
+    Degrees clockwise, always a multiple of 90. Kept separate
+    from the zoom/pan transform below - rotation changes which
+    axis is "wide" for fit-to-screen purposes, but doesn't
+    otherwise interact with panning math, since translate() is
+    the outermost transform (applied in plain screen space,
+    unaffected by whatever rotate() does further in).
+*/
+let rotation = 0;
+
 
 /*
     Movement modes:
@@ -1521,7 +1554,8 @@ function draw(){
             calc(-50% + ${offsetX}px),
             calc(-50% + ${offsetY}px)
         )
-        scale(${base * zoom})`;
+        scale(${base * zoom})
+        rotate(${rotation}deg)`;
 
 
     zoomPercent.value =
@@ -1538,13 +1572,37 @@ function fit(){
         return;
 
 
+    /*
+        At 90/270 degrees the image's visual footprint is
+        sideways - its natural WIDTH occupies the viewer's
+        vertical space and vice versa. Swapping which
+        dimension gets measured against which is what keeps
+        "fit" actually fitting after a rotation, instead of
+        the image overflowing or shrinking to a fraction of
+        the available space.
+    */
+
+    const rotatedSideways =
+        rotation % 180 !== 0;
+
+    const effectiveWidth =
+        rotatedSideways ?
+        img.naturalHeight :
+        img.naturalWidth;
+
+    const effectiveHeight =
+        rotatedSideways ?
+        img.naturalWidth :
+        img.naturalHeight;
+
+
     base = Math.min(
 
         viewer.clientWidth /
-        img.naturalWidth,
+        effectiveWidth,
 
         viewer.clientHeight /
-        img.naturalHeight
+        effectiveHeight
 
     );
 
@@ -1623,6 +1681,31 @@ plusButton.onclick =
 
 fitButton.onclick =
     fit;
+
+
+/* ---------- Rotate ---------- */
+
+rotateButton.onclick =
+    () => {
+
+        rotation =
+            (rotation + 90) % 360;
+
+
+        /*
+            Re-fitting after every rotation (rather than
+            keeping whatever zoom/pan was active) is the
+            same choice most image viewers make: a rotated
+            image at the previous zoom/pan is very likely
+            to have swung part of itself out of view, so
+            landing back on a clean centered fit is more
+            predictable than trying to preserve a zoom
+            level that may no longer make sense.
+        */
+
+        fit();
+
+    };
 
 
 /* ---------- Manual Zoom ---------- */
