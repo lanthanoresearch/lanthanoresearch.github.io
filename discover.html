@@ -1,0 +1,979 @@
+<!DOCTYPE html><html>
+<head>
+<link rel="icon" type="image/png" href="file_000000000c40722f92b1fe6758cb4855.png">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#111111">
+<title>Discover Your Research — Lanthano Research</title>
+<style>
+
+body{
+margin:0;
+background:#111;
+color:#eee;
+font-family:Arial,sans-serif;
+}
+
+a,a:link,a:visited,a:hover,a:active{
+text-decoration:none;
+color:inherit;
+}
+
+.top-nav{
+max-width:640px;
+margin:0 auto;
+padding:20px 20px 0;
+}
+
+.back-link{
+color:#888;
+font-size:.95em;
+}
+
+.back-link:hover{
+color:#fff;
+}
+
+.discover-wrap{
+max-width:640px;
+margin:0 auto;
+padding:20px 20px 80px;
+box-sizing:border-box;
+min-height:80vh;
+display:flex;
+flex-direction:column;
+}
+
+.discover-header{
+text-align:center;
+margin:20px 0 10px;
+}
+
+.discover-header h1{
+font-size:2em;
+margin:0 0 10px 0;
+}
+
+.discover-header p{
+color:#999;
+font-size:1.02em;
+line-height:1.6;
+margin:0 auto;
+max-width:480px;
+}
+
+.progress-track{
+display:flex;
+justify-content:center;
+gap:8px;
+margin:26px 0 6px;
+}
+
+.progress-dot{
+width:8px;
+height:8px;
+border-radius:50%;
+background:#333;
+transition:.25s;
+}
+
+.progress-dot.filled{
+background:#6fa8ff;
+}
+
+.progress-dot.current{
+background:#fff;
+box-shadow:0 0 0 4px rgba(255,255,255,.12);
+}
+
+.quiz-stage{
+flex:1;
+display:flex;
+align-items:center;
+justify-content:center;
+padding:10px 0;
+}
+
+.quiz-card{
+width:100%;
+background:#181818;
+border:1px solid #2b2b2b;
+border-radius:16px;
+padding:34px 26px;
+box-sizing:border-box;
+opacity:0;
+transform:translateY(10px);
+animation:cardIn .35s ease forwards;
+}
+
+@keyframes cardIn{
+to{
+opacity:1;
+transform:translateY(0);
+}
+}
+
+.quiz-card.leaving{
+animation:cardOut .2s ease forwards;
+}
+
+@keyframes cardOut{
+to{
+opacity:0;
+transform:translateY(-8px);
+}
+}
+
+.quiz-icon{
+text-align:center;
+font-size:2.4em;
+margin-bottom:6px;
+}
+
+.quiz-question{
+text-align:center;
+font-size:1.35em;
+font-weight:bold;
+line-height:1.4;
+margin:0 0 26px 0;
+}
+
+.quiz-options{
+display:flex;
+flex-direction:column;
+gap:12px;
+}
+
+.quiz-option{
+display:block;
+width:100%;
+box-sizing:border-box;
+background:#222;
+border:1px solid #444;
+border-radius:14px;
+color:#eee;
+font-size:1.05em;
+font-weight:bold;
+padding:16px 18px;
+cursor:pointer;
+transition:.2s;
+text-align:center;
+font-family:inherit;
+}
+
+.quiz-option:hover{
+background:#2c2c2c;
+border-color:#666;
+}
+
+.quiz-option:active{
+transform:scale(.98);
+}
+
+.quiz-option .opt-emoji{
+margin-right:8px;
+}
+
+.quiz-option.yes-lean:hover{
+color:#6fa8ff;
+}
+
+.quiz-option.no-lean:hover{
+color:#ffb0b0;
+}
+
+.quiz-loading{
+text-align:center;
+color:#888;
+padding:40px 0;
+}
+
+/* ---- Result ---- */
+
+.result-lead{
+text-align:center;
+color:#999;
+font-size:1em;
+margin:24px 0 4px;
+letter-spacing:.3px;
+}
+
+.result-card{
+background:#1d1d1d;
+border:1px solid #333;
+border-radius:16px;
+overflow:hidden;
+opacity:0;
+transform:translateY(10px);
+animation:cardIn .4s ease forwards;
+}
+
+.result-media{
+height:150px;
+background:#2b2b2b;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:60px;
+color:#888;
+}
+
+.result-body{
+padding:26px;
+}
+
+.result-category{
+text-align:center;
+color:#888;
+font-size:.9em;
+margin:0 0 10px 0;
+letter-spacing:.4px;
+}
+
+.result-title{
+text-align:center;
+font-weight:bold;
+font-size:1.65rem;
+line-height:1.25;
+margin:0 0 16px 0;
+}
+
+.result-description{
+color:#ccc;
+line-height:1.65;
+text-align:center;
+margin:0 0 20px 0;
+}
+
+.result-why{
+background:#151515;
+border:1px solid #2b2b2b;
+border-radius:12px;
+padding:14px 16px;
+color:#aaa;
+font-size:.92em;
+line-height:1.55;
+margin:0 0 24px 0;
+}
+
+.result-why b{
+color:#ddd;
+}
+
+.result-read{
+display:block;
+width:100%;
+box-sizing:border-box;
+text-align:center;
+background:#2f7cff;
+color:#fff;
+font-weight:bold;
+font-size:1.05em;
+padding:16px;
+border-radius:12px;
+border:none;
+cursor:pointer;
+transition:.2s;
+}
+
+.result-read:hover{
+background:#4d8dff;
+}
+
+.result-actions{
+display:flex;
+justify-content:center;
+gap:10px;
+margin-top:22px;
+flex-wrap:wrap;
+}
+
+.result-secondary{
+background:none;
+border:1px solid #444;
+color:#aaa;
+padding:10px 18px;
+border-radius:999px;
+font-size:.95em;
+cursor:pointer;
+font-family:inherit;
+transition:.2s;
+}
+
+.result-secondary:hover{
+border-color:#666;
+color:#fff;
+}
+
+/* ---- warning overlay reused from site ---- */
+
+#discoverWarningOverlay{
+display:none;
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.9);
+justify-content:center;
+align-items:center;
+z-index:999999;
+padding:20px;
+box-sizing:border-box;
+}
+
+#discoverWarningBox{
+background:#1d1d1d;
+width:100%;
+max-width:420px;
+padding:25px;
+border-radius:12px;
+text-align:center;
+}
+
+.warningIcon{
+font-size:60px;
+margin-bottom:12px;
+}
+
+#discoverWarningBox h2{
+margin:0 0 10px;
+}
+
+#discoverWarningBox p{
+color:#bbb;
+line-height:1.4;
+}
+
+.warningButtons{
+display:flex;
+gap:12px;
+margin-top:20px;
+}
+
+.warningButtons button{
+flex:1;
+padding:12px;
+background:#333;
+color:#fff;
+border:none;
+border-radius:8px;
+cursor:pointer;
+font-size:15px;
+font-family:inherit;
+}
+
+.warningButtons button:hover{
+background:#444;
+}
+
+@media (max-width:480px){
+.quiz-card{
+padding:26px 18px;
+}
+.discover-header h1{
+font-size:1.6em;
+}
+.result-title{
+font-size:1.4rem;
+}
+}
+
+</style>
+</head>
+<body>
+
+<div class="top-nav">
+<a href="index.html" class="back-link">◀ Home</a>
+</div>
+
+<div class="discover-wrap">
+
+<div class="discover-header">
+<h1>Discover Your Research</h1>
+<p id="headerSub">Answer a couple of quick questions and we'll surface something from the archive worth reading.</p>
+</div>
+
+<div class="progress-track" id="progressTrack"></div>
+
+<div class="quiz-stage" id="quizStage">
+<div class="quiz-loading">Loading the archive…</div>
+</div>
+
+</div>
+
+<div id="discoverWarningOverlay">
+<div id="discoverWarningBox">
+<div class="warningIcon">⚠️</div>
+<h2>Graphic PDF</h2>
+<p>This PDF may contain graphic or disturbing content.</p>
+<div class="warningButtons">
+<button onclick="closeDiscoverWarning()">Cancel</button>
+<button onclick="continueDiscoverWarning()">View PDF</button>
+</div>
+</div>
+</div>
+
+<script type="module">
+
+/* =========================================================
+   DISCOVER YOUR RESEARCH
+   Fully data-driven quiz built from descriptions.json.
+   No paper, category, or claim is hardcoded — everything
+   below is derived at runtime from the archive's own data.
+   ========================================================= */
+
+let descriptions = {};
+let pendingPdf = null;
+let pendingPaperTitle = null;
+
+const CATEGORY_EMOJI = {
+biblical:"📖",
+historical:"🏛️",
+political:"🏳️",
+scientific:"🧪",
+medical:"⚕️",
+astronomy:"🚀",
+technology:"💻",
+philosophy:"🧠"
+};
+
+function emojiFor(cat){
+return CATEGORY_EMOJI[cat] || "🔎";
+}
+
+function titleCase(str){
+return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+function shuffle(arr){
+const a = arr.slice();
+for(let i = a.length - 1; i > 0; i--){
+const j = Math.floor(Math.random() * (i + 1));
+[a[i], a[j]] = [a[j], a[i]];
+}
+return a;
+}
+
+function pickRandom(arr){
+return arr[Math.floor(Math.random() * arr.length)];
+}
+
+/* ---------------- Quiz state ---------------- */
+
+let poolAll = [];               // every paper, as {key, ...fields}
+let currentPool = [];           // papers still matching answers so far
+let primaryCategory = null;
+let history = [];               // [{type, value, answer}]
+let usedDims = new Set();
+let questionCount = 0;          // total questions asked so far (incl. category pick)
+const MAX_QUESTIONS = 3;
+
+const stage = document.getElementById("quizStage");
+const progressTrack = document.getElementById("progressTrack");
+const headerSub = document.getElementById("headerSub");
+
+const INTRO_SUBS = [
+"Answer a couple of quick questions and we'll surface something from the archive worth reading.",
+"A few quick taps, then a paper picked just for where your curiosity is pointing.",
+"No wrong answers — just tell us where your attention wants to go.",
+"Two or three questions. One paper. Let's see what fits."
+];
+
+headerSub.textContent = pickRandom(INTRO_SUBS);
+
+/* ---------------- Load data ---------------- */
+
+fetch("descriptions.json")
+.then(r => r.json())
+.then(data => {
+descriptions = data;
+poolAll = Object.entries(data).map(([key, p]) => ({ key, ...p }));
+startQuiz();
+})
+.catch(() => {
+stage.innerHTML = `<div class="quiz-loading">Couldn't load the research archive. Please try again shortly.</div>`;
+});
+
+/* ---------------- Category question ---------------- */
+
+const CATEGORY_INTROS = [
+"What are you most interested in exploring?",
+"Where should we start digging?",
+"Which of these pulls at your curiosity most?",
+"If you had to pick one thread to pull on first, which would it be?",
+"What's calling your attention right now?",
+"Pick a starting point — where do you want to look first?"
+];
+
+function getCategoryCounts(){
+const counts = {};
+poolAll.forEach(p => {
+(p.category || []).forEach(c => {
+counts[c] = (counts[c] || 0) + 1;
+});
+});
+return counts;
+}
+
+function startQuiz(){
+currentPool = [];
+primaryCategory = null;
+history = [];
+usedDims = new Set();
+questionCount = 1;
+
+const counts = getCategoryCounts();
+const ranked = Object.entries(counts)
+.sort((a, b) => b[1] - a[1])
+.map(([c]) => c);
+
+const topPool = ranked.slice(0, 4);
+const showFour = topPool.length === 4 && Math.random() < 0.3;
+const chosen = shuffle(topPool).slice(0, showFour ? 4 : 3);
+
+renderProgress(1, null);
+
+renderCard({
+icon: "🧭",
+question: pickRandom(CATEGORY_INTROS),
+options: chosen.map(cat => ({
+label: `${emojiFor(cat)} ${titleCase(cat)}`,
+onClick: () => chooseCategory(cat)
+}))
+});
+}
+
+function chooseCategory(cat){
+primaryCategory = cat;
+history.push({ type: "category-root", value: cat });
+currentPool = poolAll.filter(p => (p.category || []).includes(cat));
+advance();
+}
+
+/* ---------------- Narrowing questions ---------------- */
+
+const CATEGORY_TEMPLATES = [
+"Are you also curious about the {cat} side of this?",
+"Would the {cat} angle interest you too?",
+"Does {cat} factor into what you're looking for?",
+"Should this also touch on {cat}?",
+"Is there a {cat} thread you'd want pulled in as well?"
+];
+
+const CATEGORY_YES_LABELS = ["Yes, that too", "Definitely", "Sounds right", "Yes, include that", "That angle too"];
+const CATEGORY_NO_LABELS = ["Not really", "Keep it separate", "Not this time", "Skip that angle", "No, just the one"];
+
+const LENGTH_TEMPLATES = [
+"Would you rather start with something quick to get through?",
+"Looking for something you can finish in one sitting?",
+"Do you want a shorter read to start with?",
+"Should we keep this brief?"
+];
+
+const LENGTH_YES_LABELS = ["Something quick", "Keep it short", "Yes, brief is good", "Short and sweet"];
+const LENGTH_NO_LABELS = ["I want depth", "No, go deep", "Length doesn't matter", "Give me the full thing"];
+
+const RECENCY_TEMPLATES = [
+"Are you interested in something more recently researched?",
+"Do you want one of the newer additions to the archive?",
+"Should this lean toward the newest research?",
+"Interested in what's been freshly looked into?"
+];
+
+const RECENCY_YES_LABELS = ["Something recent", "Yes, newest first", "Fresh research"];
+const RECENCY_NO_LABELS = ["Doesn't matter", "No preference", "Classic is fine"];
+
+function bestSecondarySplit(pool){
+const catCounts = {};
+pool.forEach(p => {
+(p.category || []).forEach(c => {
+if(c !== primaryCategory) catCounts[c] = (catCounts[c] || 0) + 1;
+});
+});
+
+let best = null;
+Object.keys(catCounts).forEach(c => {
+const dimKey = "cat:" + c;
+if(usedDims.has(dimKey)) return;
+const yes = pool.filter(p => (p.category || []).includes(c));
+const no = pool.filter(p => !(p.category || []).includes(c));
+if(yes.length === 0 || no.length === 0) return;
+const balance = Math.abs(0.5 - yes.length / pool.length);
+if(!best || balance < best.balance){
+best = { dimKey, type: "category", value: c, yes, no, balance };
+}
+});
+return best;
+}
+
+function lengthSplit(pool){
+const dimKey = "length";
+if(usedDims.has(dimKey)) return null;
+const pages = pool.map(p => Number(p.pages) || 0).slice().sort((a, b) => a - b);
+if(!pages.length) return null;
+const median = pages[Math.floor(pages.length / 2)];
+const yes = pool.filter(p => (Number(p.pages) || 0) <= median);
+const no = pool.filter(p => (Number(p.pages) || 0) > median);
+if(yes.length === 0 || no.length === 0) return null;
+const balance = Math.abs(0.5 - yes.length / pool.length);
+return { dimKey, type: "length", value: median, yes, no, balance };
+}
+
+function recencySplit(pool){
+const dimKey = "recency";
+if(usedDims.has(dimKey)) return null;
+const now = new Date();
+const cutoff = new Date(now);
+cutoff.setMonth(cutoff.getMonth() - 18);
+const yes = pool.filter(p => p.updated && new Date(p.updated) >= cutoff);
+const no = pool.filter(p => !p.updated || new Date(p.updated) < cutoff);
+if(yes.length === 0 || no.length === 0) return null;
+const balance = Math.abs(0.5 - yes.length / pool.length);
+return { dimKey, type: "recency", value: cutoff, yes, no, balance };
+}
+
+function pickSplit(pool){
+const candidates = [bestSecondarySplit(pool), lengthSplit(pool), recencySplit(pool)].filter(Boolean);
+if(!candidates.length) return null;
+candidates.sort((a, b) => a.balance - b.balance);
+const top = candidates.slice(0, 2);
+return pickRandom(top);
+}
+
+function advance(){
+questionCount++;
+
+// Decide whether we still have room / need for another question
+if(questionCount > MAX_QUESTIONS){
+return showResult();
+}
+
+if(currentPool.length <= 1){
+return showResult();
+}
+
+const split = pickSplit(currentPool);
+
+if(!split){
+return showResult();
+}
+
+// Casual-browsing shortcut: if the pool is already tight, or we've
+// already asked one narrowing question, sometimes stop early so the
+// experience doesn't always run the full length.
+const askedNarrowing = questionCount - 1; // number of narrowing Qs so far (incl. this one about to be asked)
+if(currentPool.length <= 3 && askedNarrowing >= 2){
+return showResult();
+}
+if(askedNarrowing >= 2 && Math.random() < 0.55){
+return showResult();
+}
+
+renderProgress(questionCount, split);
+askSplitQuestion(split);
+}
+
+function askSplitQuestion(split){
+let questionText, yesLabel, noLabel, icon;
+
+if(split.type === "category"){
+questionText = pickRandom(CATEGORY_TEMPLATES).replace("{cat}", split.value);
+yesLabel = pickRandom(CATEGORY_YES_LABELS);
+noLabel = pickRandom(CATEGORY_NO_LABELS);
+icon = emojiFor(split.value);
+}else if(split.type === "length"){
+questionText = pickRandom(LENGTH_TEMPLATES);
+yesLabel = pickRandom(LENGTH_YES_LABELS);
+noLabel = pickRandom(LENGTH_NO_LABELS);
+icon = "📄";
+}else{
+questionText = pickRandom(RECENCY_TEMPLATES);
+yesLabel = pickRandom(RECENCY_YES_LABELS);
+noLabel = pickRandom(RECENCY_NO_LABELS);
+icon = "🕒";
+}
+
+const options = shuffle([
+{
+label: yesLabel,
+extraClass: "yes-lean",
+onClick: () => {
+usedDims.add(split.dimKey);
+history.push({ type: split.type, value: split.value, answer: "yes" });
+currentPool = split.yes;
+advance();
+}
+},
+{
+label: noLabel,
+extraClass: "no-lean",
+onClick: () => {
+usedDims.add(split.dimKey);
+history.push({ type: split.type, value: split.value, answer: "no" });
+currentPool = split.no;
+advance();
+}
+}
+]);
+
+renderCard({ icon, question: questionText, options });
+}
+
+/* ---------------- Rendering ---------------- */
+
+function renderProgress(step, upcomingSplit){
+// We don't know the final count in advance, so show up to 3 dots and
+// mark the current one; keep it lightweight rather than misleading.
+const total = 3;
+progressTrack.innerHTML = "";
+for(let i = 1; i <= total; i++){
+const dot = document.createElement("div");
+dot.className = "progress-dot" + (i < step ? " filled" : "") + (i === step ? " current" : "");
+progressTrack.appendChild(dot);
+}
+}
+
+function renderCard({ icon, question, options }){
+const card = document.createElement("div");
+card.className = "quiz-card";
+
+const iconEl = document.createElement("div");
+iconEl.className = "quiz-icon";
+iconEl.textContent = icon || "🔎";
+
+const qEl = document.createElement("div");
+qEl.className = "quiz-question";
+qEl.textContent = question;
+
+const optWrap = document.createElement("div");
+optWrap.className = "quiz-options";
+
+options.forEach(opt => {
+const btn = document.createElement("button");
+btn.type = "button";
+btn.className = "quiz-option" + (opt.extraClass ? " " + opt.extraClass : "");
+btn.textContent = opt.label;
+btn.addEventListener("click", () => {
+transitionOut(() => opt.onClick());
+});
+optWrap.appendChild(btn);
+});
+
+card.appendChild(iconEl);
+card.appendChild(qEl);
+card.appendChild(optWrap);
+
+stage.innerHTML = "";
+stage.appendChild(card);
+}
+
+function transitionOut(next){
+const card = stage.querySelector(".quiz-card, .result-card-wrap");
+if(card){
+card.classList.add("leaving");
+setTimeout(next, 180);
+}else{
+next();
+}
+}
+
+/* ---------------- Result ---------------- */
+
+const RESULT_INTROS = [
+"We found something you might be interested in.",
+"Here's something from the archive that fits.",
+"This one matches where your answers pointed.",
+"Found it — take a look."
+];
+
+const WHY_INTROS = [
+"You pointed toward {cat} research",
+"Your answers led toward {cat}",
+"This matches the {cat} thread you were pulling on",
+"Rooted in the {cat} category"
+];
+
+function formatDate(dateStr){
+if(!dateStr) return null;
+const d = new Date(dateStr);
+if(isNaN(d)) return null;
+return d.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+}
+
+function buildWhyClauses(paper){
+const clauses = [];
+
+history.forEach(h => {
+if(h.type === "category-root") return;
+
+if(h.type === "category"){
+if(h.answer === "yes"){
+clauses.push(`touches on ${h.value}`);
+}else{
+clauses.push(`stays focused without wandering into ${h.value}`);
+}
+}else if(h.type === "length"){
+const pages = Number(paper.pages) || 0;
+if(h.answer === "yes"){
+clauses.push(pages ? `a shorter read at ${pages} page${pages === 1 ? "" : "s"}` : "a short read");
+}else{
+clauses.push(pages ? `a deeper dive at ${pages} pages` : "a more thorough piece");
+}
+}else if(h.type === "recency"){
+const dateLabel = formatDate(paper.updated);
+if(h.answer === "yes"){
+clauses.push(dateLabel ? `recently revisited (updated ${dateLabel})` : "recently revisited");
+}else{
+clauses.push(dateLabel ? `a longer-standing piece in the archive (last updated ${dateLabel})` : "an established piece in the archive");
+}
+}
+});
+
+return clauses;
+}
+
+function pickPaper(pool){
+const key = "discoverLastPaper";
+const lastKey = sessionStorage.getItem(key);
+let candidates = pool;
+
+if(pool.length > 1 && lastKey){
+const filtered = pool.filter(p => p.key !== lastKey);
+if(filtered.length){
+candidates = filtered;
+}
+}
+
+const choice = pickRandom(candidates);
+sessionStorage.setItem(key, choice.key);
+return choice;
+}
+
+function showResult(){
+let pool = currentPool.length ? currentPool : poolAll.filter(p => (p.category || []).includes(primaryCategory));
+
+if(!pool.length){
+// Absolute fallback: never fail to recommend something.
+pool = poolAll;
+}
+
+const paper = pickPaper(pool);
+
+renderProgress(3, null);
+
+const introLine = document.createElement("div");
+introLine.className = "result-lead";
+introLine.textContent = pickRandom(RESULT_INTROS);
+
+const card = document.createElement("div");
+card.className = "result-card-wrap";
+
+const inner = document.createElement("div");
+inner.className = "result-card";
+
+const media = document.createElement("div");
+media.className = "result-media";
+media.textContent = "📄";
+
+const body = document.createElement("div");
+body.className = "result-body";
+
+const catLine = document.createElement("div");
+catLine.className = "result-category";
+catLine.textContent = (paper.category || []).map(titleCase).join(" • ");
+
+const titleLine = document.createElement("div");
+titleLine.className = "result-title";
+titleLine.textContent = paper.title;
+
+const descLine = document.createElement("div");
+descLine.className = "result-description";
+descLine.textContent = paper.description || "";
+
+const whyBox = document.createElement("div");
+whyBox.className = "result-why";
+const introText = pickRandom(WHY_INTROS).replace("{cat}", titleCase(primaryCategory));
+const clauses = shuffle(buildWhyClauses(paper)).slice(0, 2);
+let whyText = introText;
+if(clauses.length){
+whyText += " — " + clauses.join(", and ");
+}
+whyText += ".";
+whyBox.innerHTML = `<b>Why this one:</b> ${whyText}`;
+
+const readBtn = document.createElement("button");
+readBtn.type = "button";
+readBtn.className = "result-read";
+readBtn.textContent = "Read Research";
+readBtn.addEventListener("click", () => openPaper(paper));
+
+body.appendChild(catLine);
+body.appendChild(titleLine);
+body.appendChild(descLine);
+body.appendChild(whyBox);
+body.appendChild(readBtn);
+
+inner.appendChild(media);
+inner.appendChild(body);
+
+const actions = document.createElement("div");
+actions.className = "result-actions";
+
+const againBtn = document.createElement("button");
+againBtn.type = "button";
+againBtn.className = "result-secondary";
+againBtn.textContent = "Try a different topic";
+againBtn.addEventListener("click", () => transitionOut(startQuiz));
+
+const rerollBtn = document.createElement("button");
+rerollBtn.type = "button";
+rerollBtn.className = "result-secondary";
+rerollBtn.textContent = "Show me another";
+rerollBtn.addEventListener("click", () => transitionOut(showResult));
+
+actions.appendChild(rerollBtn);
+actions.appendChild(againBtn);
+
+card.appendChild(inner);
+card.appendChild(actions);
+
+stage.innerHTML = "";
+stage.appendChild(introLine);
+stage.appendChild(card);
+}
+
+/* ---------------- Opening a paper (respects content warnings) ---------------- */
+
+function openPaper(paper){
+if(paper.warning){
+pendingPdf = paper.url;
+pendingPaperTitle = paper.title;
+document.getElementById("discoverWarningOverlay").style.display = "flex";
+return;
+}
+goToPdf(paper.url, paper.title);
+}
+
+function goToPdf(url, title){
+window.location.href =
+"pdf.html?file=" + encodeURIComponent(url) +
+"&paper=" + encodeURIComponent(title) +
+"&return=" + encodeURIComponent(window.location.href);
+}
+
+window.closeDiscoverWarning = function(){
+document.getElementById("discoverWarningOverlay").style.display = "none";
+pendingPdf = null;
+pendingPaperTitle = null;
+};
+
+window.continueDiscoverWarning = function(){
+document.getElementById("discoverWarningOverlay").style.display = "none";
+if(pendingPdf){
+goToPdf(pendingPdf, pendingPaperTitle);
+}
+};
+
+</script>
+
+</body>
+</html>
