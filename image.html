@@ -146,17 +146,6 @@ header{
   -webkit-user-drag:none;
 
   max-width:none;
-
-  /* Force the browser to keep using its highest-quality
-     smoothing algorithm at every zoom level, and prevent
-     GPU layer/compositing shortcuts that can soften the
-     image while it's being scaled up. */
-  image-rendering:auto;
-
-  -webkit-backface-visibility:hidden;
-  backface-visibility:hidden;
-
-  will-change:transform;
 }
 
 /* ============================================================
@@ -261,16 +250,6 @@ input:focus-visible{
 
 .toolButton.disabled:hover{
   background:#242424;
-}
-
-.rotateIcon{
-  position:relative;
-
-  top:-1px;
-
-  margin-right:2px;
-
-  font-size:15px;
 }
 
 .iconButton{
@@ -751,14 +730,6 @@ body.reading-mode #readingModeFloat{
 
 <div id="toolbar">
 
-  <button
-    id="fit"
-    class="toolButton"
-    title="Reset view"
-  >
-    Reset
-  </button>
-
   <div class="zoomControls">
 
     <button
@@ -784,12 +755,11 @@ body.reading-mode #readingModeFloat{
   </div>
 
   <button
-    id="rotate"
+    id="fit"
     class="toolButton"
-    title="Rotate clockwise"
-    aria-label="Rotate clockwise"
+    title="Reset view"
   >
-    <span class="rotateIcon">⟳</span> Rotate
+    Reset
   </button>
 
   <button
@@ -991,10 +961,6 @@ const fitButton =
     document.getElementById("fit");
 
 
-const rotateButton =
-    document.getElementById("rotate");
-
-
 const lockButton =
     document.getElementById("lock");
 
@@ -1057,86 +1023,10 @@ function syncTitleBarHeight(){
 }
 
 
-const rawImageParam =
+const src =
     decodeURIComponent(
         p.get("image") || ""
     );
-
-
-/*
-    Images extracted from the PDF viewer arrive as a "session:KEY"
-    sentinel instead of a normal URL - the actual image (a data
-    URL) and its suggested filename live in sessionStorage under
-    that key, because a data URL long enough to hold a real photo
-    would be unwieldy (and in some browsers, too long) to pass
-    through the query string itself.
-*/
-let src = rawImageParam;
-let sessionFilename = null;
-let sessionDisplayName = null;
-
-if(rawImageParam.startsWith("session:")){
-
-    const storageKey =
-        rawImageParam.slice(
-            "session:".length
-        );
-
-    try{
-
-        const stored =
-            sessionStorage.getItem(
-                storageKey
-            );
-
-        if(stored){
-
-            const parsed =
-                JSON.parse(stored);
-
-            src = parsed.dataUrl || "";
-            sessionFilename = parsed.filename || null;
-            sessionDisplayName = parsed.displayName || null;
-
-        }else{
-
-            src = "";
-
-        }
-
-    }catch(error){
-
-        console.warn(
-            "Could not read stored image:",
-            error
-        );
-
-        src = "";
-
-    }
-
-}
-
-
-/*
-    Set when this image was opened directly from the PDF viewer's
-    image-click flow (either as our own extracted crop, above, or
-    as a descriptions.json catalog image that visually matched
-    it) - either way, the PDF viewer already knows exactly which
-    page/zoom/scroll to return to, so "Open Parent PDF" should
-    just act like Back rather than running the catalog
-    search-and-jump used when this page is reached some other way.
-*/
-const viewedFromPdf =
-    p.get("viewedFromPdf") === "1";
-
-
-const urlDisplayName =
-    p.get("displayName") ?
-    decodeURIComponent(
-        p.get("displayName")
-    ) :
-    null;
 
 
 const returnPage =
@@ -1270,34 +1160,6 @@ pdfButtonEl.addEventListener(
 );
 
 
-/*
-    An image extracted from the PDF viewer already has a precise
-    "return" link straight back to the exact page/zoom/scroll it
-    was tapped from - there's no need to go hunting through
-    descriptions.json for a parent PDF, since the Back button
-    (and this button) can just point at that same return link.
-*/
-if(sessionFilename || viewedFromPdf){
-
-    pdfButtonEl.href =
-        returnPage;
-
-    pdfButtonEl.classList.remove(
-        "disabled"
-    );
-
-    pdfButtonEl.removeAttribute(
-        "aria-disabled"
-    );
-
-    pdfButtonEl.textContent =
-        "Open Parent PDF";
-
-    pdfButtonEl.title =
-        "Return to the PDF page this image came from";
-
-}else{
-
 fetch("descriptions.json")
 .then(response => {
 
@@ -1391,15 +1253,6 @@ fetch("descriptions.json")
         all), so that pressing Back inside
         pdf.html lands right back on this exact
         image.
-
-        findImage carries this same image's own
-        URL, double-encoded the same way, so
-        pdf.html can search its rendered pages for
-        a visual match and jump straight to
-        whichever page it actually appears on
-        instead of always opening at page 1. If it
-        doesn't find a match, it just opens
-        normally - nothing here assumes it will.
     */
 
     const pdfUrl =
@@ -1414,10 +1267,6 @@ fetch("descriptions.json")
         "&return=" +
         encodeURIComponent(
             encodeURIComponent(location.href)
-        ) +
-        "&findImage=" +
-        encodeURIComponent(
-            encodeURIComponent(src)
         );
 
     pdfButtonEl.href =
@@ -1454,8 +1303,6 @@ fetch("descriptions.json")
 
 });
 
-}
-
 
 /* ---------- Image ---------- */
 
@@ -1484,20 +1331,12 @@ img.src =
 
 
 const filename =
-    sessionFilename ||
     src
         .split("/")
         .pop();
 
 
 const displayName =
-    sessionDisplayName ||
-    urlDisplayName ||
-
-    (sessionFilename ?
-
-    "Extracted Image" :
-
     filename
         .replace(/\.[^/.]+$/, "")
         .replace(/[-_]+/g, " ")
@@ -1505,7 +1344,7 @@ const displayName =
 
             return char.toUpperCase();
 
-        }));
+        });
 
 
 title.textContent =
@@ -1528,16 +1367,6 @@ let zoom = 1;
 let offsetX = 0;
 
 let offsetY = 0;
-
-/*
-    Degrees clockwise, always a multiple of 90. Kept separate
-    from the zoom/pan transform below - rotation changes which
-    axis is "wide" for fit-to-screen purposes, but doesn't
-    otherwise interact with panning math, since translate() is
-    the outermost transform (applied in plain screen space,
-    unaffected by whatever rotate() does further in).
-*/
-let rotation = 0;
 
 
 /*
@@ -1593,8 +1422,7 @@ function draw(){
             calc(-50% + ${offsetX}px),
             calc(-50% + ${offsetY}px)
         )
-        scale(${base * zoom})
-        rotate(${rotation}deg)`;
+        scale(${base * zoom})`;
 
 
     zoomPercent.value =
@@ -1611,37 +1439,13 @@ function fit(){
         return;
 
 
-    /*
-        At 90/270 degrees the image's visual footprint is
-        sideways - its natural WIDTH occupies the viewer's
-        vertical space and vice versa. Swapping which
-        dimension gets measured against which is what keeps
-        "fit" actually fitting after a rotation, instead of
-        the image overflowing or shrinking to a fraction of
-        the available space.
-    */
-
-    const rotatedSideways =
-        rotation % 180 !== 0;
-
-    const effectiveWidth =
-        rotatedSideways ?
-        img.naturalHeight :
-        img.naturalWidth;
-
-    const effectiveHeight =
-        rotatedSideways ?
-        img.naturalWidth :
-        img.naturalHeight;
-
-
     base = Math.min(
 
         viewer.clientWidth /
-        effectiveWidth,
+        img.naturalWidth,
 
         viewer.clientHeight /
-        effectiveHeight
+        img.naturalHeight
 
     );
 
@@ -1720,31 +1524,6 @@ plusButton.onclick =
 
 fitButton.onclick =
     fit;
-
-
-/* ---------- Rotate ---------- */
-
-rotateButton.onclick =
-    () => {
-
-        rotation =
-            (rotation + 90) % 360;
-
-
-        /*
-            Re-fitting after every rotation (rather than
-            keeping whatever zoom/pan was active) is the
-            same choice most image viewers make: a rotated
-            image at the previous zoom/pan is very likely
-            to have swung part of itself out of view, so
-            landing back on a clean centered fit is more
-            predictable than trying to preserve a zoom
-            level that may no longer make sense.
-        */
-
-        fit();
-
-    };
 
 
 /* ---------- Manual Zoom ---------- */
@@ -2499,35 +2278,6 @@ if(
 syncViewerTop();
 
 syncTitleBarHeight();
-
-
-/*
-    Back-forward cache (bfcache) restore.
-
-    If this page is reached again via the browser's own history
-    traversal (a real back/forward navigation - e.g. a phone's
-    edge-swipe-back gesture, not this page's own in-app Back
-    button, which navigates forward to a new URL instead) while
-    a frozen bfcache snapshot of it still exists, the browser can
-    resume that snapshot instead of re-running this script. That
-    snapshot has whichever image was extracted at the time it was
-    frozen baked into it, so resuming it looks exactly like "this
-    is still showing the old image". Forcing a real reload on a
-    persisted pageshow guarantees a fresh read of whatever the
-    current image/return params actually say.
-*/
-window.addEventListener(
-    "pageshow",
-    function(event){
-
-        if(event.persisted){
-
-            location.reload();
-
-        }
-
-    }
-);
 
 
 </script>
