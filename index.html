@@ -473,7 +473,8 @@ flex-shrink:0;
 }
 
 .research-tools .favorites-button,
-.research-tools .timeline-button {
+.research-tools .timeline-button,
+.research-tools .discover-button {
   display: inline-block;
   width: auto;
   margin: 0;
@@ -500,6 +501,12 @@ flex-shrink:0;
   color: #6fa8ff;
 }
 
+.research-tools .discover-button:hover {
+  background: #2c2c2c;
+  border-color: #666;
+  color: #b28cff;
+}
+
 
 
     
@@ -513,7 +520,8 @@ flex-shrink:0;
 }
 
 .research-tools .favorites-button,
-.research-tools .timeline-button {
+.research-tools .timeline-button,
+.research-tools .discover-button {
   padding: 9px 18px;
   font-size: 0.95rem;
 }
@@ -1550,6 +1558,13 @@ disabled
     class="favorites-button"
   >
     ⭐ Favorites
+  </a>
+
+  <a
+    href="discover.html"
+    class="discover-button"
+  >
+    🧭 Discover
   </a>
 
   <a
