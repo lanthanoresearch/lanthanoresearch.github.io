@@ -678,13 +678,23 @@ if(text) headerSub.textContent = text;
 
 setHeader("full", pickRandom(INTRO_SUBS));
 
-/* ---------------- Load data ---------------- */
+/* ---------------- Load data ----------------
+   Page counts come exclusively from page-counts.json — it's kept
+   perfectly current, unlike the "pages" field inside descriptions.json,
+   which can go stale. Every paper's page count below is overwritten
+   with whatever page-counts.json says, full stop. */
 
-fetch("descriptions.json")
-.then(r => r.json())
-.then(data => {
+Promise.all([
+fetch("descriptions.json").then(r => r.json()),
+fetch("page-counts.json").then(r => r.json())
+])
+.then(([data, pageCounts]) => {
 descriptions = data;
-poolAll = Object.entries(data).map(([key, p]) => ({ key, ...p }));
+poolAll = Object.entries(data).map(([key, p]) => ({
+key,
+...p,
+pages: Number(pageCounts[key]) || 0
+}));
 
 let returning = false;
 try{
@@ -824,14 +834,26 @@ return best;
 function lengthSplit(pool){
 const dimKey = "length";
 if(usedDims.has(dimKey)) return null;
-const pages = pool.map(p => Number(p.pages) || 0).slice().sort((a, b) => a - b);
-if(!pages.length) return null;
-const median = pages[Math.floor(pages.length / 2)];
-const yes = pool.filter(p => (Number(p.pages) || 0) <= median);
-const no = pool.filter(p => (Number(p.pages) || 0) > median);
+
+// A plain median split will happily ask "short or long?" even when
+// everything in the pool is roughly the same length — a lone 20-page
+// outlier next to five 15-pagers isn't a meaningful choice. Only offer
+// this question when the pool actually contains something genuinely
+// short AND something genuinely long; otherwise it's not a real fork.
+const SHORT_MAX = 8;
+const LONG_MIN = 20;
+const threshold = (SHORT_MAX + LONG_MIN) / 2;
+
+const hasShort = pool.some(p => (Number(p.pages) || 0) <= SHORT_MAX);
+const hasLong = pool.some(p => (Number(p.pages) || 0) >= LONG_MIN);
+if(!hasShort || !hasLong) return null;
+
+const yes = pool.filter(p => (Number(p.pages) || 0) <= threshold);
+const no = pool.filter(p => (Number(p.pages) || 0) > threshold);
 if(yes.length === 0 || no.length === 0) return null;
+
 const balance = Math.abs(0.5 - yes.length / pool.length);
-return { dimKey, type: "length", value: median, yes, no, balance };
+return { dimKey, type: "length", value: threshold, yes, no, balance };
 }
 
 function recencySplit(pool){
