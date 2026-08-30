@@ -51,8 +51,9 @@ transition:.2s;
 }
 
 .discover-header h1{
-font-size:1.36rem;
-margin:0 0 6px 0;
+font-size:2.6rem;
+line-height:1.05;
+margin:0 0 10px 0;
 }
 
 .discover-header p{
@@ -64,7 +65,7 @@ max-width:440px;
 }
 
 .discover-header.compact h1{
-font-size:1.1rem;
+font-size:1.3rem;
 margin-bottom:0;
 }
 
@@ -737,7 +738,6 @@ const showFour = all.length >= 4 && Math.random() < 0.3;
 const chosen = shuffle(all).slice(0, showFour ? 4 : Math.min(3, all.length));
 
 resetProgress();
-addProgressStep("start");
 addProgressStep("question");
 
 renderCard({
@@ -1284,7 +1284,7 @@ history = saved.history || [];
 replayHistoryIntoPool();
 
 resetProgress();
-(saved.progressDotsTypes || ["start", "question", "end"]).forEach(t => addProgressStep(t));
+(saved.progressDotsTypes || ["question", "end"]).forEach(t => addProgressStep(t));
 completeProgress();
 
 setHeader("full", saved.introText);
