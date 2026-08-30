@@ -1413,6 +1413,105 @@ body.reading-mode #sideScroller{
   pointer-events:none;
 }
 
+/* ============================================================
+   IMAGE LAYER
+
+   Invisible tap targets placed over every embedded image on a
+   page (positions computed from the PDF's operator list, not
+   from anything visual), sitting above the text layer so a tap
+   on picture content opens the image menu instead of starting a
+   text selection.
+============================================================ */
+
+.imageLayer{
+  position:absolute;
+
+  inset:0;
+
+  overflow:hidden;
+
+  z-index:6;
+
+  pointer-events:none;
+}
+
+.pdf-image-hit{
+  position:absolute;
+
+  display:block;
+
+  pointer-events:auto;
+
+  cursor:pointer;
+
+  background:transparent;
+
+  border:0;
+
+  padding:0;
+
+  margin:0;
+
+  -webkit-tap-highlight-color:transparent;
+}
+
+.pdf-image-hit:hover{
+  background:rgba(255,255,255,.08);
+}
+
+.pdf-image-hit:active{
+  background:rgba(255,255,255,.14);
+}
+
+/* ============================================================
+   IMAGE CONTEXT MENU
+
+   A small custom popup (not the browser's native context menu)
+   that appears near wherever an image was tapped.
+============================================================ */
+
+#imageContextMenu{
+  position:fixed;
+
+  background:#222;
+
+  border:1px solid #333;
+
+  border-radius:10px;
+
+  padding:6px;
+
+  min-width:190px;
+
+  box-shadow:0 8px 20px rgba(0,0,0,.45);
+
+  z-index:9700;
+}
+
+#imageContextMenu.hidden{
+  display:none;
+}
+
+#imageContextMenu button{
+  width:100%;
+
+  text-align:left;
+
+  margin:3px 0;
+
+  display:flex;
+
+  align-items:center;
+
+  gap:8px;
+}
+
+#imageContextMenu button:disabled{
+  opacity:.55;
+
+  cursor:default;
+}
+
 .email-link{
   position:absolute;
 
@@ -1975,6 +2074,13 @@ body.reading-mode #readingModeFloat{
 <button id="fullscreenBtn">Fullscreen</button>
 </div>
 <!-- ==========================================================
+     IMAGE CONTEXT MENU
+========================================================== -->
+<div id="imageContextMenu" class="hidden" role="menu">
+<button id="imageViewBtn" type="button">🔍 View Image</button>
+<button id="imageDownloadBtn" type="button">⬇ Download Image</button>
+</div>
+<!-- ==========================================================
      FLOATING READING MODE
 ========================================================== -->
 <button id="readingModeFloat" aria-label="Toggle Reading Mode" title="Reading Mode">▣</button>
@@ -1997,7 +2103,9 @@ body.reading-mode #readingModeFloat{
 import {
   getDocument,
   GlobalWorkerOptions,
-  TextLayer
+  TextLayer,
+  OPS,
+  Util
 } from "./pdfjs/build/pdf.mjs";
 
 GlobalWorkerOptions.workerSrc = "./pdfjs/build/pdf.worker.mjs";
@@ -2011,6 +2119,18 @@ const params = new URLSearchParams(location.search);
 const file = decodeURIComponent(params.get("file") || "");
 const title = decodeURIComponent(params.get("paper") || "PDF");
 const returnPage = decodeURIComponent(params.get("return") || "index.html");
+
+/*
+   Optional restore-state params. Present when this viewer was
+   reached via the "back" navigation from the image viewer (see
+   openImageInViewer below) - they put the reader back on the
+   same page, zoom level, and scroll position they tapped the
+   image from, instead of dumping them back at page 1.
+*/
+const initialPageParam = parseInt(params.get("page") || "", 10);
+const initialZoomParam = parseFloat(params.get("zoom") || "");
+const initialScrollTopParam = parseFloat(params.get("scrollTop") || "");
+const initialScrollLeftParam = parseFloat(params.get("scrollLeft") || "");
 
 /* ============================================================
    ELEMENTS
@@ -2042,6 +2162,9 @@ const sideScrollerThumb = document.getElementById("sideScrollerThumb");
 const sideScrollerPageBadge = document.getElementById("sideScrollerPageBadge");
 const titleBar = document.getElementById("titleBar");
 const lockButton = document.getElementById("lockButton");
+const imageContextMenu = document.getElementById("imageContextMenu");
+const imageViewBtn = document.getElementById("imageViewBtn");
+const imageDownloadBtn = document.getElementById("imageDownloadBtn");
 
 /* ============================================================
    CHROME HEIGHT
@@ -2392,6 +2515,9 @@ function layoutPage(view, scale){
   view.emailLinkLayerDiv.style.width = width;
   view.emailLinkLayerDiv.style.height = height;
 
+  view.imageLayerDiv.style.width = width;
+  view.imageLayerDiv.style.height = height;
+
   const userUnit = view.page.userUnit || 1;
 
   view.textLayerDiv.style.setProperty("--scale-factor", String(viewport.scale));
@@ -2418,6 +2544,7 @@ function resetRenderedPage(view){
   view.searchLayerDiv.replaceChildren();
   view.linkLayerDiv.replaceChildren();
   view.emailLinkLayerDiv.replaceChildren();
+  view.imageLayerDiv.replaceChildren();
 
   view.textLayer = null;
   view.textLayerEnd = null;
@@ -2617,6 +2744,175 @@ function renderLinkLayer(view){
 }
 
 /* ============================================================
+   IMAGE REGIONS
+
+   Finds every embedded picture on a page by walking the page's
+   operator list ourselves and tracking the current transform
+   matrix (the same bookkeeping pdf.js's own canvas renderer
+   does internally), rather than trying to read pixel data back
+   out of a rendered canvas. A "paint image" operator always
+   draws into the unit square of whatever the CTM is at that
+   point in the list, so applying the CTM to the square's four
+   corners gives the image's placement rectangle in ordinary PDF
+   page-space - independent of zoom, and reusable with
+   viewport.convertToViewportRectangle() exactly like the link
+   layer already does with annotation rects.
+============================================================ */
+
+const MIN_IMAGE_HIT_PDF_UNITS = 24;
+
+async function extractPageImages(page){
+
+  let opList;
+
+  try{
+    opList = await page.getOperatorList();
+  }catch(error){
+    console.warn(`Could not read operator list for page ${page.pageNumber}:`, error);
+    return [];
+  }
+
+  const { fnArray, argsArray } = opList;
+
+  const regions = [];
+  const stack = [];
+
+  let ctm = [1, 0, 0, 1, 0, 0];
+
+  for(let i = 0; i < fnArray.length; i++){
+
+    const fn = fnArray[i];
+    const args = argsArray[i];
+
+    if(fn === OPS.save){
+
+      stack.push(ctm);
+
+    }else if(fn === OPS.restore){
+
+      ctm = stack.pop() || ctm;
+
+    }else if(fn === OPS.transform){
+
+      ctm = Util.transform(ctm, args);
+
+    }else if(
+      fn === OPS.paintImageXObject ||
+      fn === OPS.paintImageXObjectRepeat ||
+      fn === OPS.paintJpegXObject
+    ){
+
+      const objId = args?.[0];
+
+      if(!objId){
+        continue;
+      }
+
+      const corners = [
+        Util.applyTransform([0, 0], ctm),
+        Util.applyTransform([1, 0], ctm),
+        Util.applyTransform([0, 1], ctm),
+        Util.applyTransform([1, 1], ctm)
+      ];
+
+      const xs = corners.map(point => point[0]);
+      const ys = corners.map(point => point[1]);
+
+      const minX = Math.min(...xs);
+      const maxX = Math.max(...xs);
+      const minY = Math.min(...ys);
+      const maxY = Math.max(...ys);
+
+      // Skip slivers - decorative rules, tiny bullet glyphs
+      // rendered as image masks, etc. Real photos/figures are
+      // comfortably larger than this in PDF user-space units
+      // (1 unit = 1/72 inch), so this is a safe floor.
+      if((maxX - minX) < MIN_IMAGE_HIT_PDF_UNITS || (maxY - minY) < MIN_IMAGE_HIT_PDF_UNITS){
+        continue;
+      }
+
+      regions.push({ minX, minY, maxX, maxY });
+    }
+  }
+
+  return regions;
+}
+
+function renderImageLayer(view){
+
+  const layer = view.imageLayerDiv;
+
+  layer.replaceChildren();
+
+  if(!Array.isArray(view.imageRegions) || !view.imageRegions.length){
+    return;
+  }
+
+  const viewport = view.viewport;
+
+  for(const region of view.imageRegions){
+
+    const rect = viewport.convertToViewportRectangle([region.minX, region.minY, region.maxX, region.maxY]);
+
+    const left = Math.min(rect[0], rect[2]);
+    const top = Math.min(rect[1], rect[3]);
+    const width = Math.abs(rect[2] - rect[0]);
+    const height = Math.abs(rect[3] - rect[1]);
+
+    if(width < 16 || height < 16){
+      continue;
+    }
+
+    const hit = document.createElement("button");
+
+    hit.type = "button";
+    hit.className = "pdf-image-hit";
+    hit.setAttribute("aria-label", "Image options");
+
+    hit.style.left = `${left}px`;
+    hit.style.top = `${top}px`;
+    hit.style.width = `${width}px`;
+    hit.style.height = `${height}px`;
+
+    hit.addEventListener("click", event => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      openImageContextMenu(event, view, region);
+    });
+
+    hit.addEventListener("contextmenu", event => {
+      event.preventDefault();
+    });
+
+    layer.appendChild(hit);
+  }
+}
+
+async function paintImages(view, generation){
+
+  if(generation !== renderGeneration){
+    return;
+  }
+
+  try{
+
+    if(!view.imageRegions){
+      view.imageRegions = await extractPageImages(view.page);
+    }
+
+    if(generation !== renderGeneration){
+      return;
+    }
+
+    renderImageLayer(view);
+
+  }catch(error){
+    console.warn(`Image layer failed on page ${view.pageNumber}:`, error);
+  }
+}
+
+/* ============================================================
    EMAIL LINKS
 
    Scans a page's text layer for any occurrence of TARGET_EMAIL
@@ -2710,11 +3006,16 @@ function createPageShell(pageNumber, page){
 
   emailLinkLayerDiv.className = "emailLinkLayer";
 
+  const imageLayerDiv = document.createElement("div");
+
+  imageLayerDiv.className = "imageLayer";
+
   pageDiv.appendChild(canvas);
   pageDiv.appendChild(textLayerDiv);
   pageDiv.appendChild(searchLayerDiv);
   pageDiv.appendChild(linkLayerDiv);
   pageDiv.appendChild(emailLinkLayerDiv);
+  pageDiv.appendChild(imageLayerDiv);
 
   pagesWrapper.appendChild(pageDiv);
 
@@ -2727,9 +3028,11 @@ function createPageShell(pageNumber, page){
     searchLayerDiv,
     linkLayerDiv,
     emailLinkLayerDiv,
+    imageLayerDiv,
     viewport:null,
     textContent:null,
     annotations:null,
+    imageRegions:null,
     textLayer:null,
     textLayerEnd:null,
     renderedScale:null,
@@ -2777,7 +3080,8 @@ async function renderPage(view){
 
       await Promise.all([
         paintText(view, generation),
-        paintLinks(view, generation)
+        paintLinks(view, generation),
+        paintImages(view, generation)
       ]);
 
       // Email links depend on the text layer's DOM nodes, so this
@@ -2990,6 +3294,7 @@ function setReadingMode(enabled){
 
     searchPopup.classList.add("hidden");
     tocPopup.classList.add("hidden");
+    closeImageContextMenu();
 
     /*
        Explicitly remove the normal chrome
@@ -3099,6 +3404,7 @@ viewer.addEventListener("pointerdown", event => {
     event.target.closest(".textLayer") ||
     event.target.closest(".pdf-link") ||
     event.target.closest(".email-link") ||
+    event.target.closest(".pdf-image-hit") ||
     event.target.closest(".searchHighlightLayer")
   ){
     tapState.active = false;
@@ -3148,6 +3454,7 @@ viewer.addEventListener("pointerup", event => {
     event.target.closest(".textLayer") ||
     event.target.closest(".pdf-link") ||
     event.target.closest(".email-link") ||
+    event.target.closest(".pdf-image-hit") ||
     event.target.closest(".searchHighlightLayer")
   ){
     return;
@@ -3157,6 +3464,34 @@ viewer.addEventListener("pointerup", event => {
     setReadingMode(!readingMode);
   }
 });
+
+/* ============================================================
+   DESELECT ON OUTSIDE TAP
+
+   Clicking/tapping anywhere that isn't inside a text layer -
+   including the blank whitespace of a page, the margins around
+   it, or the toolbar/menus - clears any active text selection.
+   Runs in the capture phase so it fires before any other
+   pointerdown handler (including the one above), and never
+   calls preventDefault/stopPropagation, so it never interferes
+   with what the person was actually tapping on.
+============================================================ */
+
+document.addEventListener("pointerdown", event => {
+
+  const selection = window.getSelection();
+
+  if(!selection || !selection.toString().length){
+    return;
+  }
+
+  if(event.target.closest(".textLayer")){
+    return;
+  }
+
+  selection.removeAllRanges();
+
+}, true);
 
 /* ============================================================
    PINCH ZOOM
@@ -5181,6 +5516,279 @@ document.getElementById("copyLinkBtn").addEventListener("click", async () => {
 });
 
 /* ============================================================
+   IMAGE MENU
+
+   The popup that appears when an image on the page is tapped,
+   offering to open it in the image viewer or download it
+   directly. Extraction happens on demand (only once one of the
+   two options is actually picked) by re-rendering just that
+   page at a resolution high enough to give the image good
+   detail, then cropping to the image's rectangle - this reuses
+   the normal page.render() path rather than trying to pull raw
+   pixel buffers back out of pdf.js's internal image cache,
+   which varies in shape across versions.
+============================================================ */
+
+const IMAGE_EXPORT_TARGET_EDGE = 2200;
+const IMAGE_EXPORT_MAX_UPSCALE = 6;
+
+let pendingImageTarget = null;
+
+function closeImageContextMenu(){
+
+  imageContextMenu.classList.add("hidden");
+
+  pendingImageTarget = null;
+
+  imageViewBtn.disabled = false;
+  imageDownloadBtn.disabled = false;
+
+  imageViewBtn.textContent = "🔍 View Image";
+  imageDownloadBtn.textContent = "⬇ Download Image";
+}
+
+function openImageContextMenu(event, view, region){
+
+  pendingImageTarget = { view, region };
+
+  imageContextMenu.classList.remove("hidden");
+  imageContextMenu.style.visibility = "hidden";
+  imageContextMenu.style.left = "0px";
+  imageContextMenu.style.top = "0px";
+
+  const menuRect = imageContextMenu.getBoundingClientRect();
+  const margin = 10;
+
+  let left = event.clientX;
+  let top = event.clientY;
+
+  if(left + menuRect.width + margin > window.innerWidth){
+    left = window.innerWidth - menuRect.width - margin;
+  }
+
+  if(top + menuRect.height + margin > window.innerHeight){
+    top = window.innerHeight - menuRect.height - margin;
+  }
+
+  left = Math.max(margin, left);
+  top = Math.max(margin, top);
+
+  imageContextMenu.style.left = `${left}px`;
+  imageContextMenu.style.top = `${top}px`;
+  imageContextMenu.style.visibility = "";
+}
+
+imageContextMenu.addEventListener("click", event => event.stopPropagation());
+
+document.addEventListener("click", event => {
+
+  if(imageContextMenu.contains(event.target) || event.target.closest(".pdf-image-hit")){
+    return;
+  }
+
+  closeImageContextMenu();
+});
+
+viewer.addEventListener("scroll", () => closeImageContextMenu());
+
+/*
+   Renders the target page at a resolution high enough for the
+   image region to look sharp, independent of whatever zoom
+   level the person is currently reading at, then crops down to
+   just that region.
+*/
+async function extractImageCanvas(view, region){
+
+  const page = view.page;
+
+  const baseViewport = page.getViewport({ scale:1 });
+
+  const rectAtScale1 = baseViewport.convertToViewportRectangle(
+    [region.minX, region.minY, region.maxX, region.maxY]
+  );
+
+  const naturalWidth = Math.abs(rectAtScale1[2] - rectAtScale1[0]);
+  const naturalHeight = Math.abs(rectAtScale1[3] - rectAtScale1[1]);
+
+  const longEdge = Math.max(naturalWidth, naturalHeight) || 1;
+
+  let exportScale = Math.min(Math.max(IMAGE_EXPORT_TARGET_EDGE / longEdge, 1), IMAGE_EXPORT_MAX_UPSCALE);
+
+  const roughViewport = page.getViewport({ scale:exportScale });
+
+  const safeScale = Math.min(
+    exportScale,
+    MAX_CANVAS_DIMENSION / roughViewport.width,
+    MAX_CANVAS_DIMENSION / roughViewport.height
+  );
+
+  const exportViewport = page.getViewport({ scale:safeScale });
+
+  const pageCanvas = document.createElement("canvas");
+
+  pageCanvas.width = Math.max(1, Math.ceil(exportViewport.width));
+  pageCanvas.height = Math.max(1, Math.ceil(exportViewport.height));
+
+  const pageContext = pageCanvas.getContext("2d", { alpha:false });
+
+  await page.render({ canvasContext:pageContext, viewport:exportViewport }).promise;
+
+  const rect = exportViewport.convertToViewportRectangle(
+    [region.minX, region.minY, region.maxX, region.maxY]
+  );
+
+  const left = Math.max(0, Math.min(rect[0], rect[2]));
+  const top = Math.max(0, Math.min(rect[1], rect[3]));
+  const width = Math.min(pageCanvas.width - left, Math.abs(rect[2] - rect[0]));
+  const height = Math.min(pageCanvas.height - top, Math.abs(rect[3] - rect[1]));
+
+  const cropCanvas = document.createElement("canvas");
+
+  cropCanvas.width = Math.max(1, Math.round(width));
+  cropCanvas.height = Math.max(1, Math.round(height));
+
+  const cropContext = cropCanvas.getContext("2d");
+
+  cropContext.drawImage(
+    pageCanvas,
+    left, top, width, height,
+    0, 0, cropCanvas.width, cropCanvas.height
+  );
+
+  return cropCanvas;
+}
+
+function canvasToDataUrl(canvas){
+
+  return new Promise((resolve, reject) => {
+
+    canvas.toBlob(blob => {
+
+      if(!blob){
+        reject(new Error("Could not encode image."));
+        return;
+      }
+
+      const reader = new FileReader();
+
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(reader.error || new Error("Could not read image data."));
+
+      reader.readAsDataURL(blob);
+
+    }, "image/png");
+  });
+}
+
+function buildImageFilename(pageNumber){
+
+  const base = (title || "document")
+    .replace(/[^\w\- ]+/g, "")
+    .trim()
+    .replace(/\s+/g, "_")
+    .slice(0, 60) || "document";
+
+  return `${base}_page${pageNumber}_image.png`;
+}
+
+/*
+   Captures exactly where the person is right now (page, zoom,
+   scroll position) as a URL that reloads this same PDF viewer
+   back into that same spot - this is what lets the image
+   viewer's own back button return here instead of to page 1.
+*/
+function buildSelfReturnUrl(){
+
+  const pageNumber = getNearestVisiblePage();
+
+  const selfParams = new URLSearchParams();
+
+  selfParams.set("file", file);
+  selfParams.set("paper", title);
+  selfParams.set("return", returnPage);
+  selfParams.set("page", String(pageNumber));
+  selfParams.set("zoom", String(zoomLevel));
+  selfParams.set("scrollTop", String(Math.round(viewer.scrollTop)));
+  selfParams.set("scrollLeft", String(Math.round(viewer.scrollLeft)));
+
+  return `${location.pathname}?${selfParams.toString()}`;
+}
+
+function openImageInViewer(dataUrl, filename){
+
+  const selfUrl = buildSelfReturnUrl();
+
+  try{
+    sessionStorage.setItem("pdfImageExport", JSON.stringify({ dataUrl, filename }));
+  }catch(error){
+    console.warn("Could not stash extracted image for the image viewer:", error);
+  }
+
+  const imageParams = new URLSearchParams();
+
+  imageParams.set("image", "session:pdfImageExport");
+  imageParams.set("return", selfUrl);
+
+  window.location.assign(`image.html?${imageParams.toString()}`);
+}
+
+function downloadExtractedImage(dataUrl, filename){
+
+  const link = document.createElement("a");
+
+  link.href = dataUrl;
+  link.download = filename;
+
+  document.body.appendChild(link);
+
+  link.click();
+
+  link.remove();
+}
+
+async function handleImageMenuAction(action){
+
+  const target = pendingImageTarget;
+
+  if(!target){
+    return;
+  }
+
+  const busyButton = action === "view" ? imageViewBtn : imageDownloadBtn;
+  const otherButton = action === "view" ? imageDownloadBtn : imageViewBtn;
+
+  busyButton.disabled = true;
+  otherButton.disabled = true;
+  busyButton.textContent = "Working…";
+
+  try{
+
+    const canvas = await extractImageCanvas(target.view, target.region);
+    const dataUrl = await canvasToDataUrl(canvas);
+    const filename = buildImageFilename(target.view.pageNumber);
+
+    closeImageContextMenu();
+
+    if(action === "view"){
+      openImageInViewer(dataUrl, filename);
+    }else{
+      downloadExtractedImage(dataUrl, filename);
+    }
+
+  }catch(error){
+
+    console.warn("Image extraction failed:", error);
+
+    closeImageContextMenu();
+
+    alert("Sorry, that image couldn't be extracted.");
+  }
+}
+
+imageViewBtn.addEventListener("click", () => handleImageMenuAction("view"));
+imageDownloadBtn.addEventListener("click", () => handleImageMenuAction("download"));
+
+/* ============================================================
    SELECTION CLEANUP
 ============================================================ */
 
@@ -5324,7 +5932,14 @@ try{
 
   baseScale = getFitWidthScale(firstPage);
   zoomLevel = 1;
-  currentScale = baseScale;
+
+  if(Number.isFinite(initialZoomParam) && initialZoomParam > 0){
+    zoomLevel = Math.max(MIN_ZOOM_LEVEL, Math.min(MAX_ZOOM_LEVEL, initialZoomParam));
+  }
+
+  currentScale = baseScale * zoomLevel;
+
+  zoomBox.value = `${Math.round(zoomLevel * 100)}%`;
 
   const firstView = createPageShell(1, firstPage);
 
@@ -5340,6 +5955,64 @@ try{
   loadingOverlay.style.display = "none";
 
   updateSideScroller();
+
+  /*
+     If we arrived here via the image viewer's back button (see
+     buildSelfReturnUrl / openImageInViewer above), jump straight
+     to the page/zoom/scroll position the person was actually at,
+     rather than leaving them at page 1. Every page from 2 up to
+     the target needs its shell created first - page N's on-screen
+     position depends on the accumulated height of every page
+     before it, so there's no way to land on page 40's exact
+     scroll offset without pages 2-39 already occupying their
+     space in the DOM. ensurePageView is cheap (layout only, no
+     rendering) for the ones we're just passing through.
+  */
+  let targetPage = 1;
+
+  if(Number.isFinite(initialPageParam) && initialPageParam >= 1 && initialPageParam <= pdfDoc.numPages){
+    targetPage = initialPageParam;
+  }
+
+  if(targetPage > 1){
+
+    try{
+
+      for(let pageNumber = 2; pageNumber <= targetPage; pageNumber++){
+        await ensurePageView(pageNumber);
+      }
+
+      updateWrapperWidth();
+
+      const targetView = pageViews[targetPage - 1];
+
+      if(targetView){
+
+        await renderPage(targetView);
+
+        if(Number.isFinite(initialScrollTopParam) || Number.isFinite(initialScrollLeftParam)){
+
+          viewer.scrollTop = Number.isFinite(initialScrollTopParam) ? initialScrollTopParam : 0;
+          viewer.scrollLeft = Number.isFinite(initialScrollLeftParam) ? initialScrollLeftParam : 0;
+
+        }else{
+
+          const viewerRect = viewer.getBoundingClientRect();
+          const pageRect = targetView.pageDiv.getBoundingClientRect();
+          const targetOffset = pageRect.top - viewerRect.top + viewer.scrollTop;
+
+          viewer.scrollTop = Math.max(0, targetOffset - 8);
+        }
+
+        pageInput.value = String(targetPage);
+
+        updateSideScroller();
+      }
+
+    }catch(error){
+      console.warn("Could not restore saved page position:", error);
+    }
+  }
 
   void (async () => {
 
