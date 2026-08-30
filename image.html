@@ -146,6 +146,17 @@ header{
   -webkit-user-drag:none;
 
   max-width:none;
+
+  /* Force the browser to keep using its highest-quality
+     smoothing algorithm at every zoom level, and prevent
+     GPU layer/compositing shortcuts that can soften the
+     image while it's being scaled up. */
+  image-rendering:auto;
+
+  -webkit-backface-visibility:hidden;
+  backface-visibility:hidden;
+
+  will-change:transform;
 }
 
 /* ============================================================
