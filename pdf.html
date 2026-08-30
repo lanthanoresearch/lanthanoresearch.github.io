@@ -2077,8 +2077,8 @@ body.reading-mode #readingModeFloat{
      IMAGE CONTEXT MENU
 ========================================================== -->
 <div id="imageContextMenu" class="hidden" role="menu">
-<button id="imageViewBtn" type="button">🔍 View Image</button>
-<button id="imageDownloadBtn" type="button">⬇ Download Image</button>
+<button id="imageViewBtn" type="button">View Image</button>
+<button id="imageDownloadBtn" type="button">Download Image</button>
 </div>
 <!-- ==========================================================
      FLOATING READING MODE
@@ -2897,6 +2897,18 @@ function renderImageLayer(view){
       event.preventDefault();
       event.stopPropagation();
 
+      /*
+         If this same tap just dismissed an active text
+         selection (see DESELECT ON OUTSIDE TAP), treat it as
+         spent - don't also pop the menu open. A plain second
+         tap on the image, with nothing left selected, opens
+         it normally.
+      */
+      if(suppressNextTapAction){
+        suppressNextTapAction = false;
+        return;
+      }
+
       openImageContextMenu(event, view, region);
     });
 
@@ -3410,6 +3422,27 @@ lockButton.addEventListener("click", event => {
    TAP TO READ
 ============================================================ */
 
+/*
+   .textLayer's own div covers the page's ENTIRE area (inset:0),
+   not just the pixels where text actually sits - so
+   event.target.closest(".textLayer") matches almost any tap
+   inside the page, including plainly blank whitespace, because
+   with nothing more specific underneath, the textLayer div
+   itself becomes the tap's target. Checking for an actual glyph
+   element (a real <span>/<br> pdf.js drew a character into) is
+   what tells a genuine text tap apart from a blank-area tap that
+   merely happened to land inside that same full-coverage box.
+   The endOfContent sentinel div is deliberately excluded too -
+   it's pdf.js's own drag-selection helper, not real text, and
+   while a selection is active it can expand to cover the whole
+   page (see .textLayer.selecting .endOfContent in the CSS),
+   which would otherwise make blank-area taps disappear entirely
+   for as long as anything is selected.
+*/
+function isTextGlyphTarget(target){
+  return !!(target?.closest && target.closest(".textLayer span, .textLayer br"));
+}
+
 let tapState = {
   active:false,
   moved:false,
@@ -3417,10 +3450,22 @@ let tapState = {
   startY:0
 };
 
+/*
+   Set for one tap right after that tap has just dismissed an
+   active text selection (see DESELECT ON OUTSIDE TAP below) - it
+   tells the reading-mode toggle below, and the image tap handler
+   further down, to treat that specific tap as "just closing the
+   selection" and skip their own normal action, rather than both
+   dismissing the selection AND opening a popup/toggling reading
+   mode in the same tap. A real second tap (with no selection left
+   to clear) behaves normally again.
+*/
+let suppressNextTapAction = false;
+
 viewer.addEventListener("pointerdown", event => {
 
   if(
-    event.target.closest(".textLayer") ||
+    isTextGlyphTarget(event.target) ||
     event.target.closest(".pdf-link") ||
     event.target.closest(".email-link") ||
     event.target.closest(".pdf-image-hit") ||
@@ -3470,7 +3515,7 @@ viewer.addEventListener("pointerup", event => {
   }
 
   if(
-    event.target.closest(".textLayer") ||
+    isTextGlyphTarget(event.target) ||
     event.target.closest(".pdf-link") ||
     event.target.closest(".email-link") ||
     event.target.closest(".pdf-image-hit") ||
@@ -3480,6 +3525,12 @@ viewer.addEventListener("pointerup", event => {
   }
 
   if(event.target.closest(".page")){
+
+    if(suppressNextTapAction){
+      suppressNextTapAction = false;
+      return;
+    }
+
     setReadingMode(!readingMode);
   }
 });
@@ -3489,11 +3540,19 @@ viewer.addEventListener("pointerup", event => {
 
    Clicking/tapping anywhere that isn't inside a text layer -
    including the blank whitespace of a page, the margins around
-   it, or the toolbar/menus - clears any active text selection.
-   Runs in the capture phase so it fires before any other
-   pointerdown handler (including the one above), and never
-   calls preventDefault/stopPropagation, so it never interferes
-   with what the person was actually tapping on.
+   it, an image, or the toolbar/menus - clears any active text
+   selection. Runs in the capture phase so it fires before any
+   other pointerdown handler (including the ones above/below),
+   and never calls preventDefault/stopPropagation, so it never
+   blocks what the person was actually tapping on.
+
+   That tap is also flagged via suppressNextTapAction so that,
+   when it lands on an image or blank page, that same tap only
+   dismisses the selection - it doesn't also pop the image menu
+   open or toggle reading mode. The flag is consumed (read once,
+   then reset) by whichever handler runs next, and additionally
+   self-clears on a short timeout as a safety net in case nothing
+   ends up consuming it.
 ============================================================ */
 
 document.addEventListener("pointerdown", event => {
@@ -3504,11 +3563,15 @@ document.addEventListener("pointerdown", event => {
     return;
   }
 
-  if(event.target.closest(".textLayer")){
+  if(isTextGlyphTarget(event.target)){
     return;
   }
 
   selection.removeAllRanges();
+
+  suppressNextTapAction = true;
+
+  setTimeout(() => { suppressNextTapAction = false; }, 400);
 
 }, true);
 
@@ -4506,7 +4569,7 @@ async function ensureQuerySearched(){
    deliberately NOT the cached `result.docTop` from when
    highlights were built - that snapshot can go stale (the
    person may have scrolled, or layout may have settled
-   slightly different) by the time they actually press an
+   slightly differently) by the time they actually press an
    arrow button, and navigating off a stale snapshot is what
    made forward navigation from an unset state unreliable.
 ============================================================ */
@@ -5562,8 +5625,8 @@ function closeImageContextMenu(){
   imageViewBtn.disabled = false;
   imageDownloadBtn.disabled = false;
 
-  imageViewBtn.textContent = "🔍 View Image";
-  imageDownloadBtn.textContent = "⬇ Download Image";
+  imageViewBtn.textContent = "View Image";
+  imageDownloadBtn.textContent = "Download Image";
 }
 
 function openImageContextMenu(event, view, region){
