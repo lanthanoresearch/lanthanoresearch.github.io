@@ -420,20 +420,19 @@ background:#444;
 
 .discover-footer{
 text-align:center;
-margin-top:30px;
 }
 
 .share-button{
-display:inline-block;
+display:block;
+margin:30px auto;
 padding:12px 24px;
 background:#1d1d1d;
 color:#aaa;
-border:1px solid #2b2b2b;
+border:none;
 border-radius:10px;
 cursor:pointer;
 font-size:1em;
 font-family:inherit;
-transition:.2s;
 }
 
 .share-button:hover{
@@ -472,7 +471,7 @@ font-size:1.05em;
 </div>
 
 <div class="discover-footer">
-<button type="button" class="share-button" onclick="shareDiscoverPage()">🔗 Share This Page</button>
+<button type="button" class="share-button" onclick="shareDiscoverPage()">Share This Page</button>
 </div>
 
 </div>
@@ -684,7 +683,20 @@ fetch("descriptions.json")
 .then(data => {
 descriptions = data;
 poolAll = Object.entries(data).map(([key, p]) => ({ key, ...p }));
+
+let returning = false;
+try{
+returning = sessionStorage.getItem(RETURN_FLAG_KEY) === "yes";
+sessionStorage.removeItem(RETURN_FLAG_KEY);
+}catch(e){}
+
+const saved = returning ? loadResultState() : null;
+
+if(saved){
+restoreResult(saved);
+}else{
 startQuiz();
+}
 })
 .catch(() => {
 stage.innerHTML = `<div class="quiz-loading">Couldn't load the research archive. Please try again shortly.</div>`;
@@ -774,12 +786,12 @@ const LENGTH_YES_LABELS = ["Something quick", "Keep it short", "Yes, brief is go
 const LENGTH_NO_LABELS = ["I want depth", "No, go deep", "Length doesn't matter", "Give me the full thing", "I've got time"];
 
 const RECENCY_TEMPLATES = [
-"Are you interested in something more recently researched?",
-"Do you want one of the newer additions to the archive?",
-"Should this lean toward the newest research?",
-"Interested in what's been freshly looked into?",
+"Are you interested in one of the newer additions to the archive?",
+"Do you want something that was added more recently?",
+"Should this lean toward the newer material?",
+"Interested in what's been added lately?",
 "Do you want something from the more recent additions?",
-"Does it matter if this was just recently added?"
+"Does it matter if this has been in the archive a while?"
 ];
 
 const RECENCY_YES_LABELS = ["Something recent", "Yes, newest first", "Fresh research", "The newer stuff"];
@@ -1057,9 +1069,9 @@ clauses.push(pages ? `a deeper dive at ${pages} pages` : "a more thorough piece"
 }else if(h.type === "recency"){
 const dateLabel = formatDate(paper.updated);
 if(h.answer === "yes"){
-clauses.push(dateLabel ? `recently revisited (updated ${dateLabel})` : "recently revisited");
+clauses.push(dateLabel ? `one of the newer additions to the archive (added ${dateLabel})` : "one of the newer additions to the archive");
 }else{
-clauses.push(dateLabel ? `a longer-standing piece in the archive (last updated ${dateLabel})` : "an established piece in the archive");
+clauses.push(dateLabel ? `a longer-standing piece in the archive (added ${dateLabel})` : "an established piece in the archive");
 }
 }
 });
@@ -1084,14 +1096,9 @@ sessionStorage.setItem(key, choice.key);
 return choice;
 }
 
-function buildMediaElement(paper){
+function buildMediaElement(paper, sources){
 const wrapper = document.createElement("div");
 wrapper.className = "result-media";
-
-const visible = getVisibleImages(paper.images);
-const sources = [];
-if(visible.length) sources.push(pickRandom(visible));
-sources.push(`covers/${paper.key}.png`);
 
 const img = document.createElement("img");
 img.className = "result-img";
@@ -1113,6 +1120,183 @@ tryNext();
 
 wrapper.appendChild(img);
 return wrapper;
+}
+
+/* Builds the actual result card DOM from a fully-resolved payload.
+   Shared by a fresh recommendation (showResult) and a restored one
+   (restoreResult), so a paper reopened via the browser's back button
+   looks exactly like it did when the person left. */
+
+function renderResultCard(paper, payload){
+const wrap = document.createElement("div");
+wrap.className = "result-card-wrap";
+
+const inner = document.createElement("div");
+inner.className = "result-card";
+
+const media = buildMediaElement(paper, payload.mediaSources);
+
+const body = document.createElement("div");
+body.className = "result-body";
+
+const catLine = document.createElement("div");
+catLine.className = "result-category";
+catLine.textContent = payload.catText;
+
+const titleLine = document.createElement("div");
+titleLine.className = "result-title";
+titleLine.textContent = paper.title;
+
+const descLine = document.createElement("div");
+descLine.className = "result-description";
+descLine.textContent = paper.description || "";
+
+const whyBox = document.createElement("div");
+whyBox.className = "result-why";
+whyBox.innerHTML = payload.whyHtml;
+
+const readBtn = document.createElement("button");
+readBtn.type = "button";
+readBtn.className = "result-read";
+readBtn.textContent = "Read Research";
+readBtn.addEventListener("click", () => openPaper(paper));
+
+body.appendChild(catLine);
+body.appendChild(titleLine);
+body.appendChild(descLine);
+body.appendChild(whyBox);
+body.appendChild(readBtn);
+
+inner.appendChild(media);
+inner.appendChild(body);
+
+const actions = document.createElement("div");
+actions.className = "result-actions";
+
+const againBtn = document.createElement("button");
+againBtn.type = "button";
+againBtn.className = "result-secondary";
+againBtn.textContent = "Try a different topic";
+againBtn.addEventListener("click", () => transitionOut(wrap, startQuiz));
+
+const rerollBtn = document.createElement("button");
+rerollBtn.type = "button";
+rerollBtn.className = "result-secondary";
+rerollBtn.textContent = "Show me another";
+rerollBtn.addEventListener("click", () => transitionOut(wrap, showResult));
+
+actions.appendChild(rerollBtn);
+actions.appendChild(againBtn);
+
+wrap.appendChild(inner);
+wrap.appendChild(actions);
+
+stage.innerHTML = "";
+stage.appendChild(wrap);
+}
+
+/* ---------------- Remembering where you left off ----------------
+   The only place this page links away from itself is the "Read
+   Research" button on a result card, so that's the only state worth
+   persisting. Right before navigating to the PDF we save exactly what
+   was on screen and set a one-time flag; if the person comes straight
+   back (browser back button), that flag tells this page to rebuild the
+   identical card — same paper, same image, same "why this one" text —
+   instead of rolling a brand new one. Any other way of arriving here
+   (a fresh visit, clicking Discover from the homepage) starts clean. */
+
+const RESULT_STATE_KEY = "discoverResultState";
+const RETURN_FLAG_KEY = "discoverReturnPending";
+
+function saveResultState(paper, payload){
+try{
+sessionStorage.setItem(RESULT_STATE_KEY, JSON.stringify({
+paperKey: paper.key,
+catText: payload.catText,
+whyHtml: payload.whyHtml,
+mediaSources: payload.mediaSources,
+introText: payload.introText,
+progressDotsTypes: progressDots.map(d => d.type),
+primaryCategory,
+history
+}));
+}catch(e){
+// Storage can fail in private-browsing modes — the page just falls
+// back to starting fresh on return, which is a safe default.
+}
+}
+
+function loadResultState(){
+try{
+const raw = sessionStorage.getItem(RESULT_STATE_KEY);
+return raw ? JSON.parse(raw) : null;
+}catch(e){
+return null;
+}
+}
+
+function replayHistoryIntoPool(){
+currentPool = poolAll.filter(p => (p.category || []).includes(primaryCategory));
+
+history.forEach(h => {
+if(h.type === "category"){
+currentPool = currentPool.filter(p =>
+h.answer === "yes"
+? (p.category || []).includes(h.value)
+: !(p.category || []).includes(h.value)
+);
+}else if(h.type === "length"){
+currentPool = currentPool.filter(p =>
+h.answer === "yes"
+? (Number(p.pages) || 0) <= h.value
+: (Number(p.pages) || 0) > h.value
+);
+}else if(h.type === "recency"){
+const cutoff = new Date(h.value);
+currentPool = currentPool.filter(p =>
+h.answer === "yes"
+? (p.updated && new Date(p.updated) >= cutoff)
+: (!p.updated || new Date(p.updated) < cutoff)
+);
+}
+});
+
+usedDims = new Set(
+history
+.filter(h => h.type !== "category-root")
+.map(h => (h.type === "category" ? "cat:" + h.value : h.type))
+);
+
+questionCount = 1 + history.filter(h => h.type !== "category-root").length;
+}
+
+function restoreResult(saved){
+const paper = poolAll.find(p => p.key === saved.paperKey);
+
+if(!paper){
+startQuiz();
+return;
+}
+
+primaryCategory = saved.primaryCategory || null;
+history = saved.history || [];
+replayHistoryIntoPool();
+
+resetProgress();
+(saved.progressDotsTypes || ["start", "question", "end"]).forEach(t => addProgressStep(t));
+completeProgress();
+
+setHeader("full", saved.introText);
+
+const sources = saved.mediaSources && saved.mediaSources.length
+? saved.mediaSources
+: [`covers/${paper.key}.png`];
+
+renderResultCard(paper, {
+catText: saved.catText,
+whyHtml: saved.whyHtml,
+mediaSources: sources
+});
 }
 
 function showResult(){
@@ -1157,80 +1341,29 @@ addProgressStep("end");
 }
 completeProgress();
 
-setHeader("full", pickRandom(RESULT_INTROS));
+const introText = pickRandom(RESULT_INTROS);
+setHeader("full", introText);
 
-const wrap = document.createElement("div");
-wrap.className = "result-card-wrap";
+const catText = (paper.category || []).map(titleCase).join(" • ");
 
-const inner = document.createElement("div");
-inner.className = "result-card";
-
-const media = buildMediaElement(paper);
-
-const body = document.createElement("div");
-body.className = "result-body";
-
-const catLine = document.createElement("div");
-catLine.className = "result-category";
-catLine.textContent = (paper.category || []).map(titleCase).join(" • ");
-
-const titleLine = document.createElement("div");
-titleLine.className = "result-title";
-titleLine.textContent = paper.title;
-
-const descLine = document.createElement("div");
-descLine.className = "result-description";
-descLine.textContent = paper.description || "";
-
-const whyBox = document.createElement("div");
-whyBox.className = "result-why";
-const introText = pickRandom(WHY_INTROS).replace("{cat}", titleCase(primaryCategory));
+const whyIntro = pickRandom(WHY_INTROS).replace("{cat}", titleCase(primaryCategory));
 const clauses = shuffle(buildWhyClauses(paper)).slice(0, 2);
-let whyText = introText;
+let whyText = whyIntro;
 if(clauses.length){
 whyText += " — " + clauses.join(", and ");
 }
 whyText += ".";
-whyBox.innerHTML = `<b>Why this one:</b> ${whyText}`;
+const whyHtml = `<b>Why this one:</b> ${whyText}`;
 
-const readBtn = document.createElement("button");
-readBtn.type = "button";
-readBtn.className = "result-read";
-readBtn.textContent = "Read Research";
-readBtn.addEventListener("click", () => openPaper(paper));
+const visible = getVisibleImages(paper.images);
+const mediaSources = [];
+if(visible.length) mediaSources.push(pickRandom(visible));
+mediaSources.push(`covers/${paper.key}.png`);
 
-body.appendChild(catLine);
-body.appendChild(titleLine);
-body.appendChild(descLine);
-body.appendChild(whyBox);
-body.appendChild(readBtn);
+const payload = { introText, catText, whyHtml, mediaSources };
 
-inner.appendChild(media);
-inner.appendChild(body);
-
-const actions = document.createElement("div");
-actions.className = "result-actions";
-
-const againBtn = document.createElement("button");
-againBtn.type = "button";
-againBtn.className = "result-secondary";
-againBtn.textContent = "Try a different topic";
-againBtn.addEventListener("click", () => transitionOut(wrap, startQuiz));
-
-const rerollBtn = document.createElement("button");
-rerollBtn.type = "button";
-rerollBtn.className = "result-secondary";
-rerollBtn.textContent = "Show me another";
-rerollBtn.addEventListener("click", () => transitionOut(wrap, showResult));
-
-actions.appendChild(rerollBtn);
-actions.appendChild(againBtn);
-
-wrap.appendChild(inner);
-wrap.appendChild(actions);
-
-stage.innerHTML = "";
-stage.appendChild(wrap);
+renderResultCard(paper, payload);
+saveResultState(paper, payload);
 }
 
 /* ---------------- Opening a paper (respects content warnings) ---------------- */
@@ -1246,6 +1379,10 @@ goToPdf(paper.url, paper.title);
 }
 
 function goToPdf(url, title){
+try{
+sessionStorage.setItem(RETURN_FLAG_KEY, "yes");
+}catch(e){}
+
 window.location.href =
 "pdf.html?file=" + encodeURIComponent(url) +
 "&paper=" + encodeURIComponent(title) +
@@ -1265,31 +1402,62 @@ goToPdf(pendingPdf, pendingPaperTitle);
 }
 };
 
-/* ---------------- Share ---------------- */
+/* ---------------- Share ----------------
+   Mirrors the homepage's shareSite() exactly: native share sheet
+   first, clipboard copy as the fallback, then a prompt as the last
+   resort. Just pointed at this page instead. */
 
 window.shareDiscoverPage = function(){
-const url = window.location.origin + window.location.pathname;
+
+const url =
+"https://lanthanoresearch.com/discover.html";
 
 if(navigator.share){
+
 navigator.share({
-title: "Discover Your Research — Lanthano Research",
-text: "Find something worth reading from the Lanthano Research archive.",
-url
-}).catch(() => {});
+
+title:"Lanthano Research",
+
+text:"Explore Discover Your Research",
+
+url:url
+
+});
+
 return;
+
 }
 
 if(navigator.clipboard){
-navigator.clipboard.writeText(url)
-.then(() => {
-alert("Link copied to clipboard.");
+
+navigator.clipboard
+.writeText(url)
+.then(()=>{
+
+alert(
+"Link copied to clipboard."
+);
+
 })
-.catch(() => {
-prompt("Copy this link:", url);
+.catch(()=>{
+
+prompt(
+"Copy this link:",
+url
+);
+
 });
-}else{
-prompt("Copy this link:", url);
+
 }
+else{
+
+prompt(
+"Copy this link:",
+url
+);
+
+}
+
 };
 
 </script>
