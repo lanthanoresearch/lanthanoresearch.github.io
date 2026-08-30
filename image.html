@@ -1073,6 +1073,7 @@ const rawImageParam =
 */
 let src = rawImageParam;
 let sessionFilename = null;
+let sessionDisplayName = null;
 
 if(rawImageParam.startsWith("session:")){
 
@@ -1095,6 +1096,7 @@ if(rawImageParam.startsWith("session:")){
 
             src = parsed.dataUrl || "";
             sessionFilename = parsed.filename || null;
+            sessionDisplayName = parsed.displayName || null;
 
         }else{
 
@@ -1114,6 +1116,27 @@ if(rawImageParam.startsWith("session:")){
     }
 
 }
+
+
+/*
+    Set when this image was opened directly from the PDF viewer's
+    image-click flow (either as our own extracted crop, above, or
+    as a descriptions.json catalog image that visually matched
+    it) - either way, the PDF viewer already knows exactly which
+    page/zoom/scroll to return to, so "Open Parent PDF" should
+    just act like Back rather than running the catalog
+    search-and-jump used when this page is reached some other way.
+*/
+const viewedFromPdf =
+    p.get("viewedFromPdf") === "1";
+
+
+const urlDisplayName =
+    p.get("displayName") ?
+    decodeURIComponent(
+        p.get("displayName")
+    ) :
+    null;
 
 
 const returnPage =
@@ -1254,7 +1277,7 @@ pdfButtonEl.addEventListener(
     descriptions.json for a parent PDF, since the Back button
     (and this button) can just point at that same return link.
 */
-if(sessionFilename){
+if(sessionFilename || viewedFromPdf){
 
     pdfButtonEl.href =
         returnPage;
@@ -1368,6 +1391,15 @@ fetch("descriptions.json")
         all), so that pressing Back inside
         pdf.html lands right back on this exact
         image.
+
+        findImage carries this same image's own
+        URL, double-encoded the same way, so
+        pdf.html can search its rendered pages for
+        a visual match and jump straight to
+        whichever page it actually appears on
+        instead of always opening at page 1. If it
+        doesn't find a match, it just opens
+        normally - nothing here assumes it will.
     */
 
     const pdfUrl =
@@ -1382,6 +1414,10 @@ fetch("descriptions.json")
         "&return=" +
         encodeURIComponent(
             encodeURIComponent(location.href)
+        ) +
+        "&findImage=" +
+        encodeURIComponent(
+            encodeURIComponent(src)
         );
 
     pdfButtonEl.href =
@@ -1455,7 +1491,10 @@ const filename =
 
 
 const displayName =
-    sessionFilename ?
+    sessionDisplayName ||
+    urlDisplayName ||
+
+    (sessionFilename ?
 
     "Extracted Image" :
 
@@ -1466,7 +1505,7 @@ const displayName =
 
             return char.toUpperCase();
 
-        });
+        }));
 
 
 title.textContent =
@@ -2460,6 +2499,35 @@ if(
 syncViewerTop();
 
 syncTitleBarHeight();
+
+
+/*
+    Back-forward cache (bfcache) restore.
+
+    If this page is reached again via the browser's own history
+    traversal (a real back/forward navigation - e.g. a phone's
+    edge-swipe-back gesture, not this page's own in-app Back
+    button, which navigates forward to a new URL instead) while
+    a frozen bfcache snapshot of it still exists, the browser can
+    resume that snapshot instead of re-running this script. That
+    snapshot has whichever image was extracted at the time it was
+    frozen baked into it, so resuming it looks exactly like "this
+    is still showing the old image". Forcing a real reload on a
+    persisted pageshow guarantees a fresh read of whatever the
+    current image/return params actually say.
+*/
+window.addEventListener(
+    "pageshow",
+    function(event){
+
+        if(event.persisted){
+
+            location.reload();
+
+        }
+
+    }
+);
 
 
 </script>
