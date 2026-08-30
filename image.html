@@ -252,6 +252,22 @@ input:focus-visible{
   background:#242424;
 }
 
+.rotateIcon{
+  position:relative;
+  top:-2px;
+
+  margin-right:2px;
+}
+
+.horizontalIcon{
+  position:relative;
+  top:0;
+
+  display:inline-block;
+
+  transform:translateY(-3px);
+}
+
 .iconButton{
   width:32px;
   height:32px;
@@ -730,6 +746,14 @@ body.reading-mode #readingModeFloat{
 
 <div id="toolbar">
 
+  <button
+    id="fit"
+    class="toolButton"
+    title="Reset view"
+  >
+    Reset
+  </button>
+
   <div class="zoomControls">
 
     <button
@@ -755,11 +779,11 @@ body.reading-mode #readingModeFloat{
   </div>
 
   <button
-    id="fit"
+    id="rotate"
     class="toolButton"
-    title="Reset view"
+    title="Rotate clockwise"
   >
-    Reset
+    <span class="rotateIcon">⟳</span> Rotate
   </button>
 
   <button
@@ -971,6 +995,10 @@ const minusButton =
 
 const plusButton =
     document.getElementById("plus");
+
+
+const rotateButton =
+    document.getElementById("rotate");
 
 
 const menu =
@@ -1369,6 +1397,9 @@ let offsetX = 0;
 let offsetY = 0;
 
 
+let rotation = 0;
+
+
 /*
     Movement modes:
 
@@ -1422,6 +1453,7 @@ function draw(){
             calc(-50% + ${offsetX}px),
             calc(-50% + ${offsetY}px)
         )
+        rotate(${rotation}deg)
         scale(${base * zoom})`;
 
 
@@ -1439,13 +1471,30 @@ function fit(){
         return;
 
 
+    /*
+        A 90/270 degree rotation swaps which of the
+        image's natural dimensions maps to the
+        viewer's width vs height, so fitting has to
+        swap them too or the image would be sized as
+        if it were never rotated.
+    */
+    const rotated =
+        rotation % 180 !== 0;
+
+    const naturalW =
+        rotated ? img.naturalHeight : img.naturalWidth;
+
+    const naturalH =
+        rotated ? img.naturalWidth : img.naturalHeight;
+
+
     base = Math.min(
 
         viewer.clientWidth /
-        img.naturalWidth,
+        naturalW,
 
         viewer.clientHeight /
-        img.naturalHeight
+        naturalH
 
     );
 
@@ -1526,6 +1575,19 @@ fitButton.onclick =
     fit;
 
 
+/* ---------- Rotate ---------- */
+
+rotateButton.onclick =
+    () => {
+
+        rotation =
+            (rotation + 90) % 360;
+
+        fit();
+
+    };
+
+
 /* ---------- Manual Zoom ---------- */
 
 zoomPercent.addEventListener(
@@ -1594,8 +1656,8 @@ lockButton.onclick = () => {
 
         movementMode = "horizontal";
 
-        lockButton.textContent =
-            "↔ Horizontal";
+        lockButton.innerHTML =
+            '<span class="horizontalIcon">↔</span> Horizontal';
 
     }else{
 
