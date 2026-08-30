@@ -1034,10 +1034,63 @@ function syncTitleBarHeight(){
 }
 
 
-const src =
+const rawImageParam =
     decodeURIComponent(
         p.get("image") || ""
     );
+
+
+/*
+    Images extracted from the PDF viewer arrive as a "session:KEY"
+    sentinel instead of a normal URL - the actual image (a data
+    URL) and its suggested filename live in sessionStorage under
+    that key, because a data URL long enough to hold a real photo
+    would be unwieldy (and in some browsers, too long) to pass
+    through the query string itself.
+*/
+let src = rawImageParam;
+let sessionFilename = null;
+
+if(rawImageParam.startsWith("session:")){
+
+    const storageKey =
+        rawImageParam.slice(
+            "session:".length
+        );
+
+    try{
+
+        const stored =
+            sessionStorage.getItem(
+                storageKey
+            );
+
+        if(stored){
+
+            const parsed =
+                JSON.parse(stored);
+
+            src = parsed.dataUrl || "";
+            sessionFilename = parsed.filename || null;
+
+        }else{
+
+            src = "";
+
+        }
+
+    }catch(error){
+
+        console.warn(
+            "Could not read stored image:",
+            error
+        );
+
+        src = "";
+
+    }
+
+}
 
 
 const returnPage =
@@ -1170,6 +1223,34 @@ pdfButtonEl.addEventListener(
     }
 );
 
+
+/*
+    An image extracted from the PDF viewer already has a precise
+    "return" link straight back to the exact page/zoom/scroll it
+    was tapped from - there's no need to go hunting through
+    descriptions.json for a parent PDF, since the Back button
+    (and this button) can just point at that same return link.
+*/
+if(sessionFilename){
+
+    pdfButtonEl.href =
+        returnPage;
+
+    pdfButtonEl.classList.remove(
+        "disabled"
+    );
+
+    pdfButtonEl.removeAttribute(
+        "aria-disabled"
+    );
+
+    pdfButtonEl.textContent =
+        "Open Parent PDF";
+
+    pdfButtonEl.title =
+        "Return to the PDF page this image came from";
+
+}else{
 
 fetch("descriptions.json")
 .then(response => {
@@ -1314,6 +1395,8 @@ fetch("descriptions.json")
 
 });
 
+}
+
 
 /* ---------- Image ---------- */
 
@@ -1342,12 +1425,17 @@ img.src =
 
 
 const filename =
+    sessionFilename ||
     src
         .split("/")
         .pop();
 
 
 const displayName =
+    sessionFilename ?
+
+    "Extracted Image" :
+
     filename
         .replace(/\.[^/.]+$/, "")
         .replace(/[-_]+/g, " ")
