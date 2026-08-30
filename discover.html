@@ -85,6 +85,7 @@ height:8px;
 border-radius:50%;
 background:#333;
 transition:.25s;
+flex-shrink:0;
 }
 
 .progress-dot.filled{
@@ -94,6 +95,16 @@ background:#6fa8ff;
 .progress-dot.current{
 background:#fff;
 box-shadow:0 0 0 4px rgba(255,255,255,.12);
+}
+
+.progress-dot.endpoint{
+width:6px;
+height:6px;
+background:#555;
+}
+
+.progress-dot.endpoint.filled{
+background:#6fa8ff;
 }
 
 .quiz-stage{
@@ -407,6 +418,29 @@ font-family:inherit;
 background:#444;
 }
 
+.discover-footer{
+text-align:center;
+margin-top:30px;
+}
+
+.share-button{
+display:inline-block;
+padding:12px 24px;
+background:#1d1d1d;
+color:#aaa;
+border:1px solid #2b2b2b;
+border-radius:10px;
+cursor:pointer;
+font-size:1em;
+font-family:inherit;
+transition:.2s;
+}
+
+.share-button:hover{
+background:#262626;
+color:#fff;
+}
+
 @media (max-width:400px){
 .result-title{
 font-size:1.18rem;
@@ -435,6 +469,10 @@ font-size:1.05em;
 
 <div class="quiz-stage" id="quizStage">
 <div class="quiz-loading">Loading the archive…</div>
+</div>
+
+<div class="discover-footer">
+<button type="button" class="share-button" onclick="shareDiscoverPage()">🔗 Share This Page</button>
 </div>
 
 </div>
@@ -571,6 +609,41 @@ typeof image === "string" &&
 );
 }
 
+/* ---------------- Sensitive-content gating ----------------
+   A handful of papers in the archive deal with real atrocity, violence,
+   or graphic imagery (the site already marks individual graphic images
+   with a "#$" filename prefix, and has a per-paper "warning" flag for
+   graphic PDFs). Those signals are honored automatically. On top of
+   that, a short curated list below covers papers whose SUBJECT MATTER
+   is heavy even when no single image is marked graphic — right now
+   that's 9/11, the Israel piece, the nuclear one, and the Nazi one.
+   All four happen to be tagged "political", which is what makes the
+   gating rule below workable: they only enter the recommendation pool
+   once the person has actually signaled interest in that angle, either
+   by picking it as their starting point or by explicitly opting into
+   "political" during a narrowing question. If a future paper this
+   heavy doesn't share that tag, add its key here and adjust the gate
+   condition to match how it should be unlocked. */
+
+const HEAVY_TOPIC_KEYS = new Set(["911", "godless_israel", "nuclear_scare", "real_nazis"]);
+
+function isHeavyPaper(paper){
+if(HEAVY_TOPIC_KEYS.has(paper.key)) return true;
+if(paper.warning) return true;
+if((paper.images || []).some(img => typeof img === "string" && img.trim().startsWith("#$"))) return true;
+return false;
+}
+
+function heavyContentUnlocked(){
+return primaryCategory === "political" ||
+history.some(h => h.type === "category" && h.answer === "yes" && h.value === "political");
+}
+
+function sanitizePool(pool){
+if(heavyContentUnlocked()) return pool;
+return pool.filter(p => !isHeavyPaper(p));
+}
+
 /* ---------------- Quiz state ---------------- */
 
 let poolAll = [];               // every paper, as {key, ...fields}
@@ -650,7 +723,9 @@ const all = getAllCategories();
 const showFour = all.length >= 4 && Math.random() < 0.3;
 const chosen = shuffle(all).slice(0, showFour ? 4 : Math.min(3, all.length));
 
-renderProgress(1);
+resetProgress();
+addProgressStep("start");
+addProgressStep("question");
 
 renderCard({
 icon: "🧭",
@@ -677,31 +752,38 @@ const CATEGORY_TEMPLATES = [
 "Would the {cat} angle interest you too?",
 "Does {cat} factor into what you're looking for?",
 "Should this also touch on {cat}?",
-"Is there a {cat} thread you'd want pulled in as well?"
+"Is there a {cat} thread you'd want pulled in as well?",
+"Want us to bring {cat} into it too?",
+"Does the {cat} connection matter to you here?",
+"Should {cat} be part of the mix?"
 ];
 
-const CATEGORY_YES_LABELS = ["Yes, that too", "Definitely", "Sounds right", "Yes, include that", "That angle too"];
-const CATEGORY_NO_LABELS = ["Not really", "Keep it separate", "Not this time", "Skip that angle", "No, just the one"];
+const CATEGORY_YES_LABELS = ["Yes, that too", "Definitely", "Sounds right", "Yes, include that", "That angle too", "Bring it in", "Yes, go for it"];
+const CATEGORY_NO_LABELS = ["Not really", "Keep it separate", "Not this time", "Skip that angle", "No, just the one", "Leave that out", "No thanks"];
 
 const LENGTH_TEMPLATES = [
 "Would you rather start with something quick to get through?",
 "Looking for something you can finish in one sitting?",
 "Do you want a shorter read to start with?",
-"Should we keep this brief?"
+"Should we keep this brief?",
+"Would a quick one suit you better right now?",
+"Short and to the point, or willing to go longer?"
 ];
 
-const LENGTH_YES_LABELS = ["Something quick", "Keep it short", "Yes, brief is good", "Short and sweet"];
-const LENGTH_NO_LABELS = ["I want depth", "No, go deep", "Length doesn't matter", "Give me the full thing"];
+const LENGTH_YES_LABELS = ["Something quick", "Keep it short", "Yes, brief is good", "Short and sweet", "Quick one, please"];
+const LENGTH_NO_LABELS = ["I want depth", "No, go deep", "Length doesn't matter", "Give me the full thing", "I've got time"];
 
 const RECENCY_TEMPLATES = [
 "Are you interested in something more recently researched?",
 "Do you want one of the newer additions to the archive?",
 "Should this lean toward the newest research?",
-"Interested in what's been freshly looked into?"
+"Interested in what's been freshly looked into?",
+"Do you want something from the more recent additions?",
+"Does it matter if this was just recently added?"
 ];
 
-const RECENCY_YES_LABELS = ["Something recent", "Yes, newest first", "Fresh research"];
-const RECENCY_NO_LABELS = ["Doesn't matter", "No preference", "Classic is fine"];
+const RECENCY_YES_LABELS = ["Something recent", "Yes, newest first", "Fresh research", "The newer stuff"];
+const RECENCY_NO_LABELS = ["Doesn't matter", "No preference", "Classic is fine", "Age doesn't matter"];
 
 function bestSecondarySplit(pool){
 const catCounts = {};
@@ -785,7 +867,7 @@ if(askedNarrowing >= 2 && Math.random() < 0.55){
 return showResult();
 }
 
-renderProgress(questionCount);
+addProgressStep("question");
 askSplitQuestion(split);
 }
 
@@ -839,14 +921,38 @@ renderCard({ icon, question: questionText, options });
 
 /* ---------------- Rendering ---------------- */
 
-function renderProgress(step){
-const total = 3;
+/* ---------------- Progress dots ----------------
+   Dynamic and append-only: one dot for the start, one for each
+   question actually asked (however many that turns out to be), and
+   one for the final result. A new question always gets its own new
+   dot — nothing is reused or skipped. Once the result is shown, every
+   dot (including the last) is filled solid; nothing is left looking
+   "in progress" once you've reached a paper. */
+
+let progressDots = [];
+
+function resetProgress(){
 progressTrack.innerHTML = "";
-for(let i = 1; i <= total; i++){
-const dot = document.createElement("div");
-dot.className = "progress-dot" + (i < step ? " filled" : "") + (i === step ? " current" : "");
-progressTrack.appendChild(dot);
+progressDots = [];
 }
+
+function addProgressStep(type){
+if(progressDots.length){
+const prev = progressDots[progressDots.length - 1];
+prev.el.classList.remove("current");
+prev.el.classList.add("filled");
+}
+const dot = document.createElement("div");
+dot.className = "progress-dot current" + (type !== "question" ? " endpoint" : "");
+progressTrack.appendChild(dot);
+progressDots.push({ type, el: dot });
+}
+
+function completeProgress(){
+progressDots.forEach(d => {
+d.el.classList.remove("current");
+d.el.classList.add("filled");
+});
 }
 
 function renderCard({ icon, question, options }){
@@ -1010,16 +1116,47 @@ return wrapper;
 }
 
 function showResult(){
-let pool = currentPool.length ? currentPool : poolAll.filter(p => (p.category || []).includes(primaryCategory));
+// currentPool should never be empty here — every split is constructed
+// so both branches keep at least one paper (see bestSecondarySplit /
+// lengthSplit / recencySplit above), and the category pool itself is
+// never empty since we only ever offer categories that exist in the
+// data. These fallbacks are defensive only, and — if ever triggered —
+// stay as relevant as possible rather than jumping to a random paper:
+// first try anything sharing a category touched during this session,
+// then anything in the starting category, and only as an absolute
+// last resort, anything in the archive at all.
+let pool = sanitizePool(currentPool);
 
 if(!pool.length){
-// Absolute fallback: never fail to recommend something.
+const touchedCategories = new Set(
+[primaryCategory, ...history.filter(h => h.type === "category").map(h => h.value)]
+);
+pool = sanitizePool(poolAll.filter(p => (p.category || []).some(c => touchedCategories.has(c))));
+}
+
+if(!pool.length){
+pool = sanitizePool(poolAll.filter(p => (p.category || []).includes(primaryCategory)));
+}
+
+if(!pool.length){
+pool = sanitizePool(poolAll);
+}
+
+if(!pool.length){
+// Only reachable if literally every remaining candidate were heavy
+// content the person never opted into — rather than force one of
+// those through, fall back to the full archive as an absolute last
+// resort so the experience never dead-ends.
 pool = poolAll;
 }
 
 const paper = pickPaper(pool);
 
-renderProgress(3);
+if(!progressDots.length || progressDots[progressDots.length - 1].type !== "end"){
+addProgressStep("end");
+}
+completeProgress();
+
 setHeader("full", pickRandom(RESULT_INTROS));
 
 const wrap = document.createElement("div");
@@ -1125,6 +1262,33 @@ window.continueDiscoverWarning = function(){
 document.getElementById("discoverWarningOverlay").style.display = "none";
 if(pendingPdf){
 goToPdf(pendingPdf, pendingPaperTitle);
+}
+};
+
+/* ---------------- Share ---------------- */
+
+window.shareDiscoverPage = function(){
+const url = window.location.origin + window.location.pathname;
+
+if(navigator.share){
+navigator.share({
+title: "Discover Your Research — Lanthano Research",
+text: "Find something worth reading from the Lanthano Research archive.",
+url
+}).catch(() => {});
+return;
+}
+
+if(navigator.clipboard){
+navigator.clipboard.writeText(url)
+.then(() => {
+alert("Link copied to clipboard.");
+})
+.catch(() => {
+prompt("Copy this link:", url);
+});
+}else{
+prompt("Copy this link:", url);
 }
 };
 
