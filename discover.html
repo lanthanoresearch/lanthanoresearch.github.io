@@ -23,12 +23,12 @@ color:inherit;
 .top-nav{
 max-width:640px;
 margin:0 auto;
-padding:20px 20px 0;
+padding:14px 16px 0;
 }
 
 .back-link{
 color:#888;
-font-size:.95em;
+font-size:.92em;
 }
 
 .back-link:hover{
@@ -38,36 +38,45 @@ color:#fff;
 .discover-wrap{
 max-width:640px;
 margin:0 auto;
-padding:20px 20px 80px;
+padding:8px 16px 36px;
 box-sizing:border-box;
-min-height:80vh;
 display:flex;
 flex-direction:column;
 }
 
 .discover-header{
 text-align:center;
-margin:20px 0 10px;
+margin:10px 0 4px;
+transition:.2s;
 }
 
 .discover-header h1{
-font-size:2em;
-margin:0 0 10px 0;
+font-size:1.5em;
+margin:0 0 6px 0;
 }
 
 .discover-header p{
 color:#999;
-font-size:1.02em;
-line-height:1.6;
+font-size:.92em;
+line-height:1.4;
 margin:0 auto;
-max-width:480px;
+max-width:440px;
+}
+
+.discover-header.compact h1{
+font-size:1.15em;
+margin-bottom:0;
+}
+
+.discover-header.compact p{
+display:none;
 }
 
 .progress-track{
 display:flex;
 justify-content:center;
 gap:8px;
-margin:26px 0 6px;
+margin:14px 0 4px;
 }
 
 .progress-dot{
@@ -88,23 +97,24 @@ box-shadow:0 0 0 4px rgba(255,255,255,.12);
 }
 
 .quiz-stage{
-flex:1;
 display:flex;
-align-items:center;
-justify-content:center;
-padding:10px 0;
+flex-direction:column;
+align-items:stretch;
+justify-content:flex-start;
+gap:14px;
+padding:6px 0 0;
 }
 
 .quiz-card{
 width:100%;
+box-sizing:border-box;
 background:#181818;
 border:1px solid #2b2b2b;
 border-radius:16px;
-padding:34px 26px;
-box-sizing:border-box;
+padding:22px 20px;
 opacity:0;
 transform:translateY(10px);
-animation:cardIn .35s ease forwards;
+animation:cardIn .32s ease forwards;
 }
 
 @keyframes cardIn{
@@ -114,8 +124,9 @@ transform:translateY(0);
 }
 }
 
-.quiz-card.leaving{
-animation:cardOut .2s ease forwards;
+.quiz-card.leaving,
+.result-card-wrap.leaving{
+animation:cardOut .18s ease forwards;
 }
 
 @keyframes cardOut{
@@ -127,22 +138,22 @@ transform:translateY(-8px);
 
 .quiz-icon{
 text-align:center;
-font-size:2.4em;
-margin-bottom:6px;
+font-size:1.8em;
+margin-bottom:4px;
 }
 
 .quiz-question{
 text-align:center;
-font-size:1.35em;
+font-size:1.12em;
 font-weight:bold;
-line-height:1.4;
-margin:0 0 26px 0;
+line-height:1.35;
+margin:0 0 18px 0;
 }
 
 .quiz-options{
 display:flex;
 flex-direction:column;
-gap:12px;
+gap:10px;
 }
 
 .quiz-option{
@@ -153,9 +164,9 @@ background:#222;
 border:1px solid #444;
 border-radius:14px;
 color:#eee;
-font-size:1.05em;
+font-size:1em;
 font-weight:bold;
-padding:16px 18px;
+padding:13px 16px;
 cursor:pointer;
 transition:.2s;
 text-align:center;
@@ -171,16 +182,30 @@ border-color:#666;
 transform:scale(.98);
 }
 
-.quiz-option .opt-emoji{
-margin-right:8px;
-}
-
 .quiz-option.yes-lean:hover{
 color:#6fa8ff;
 }
 
 .quiz-option.no-lean:hover{
 color:#ffb0b0;
+}
+
+.quiz-option.has-icon{
+display:flex;
+align-items:center;
+gap:12px;
+text-align:left;
+font-weight:normal;
+}
+
+.quiz-option.has-icon .opt-emoji{
+font-size:1.3em;
+flex-shrink:0;
+}
+
+.quiz-option.has-icon .opt-text{
+flex:1;
+line-height:1.35;
 }
 
 .quiz-loading{
@@ -191,12 +216,10 @@ padding:40px 0;
 
 /* ---- Result ---- */
 
-.result-lead{
-text-align:center;
-color:#999;
-font-size:1em;
-margin:24px 0 4px;
-letter-spacing:.3px;
+.result-card-wrap{
+opacity:0;
+transform:translateY(10px);
+animation:cardIn .35s ease forwards;
 }
 
 .result-card{
@@ -204,57 +227,76 @@ background:#1d1d1d;
 border:1px solid #333;
 border-radius:16px;
 overflow:hidden;
-opacity:0;
-transform:translateY(10px);
-animation:cardIn .4s ease forwards;
 }
 
 .result-media{
-height:150px;
+height:120px;
 background:#2b2b2b;
+overflow:hidden;
+}
+
+.result-img{
+width:100%;
+height:100%;
+object-fit:cover;
+display:block;
+}
+
+.result-icon{
+width:100%;
+height:100%;
 display:flex;
 align-items:center;
 justify-content:center;
-font-size:60px;
+font-size:52px;
 color:#888;
 }
 
 .result-body{
-padding:26px;
+padding:18px 20px 20px;
 }
 
 .result-category{
 text-align:center;
 color:#888;
-font-size:.9em;
-margin:0 0 10px 0;
+font-size:.85em;
+margin:0 0 6px 0;
 letter-spacing:.4px;
 }
 
 .result-title{
 text-align:center;
 font-weight:bold;
-font-size:1.65rem;
-line-height:1.25;
-margin:0 0 16px 0;
+font-size:1.32rem;
+line-height:1.22;
+margin:0 0 10px 0;
+display:-webkit-box;
+-webkit-line-clamp:2;
+-webkit-box-orient:vertical;
+overflow:hidden;
 }
 
 .result-description{
 color:#ccc;
-line-height:1.65;
+font-size:.95em;
+line-height:1.45;
 text-align:center;
-margin:0 0 20px 0;
+margin:0 0 14px 0;
+display:-webkit-box;
+-webkit-line-clamp:3;
+-webkit-box-orient:vertical;
+overflow:hidden;
 }
 
 .result-why{
 background:#151515;
 border:1px solid #2b2b2b;
 border-radius:12px;
-padding:14px 16px;
+padding:10px 14px;
 color:#aaa;
-font-size:.92em;
-line-height:1.55;
-margin:0 0 24px 0;
+font-size:.85em;
+line-height:1.45;
+margin:0 0 16px 0;
 }
 
 .result-why b{
@@ -269,8 +311,8 @@ text-align:center;
 background:#2f7cff;
 color:#fff;
 font-weight:bold;
-font-size:1.05em;
-padding:16px;
+font-size:1em;
+padding:13px;
 border-radius:12px;
 border:none;
 cursor:pointer;
@@ -284,8 +326,8 @@ background:#4d8dff;
 .result-actions{
 display:flex;
 justify-content:center;
-gap:10px;
-margin-top:22px;
+gap:8px;
+margin-top:14px;
 flex-wrap:wrap;
 }
 
@@ -293,9 +335,9 @@ flex-wrap:wrap;
 background:none;
 border:1px solid #444;
 color:#aaa;
-padding:10px 18px;
+padding:8px 14px;
 border-radius:999px;
-font-size:.95em;
+font-size:.85em;
 cursor:pointer;
 font-family:inherit;
 transition:.2s;
@@ -365,15 +407,12 @@ font-family:inherit;
 background:#444;
 }
 
-@media (max-width:480px){
-.quiz-card{
-padding:26px 18px;
-}
-.discover-header h1{
-font-size:1.6em;
-}
+@media (max-width:400px){
 .result-title{
-font-size:1.4rem;
+font-size:1.18rem;
+}
+.quiz-question{
+font-size:1.05em;
 }
 }
 
@@ -387,7 +426,7 @@ font-size:1.4rem;
 
 <div class="discover-wrap">
 
-<div class="discover-header">
+<div class="discover-header" id="discoverHeader">
 <h1>Discover Your Research</h1>
 <p id="headerSub">Answer a couple of quick questions and we'll surface something from the archive worth reading.</p>
 </div>
@@ -440,6 +479,74 @@ function emojiFor(cat){
 return CATEGORY_EMOJI[cat] || "🔎";
 }
 
+/* Curiosity hooks — these describe what's actually inside each category
+   without naming it outright, so the opening question feels different
+   from the plain category grid on the homepage. The category itself is
+   only revealed once a result is shown. New categories that don't have
+   a hand-written hook yet still work via the generic fallback below. */
+
+const CATEGORY_HOOKS = {
+biblical: [
+"What scripture actually says, once translation choices get out of the way",
+"Doctrines everyone assumes are settled — and aren't",
+"Signs of the end times, examined verse by verse",
+"Symbols hiding in plain sight, and where they came from"
+],
+historical: [
+"Events where the official account doesn't quite add up",
+"Timelines and dates that may not be what they seem",
+"Disasters and cover-ups history glossed over",
+"The past, re-examined without the textbook filter"
+],
+political: [
+"What power doesn't want closely examined",
+"Where politics and propaganda blur together",
+"Modern conflicts, and the narratives built around them",
+"Surveillance, control, and who benefits"
+],
+scientific: [
+"Scientific \"facts\" that are really just assumptions",
+"What the data actually shows, once you look closely",
+"Long-held claims, tested against the evidence",
+"The stuff textbooks present as settled — but isn't"
+],
+astronomy: [
+"Whether the sky is exactly what we've been told",
+"Space missions, and the questions raised about their footage",
+"How ancient and modern views of the cosmos compare",
+"Photos, missions, and the anomalies critics point to"
+],
+medical: [
+"What your body's being told — and what's left out",
+"Health claims that deserve a second look",
+"Medicine's track record, warts and all",
+"Substances, safety, and the studies behind the claims"
+],
+technology: [
+"How much of your life is quietly being tracked",
+"Where technology and surveillance start to overlap",
+"The tech in your pocket, and what it's really doing"
+],
+philosophy: [
+"The big question sitting underneath everything else",
+"What reality actually is, once you ask hard enough",
+"Meaning, existence, and the frameworks we use to explain them"
+]
+};
+
+const GENERIC_HOOK_TEMPLATES = [
+"Something in the {cat} files",
+"A closer look at {cat}",
+"What's turned up in the {cat} research"
+];
+
+function hookFor(cat){
+if(CATEGORY_HOOKS[cat] && CATEGORY_HOOKS[cat].length){
+return pickRandom(CATEGORY_HOOKS[cat]);
+}
+return pickRandom(GENERIC_HOOK_TEMPLATES).replace("{cat}", cat);
+}
+
 function titleCase(str){
 return str.charAt(0).toUpperCase() + str.slice(1);
 }
@@ -457,6 +564,13 @@ function pickRandom(arr){
 return arr[Math.floor(Math.random() * arr.length)];
 }
 
+function getVisibleImages(images){
+return (images || []).filter(image =>
+typeof image === "string" &&
+!image.trim().startsWith("#$")
+);
+}
+
 /* ---------------- Quiz state ---------------- */
 
 let poolAll = [];               // every paper, as {key, ...fields}
@@ -469,6 +583,7 @@ const MAX_QUESTIONS = 3;
 
 const stage = document.getElementById("quizStage");
 const progressTrack = document.getElementById("progressTrack");
+const headerEl = document.getElementById("discoverHeader");
 const headerSub = document.getElementById("headerSub");
 
 const INTRO_SUBS = [
@@ -478,7 +593,16 @@ const INTRO_SUBS = [
 "Two or three questions. One paper. Let's see what fits."
 ];
 
-headerSub.textContent = pickRandom(INTRO_SUBS);
+function setHeader(mode, text){
+if(mode === "compact"){
+headerEl.classList.add("compact");
+}else{
+headerEl.classList.remove("compact");
+if(text) headerSub.textContent = text;
+}
+}
+
+setHeader("full", pickRandom(INTRO_SUBS));
 
 /* ---------------- Load data ---------------- */
 
@@ -496,22 +620,18 @@ stage.innerHTML = `<div class="quiz-loading">Couldn't load the research archive.
 /* ---------------- Category question ---------------- */
 
 const CATEGORY_INTROS = [
-"What are you most interested in exploring?",
-"Where should we start digging?",
-"Which of these pulls at your curiosity most?",
-"If you had to pick one thread to pull on first, which would it be?",
-"What's calling your attention right now?",
-"Pick a starting point — where do you want to look first?"
+"Which of these itches at you the most?",
+"What's got your attention right now?",
+"Pick the one you can't stop thinking about.",
+"Which thread do you want to pull on first?",
+"What's worth a closer look today?",
+"Where should we start digging?"
 ];
 
-function getCategoryCounts(){
-const counts = {};
-poolAll.forEach(p => {
-(p.category || []).forEach(c => {
-counts[c] = (counts[c] || 0) + 1;
-});
-});
-return counts;
+function getAllCategories(){
+const set = new Set();
+poolAll.forEach(p => (p.category || []).forEach(c => set.add(c)));
+return [...set];
 }
 
 function startQuiz(){
@@ -521,22 +641,23 @@ history = [];
 usedDims = new Set();
 questionCount = 1;
 
-const counts = getCategoryCounts();
-const ranked = Object.entries(counts)
-.sort((a, b) => b[1] - a[1])
-.map(([c]) => c);
+setHeader("full", pickRandom(INTRO_SUBS));
 
-const topPool = ranked.slice(0, 4);
-const showFour = topPool.length === 4 && Math.random() < 0.3;
-const chosen = shuffle(topPool).slice(0, showFour ? 4 : 3);
+// Draw from every category in the archive, not just the biggest ones,
+// so repeat visits surface different subjects over time. Still only
+// show a handful at once so it doesn't overwhelm.
+const all = getAllCategories();
+const showFour = all.length >= 4 && Math.random() < 0.3;
+const chosen = shuffle(all).slice(0, showFour ? 4 : Math.min(3, all.length));
 
-renderProgress(1, null);
+renderProgress(1);
 
 renderCard({
 icon: "🧭",
 question: pickRandom(CATEGORY_INTROS),
-options: chosen.map(cat => ({
-label: `${emojiFor(cat)} ${titleCase(cat)}`,
+options: shuffle(chosen).map(cat => ({
+label: hookFor(cat),
+icon: emojiFor(cat),
 onClick: () => chooseCategory(cat)
 }))
 });
@@ -635,14 +756,13 @@ function pickSplit(pool){
 const candidates = [bestSecondarySplit(pool), lengthSplit(pool), recencySplit(pool)].filter(Boolean);
 if(!candidates.length) return null;
 candidates.sort((a, b) => a.balance - b.balance);
-const top = candidates.slice(0, 2);
+const top = candidates.slice(0, Math.min(3, candidates.length));
 return pickRandom(top);
 }
 
 function advance(){
 questionCount++;
 
-// Decide whether we still have room / need for another question
 if(questionCount > MAX_QUESTIONS){
 return showResult();
 }
@@ -657,10 +777,7 @@ if(!split){
 return showResult();
 }
 
-// Casual-browsing shortcut: if the pool is already tight, or we've
-// already asked one narrowing question, sometimes stop early so the
-// experience doesn't always run the full length.
-const askedNarrowing = questionCount - 1; // number of narrowing Qs so far (incl. this one about to be asked)
+const askedNarrowing = questionCount - 1;
 if(currentPool.length <= 3 && askedNarrowing >= 2){
 return showResult();
 }
@@ -668,7 +785,7 @@ if(askedNarrowing >= 2 && Math.random() < 0.55){
 return showResult();
 }
 
-renderProgress(questionCount, split);
+renderProgress(questionCount);
 askSplitQuestion(split);
 }
 
@@ -691,6 +808,8 @@ yesLabel = pickRandom(RECENCY_YES_LABELS);
 noLabel = pickRandom(RECENCY_NO_LABELS);
 icon = "🕒";
 }
+
+setHeader("compact");
 
 const options = shuffle([
 {
@@ -720,9 +839,7 @@ renderCard({ icon, question: questionText, options });
 
 /* ---------------- Rendering ---------------- */
 
-function renderProgress(step, upcomingSplit){
-// We don't know the final count in advance, so show up to 3 dots and
-// mark the current one; keep it lightweight rather than misleading.
+function renderProgress(step){
 const total = 3;
 progressTrack.innerHTML = "";
 for(let i = 1; i <= total; i++){
@@ -751,9 +868,23 @@ options.forEach(opt => {
 const btn = document.createElement("button");
 btn.type = "button";
 btn.className = "quiz-option" + (opt.extraClass ? " " + opt.extraClass : "");
+
+if(opt.icon){
+btn.classList.add("has-icon");
+const iconSpan = document.createElement("span");
+iconSpan.className = "opt-emoji";
+iconSpan.textContent = opt.icon;
+const textSpan = document.createElement("span");
+textSpan.className = "opt-text";
+textSpan.textContent = opt.label;
+btn.appendChild(iconSpan);
+btn.appendChild(textSpan);
+}else{
 btn.textContent = opt.label;
+}
+
 btn.addEventListener("click", () => {
-transitionOut(() => opt.onClick());
+transitionOut(card, () => opt.onClick());
 });
 optWrap.appendChild(btn);
 });
@@ -766,11 +897,10 @@ stage.innerHTML = "";
 stage.appendChild(card);
 }
 
-function transitionOut(next){
-const card = stage.querySelector(".quiz-card, .result-card-wrap");
-if(card){
-card.classList.add("leaving");
-setTimeout(next, 180);
+function transitionOut(el, next){
+if(el){
+el.classList.add("leaving");
+setTimeout(next, 160);
 }else{
 next();
 }
@@ -848,6 +978,37 @@ sessionStorage.setItem(key, choice.key);
 return choice;
 }
 
+function buildMediaElement(paper){
+const wrapper = document.createElement("div");
+wrapper.className = "result-media";
+
+const visible = getVisibleImages(paper.images);
+const sources = [];
+if(visible.length) sources.push(pickRandom(visible));
+sources.push(`covers/${paper.key}.png`);
+
+const img = document.createElement("img");
+img.className = "result-img";
+img.alt = paper.title;
+img.loading = "lazy";
+
+let idx = 0;
+function tryNext(){
+if(idx >= sources.length){
+wrapper.innerHTML = `<div class="result-icon">📄</div>`;
+return;
+}
+img.src = sources[idx];
+idx++;
+}
+
+img.addEventListener("error", tryNext);
+tryNext();
+
+wrapper.appendChild(img);
+return wrapper;
+}
+
 function showResult(){
 let pool = currentPool.length ? currentPool : poolAll.filter(p => (p.category || []).includes(primaryCategory));
 
@@ -858,21 +1019,16 @@ pool = poolAll;
 
 const paper = pickPaper(pool);
 
-renderProgress(3, null);
+renderProgress(3);
+setHeader("full", pickRandom(RESULT_INTROS));
 
-const introLine = document.createElement("div");
-introLine.className = "result-lead";
-introLine.textContent = pickRandom(RESULT_INTROS);
-
-const card = document.createElement("div");
-card.className = "result-card-wrap";
+const wrap = document.createElement("div");
+wrap.className = "result-card-wrap";
 
 const inner = document.createElement("div");
 inner.className = "result-card";
 
-const media = document.createElement("div");
-media.className = "result-media";
-media.textContent = "📄";
+const media = buildMediaElement(paper);
 
 const body = document.createElement("div");
 body.className = "result-body";
@@ -922,23 +1078,22 @@ const againBtn = document.createElement("button");
 againBtn.type = "button";
 againBtn.className = "result-secondary";
 againBtn.textContent = "Try a different topic";
-againBtn.addEventListener("click", () => transitionOut(startQuiz));
+againBtn.addEventListener("click", () => transitionOut(wrap, startQuiz));
 
 const rerollBtn = document.createElement("button");
 rerollBtn.type = "button";
 rerollBtn.className = "result-secondary";
 rerollBtn.textContent = "Show me another";
-rerollBtn.addEventListener("click", () => transitionOut(showResult));
+rerollBtn.addEventListener("click", () => transitionOut(wrap, showResult));
 
 actions.appendChild(rerollBtn);
 actions.appendChild(againBtn);
 
-card.appendChild(inner);
-card.appendChild(actions);
+wrap.appendChild(inner);
+wrap.appendChild(actions);
 
 stage.innerHTML = "";
-stage.appendChild(introLine);
-stage.appendChild(card);
+stage.appendChild(wrap);
 }
 
 /* ---------------- Opening a paper (respects content warnings) ---------------- */
