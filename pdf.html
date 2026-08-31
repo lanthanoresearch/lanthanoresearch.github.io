@@ -2597,16 +2597,16 @@ body.reading-mode #readingModeFloat{
 <button id="readAloudSettingsBtn" class="readAloudBtn" title="Speed &amp; voice" aria-label="Reading speed and voice settings" aria-haspopup="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1z"></path></svg></button>
 <div id="readAloudSettingsMenu" class="hidden" role="menu">
 <div class="readAloudSettingsSection">
+<div class="readAloudSettingsHeading">Options</div>
+<div id="readAloudOptionsList" class="readAloudOptionList"></div>
+</div>
+<div class="readAloudSettingsSection">
 <div class="readAloudSettingsHeading">Speed</div>
 <div id="readAloudSpeedList" class="readAloudOptionList"></div>
 </div>
 <div class="readAloudSettingsSection">
 <div class="readAloudSettingsHeading">Voice</div>
 <div id="readAloudVoiceList" class="readAloudOptionList"></div>
-</div>
-<div class="readAloudSettingsSection">
-<div class="readAloudSettingsHeading">Options</div>
-<div id="readAloudOptionsList" class="readAloudOptionList"></div>
 </div>
 </div>
 </div>
@@ -3989,6 +3989,14 @@ function groupedVoiceList(){
 
 function pickVoice(){
 
+  // Always match against the browser's current live voice list
+  // right before speaking, rather than whatever was cached the
+  // last time the settings menu happened to be opened - some
+  // browsers replace their voice objects after onvoiceschanged,
+  // and speaking with a stale one is another way a chosen voice
+  // can silently fail to apply.
+  refreshVoices();
+
   if(selectedVoiceURI){
 
     const chosen = availableVoices.find(voice => voice.voiceURI === selectedVoiceURI);
@@ -4081,22 +4089,62 @@ function estimateAvgCharWidth(line){
   return totalChars > 0 ? totalWidth / totalChars : 5;
 }
 
-// Best-effort heuristic for "this line is a row of a table". PDFs
+// Groups the flat item list into visual ROWS by y-position, wholly
+// independent of pdf.js's own hasEOL-based line breaks used
+// elsewhere (see groupIntoLines). This matters because many
+// PDFs - especially ones exported from spreadsheets or HTML tables -
+// emit each table CELL as its own separately line-terminated text
+// run even though several of them sit on the same visual row.
+// groupIntoLines would see those as several single-item "lines",
+// each too short on its own for the multi-column gap check below to
+// ever notice a table. Reassembling by y-position first means a
+// table row is always evaluated as a whole, however the PDF itself
+// happened to chop it up.
+function groupIntoRows(items){
+
+  const rows = [];
+
+  for(const item of items){
+
+    if(typeof item.str !== "string" || !item.str.trim()){
+      continue;
+    }
+
+    const y = item.transform[5];
+    const size = itemFontSize(item) || 10;
+
+    let row = rows.find(r => Math.abs(r.y - y) <= size * 0.4);
+
+    if(!row){
+      row = { y, items:[] };
+      rows.push(row);
+    }
+
+    row.items.push(item);
+  }
+
+  // Top-to-bottom - PDF y-coordinates increase upward.
+  rows.sort((a, b) => b.y - a.y);
+
+  return rows.map(row => row.items.slice().sort((a, b) => a.transform[4] - b.transform[4]));
+}
+
+// Best-effort heuristic for "this row is a row of a table". PDFs
 // carry no real table markup - just positioned text - so this
 // looks for the same visual cue a person's eye would: two or more
-// wide gaps between chunks of text on one line (separate columns),
+// wide gaps between chunks of text on one row (separate columns),
 // or a single wide gap next to mostly-numeric content (a
 // label/value row, e.g. "Revenue        $4.2M").
-function isTableLikeLine(line){
+function isTableLikeLine(row){
 
-  const items = line.filter(item => item.str && item.str.trim());
+  const items = row.filter(item => item.str && item.str.trim());
 
   if(items.length < 2){
     return false;
   }
 
-  const avgCharWidth = estimateAvgCharWidth(line) || 5;
-  const gapThreshold = Math.max(avgCharWidth * 4, 14);
+  const avgCharWidth = estimateAvgCharWidth(row) || 5;
+  const gapThreshold = Math.max(avgCharWidth * 3, 12);
 
   let bigGaps = 0;
 
@@ -4131,14 +4179,14 @@ function isTableLikeLine(line){
   return false;
 }
 
-// Smooths raw per-line table flags into runs: a single stray line
+// Smooths raw per-row table flags into runs: a single stray row
 // that happens to look tabular (e.g. a two-column running head) is
 // not, by itself, a table - only a run of 2+ consecutive
-// table-like lines is treated as one, so ordinary prose is never
+// table-like rows is treated as one, so ordinary prose is never
 // mistakenly swallowed.
-function detectTableRuns(lines){
+function detectTableRuns(rows){
 
-  const raw = lines.map(isTableLikeLine);
+  const raw = rows.map(isTableLikeLine);
   const inTable = raw.slice();
 
   let i = 0;
@@ -4166,6 +4214,70 @@ function detectTableRuns(lines){
   }
 
   return inTable;
+}
+
+function lineRepresentativeY(line){
+
+  let sum = 0;
+  let count = 0;
+
+  for(const item of line){
+    if(item.str && item.str.trim()){
+      sum += item.transform[5];
+      count++;
+    }
+  }
+
+  return count > 0 ? sum / count : null;
+}
+
+// Bridges the two independent groupings: buildReadableBlocks walks
+// pdf.js's hasEOL-based `lines`, but table detection runs on
+// y-clustered `rows` (see groupIntoRows above for why). For each
+// line, finds the row sitting at essentially the same y-position and
+// carries that row's table flag over to it - so a line that's only
+// one fragment of a multi-cell row still gets correctly skipped.
+function mapTableFlagsToLines(lines, rows, rowFlags){
+
+  return lines.map(line => {
+
+    const y = lineRepresentativeY(line);
+
+    if(y === null){
+      return false;
+    }
+
+    let bestIndex = -1;
+    let bestDist = Infinity;
+
+    for(let i = 0; i < rows.length; i++){
+
+      const rowY = rows[i][0]?.transform?.[5];
+
+      if(typeof rowY !== "number"){
+        continue;
+      }
+
+      const dist = Math.abs(rowY - y);
+
+      if(dist < bestDist){
+        bestDist = dist;
+        bestIndex = i;
+      }
+    }
+
+    if(bestIndex === -1){
+      return false;
+    }
+
+    const size = itemFontSize(rows[bestIndex][0]) || 10;
+
+    if(bestDist > size * 0.6){
+      return false;
+    }
+
+    return rowFlags[bestIndex];
+  });
 }
 
 function dominantFontSize(lines){
@@ -4409,7 +4521,14 @@ function buildReadableBlocks(textContent){
 
   const lines = groupIntoLines(items);
   const bodySize = dominantFontSize(lines);
-  const inTable = skipTables ? detectTableRuns(lines) : null;
+
+  let inTable = null;
+
+  if(skipTables){
+    const rows = groupIntoRows(items);
+    const rowFlags = detectTableRuns(rows);
+    inTable = mapTableFlagsToLines(lines, rows, rowFlags);
+  }
 
   const blocks = [];
 
@@ -4771,9 +4890,9 @@ function buildOptionsList(){
 
 function openSettingsMenu(){
   refreshVoices();
+  buildOptionsList();
   buildSpeedList();
   buildVoiceList();
-  buildOptionsList();
   readAloudSettingsMenu.classList.remove("hidden");
   readAloudSettingsBtn.setAttribute("aria-expanded", "true");
 }
@@ -5194,16 +5313,30 @@ function releaseWakeLock(){
 }
 
 const WATCHDOG_CHECK_MS = 2000;
-const WATCHDOG_STALL_MS = 6000;
+const WATCHDOG_BASE_STALL_MS = 6000;
 const WATCHDOG_MAX_RETRIES = 2;
+
+// Rough spoken words per second at 1x rate - used only to give a
+// merged multi-line utterance (see groupBlocksForSpeech - several
+// original PDF lines are now often spoken as one sentence, to avoid
+// pausing at every line wrap) a fair, duration-aware stall
+// allowance. Many voices/browsers never fire onboundary events at
+// all, so for those the utterance's own start/end are the *only*
+// progress signal that exists; a stall window sized for a single
+// short line would otherwise trip on every long utterance well
+// before it ever had a chance to finish speaking normally.
+const ESTIMATED_WORDS_PER_SECOND = 2.3;
 
 let watchdogTimer = null;
 let watchdogRetries = 0;
 
-// Called on every sign of real progress - a line starting, a word
-// boundary, a line finishing - so the watchdog always measures
-// time since the last thing that actually happened, not time
-// since reading started.
+// Called on every sign of *genuine* progress - an utterance
+// starting, a word boundary, an utterance finishing - so the
+// watchdog always measures time since the last thing that actually
+// happened, not time since reading started. This also clears the
+// retry count, since real progress means recovery worked. The
+// watchdog's own forced restart below deliberately does NOT call
+// this - see the note there.
 function noteReadingProgress(){
   reading.lastProgressAt = Date.now();
   watchdogRetries = 0;
@@ -5221,8 +5354,9 @@ function startWatchdog(){
     }
 
     const elapsed = Date.now() - reading.lastProgressAt;
+    const allowance = reading.stallAllowanceMs || WATCHDOG_BASE_STALL_MS;
 
-    if(elapsed < WATCHDOG_STALL_MS){
+    if(elapsed < allowance){
       return;
     }
 
@@ -5246,7 +5380,16 @@ function startWatchdog(){
       window.speechSynthesis.cancel();
     }catch{}
 
-    noteReadingProgress();
+    // Deliberately not noteReadingProgress() here - this is a
+    // forced retry, not genuine progress, so the retry count above
+    // must survive into the next check. Calling the shared
+    // progress function would zero watchdogRetries right back out
+    // on every single check, meaning the >= WATCHDOG_MAX_RETRIES
+    // give-up above could never actually trigger - the exact bug
+    // that let a stalled utterance restart the same content forever
+    // instead of eventually pausing.
+    reading.lastProgressAt = Date.now();
+
     speakCurrentBlock();
 
   }, WATCHDOG_CHECK_MS);
@@ -5502,6 +5645,15 @@ function speakCurrentBlock(){
     const token = ++utteranceToken;
     reading.currentToken = token;
 
+    // Duration-aware stall allowance for the watchdog (see
+    // startWatchdog()) - a merged multi-line unit legitimately
+    // takes longer to speak than a single short line did, and on
+    // browsers/voices that never fire onboundary events, its own
+    // start/end are the only progress signal that exists at all.
+    const wordCount = Math.max(1, unit.text.split(/\s+/).filter(Boolean).length);
+    const estimatedSpeakMs = (wordCount / ESTIMATED_WORDS_PER_SECOND / currentReadRate()) * 1000;
+    reading.stallAllowanceMs = Math.max(WATCHDOG_BASE_STALL_MS, estimatedSpeakMs * 1.6 + 3000);
+
     noteReadingProgress();
 
     const view = pageViews[reading.pageNumber - 1];
@@ -5522,12 +5674,22 @@ function speakCurrentBlock(){
     const utterance = new SpeechSynthesisUtterance(unit.text);
 
     utterance.rate = currentReadRate();
-    utterance.lang = "en-US";
 
     const voice = pickVoice();
 
     if(voice){
+      // Match the utterance's lang to the chosen voice's own lang
+      // rather than always forcing "en-US" - several browsers
+      // (notably Android's platform TTS bridge) pick the actual
+      // speaking voice primarily off of .lang, and will silently
+      // fall back to a default English voice if it's left
+      // mismatched with the voice actually assigned. This is why
+      // picking a different voice - especially a non-English one -
+      // used to appear to do nothing.
       utterance.voice = voice;
+      utterance.lang = voice.lang || "en-US";
+    }else{
+      utterance.lang = "en-US";
     }
 
     utterance.onboundary = event => {
