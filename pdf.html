@@ -2604,6 +2604,10 @@ body.reading-mode #readingModeFloat{
 <div class="readAloudSettingsHeading">Voice</div>
 <div id="readAloudVoiceList" class="readAloudOptionList"></div>
 </div>
+<div class="readAloudSettingsSection">
+<div class="readAloudSettingsHeading">Options</div>
+<div id="readAloudOptionsList" class="readAloudOptionList"></div>
+</div>
 </div>
 </div>
 <span id="readAloudStatus">Reading page 1</span>
@@ -2697,6 +2701,7 @@ const readAloudSettingsWrap = document.getElementById("readAloudSettingsWrap");
 const readAloudSettingsMenu = document.getElementById("readAloudSettingsMenu");
 const readAloudSpeedList = document.getElementById("readAloudSpeedList");
 const readAloudVoiceList = document.getElementById("readAloudVoiceList");
+const readAloudOptionsList = document.getElementById("readAloudOptionsList");
 const readAloudStatus = document.getElementById("readAloudStatus");
 const readAloudChoice = document.getElementById("readAloudChoice");
 const readAloudChoiceCurrentPage = document.getElementById("readAloudChoiceCurrentPage");
@@ -3837,7 +3842,8 @@ function saveReadAloudPrefs(){
   try{
     window.localStorage.setItem(READ_ALOUD_PREFS_KEY, JSON.stringify({
       rateIndex: readRateIndex,
-      voiceURI: selectedVoiceURI
+      voiceURI: selectedVoiceURI,
+      skipTables: skipTables
     }));
   }catch{
     // Nothing to do - see the note above.
@@ -3850,6 +3856,11 @@ function saveReadAloudPrefs(){
 
 let availableVoices = [];
 let selectedVoiceURI = null;
+
+// When on, lines detected as part of a table are left out of what
+// gets read - see detectTableRuns()/isTableLikeLine() below for how
+// that detection works.
+let skipTables = false;
 
 function refreshVoices(){
   try{
@@ -4050,6 +4061,111 @@ function groupIntoLines(items){
   }
 
   return lines;
+}
+
+function estimateAvgCharWidth(line){
+
+  let totalWidth = 0;
+  let totalChars = 0;
+
+  for(const item of line){
+
+    const length = (item.str || "").length;
+
+    if(length > 0 && typeof item.width === "number" && item.width > 0){
+      totalWidth += item.width;
+      totalChars += length;
+    }
+  }
+
+  return totalChars > 0 ? totalWidth / totalChars : 5;
+}
+
+// Best-effort heuristic for "this line is a row of a table". PDFs
+// carry no real table markup - just positioned text - so this
+// looks for the same visual cue a person's eye would: two or more
+// wide gaps between chunks of text on one line (separate columns),
+// or a single wide gap next to mostly-numeric content (a
+// label/value row, e.g. "Revenue        $4.2M").
+function isTableLikeLine(line){
+
+  const items = line.filter(item => item.str && item.str.trim());
+
+  if(items.length < 2){
+    return false;
+  }
+
+  const avgCharWidth = estimateAvgCharWidth(line) || 5;
+  const gapThreshold = Math.max(avgCharWidth * 4, 14);
+
+  let bigGaps = 0;
+
+  for(let i = 0; i < items.length - 1; i++){
+
+    const a = items[i];
+    const b = items[i + 1];
+
+    const aEnd = a.transform[4] + (a.width || 0);
+    const bStart = b.transform[4];
+
+    if((bStart - aEnd) > gapThreshold){
+      bigGaps++;
+    }
+  }
+
+  if(bigGaps >= 2){
+    return true;
+  }
+
+  if(bigGaps === 1){
+
+    const joined = items.map(item => item.str).join(" ");
+    const digitCount = (joined.match(/\d/g) || []).length;
+    const letterCount = joined.replace(/[^A-Za-z]/g, "").length;
+
+    if(digitCount >= 2 && digitCount >= letterCount){
+      return true;
+    }
+  }
+
+  return false;
+}
+
+// Smooths raw per-line table flags into runs: a single stray line
+// that happens to look tabular (e.g. a two-column running head) is
+// not, by itself, a table - only a run of 2+ consecutive
+// table-like lines is treated as one, so ordinary prose is never
+// mistakenly swallowed.
+function detectTableRuns(lines){
+
+  const raw = lines.map(isTableLikeLine);
+  const inTable = raw.slice();
+
+  let i = 0;
+
+  while(i < raw.length){
+
+    if(!raw[i]){
+      i++;
+      continue;
+    }
+
+    let j = i;
+
+    while(j < raw.length && raw[j]){
+      j++;
+    }
+
+    if(j - i < 2){
+      for(let k = i; k < j; k++){
+        inTable[k] = false;
+      }
+    }
+
+    i = j;
+  }
+
+  return inTable;
 }
 
 function dominantFontSize(lines){
@@ -4293,10 +4409,17 @@ function buildReadableBlocks(textContent){
 
   const lines = groupIntoLines(items);
   const bodySize = dominantFontSize(lines);
+  const inTable = skipTables ? detectTableRuns(lines) : null;
 
   const blocks = [];
 
-  for(const line of lines){
+  for(let lineIndex = 0; lineIndex < lines.length; lineIndex++){
+
+    const line = lines[lineIndex];
+
+    if(inTable && inTable[lineIndex]){
+      continue;
+    }
 
     const rawJoined = line.map(item => item.str).join("").trim();
 
@@ -4347,6 +4470,71 @@ function buildReadableBlocks(textContent){
   return blocks;
 }
 
+function endsSentence(text){
+  return /[.!?]["'\u2019\u201d)\]]*$/.test(text.trim());
+}
+
+// Merges consecutive "line" blocks - each one visual line of the
+// PDF - into paragraph-sized speech units, so playback only pauses
+// at real sentence punctuation and never just because the PDF
+// happened to wrap a line. Headings stay their own unit so the
+// existing heading lead-in pause is untouched. Each unit keeps a
+// `segments` list recording exactly where each original line's text
+// landed inside the unit's combined text, so highlighting can still
+// track the precise source line (and word) as speech moves through
+// it, even though several original lines are now spoken as one
+// utterance. A generous length/line cap forces a break even
+// without punctuation, both as a safety net against runaway merges
+// and to avoid reintroducing the old very-long-utterance stall bug.
+function groupBlocksForSpeech(blocks){
+
+  const units = [];
+  let current = null;
+
+  function flush(){
+    if(current && current.segments.length){
+      units.push(current);
+    }
+    current = null;
+  }
+
+  for(const block of blocks){
+
+    if(block.type === "heading"){
+      flush();
+      units.push({
+        type:"heading",
+        text: block.text,
+        segments:[{ block, start:0, end: block.text.length }]
+      });
+      continue;
+    }
+
+    if(!current){
+      current = { type:"paragraph", text:"", segments:[] };
+    }
+
+    const sep = current.text.length > 0 ? " " : "";
+    const start = current.text.length + sep.length;
+
+    current.text += sep + block.text;
+
+    const end = current.text.length;
+
+    current.segments.push({ block, start, end });
+
+    const tooLong = current.text.length > 600 || current.segments.length >= 8;
+
+    if(endsSentence(block.text) || tooLong){
+      flush();
+    }
+  }
+
+  flush();
+
+  return units;
+}
+
 /* ------------------------------------------------------------
    READING STATE
 
@@ -4390,6 +4578,10 @@ let readRateIndex = 2;
     if(typeof savedPrefs.voiceURI === "string" && savedPrefs.voiceURI){
       selectedVoiceURI = savedPrefs.voiceURI;
     }
+
+    if(typeof savedPrefs.skipTables === "boolean"){
+      skipTables = savedPrefs.skipTables;
+    }
   }
 }
 
@@ -4413,24 +4605,56 @@ function describeVoice(voice){
 function refreshSettingsSelection(){
 
   for(const button of readAloudSpeedList.children){
-    button.classList.toggle("active", Number(button.dataset.index) === readRateIndex);
+    const active = Number(button.dataset.index) === readRateIndex;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-checked", active ? "true" : "false");
   }
 
   for(const button of readAloudVoiceList.children){
-    button.classList.toggle("active", button.dataset.voiceUri === (selectedVoiceURI || ""));
+    if(button.dataset.voiceUri === undefined){
+      continue;
+    }
+    const active = button.dataset.voiceUri === (selectedVoiceURI || "");
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-checked", active ? "true" : "false");
+  }
+
+  for(const button of readAloudOptionsList.children){
+    if(button.dataset.option !== "skipTables"){
+      continue;
+    }
+    button.classList.toggle("active", skipTables);
+    button.setAttribute("aria-checked", skipTables ? "true" : "false");
   }
 
   updateReadAloudUI();
 }
 
-function optionRow({ label, active, onSelect }){
+// `dataset` lets each row carry whatever identifying data(-index,
+// -voiceUri, -option) refreshSettingsSelection() needs later to
+// find it again and re-check its active state - every row must set
+// one, or it silently stops following along after the first change
+// (this was previously missing for the Speed rows entirely, and for
+// the Voice list's "Default" row, which is why selection used to
+// look right only until the first tap).
+// `liveRestart`, unless explicitly set to false, restarts whatever
+// is currently being spoken right away so a speed/voice change is
+// heard immediately rather than only on the next line - callers
+// that need a different live-apply behavior (like Skip Tables,
+// which rebuilds the page instead) pass liveRestart:false and do
+// their own live-apply inside onSelect.
+function optionRow({ label, active, dataset, role, liveRestart, onSelect }){
 
   const button = document.createElement("button");
 
   button.type = "button";
   button.className = "readAloudOption" + (active ? " active" : "");
-  button.setAttribute("role", "menuitemradio");
+  button.setAttribute("role", role || "menuitemradio");
   button.setAttribute("aria-checked", active ? "true" : "false");
+
+  if(dataset){
+    Object.assign(button.dataset, dataset);
+  }
 
   const check = document.createElement("span");
   check.className = "readAloudOptionCheck";
@@ -4447,6 +4671,10 @@ function optionRow({ label, active, onSelect }){
     onSelect();
     saveReadAloudPrefs();
     refreshSettingsSelection();
+
+    if(liveRestart !== false){
+      restartCurrentUtterance();
+    }
   });
 
   return button;
@@ -4461,6 +4689,7 @@ function buildSpeedList(){
     readAloudSpeedList.appendChild(optionRow({
       label,
       active: index === readRateIndex,
+      dataset:{ index:String(index) },
       onSelect(){
         readRateIndex = index;
       }
@@ -4487,6 +4716,7 @@ function buildVoiceList(){
   readAloudVoiceList.appendChild(optionRow({
     label: "Default (Auto)",
     active: !selectedVoiceURI,
+    dataset:{ voiceUri:"" },
     onSelect(){
       selectedVoiceURI = null;
     }
@@ -4504,22 +4734,46 @@ function buildVoiceList(){
       const row = optionRow({
         label: describeVoice(voice),
         active: voice.voiceURI === selectedVoiceURI,
+        dataset:{ voiceUri: voice.voiceURI },
         onSelect(){
           selectedVoiceURI = voice.voiceURI;
         }
       });
-
-      row.dataset.voiceUri = voice.voiceURI;
 
       readAloudVoiceList.appendChild(row);
     }
   }
 }
 
+// Skip Tables changes *what* gets read, not just how - so instead
+// of the usual "restart the current utterance" live-apply, toggling
+// it invalidates every page's cached blocks and restarts the
+// current page's reading from its start (see
+// restartCurrentPageReading() for why a clean restart, rather than
+// trying to resume mid-sentence, is the right call here).
+function buildOptionsList(){
+
+  readAloudOptionsList.replaceChildren();
+
+  readAloudOptionsList.appendChild(optionRow({
+    label: "Skip tables",
+    active: skipTables,
+    role: "menuitemcheckbox",
+    dataset:{ option:"skipTables" },
+    liveRestart: false,
+    onSelect(){
+      skipTables = !skipTables;
+      invalidateAllPageBlockCaches();
+      restartCurrentPageReading();
+    }
+  }));
+}
+
 function openSettingsMenu(){
   refreshVoices();
   buildSpeedList();
   buildVoiceList();
+  buildOptionsList();
   readAloudSettingsMenu.classList.remove("hidden");
   readAloudSettingsBtn.setAttribute("aria-expanded", "true");
 }
@@ -4545,7 +4799,8 @@ async function getPageBlocks(view){
 
   try{
     const textContent = await ensureTextContent(view);
-    view.readAloudBlocks = buildReadableBlocks(textContent);
+    const lineBlocks = buildReadableBlocks(textContent);
+    view.readAloudBlocks = groupBlocksForSpeech(lineBlocks);
   }catch(error){
     console.warn(`Read Aloud: could not read page ${view.pageNumber}:`, error);
     view.readAloudBlocks = [];
@@ -5170,6 +5425,59 @@ function resumeReading(){
   speakCurrentBlock();
 }
 
+// Applies a speed/voice change immediately, even mid-sentence,
+// instead of waiting for the current utterance to finish on its
+// own - cancels it and restarts the exact same unit (not the next
+// one) with the newly chosen rate/voice, so nothing gets skipped.
+function restartCurrentUtterance(){
+
+  if(!reading.active || reading.paused){
+    return;
+  }
+
+  clearTimeout(reading.gapTimer);
+  reading.gapTimer = null;
+
+  try{
+    window.speechSynthesis.cancel();
+  }catch{}
+
+  speakCurrentBlock();
+}
+
+// Clears every page's cached Read Aloud blocks so the next time
+// each is needed it's rebuilt from scratch - used when a setting
+// that changes *what* gets read (Skip Tables) is toggled, so pages
+// already visited during this session pick up the new behavior too.
+function invalidateAllPageBlockCaches(){
+  for(const view of pageViews){
+    if(view){
+      view.readAloudBlocks = null;
+    }
+  }
+}
+
+// Rebuilds and restarts the current page's reading from its start.
+// Used right after a change (like Skip Tables) that alters which
+// lines even exist to read - there's no sound way to line up an old
+// mid-sentence position against newly-filtered content, so starting
+// the page over is the honest, correct behavior.
+function restartCurrentPageReading(){
+
+  if(!reading.active){
+    return;
+  }
+
+  reading.generation++;
+  reading.paused = false;
+
+  stopUtteranceQuietly();
+  clearReadHighlights();
+  noteReadingProgress();
+
+  void advanceToPage(reading.pageNumber);
+}
+
 function speakCurrentBlock(){
 
   if(!reading.active || reading.paused){
@@ -5181,9 +5489,9 @@ function speakCurrentBlock(){
     return;
   }
 
-  const block = reading.blocks[reading.blockIndex];
+  const unit = reading.blocks[reading.blockIndex];
   const generation = reading.generation;
-  const isHeading = block.type === "heading";
+  const isHeading = unit.type === "heading";
 
   const speakNow = () => {
 
@@ -5198,14 +5506,20 @@ function speakCurrentBlock(){
 
     const view = pageViews[reading.pageNumber - 1];
 
-    if(view){
-      highlightLine(view, block);
+    // Tracks which original PDF line (segment) inside this merged
+    // unit is currently being highlighted, so highlightLine() is
+    // only re-run when speech actually crosses into a new source
+    // line - not on every word.
+    let currentSegment = unit.segments[0] || null;
+
+    if(view && currentSegment){
+      highlightLine(view, currentSegment.block);
       if(autoFollow){
         snapToCurrentLine(view, false);
       }
     }
 
-    const utterance = new SpeechSynthesisUtterance(block.text);
+    const utterance = new SpeechSynthesisUtterance(unit.text);
 
     utterance.rate = currentReadRate();
     utterance.lang = "en-US";
@@ -5230,14 +5544,36 @@ function speakCurrentBlock(){
         return;
       }
 
+      const charIndex = event?.charIndex || 0;
       const length = (typeof event?.charLength === "number" && event.charLength > 0) ? event.charLength : 1;
 
-      highlightWord(block, event?.charIndex || 0, length);
+      // Find which original line this position in the merged
+      // utterance text belongs to, so the right line (and the
+      // right offset within it) gets highlighted even though
+      // several lines are being spoken as one utterance.
+      let segment = unit.segments.find(s => charIndex >= s.start && charIndex < s.end);
+
+      if(!segment){
+        segment = unit.segments[unit.segments.length - 1];
+      }
+
+      if(segment && segment !== currentSegment){
+        currentSegment = segment;
+        if(view){
+          highlightLine(view, segment.block);
+        }
+      }
+
+      if(segment){
+        const localIndex = charIndex - segment.start;
+        const localLength = Math.max(1, Math.min(length, segment.end - charIndex));
+        highlightWord(segment.block, localIndex, localLength);
+      }
 
       // Re-check on every word, not just once at the start of the
-      // line, so Follow Along keeps the reading position in view
+      // unit, so Follow Along keeps the reading position in view
       // continuously as it moves rather than only nudging once per
-      // line.
+      // utterance.
       if(autoFollow){
         snapToCurrentLine(view, false);
       }
