@@ -1851,70 +1851,37 @@ body.reading-mode #readAloudControls{
   font-size:17px;
 }
 
-#readAloudRate{
+.readAloudBtn.active{
+  background:#2f7cff;
+
+  border-color:#2f7cff;
+
+  color:#fff;
+}
+
+.readAloudBtn.active:hover{
+  background:#4a8dff;
+}
+
+.readAloudBtn svg{
+  display:block;
+}
+
+/* ============================================================
+   READ ALOUD SETTINGS (SPEED + VOICE)
+
+   One gear button opens a popover with two picklists - speed and
+   voice - rather than a +/- stepper, so a value is chosen
+   directly rather than stepped to.
+============================================================ */
+
+#readAloudSettingsWrap{
   position:relative;
-
-  display:flex;
-
-  align-items:center;
-
-  gap:2px;
-
-  height:36px;
-
-  padding:0 2px;
-
-  background:#181818;
-
-  border:1px solid #3b3b3b;
-
-  border-radius:8px;
 
   flex:0 0 auto;
 }
 
-#readAloudRate button{
-  width:26px;
-  height:30px;
-
-  padding:0;
-
-  border:0;
-
-  background:transparent;
-
-  font-size:14px;
-}
-
-#readAloudRateLabel{
-  min-width:38px;
-
-  padding:0 2px;
-
-  text-align:center;
-
-  font-size:12px;
-
-  color:#ddd;
-
-  cursor:pointer;
-
-  border-radius:5px;
-}
-
-#readAloudRateLabel:hover{
-  background:#2c2c2c;
-}
-
-/* ============================================================
-   READ ALOUD SPEED PRESET MENU
-
-   Opens above the rate control when its label is tapped, so a
-   specific speed can be picked directly instead of stepping to
-   it one +/- tap at a time.
-============================================================ */
-
-#readAloudRateMenu{
+#readAloudSettingsMenu{
   position:absolute;
 
   left:50%;
@@ -1925,34 +1892,69 @@ body.reading-mode #readAloudControls{
   display:flex;
   flex-direction:column;
 
-  gap:2px;
+  gap:4px;
 
-  padding:6px;
+  width:230px;
+  max-height:min(60vh, 420px);
+
+  overflow-y:auto;
+
+  padding:8px;
 
   background:#222;
 
   border:1px solid #444;
 
-  border-radius:9px;
+  border-radius:11px;
 
   box-shadow:
-    0 8px 20px rgba(0,0,0,.5);
+    0 8px 24px rgba(0,0,0,.5);
 
   z-index:6600;
 }
 
-#readAloudRateMenu.hidden{
+#readAloudSettingsMenu.hidden{
   display:none;
 }
 
-#readAloudRateMenu button{
-  width:64px;
+.readAloudSettingsHeading{
+  padding:6px 8px 2px;
 
-  padding:6px 8px;
+  color:#888;
+
+  font-size:11px;
+  font-weight:bold;
+
+  text-transform:uppercase;
+  letter-spacing:.05em;
+}
+
+.readAloudSettingsSection + .readAloudSettingsSection{
+  margin-top:4px;
+
+  padding-top:8px;
+
+  border-top:1px solid #333;
+}
+
+.readAloudOptionList{
+  display:flex;
+  flex-direction:column;
+}
+
+.readAloudOption{
+  display:flex;
+
+  align-items:center;
+
+  gap:8px;
+
+  width:100%;
+
+  padding:8px 8px;
 
   border:0;
-
-  border-radius:6px;
+  border-radius:7px;
 
   background:transparent;
 
@@ -1960,17 +1962,55 @@ body.reading-mode #readAloudControls{
 
   font-size:13px;
 
-  text-align:center;
+  text-align:left;
+
+  white-space:nowrap;
+
+  overflow:hidden;
+
+  text-overflow:ellipsis;
 }
 
-#readAloudRateMenu button:hover{
+.readAloudOption:hover{
   background:#333;
 }
 
-#readAloudRateMenu button.active{
+.readAloudOption.active{
   background:#2f7cff;
 
   color:#fff;
+}
+
+.readAloudOption .readAloudOptionCheck{
+  flex:0 0 auto;
+
+  width:14px;
+
+  opacity:0;
+}
+
+.readAloudOption.active .readAloudOptionCheck{
+  opacity:1;
+}
+
+.readAloudOption .readAloudOptionLabel{
+  flex:1 1 auto;
+
+  min-width:0;
+
+  overflow:hidden;
+
+  text-overflow:ellipsis;
+}
+
+.readAloudEmptyNote{
+  padding:8px;
+
+  color:#888;
+
+  font-size:12px;
+
+  line-height:1.4;
 }
 
 #readAloudStatus{
@@ -2513,14 +2553,23 @@ body.reading-mode #readingModeFloat{
 <div id="readAloudControls" class="hidden">
 <button id="readAloudPrevPage" class="readAloudBtn" title="Previous page" aria-label="Read previous page">⏮</button>
 <button id="readAloudPlayPause" class="readAloudBtn" title="Pause" aria-label="Pause reading"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"></rect><rect x="14" y="5" width="4" height="14" rx="1"></rect></svg></button>
+<button id="readAloudNextLine" class="readAloudBtn" title="Next line" aria-label="Skip to next line"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l7 6-7 6"></path></svg></button>
 <button id="readAloudNextPage" class="readAloudBtn" title="Next page" aria-label="Read next page">⏭</button>
-<div id="readAloudRate">
-<button id="readAloudRateDown" aria-label="Slower">−</button>
-<span id="readAloudRateLabel" role="button" tabindex="0" aria-haspopup="true" title="Choose a reading speed">1.0×</span>
-<button id="readAloudRateUp" aria-label="Faster">+</button>
-<div id="readAloudRateMenu" class="hidden" role="menu"></div>
+<div id="readAloudSettingsWrap">
+<button id="readAloudSettingsBtn" class="readAloudBtn" title="Speed &amp; voice" aria-label="Reading speed and voice settings" aria-haspopup="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1z"></path></svg></button>
+<div id="readAloudSettingsMenu" class="hidden" role="menu">
+<div class="readAloudSettingsSection">
+<div class="readAloudSettingsHeading">Speed</div>
+<div id="readAloudSpeedList" class="readAloudOptionList"></div>
+</div>
+<div class="readAloudSettingsSection">
+<div class="readAloudSettingsHeading">Voice</div>
+<div id="readAloudVoiceList" class="readAloudOptionList"></div>
+</div>
+</div>
 </div>
 <span id="readAloudStatus">Reading page 1</span>
+<button id="readAloudFollowBtn" class="readAloudBtn" title="Follow along as it reads" aria-label="Follow along as it reads" aria-pressed="false"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7"></circle><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"></circle><path d="M12 2v3"></path><path d="M12 19v3"></path><path d="M2 12h3"></path><path d="M19 12h3"></path></svg></button>
 <button id="readAloudStop" class="readAloudBtn" title="Stop reading" aria-label="Stop reading">✕</button>
 </div>
 <!-- ==========================================================
@@ -2601,12 +2650,15 @@ const readAloudFloat = document.getElementById("readAloudFloat");
 const readAloudControls = document.getElementById("readAloudControls");
 const readAloudPlayPause = document.getElementById("readAloudPlayPause");
 const readAloudPrevPage = document.getElementById("readAloudPrevPage");
+const readAloudNextLine = document.getElementById("readAloudNextLine");
 const readAloudNextPage = document.getElementById("readAloudNextPage");
+const readAloudFollowBtn = document.getElementById("readAloudFollowBtn");
 const readAloudStop = document.getElementById("readAloudStop");
-const readAloudRateDown = document.getElementById("readAloudRateDown");
-const readAloudRateUp = document.getElementById("readAloudRateUp");
-const readAloudRateLabel = document.getElementById("readAloudRateLabel");
-const readAloudRateMenu = document.getElementById("readAloudRateMenu");
+const readAloudSettingsBtn = document.getElementById("readAloudSettingsBtn");
+const readAloudSettingsWrap = document.getElementById("readAloudSettingsWrap");
+const readAloudSettingsMenu = document.getElementById("readAloudSettingsMenu");
+const readAloudSpeedList = document.getElementById("readAloudSpeedList");
+const readAloudVoiceList = document.getElementById("readAloudVoiceList");
 const readAloudStatus = document.getElementById("readAloudStatus");
 const readAloudChoice = document.getElementById("readAloudChoice");
 const readAloudChoiceCurrentPage = document.getElementById("readAloudChoiceCurrentPage");
@@ -3723,10 +3775,43 @@ const ICON_PLAY =
   '</svg>';
 
 /* ------------------------------------------------------------
+   SAVED PREFERENCES
+
+   Persists the chosen reading speed and voice across visits via
+   localStorage, guarded by try/catch throughout: if storage is
+   unavailable (private browsing, a locked-down preview context,
+   etc.) the reading experience is completely unaffected - the
+   choice just won't be remembered next time.
+------------------------------------------------------------ */
+
+const READ_ALOUD_PREFS_KEY = "pdfReaderReadAloudPrefs";
+
+function loadReadAloudPrefs(){
+  try{
+    const raw = window.localStorage.getItem(READ_ALOUD_PREFS_KEY);
+    return raw ? JSON.parse(raw) : null;
+  }catch{
+    return null;
+  }
+}
+
+function saveReadAloudPrefs(){
+  try{
+    window.localStorage.setItem(READ_ALOUD_PREFS_KEY, JSON.stringify({
+      rateIndex: readRateIndex,
+      voiceURI: selectedVoiceURI
+    }));
+  }catch{
+    // Nothing to do - see the note above.
+  }
+}
+
+/* ------------------------------------------------------------
    VOICE SELECTION
 ------------------------------------------------------------ */
 
 let availableVoices = [];
+let selectedVoiceURI = null;
 
 function refreshVoices(){
   try{
@@ -3742,11 +3827,50 @@ if(SUPPORTS_SPEECH){
 
   // Chrome (among others) reports an empty voice list until this
   // fires at least once - refreshing again here is what makes a
-  // non-default voice available on the very first read.
+  // non-default voice (and the saved choice, if any) available on
+  // the very first read.
   window.speechSynthesis.onvoiceschanged = refreshVoices;
 }
 
+// Sorted, de-duplicated view of the voice list for display: the
+// person's own saved/selected voice (if still available) first,
+// then English voices, then everything else, each group
+// alphabetical by name.
+function sortedVoiceList(){
+
+  return [...availableVoices].sort((a, b) => {
+
+    const aSelected = a.voiceURI === selectedVoiceURI;
+    const bSelected = b.voiceURI === selectedVoiceURI;
+
+    if(aSelected !== bSelected){
+      return aSelected ? -1 : 1;
+    }
+
+    const aEnglish = /^en/i.test(a.lang || "");
+    const bEnglish = /^en/i.test(b.lang || "");
+
+    if(aEnglish !== bEnglish){
+      return aEnglish ? -1 : 1;
+    }
+
+    return (a.name || "").localeCompare(b.name || "");
+  });
+}
+
 function pickVoice(){
+
+  if(selectedVoiceURI){
+
+    const chosen = availableVoices.find(voice => voice.voiceURI === selectedVoiceURI);
+
+    if(chosen){
+      return chosen;
+    }
+
+    // The saved voice isn't available in this browser/device -
+    // fall through to picking automatically instead.
+  }
 
   if(!availableVoices.length){
     return null;
@@ -4124,7 +4248,8 @@ const reading = {
   blockIndex:0,
   generation:0,
   gapTimer:null,
-  currentToken:0
+  currentToken:0,
+  lastProgressAt:0
 };
 
 let utteranceToken = 0;
@@ -4133,60 +4258,155 @@ const READ_RATE_STEPS = [0.5, 0.75, 1, 1.1, 1.25, 1.5, 1.75, 2, 2.5, 3];
 const READ_RATE_LABELS = ["0.5×", "0.75×", "1.0×", "1.1×", "1.25×", "1.5×", "1.75×", "2.0×", "2.5×", "3.0×"];
 let readRateIndex = 2;
 
+// Restore a previously saved speed/voice, if any, before anything
+// else touches these values.
+{
+  const savedPrefs = loadReadAloudPrefs();
+
+  if(savedPrefs){
+
+    if(Number.isInteger(savedPrefs.rateIndex) && READ_RATE_STEPS[savedPrefs.rateIndex] !== undefined){
+      readRateIndex = savedPrefs.rateIndex;
+    }
+
+    if(typeof savedPrefs.voiceURI === "string" && savedPrefs.voiceURI){
+      selectedVoiceURI = savedPrefs.voiceURI;
+    }
+  }
+}
+
 function currentReadRate(){
   return READ_RATE_STEPS[readRateIndex];
 }
 
-function updateRateLabel(){
+function describeVoice(voice){
 
-  readAloudRateLabel.textContent = READ_RATE_LABELS[readRateIndex];
-
-  for(const button of readAloudRateMenu.children){
-    button.classList.toggle("active", Number(button.dataset.index) === readRateIndex);
+  if(!voice){
+    return "Default";
   }
+
+  return voice.lang ? `${voice.name} (${voice.lang})` : voice.name;
 }
 
-// Built once, from the same step/label arrays the +/- buttons
-// use, so the two controls can never drift out of sync with
-// each other.
-function buildRateMenu(){
+// Reflects the current speed/voice as active (checked) rows
+// whenever either list is already built - called after every
+// change so the two lists and the status line never drift out of
+// sync with the actual selection.
+function refreshSettingsSelection(){
 
-  readAloudRateMenu.replaceChildren();
+  for(const button of readAloudSpeedList.children){
+    button.classList.toggle("active", Number(button.dataset.index) === readRateIndex);
+  }
+
+  for(const button of readAloudVoiceList.children){
+    button.classList.toggle("active", button.dataset.voiceUri === (selectedVoiceURI || ""));
+  }
+
+  updateReadAloudUI();
+}
+
+function optionRow({ label, active, onSelect }){
+
+  const button = document.createElement("button");
+
+  button.type = "button";
+  button.className = "readAloudOption" + (active ? " active" : "");
+  button.setAttribute("role", "menuitemradio");
+  button.setAttribute("aria-checked", active ? "true" : "false");
+
+  const check = document.createElement("span");
+  check.className = "readAloudOptionCheck";
+  check.textContent = "✓";
+
+  const text = document.createElement("span");
+  text.className = "readAloudOptionLabel";
+  text.textContent = label;
+
+  button.append(check, text);
+
+  button.addEventListener("click", event => {
+    event.stopPropagation();
+    onSelect();
+    saveReadAloudPrefs();
+    refreshSettingsSelection();
+  });
+
+  return button;
+}
+
+function buildSpeedList(){
+
+  readAloudSpeedList.replaceChildren();
 
   READ_RATE_LABELS.forEach((label, index) => {
 
-    const button = document.createElement("button");
-
-    button.type = "button";
-    button.textContent = label;
-    button.dataset.index = String(index);
-    button.setAttribute("role", "menuitemradio");
-
-    button.addEventListener("click", event => {
-      event.stopPropagation();
-      readRateIndex = index;
-      updateRateLabel();
-      closeRateMenu();
-    });
-
-    readAloudRateMenu.appendChild(button);
+    readAloudSpeedList.appendChild(optionRow({
+      label,
+      active: index === readRateIndex,
+      onSelect(){
+        readRateIndex = index;
+      }
+    }));
   });
 }
 
-function openRateMenu(){
-  buildRateMenu();
-  readAloudRateMenu.classList.remove("hidden");
+function buildVoiceList(){
+
+  readAloudVoiceList.replaceChildren();
+
+  const voices = sortedVoiceList();
+
+  if(!voices.length){
+
+    const note = document.createElement("div");
+    note.className = "readAloudEmptyNote";
+    note.textContent = "No voices reported by this browser yet - try opening this menu again in a moment.";
+    readAloudVoiceList.appendChild(note);
+    return;
+  }
+
+  readAloudVoiceList.appendChild(optionRow({
+    label: "Default (Auto)",
+    active: !selectedVoiceURI,
+    onSelect(){
+      selectedVoiceURI = null;
+    }
+  }));
+
+  for(const voice of voices){
+
+    const row = optionRow({
+      label: describeVoice(voice),
+      active: voice.voiceURI === selectedVoiceURI,
+      onSelect(){
+        selectedVoiceURI = voice.voiceURI;
+      }
+    });
+
+    row.dataset.voiceUri = voice.voiceURI;
+
+    readAloudVoiceList.appendChild(row);
+  }
 }
 
-function closeRateMenu(){
-  readAloudRateMenu.classList.add("hidden");
+function openSettingsMenu(){
+  refreshVoices();
+  buildSpeedList();
+  buildVoiceList();
+  readAloudSettingsMenu.classList.remove("hidden");
+  readAloudSettingsBtn.setAttribute("aria-expanded", "true");
 }
 
-function toggleRateMenu(){
-  if(readAloudRateMenu.classList.contains("hidden")){
-    openRateMenu();
+function closeSettingsMenu(){
+  readAloudSettingsMenu.classList.add("hidden");
+  readAloudSettingsBtn.setAttribute("aria-expanded", "false");
+}
+
+function toggleSettingsMenu(){
+  if(readAloudSettingsMenu.classList.contains("hidden")){
+    openSettingsMenu();
   }else{
-    closeRateMenu();
+    closeSettingsMenu();
   }
 }
 
@@ -4376,6 +4596,149 @@ function highlightWord(block, charIndex, charLength){
 }
 
 /* ------------------------------------------------------------
+   FOLLOW ALONG (AUTO-SCROLL)
+
+   Off by default - a deliberate opt-in, not something reading
+   quietly turns on for you. While it's on, the viewer scrolls to
+   keep the line currently being read in a comfortable spot;
+   scrolling it there yourself for any reason - a drag, a wheel
+   turn, a keyboard scroll - breaks it instantly, and the button is
+   the only thing that turns it back on (it never silently
+   re-engages on its own).
+
+   The "instantly" part is why every scroll this feature performs
+   is a plain, synchronous `scrollTop` assignment rather than a
+   smooth/animated one: a smooth scroll keeps generating scroll
+   events for hundreds of milliseconds after it's requested, which
+   would make it effectively impossible to tell "the person just
+   grabbed the page" apart from "our own animation is still
+   settling". A single instant jump, guarded for a brief moment
+   right around when it happens, avoids that ambiguity entirely.
+------------------------------------------------------------ */
+
+let autoFollow = false;
+let autoScrollGuardUntil = 0;
+
+function beginProgrammaticScroll(){
+  // A little more than one animation frame's worth of slack - the
+  // scroll event(s) from an instant scrollTop assignment land well
+  // inside this window on every browser tested against.
+  autoScrollGuardUntil = Date.now() + 200;
+}
+
+function updateAutoFollowUI(){
+  readAloudFollowBtn.classList.toggle("active", autoFollow);
+  readAloudFollowBtn.title = autoFollow ? "Following along (tap to stop)" : "Follow along as it reads";
+  readAloudFollowBtn.setAttribute("aria-pressed", autoFollow ? "true" : "false");
+}
+
+// Scrolls (instantly) to keep a page's currently-highlighted line
+// in view. With force=false (the normal case, called after every
+// line starts) it only actually moves anything if the line has
+// drifted out of a comfortable middle band, so it doesn't re-snap
+// on literally every single line. With force=true (tapping the
+// button itself) it always jumps there, so turning the feature on
+// gives immediate, obvious feedback.
+function snapToCurrentLine(view, force){
+
+  if(!view){
+    return;
+  }
+
+  const highlightEl = view.readHighlightLayerDiv.querySelector(".read-line-highlight");
+
+  if(!highlightEl){
+    return;
+  }
+
+  const elRect = highlightEl.getBoundingClientRect();
+  const viewerRect = viewer.getBoundingClientRect();
+
+  if(!force){
+
+    const margin = 90;
+
+    if(elRect.top >= viewerRect.top + margin && elRect.bottom <= viewerRect.bottom - margin){
+      // Already comfortably in view - leave the scroll position
+      // alone rather than nudging it on every single line.
+      return;
+    }
+  }
+
+  // Aim for a bit above dead-center, leaving more room below the
+  // line than above it, since that's the text about to be read.
+  const targetY = viewerRect.top + viewerRect.height * 0.35;
+  const currentCenter = elRect.top + elRect.height / 2;
+  const delta = currentCenter - targetY;
+
+  beginProgrammaticScroll();
+  viewer.scrollTop += delta;
+}
+
+// Used for page-turn scrolling in place of the shared, smoothly-
+// animated scrollToView() only while Follow Along is engaged - see
+// the note above on why an instant scroll is what makes the
+// "breaks free the instant you touch it" behavior reliable.
+async function readingScrollToPage(view){
+
+  await renderPage(view);
+
+  const viewerRect = viewer.getBoundingClientRect();
+  const pageRect = view.pageDiv.getBoundingClientRect();
+  const targetOffset = pageRect.top - viewerRect.top + viewer.scrollTop;
+
+  beginProgrammaticScroll();
+  viewer.scrollTop = Math.max(0, targetOffset - 8);
+
+  pageInput.value = String(view.pageNumber);
+}
+
+function engageAutoFollow(){
+
+  autoFollow = true;
+  updateAutoFollowUI();
+
+  if(readHighlight.view){
+    snapToCurrentLine(readHighlight.view, true);
+  }
+}
+
+function disengageAutoFollow(){
+
+  if(!autoFollow){
+    return;
+  }
+
+  autoFollow = false;
+  updateAutoFollowUI();
+}
+
+function toggleAutoFollow(){
+  if(autoFollow){
+    disengageAutoFollow();
+  }else{
+    engageAutoFollow();
+  }
+}
+
+// The one and only way autoFollow turns itself off without the
+// person tapping the button: any scroll on the viewer that didn't
+// come from beginProgrammaticScroll() above is, by definition,
+// the person scrolling it themselves.
+viewer.addEventListener("scroll", () => {
+
+  if(!autoFollow){
+    return;
+  }
+
+  if(Date.now() < autoScrollGuardUntil){
+    return;
+  }
+
+  disengageAutoFollow();
+});
+
+/* ------------------------------------------------------------
    SCREEN-AWAKE ROBUSTNESS
 
    Two independent safety nets so a long reading session doesn't
@@ -4391,10 +4754,18 @@ function highlightWord(block, charIndex, charLength){
      Safari is known to suspend speech synthesis once the screen
      locks or the tab is backgrounded, with no web API able to
      override that).
-   - A small periodic pause/resume "nudge" works around a
-     long-standing Chrome bug where speech synthesis silently
-     stops after ~15 seconds unless kicked like this - harmless on
-     browsers that don't have the bug.
+   - A stall watchdog notices when nothing has happened - no word
+     boundary, no line finishing - for several seconds while
+     reading is supposed to be active, and recovers on its own by
+     restarting the current line, rather than leaving the person
+     staring at a "playing" icon that's gone silent. (An earlier
+     version of this nudged the engine with a periodic
+     pause()/resume() call to dodge a Chrome bug where long
+     utterances silently stop after ~15s; that nudge turned out to
+     itself be a source of random stops on some browsers, so it's
+     been replaced with this - lines are also short enough now,
+     one PDF line per utterance, that the original 15s bug rarely
+     has a chance to trigger in the first place.)
 ------------------------------------------------------------ */
 
 let wakeLockSentinel = null;
@@ -4426,30 +4797,69 @@ function releaseWakeLock(){
   }
 }
 
-let keepAliveTimer = null;
+const WATCHDOG_CHECK_MS = 2000;
+const WATCHDOG_STALL_MS = 6000;
+const WATCHDOG_MAX_RETRIES = 2;
 
-function startKeepAlive(){
+let watchdogTimer = null;
+let watchdogRetries = 0;
 
-  stopKeepAlive();
+// Called on every sign of real progress - a line starting, a word
+// boundary, a line finishing - so the watchdog always measures
+// time since the last thing that actually happened, not time
+// since reading started.
+function noteReadingProgress(){
+  reading.lastProgressAt = Date.now();
+  watchdogRetries = 0;
+}
 
-  keepAliveTimer = setInterval(() => {
+function startWatchdog(){
+
+  stopWatchdog();
+  noteReadingProgress();
+
+  watchdogTimer = setInterval(() => {
 
     if(!reading.active || reading.paused){
       return;
     }
 
+    const elapsed = Date.now() - reading.lastProgressAt;
+
+    if(elapsed < WATCHDOG_STALL_MS){
+      return;
+    }
+
+    if(watchdogRetries >= WATCHDOG_MAX_RETRIES){
+      // Recovery has already been tried a couple of times and
+      // it's still not moving - stop guessing and show this
+      // honestly as paused (with a working Resume button) rather
+      // than leaving a "playing" icon over silence indefinitely.
+      console.warn("Read Aloud: still stalled after retrying - pausing.");
+      pauseReading();
+      return;
+    }
+
+    watchdogRetries++;
+
+    console.warn(`Read Aloud: no progress for ${Math.round(elapsed / 1000)}s - restarting the current line (attempt ${watchdogRetries}/${WATCHDOG_MAX_RETRIES}).`);
+
+    reading.currentToken = -1;
+
     try{
-      window.speechSynthesis.pause();
-      window.speechSynthesis.resume();
+      window.speechSynthesis.cancel();
     }catch{}
 
-  }, 9000);
+    noteReadingProgress();
+    speakCurrentBlock();
+
+  }, WATCHDOG_CHECK_MS);
 }
 
-function stopKeepAlive(){
-  if(keepAliveTimer){
-    clearInterval(keepAliveTimer);
-    keepAliveTimer = null;
+function stopWatchdog(){
+  if(watchdogTimer){
+    clearInterval(watchdogTimer);
+    watchdogTimer = null;
   }
 }
 
@@ -4467,12 +4877,15 @@ if(SUPPORTS_SPEECH){
 
     void acquireWakeLock();
 
-    // Some browsers silently pause an in-flight utterance when a
-    // tab is backgrounded and don't resume it on their own -
-    // this is a harmless no-op if playback wasn't actually stuck.
+    // Coming back from the background is exactly the situation
+    // where a browser is most likely to have quietly suspended
+    // speech - give it a resume() nudge and reset the stall clock
+    // so the watchdog above judges it fresh from this point.
     try{
       window.speechSynthesis.resume();
     }catch{}
+
+    noteReadingProgress();
   });
 }
 
@@ -4485,7 +4898,7 @@ function updateReadAloudUI(){
   if(!reading.active){
 
     readAloudControls.classList.add("hidden");
-    closeRateMenu();
+    closeSettingsMenu();
 
     readAloudFloat.classList.remove("active");
     readAloudFloat.innerHTML = ICON_SPEAKER;
@@ -4501,6 +4914,7 @@ function updateReadAloudUI(){
   readAloudFloat.classList.add("active");
 
   const totalPages = pdfDoc ? pdfDoc.numPages : reading.pageNumber;
+  const rateLabel = READ_RATE_LABELS[readRateIndex];
 
   if(reading.paused){
 
@@ -4512,7 +4926,7 @@ function updateReadAloudUI(){
     readAloudPlayPause.title = "Resume";
     readAloudPlayPause.setAttribute("aria-label", "Resume reading");
 
-    readAloudStatus.textContent = `Paused – page ${reading.pageNumber} of ${totalPages}`;
+    readAloudStatus.textContent = `Paused – page ${reading.pageNumber} of ${totalPages} · ${rateLabel}`;
 
   }else{
 
@@ -4524,7 +4938,7 @@ function updateReadAloudUI(){
     readAloudPlayPause.title = "Pause";
     readAloudPlayPause.setAttribute("aria-label", "Pause reading");
 
-    readAloudStatus.textContent = `Reading page ${reading.pageNumber} of ${totalPages}`;
+    readAloudStatus.textContent = `Reading page ${reading.pageNumber} of ${totalPages} · ${rateLabel}`;
   }
 
   syncReadBarLift();
@@ -4575,8 +4989,11 @@ function stopReading(){
 
   stopUtteranceQuietly();
   clearReadHighlights();
-  stopKeepAlive();
+  stopWatchdog();
   releaseWakeLock();
+
+  autoFollow = false;
+  updateAutoFollowUI();
 
   updateReadAloudUI();
 }
@@ -4590,7 +5007,7 @@ function pauseReading(){
   reading.paused = true;
 
   stopUtteranceQuietly();
-  stopKeepAlive();
+  stopWatchdog();
   releaseWakeLock();
 
   updateReadAloudUI();
@@ -4607,7 +5024,7 @@ function resumeReading(){
   updateReadAloudUI();
 
   void acquireWakeLock();
-  startKeepAlive();
+  startWatchdog();
 
   speakCurrentBlock();
 }
@@ -4636,10 +5053,15 @@ function speakCurrentBlock(){
     const token = ++utteranceToken;
     reading.currentToken = token;
 
+    noteReadingProgress();
+
     const view = pageViews[reading.pageNumber - 1];
 
     if(view){
       highlightLine(view, block);
+      if(autoFollow){
+        snapToCurrentLine(view, false);
+      }
     }
 
     const utterance = new SpeechSynthesisUtterance(block.text);
@@ -4659,6 +5081,8 @@ function speakCurrentBlock(){
         return;
       }
 
+      noteReadingProgress();
+
       // Some engines also report sentence boundaries on the same
       // event - only act on word-level ones.
       if(event?.name && event.name !== "word"){
@@ -4673,7 +5097,8 @@ function speakCurrentBlock(){
     const handleFinished = () => {
 
       // A stale or intentionally-cancelled utterance - a real
-      // page turn, a pause, a stop - has since replaced this one.
+      // page turn, a pause, a stop, a watchdog restart - has since
+      // replaced this one.
       if(token !== reading.currentToken){
         return;
       }
@@ -4681,6 +5106,8 @@ function speakCurrentBlock(){
       if(generation !== reading.generation || reading.paused || !reading.active){
         return;
       }
+
+      noteReadingProgress();
 
       reading.blockIndex++;
 
@@ -4697,8 +5124,8 @@ function speakCurrentBlock(){
 
     utterance.onerror = event => {
       // "canceled"/"interrupted" are expected whenever we cut an
-      // utterance short on purpose (pause, stop, skip) - only log
-      // genuine synthesis failures.
+      // utterance short on purpose (pause, stop, skip, a watchdog
+      // restart) - only log genuine synthesis failures.
       if(event && event.error !== "canceled" && event.error !== "interrupted"){
         console.warn("Read Aloud: speech synthesis error:", event.error);
       }
@@ -4708,8 +5135,11 @@ function speakCurrentBlock(){
     try{
       window.speechSynthesis.speak(utterance);
     }catch(error){
+      // A hard failure to even start speaking - surface this as
+      // paused (with a working Resume button) rather than
+      // silently ending the whole session.
       console.warn("Read Aloud: speech synthesis failed:", error);
-      stopReading();
+      pauseReading();
     }
   };
 
@@ -4737,7 +5167,11 @@ async function advanceToPage(pageNumber){
     return;
   }
 
-  await scrollToView(view);
+  if(autoFollow){
+    await readingScrollToPage(view);
+  }else{
+    await scrollToView(view);
+  }
 
   if(generation !== reading.generation){
     return;
@@ -4753,6 +5187,7 @@ async function advanceToPage(pageNumber){
   reading.blocks = blocks;
   reading.blockIndex = 0;
 
+  noteReadingProgress();
   updateReadAloudUI();
 
   if(!blocks.length){
@@ -4774,7 +5209,7 @@ function startReading(fromPage){
   updateReadAloudUI();
 
   void acquireWakeLock();
-  startKeepAlive();
+  startWatchdog();
 
   void advanceToPage(fromPage);
 }
@@ -4796,8 +5231,32 @@ function skipPage(delta){
 
   stopUtteranceQuietly();
   clearReadHighlights();
+  noteReadingProgress();
 
   void advanceToPage(target);
+}
+
+// Skips whatever's currently being spoken and moves straight to
+// the next line. If that was the last line on the page,
+// speakCurrentBlock() (called below) already knows to roll on to
+// the next page on its own - same as reaching the end normally.
+function skipLine(){
+
+  if(!reading.active){
+    return;
+  }
+
+  reading.generation++;
+  reading.paused = false;
+
+  stopUtteranceQuietly();
+  clearReadHighlights();
+  noteReadingProgress();
+
+  reading.blockIndex++;
+
+  updateReadAloudUI();
+  speakCurrentBlock();
 }
 
 /* ------------------------------------------------------------
@@ -4864,9 +5323,19 @@ readAloudStop.addEventListener("click", event => {
   stopReading();
 });
 
+readAloudFollowBtn.addEventListener("click", event => {
+  event.stopPropagation();
+  toggleAutoFollow();
+});
+
 readAloudPrevPage.addEventListener("click", event => {
   event.stopPropagation();
   skipPage(-1);
+});
+
+readAloudNextLine.addEventListener("click", event => {
+  event.stopPropagation();
+  skipLine();
 });
 
 readAloudNextPage.addEventListener("click", event => {
@@ -4874,43 +5343,29 @@ readAloudNextPage.addEventListener("click", event => {
   skipPage(1);
 });
 
-readAloudRateDown.addEventListener("click", event => {
+readAloudSettingsBtn.addEventListener("click", event => {
   event.stopPropagation();
-  readRateIndex = Math.max(0, readRateIndex - 1);
-  updateRateLabel();
-  closeRateMenu();
+  toggleSettingsMenu();
 });
 
-readAloudRateUp.addEventListener("click", event => {
-  event.stopPropagation();
-  readRateIndex = Math.min(READ_RATE_STEPS.length - 1, readRateIndex + 1);
-  updateRateLabel();
-  closeRateMenu();
-});
-
-readAloudRateLabel.addEventListener("click", event => {
-  event.stopPropagation();
-  toggleRateMenu();
-});
-
-readAloudRateLabel.addEventListener("keydown", event => {
+readAloudSettingsBtn.addEventListener("keydown", event => {
   if(event.key === "Enter" || event.key === " "){
     event.preventDefault();
     event.stopPropagation();
-    toggleRateMenu();
+    toggleSettingsMenu();
   }
 });
 
-readAloudRateMenu.addEventListener("click", event => event.stopPropagation());
+readAloudSettingsMenu.addEventListener("click", event => event.stopPropagation());
 
 document.addEventListener("click", event => {
-  if(readAloudRateMenu.classList.contains("hidden")){
+  if(readAloudSettingsMenu.classList.contains("hidden")){
     return;
   }
-  if(event.target.closest("#readAloudRate")){
+  if(event.target.closest("#readAloudSettingsWrap")){
     return;
   }
-  closeRateMenu();
+  closeSettingsMenu();
 });
 
 readAloudFromStart.addEventListener("click", event => {
@@ -4945,12 +5400,19 @@ document.addEventListener("keydown", event => {
     closeReadAloudChoice();
     return;
   }
-  if(!readAloudRateMenu.classList.contains("hidden")){
-    closeRateMenu();
+  if(!readAloudSettingsMenu.classList.contains("hidden")){
+    closeSettingsMenu();
   }
 });
 
-updateRateLabel();
+// Builds both lists once up front (rather than only the first
+// time the menu opens) purely so the saved speed is reflected in
+// the status line's "· 1.25×" the very first time the bar shows,
+// with no empty flash. openSettingsMenu() still rebuilds the
+// voice list itself every time it's opened, since the voice list
+// can genuinely change after the page loads.
+buildSpeedList();
+buildVoiceList();
 
 /* ============================================================
    MOVEMENT LOCK (Free / Vertical)
