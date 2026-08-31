@@ -1910,7 +1910,13 @@ body.reading-mode #readAloudControls{
   box-shadow:
     0 8px 24px rgba(0,0,0,.5);
 
-  z-index:6600;
+  /*
+     Higher than the stacked floating buttons (reading mode / TOC /
+     read aloud, z-index 9000) so the popover visually and
+     functionally covers them while it's open, instead of them
+     poking through and stealing taps.
+  */
+  z-index:9600;
 }
 
 #readAloudSettingsMenu.hidden{
@@ -1927,6 +1933,27 @@ body.reading-mode #readAloudControls{
 
   text-transform:uppercase;
   letter-spacing:.05em;
+}
+
+.readAloudVoiceGroupHeading{
+  padding:8px 8px 2px;
+
+  color:#777;
+
+  font-size:10px;
+  font-weight:bold;
+
+  text-transform:uppercase;
+  letter-spacing:.05em;
+
+  border-top:1px solid #333;
+  margin-top:4px;
+}
+
+.readAloudVoiceGroupHeading:first-of-type{
+  border-top:0;
+  margin-top:0;
+  padding-top:2px;
 }
 
 .readAloudSettingsSection + .readAloudSettingsSection{
@@ -2029,6 +2056,17 @@ body.reading-mode #readAloudControls{
   overflow:hidden;
 
   text-overflow:ellipsis;
+}
+
+#readAloudStatus .readAloudDot{
+  display:inline-block;
+
+  margin:0 6px;
+
+  color:#6fa8ff;
+
+  font-size:15px;
+  font-weight:bold;
 }
 
 /* ============================================================
@@ -3832,30 +3870,110 @@ if(SUPPORTS_SPEECH){
   window.speechSynthesis.onvoiceschanged = refreshVoices;
 }
 
-// Sorted, de-duplicated view of the voice list for display: the
-// person's own saved/selected voice (if still available) first,
-// then English voices, then everything else, each group
-// alphabetical by name.
-function sortedVoiceList(){
+// Common BCP-47 primary-subtag -> readable language names, for
+// grouping the voice list into categories. Falls back to
+// Intl.DisplayNames (and then the raw code) for anything not
+// listed here, so an unfamiliar language still gets a real label
+// instead of being dropped.
+const VOICE_LANGUAGE_NAMES = {
+  en:"English", es:"Spanish", fr:"French", de:"German", it:"Italian",
+  pt:"Portuguese", nl:"Dutch", ru:"Russian", zh:"Chinese", ja:"Japanese",
+  ko:"Korean", ar:"Arabic", hi:"Hindi", pl:"Polish", tr:"Turkish",
+  sv:"Swedish", da:"Danish", no:"Norwegian", nb:"Norwegian", nn:"Norwegian",
+  fi:"Finnish", el:"Greek", he:"Hebrew", iw:"Hebrew", cs:"Czech",
+  hu:"Hungarian", ro:"Romanian", sk:"Slovak", uk:"Ukrainian", vi:"Vietnamese",
+  th:"Thai", id:"Indonesian", ms:"Malay", fil:"Filipino", tl:"Filipino",
+  bg:"Bulgarian", hr:"Croatian", ca:"Catalan", lt:"Lithuanian", lv:"Latvian",
+  et:"Estonian", sl:"Slovenian", sr:"Serbian", fa:"Persian", ur:"Urdu",
+  bn:"Bengali", ta:"Tamil", te:"Telugu", mr:"Marathi", gu:"Gujarati",
+  kn:"Kannada", ml:"Malayalam", pa:"Punjabi", sw:"Swahili", af:"Afrikaans",
+  is:"Icelandic", sq:"Albanian", mk:"Macedonian", ka:"Georgian", hy:"Armenian",
+  az:"Azerbaijani", km:"Khmer", lo:"Lao", my:"Burmese", ne:"Nepali",
+  si:"Sinhala", am:"Amharic"
+};
 
-  return [...availableVoices].sort((a, b) => {
+// Best-effort readable language name for a voice's lang tag - used
+// purely as a category heading in the picker.
+function voiceLanguageLabel(lang){
 
-    const aSelected = a.voiceURI === selectedVoiceURI;
-    const bSelected = b.voiceURI === selectedVoiceURI;
+  if(!lang){
+    return "Other";
+  }
 
-    if(aSelected !== bSelected){
-      return aSelected ? -1 : 1;
+  const primary = lang.split(/[-_]/)[0].toLowerCase();
+
+  if(VOICE_LANGUAGE_NAMES[primary]){
+    return VOICE_LANGUAGE_NAMES[primary];
+  }
+
+  try{
+    const name = new Intl.DisplayNames(["en"], { type:"language" }).of(primary);
+    if(name && name.toLowerCase() !== primary){
+      return name.charAt(0).toUpperCase() + name.slice(1);
+    }
+  }catch{
+    // Intl.DisplayNames unsupported or the code wasn't recognized -
+    // fall through to the raw code below.
+  }
+
+  return primary.toUpperCase();
+}
+
+// Every reported voice, grouped into { label, voices[] } buckets by
+// language so the picker can show real categories instead of one
+// long flat list. The person's own saved/selected voice's language
+// sorts first, English next, everything else alphabetical - voices
+// within a group follow the same rule, selected voice first then
+// alphabetical by name. Nothing is filtered out: every voice the
+// browser reports (including whichever one it flags as its own
+// default) lands in its language group and stays individually
+// selectable there.
+function groupedVoiceList(){
+
+  const groups = new Map();
+
+  for(const voice of availableVoices){
+
+    const label = voiceLanguageLabel(voice.lang);
+
+    if(!groups.has(label)){
+      groups.set(label, []);
     }
 
-    const aEnglish = /^en/i.test(a.lang || "");
-    const bEnglish = /^en/i.test(b.lang || "");
+    groups.get(label).push(voice);
+  }
 
-    if(aEnglish !== bEnglish){
-      return aEnglish ? -1 : 1;
+  const selectedVoice = availableVoices.find(voice => voice.voiceURI === selectedVoiceURI);
+  const selectedLabel = selectedVoice ? voiceLanguageLabel(selectedVoice.lang) : null;
+
+  const labels = [...groups.keys()].sort((a, b) => {
+
+    if((a === selectedLabel) !== (b === selectedLabel)){
+      return a === selectedLabel ? -1 : 1;
     }
 
-    return (a.name || "").localeCompare(b.name || "");
+    if((a === "English") !== (b === "English")){
+      return a === "English" ? -1 : 1;
+    }
+
+    return a.localeCompare(b);
   });
+
+  for(const label of labels){
+    groups.get(label).sort((a, b) => {
+
+      const aSelected = a.voiceURI === selectedVoiceURI;
+      const bSelected = b.voiceURI === selectedVoiceURI;
+
+      if(aSelected !== bSelected){
+        return aSelected ? -1 : 1;
+      }
+
+      return (a.name || "").localeCompare(b.name || "");
+    });
+  }
+
+  return labels.map(label => ({ label, voices: groups.get(label) }));
 }
 
 function pickVoice(){
@@ -4354,17 +4472,18 @@ function buildVoiceList(){
 
   readAloudVoiceList.replaceChildren();
 
-  const voices = sortedVoiceList();
-
-  if(!voices.length){
+  if(!availableVoices.length){
 
     const note = document.createElement("div");
     note.className = "readAloudEmptyNote";
-    note.textContent = "No voices reported by this browser yet - try opening this menu again in a moment.";
+    note.textContent = "No voices reported by this browser yet. Try opening this menu again in a moment.";
     readAloudVoiceList.appendChild(note);
     return;
   }
 
+  // Pinned above the categories - picks whatever the browser
+  // considers its own default, same as always, and stays
+  // selectable alongside every individual voice below it.
   readAloudVoiceList.appendChild(optionRow({
     label: "Default (Auto)",
     active: !selectedVoiceURI,
@@ -4373,19 +4492,27 @@ function buildVoiceList(){
     }
   }));
 
-  for(const voice of voices){
+  for(const { label, voices } of groupedVoiceList()){
 
-    const row = optionRow({
-      label: describeVoice(voice),
-      active: voice.voiceURI === selectedVoiceURI,
-      onSelect(){
-        selectedVoiceURI = voice.voiceURI;
-      }
-    });
+    const heading = document.createElement("div");
+    heading.className = "readAloudVoiceGroupHeading";
+    heading.textContent = label;
+    readAloudVoiceList.appendChild(heading);
 
-    row.dataset.voiceUri = voice.voiceURI;
+    for(const voice of voices){
 
-    readAloudVoiceList.appendChild(row);
+      const row = optionRow({
+        label: describeVoice(voice),
+        active: voice.voiceURI === selectedVoiceURI,
+        onSelect(){
+          selectedVoiceURI = voice.voiceURI;
+        }
+      });
+
+      row.dataset.voiceUri = voice.voiceURI;
+
+      readAloudVoiceList.appendChild(row);
+    }
   }
 }
 
@@ -4618,12 +4745,14 @@ function highlightWord(block, charIndex, charLength){
 
 let autoFollow = false;
 let autoScrollGuardUntil = 0;
+let lastAutoScrollTop = null;
 
 function beginProgrammaticScroll(){
-  // A little more than one animation frame's worth of slack - the
-  // scroll event(s) from an instant scrollTop assignment land well
-  // inside this window on every browser tested against.
-  autoScrollGuardUntil = Date.now() + 200;
+  // Backstop only. The real guard is lastAutoScrollTop below,
+  // which compares the actual scrollTop instead of a timestamp -
+  // that way a scroll event delivered late by a busy browser still
+  // reads as "ours" instead of wrongly disengaging Follow Along.
+  autoScrollGuardUntil = Date.now() + 600;
 }
 
 function updateAutoFollowUI(){
@@ -4673,6 +4802,7 @@ function snapToCurrentLine(view, force){
 
   beginProgrammaticScroll();
   viewer.scrollTop += delta;
+  lastAutoScrollTop = viewer.scrollTop;
 }
 
 // Used for page-turn scrolling in place of the shared, smoothly-
@@ -4689,6 +4819,7 @@ async function readingScrollToPage(view){
 
   beginProgrammaticScroll();
   viewer.scrollTop = Math.max(0, targetOffset - 8);
+  lastAutoScrollTop = viewer.scrollTop;
 
   pageInput.value = String(view.pageNumber);
 }
@@ -4731,6 +4862,16 @@ viewer.addEventListener("scroll", () => {
     return;
   }
 
+  // Primary check: does the current scrollTop match the value we
+  // just set ourselves? This holds regardless of how late the
+  // browser delivers the scroll event, so a busy page can't cause
+  // a false "the person grabbed it" read.
+  if(lastAutoScrollTop !== null && Math.abs(viewer.scrollTop - lastAutoScrollTop) < 2){
+    return;
+  }
+
+  // Fallback for the rare case the settled scrollTop doesn't
+  // exactly match what we set (e.g. clamped at the top/bottom).
   if(Date.now() < autoScrollGuardUntil){
     return;
   }
@@ -4926,7 +5067,7 @@ function updateReadAloudUI(){
     readAloudPlayPause.title = "Resume";
     readAloudPlayPause.setAttribute("aria-label", "Resume reading");
 
-    readAloudStatus.textContent = `Paused – page ${reading.pageNumber} of ${totalPages} · ${rateLabel}`;
+    readAloudStatus.innerHTML = `Paused, page ${reading.pageNumber} of ${totalPages}<span class="readAloudDot">•</span>${rateLabel}`;
 
   }else{
 
@@ -4938,7 +5079,7 @@ function updateReadAloudUI(){
     readAloudPlayPause.title = "Pause";
     readAloudPlayPause.setAttribute("aria-label", "Pause reading");
 
-    readAloudStatus.textContent = `Reading page ${reading.pageNumber} of ${totalPages} · ${rateLabel}`;
+    readAloudStatus.innerHTML = `Reading page ${reading.pageNumber} of ${totalPages}<span class="readAloudDot">•</span>${rateLabel}`;
   }
 
   syncReadBarLift();
@@ -5092,6 +5233,14 @@ function speakCurrentBlock(){
       const length = (typeof event?.charLength === "number" && event.charLength > 0) ? event.charLength : 1;
 
       highlightWord(block, event?.charIndex || 0, length);
+
+      // Re-check on every word, not just once at the start of the
+      // line, so Follow Along keeps the reading position in view
+      // continuously as it moves rather than only nudging once per
+      // line.
+      if(autoFollow){
+        snapToCurrentLine(view, false);
+      }
     };
 
     const handleFinished = () => {
@@ -5366,6 +5515,14 @@ document.addEventListener("click", event => {
     return;
   }
   closeSettingsMenu();
+});
+
+// Scrolling the document while the popover is open reads as the
+// person moving on, same as a tap outside it.
+viewer.addEventListener("scroll", () => {
+  if(!readAloudSettingsMenu.classList.contains("hidden")){
+    closeSettingsMenu();
+  }
 });
 
 readAloudFromStart.addEventListener("click", event => {
