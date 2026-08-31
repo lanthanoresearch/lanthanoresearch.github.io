@@ -20,6 +20,15 @@
   --viewer-top:106px;
   --content-bottom-gap:100px;
   --title-bar-height:70px;
+
+  /*
+     How far the three stacked floating buttons lift above their
+     normal resting spot to clear the Read Aloud control bar.
+     0px (their normal position) until reading starts; syncReadBarLift()
+     sets it to the bar's real measured height whenever the bar
+     is visible, in either the normal viewer or reflow reading mode.
+  */
+  --read-bar-lift:0px;
 }
 
 *{
@@ -347,6 +356,10 @@ input:focus-visible{
   width:32px;
 
   padding:0;
+}
+
+#searchButton svg{
+  display:block;
 }
 
 .iconButton{
@@ -1445,6 +1458,53 @@ body.reading-mode #sideScroller{
 }
 
 /* ============================================================
+   READ ALOUD HIGHLIGHTS
+
+   Sits just above the rendered page image but below the (invisible)
+   text/search/link layers, so it never blocks selection or link
+   taps. Two boxes at once: a soft yellow wash over the whole line
+   currently being spoken, plus a smaller, more saturated box over
+   the exact word the speech engine reports it's on right now.
+============================================================ */
+
+.readHighlightLayer{
+  position:absolute;
+
+  inset:0;
+
+  overflow:hidden;
+
+  z-index:1;
+
+  pointer-events:none;
+}
+
+.read-line-highlight{
+  position:absolute;
+
+  background:
+    rgba(255, 224, 60, .35);
+
+  border-radius:3px;
+
+  pointer-events:none;
+}
+
+.read-word-highlight{
+  position:absolute;
+
+  background:
+    rgba(255, 176, 0, .65);
+
+  border-radius:2px;
+
+  box-shadow:
+    0 0 0 1px rgba(200,120,0,.4);
+
+  pointer-events:none;
+}
+
+/* ============================================================
    LOADING
 ============================================================ */
 
@@ -1500,9 +1560,12 @@ body.reading-mode #sideScroller{
   /*
      Tracks the title bar's actual current height (same variable
      the side scroller uses) instead of a fixed guess, so it lines
-     up with the title bar whether it's one line or two.
+     up with the title bar whether it's one line or two. The
+     added --read-bar-lift term is normally 0px, and only becomes
+     nonzero while the Read Aloud control bar is docked, so this
+     button (and the two stacked above it) rise together to clear it.
   */
-  bottom:var(--content-bottom-gap);
+  bottom:calc(var(--content-bottom-gap) + var(--read-bar-lift));
 
   width:48px;
   height:48px;
@@ -1569,7 +1632,7 @@ body.reading-mode #sideScroller{
      bottom offset (the title-bar-tracking gap) plus that
      button's height and a small spacer between them.
   */
-  bottom:calc(var(--content-bottom-gap) + 58px);
+  bottom:calc(var(--content-bottom-gap) + 58px + var(--read-bar-lift));
 
   width:48px;
   height:48px;
@@ -1622,10 +1685,424 @@ body.reading-mode #tocButton{
 
   right:16px;
 
-  bottom:74px;
+  bottom:calc(74px + var(--read-bar-lift));
 
   background:
     rgba(40,40,40,.88);
+}
+
+/* ============================================================
+   FLOATING READ ALOUD BUTTON
+
+   Third button in the same stacked, circular-button family as
+   #readingModeFloat and #tocButton above (same size, same dark
+   glass look). Kept monochrome on purpose - a plain glyph in
+   currentColor, no colored emoji - so it reads as part of the
+   same icon set instead of standing out.
+============================================================ */
+
+#readAloudFloat{
+
+  position:fixed;
+
+  right:18px;
+
+  /*
+     Stacked directly above the table-of-contents button: two
+     button-heights plus their spacers above the base gap.
+  */
+  bottom:calc(var(--content-bottom-gap) + 116px + var(--read-bar-lift));
+
+  width:48px;
+  height:48px;
+
+  display:flex;
+
+  align-items:center;
+  justify-content:center;
+
+  padding:0;
+
+  border-radius:50%;
+
+  background:
+    rgba(40,40,40,.94);
+
+  border:1px solid #555;
+
+  color:#fff;
+
+  font-size:17px;
+  line-height:1;
+
+  box-shadow:
+    0 5px 18px rgba(0,0,0,.45);
+
+  z-index:9000;
+
+  cursor:pointer;
+
+  backdrop-filter:blur(6px);
+
+  transition:
+    transform .15s ease,
+    background .15s ease;
+}
+
+#readAloudFloat:hover{
+  background:#3a3a3a;
+
+  transform:scale(1.05);
+}
+
+#readAloudFloat:active{
+  transform:scale(.96);
+}
+
+#readAloudFloat.active{
+  border-color:#7a7a7a;
+
+  background:
+    rgba(60,60,60,.96);
+}
+
+body.reading-mode #readAloudFloat{
+
+  right:16px;
+
+  bottom:calc(132px + var(--read-bar-lift));
+
+  background:
+    rgba(40,40,40,.88);
+}
+
+/* ============================================================
+   READ ALOUD CONTROL BAR
+
+   A compact "now playing" bar, docked just above the title bar
+   (mirrors #searchPopup's panel styling), that appears only
+   while reading is active. It survives the reflow reading mode
+   the same way the floating buttons do, since it's not covered
+   by that mode's chrome-hiding rule.
+============================================================ */
+
+#readAloudControls{
+  position:fixed;
+
+  left:50%;
+
+  bottom:calc(var(--title-bar-height) + 12px);
+
+  transform:translateX(-50%);
+
+  display:flex;
+
+  align-items:center;
+
+  gap:8px;
+
+  max-width:calc(100% - 24px);
+
+  padding:8px 10px;
+
+  background:#222;
+
+  border:1px solid #444;
+
+  border-radius:11px;
+
+  box-shadow:
+    0 8px 24px rgba(0,0,0,.5);
+
+  z-index:6500;
+}
+
+#readAloudControls.hidden{
+  display:none;
+}
+
+body.reading-mode #readAloudControls{
+  bottom:16px;
+}
+
+.readAloudBtn{
+  width:36px;
+  height:36px;
+
+  padding:0;
+
+  display:flex;
+
+  align-items:center;
+  justify-content:center;
+
+  flex:0 0 auto;
+
+  border-radius:8px;
+
+  font-size:16px;
+  line-height:1;
+}
+
+#readAloudPlayPause{
+  width:40px;
+  height:40px;
+
+  font-size:17px;
+}
+
+#readAloudRate{
+  position:relative;
+
+  display:flex;
+
+  align-items:center;
+
+  gap:2px;
+
+  height:36px;
+
+  padding:0 2px;
+
+  background:#181818;
+
+  border:1px solid #3b3b3b;
+
+  border-radius:8px;
+
+  flex:0 0 auto;
+}
+
+#readAloudRate button{
+  width:26px;
+  height:30px;
+
+  padding:0;
+
+  border:0;
+
+  background:transparent;
+
+  font-size:14px;
+}
+
+#readAloudRateLabel{
+  min-width:38px;
+
+  padding:0 2px;
+
+  text-align:center;
+
+  font-size:12px;
+
+  color:#ddd;
+
+  cursor:pointer;
+
+  border-radius:5px;
+}
+
+#readAloudRateLabel:hover{
+  background:#2c2c2c;
+}
+
+/* ============================================================
+   READ ALOUD SPEED PRESET MENU
+
+   Opens above the rate control when its label is tapped, so a
+   specific speed can be picked directly instead of stepping to
+   it one +/- tap at a time.
+============================================================ */
+
+#readAloudRateMenu{
+  position:absolute;
+
+  left:50%;
+  bottom:calc(100% + 8px);
+
+  transform:translateX(-50%);
+
+  display:flex;
+  flex-direction:column;
+
+  gap:2px;
+
+  padding:6px;
+
+  background:#222;
+
+  border:1px solid #444;
+
+  border-radius:9px;
+
+  box-shadow:
+    0 8px 20px rgba(0,0,0,.5);
+
+  z-index:6600;
+}
+
+#readAloudRateMenu.hidden{
+  display:none;
+}
+
+#readAloudRateMenu button{
+  width:64px;
+
+  padding:6px 8px;
+
+  border:0;
+
+  border-radius:6px;
+
+  background:transparent;
+
+  color:#ddd;
+
+  font-size:13px;
+
+  text-align:center;
+}
+
+#readAloudRateMenu button:hover{
+  background:#333;
+}
+
+#readAloudRateMenu button.active{
+  background:#2f7cff;
+
+  color:#fff;
+}
+
+#readAloudStatus{
+  min-width:0;
+
+  padding:0 2px;
+
+  color:#aaa;
+
+  font-size:12px;
+
+  line-height:1.25;
+
+  white-space:nowrap;
+
+  overflow:hidden;
+
+  text-overflow:ellipsis;
+}
+
+/* ============================================================
+   READ ALOUD START CHOICE
+
+   A small centered confirmation card - "start from the
+   beginning, or from here?" - shown only when the person isn't
+   already on page 1. Styled as a simple modal so it reads as a
+   deliberate question rather than a menu.
+============================================================ */
+
+#readAloudChoice{
+  position:fixed;
+
+  inset:0;
+
+  display:flex;
+
+  align-items:center;
+  justify-content:center;
+
+  padding:20px;
+
+  background:rgba(0,0,0,.55);
+
+  z-index:9800;
+}
+
+#readAloudChoice.hidden{
+  display:none;
+}
+
+#readAloudChoiceCard{
+  width:100%;
+  max-width:320px;
+
+  padding:20px;
+
+  background:#1e1e1e;
+
+  border:1px solid #3a3a3a;
+
+  border-radius:13px;
+
+  box-shadow:
+    0 12px 32px rgba(0,0,0,.55);
+
+  text-align:center;
+}
+
+#readAloudChoiceCard h3{
+  margin:0 0 8px;
+
+  font-size:16px;
+
+  color:#fff;
+}
+
+#readAloudChoiceCard p{
+  margin:0 0 16px;
+
+  color:#bbb;
+
+  font-size:13px;
+
+  line-height:1.45;
+}
+
+.readAloudChoiceButtons{
+  display:flex;
+
+  flex-direction:column;
+
+  gap:8px;
+}
+
+.readAloudChoiceButtons button{
+  width:100%;
+
+  padding:11px 10px;
+
+  font-size:14px;
+
+  border-radius:8px;
+}
+
+#readAloudFromCurrent{
+  background:#2f7cff;
+
+  border-color:#2f7cff;
+}
+
+#readAloudFromCurrent:hover{
+  background:#4a8dff;
+}
+
+#readAloudChoiceCancel{
+  margin-top:2px;
+
+  background:transparent;
+
+  border:0;
+
+  color:#999;
+
+  font-size:12px;
+
+  padding:6px;
+}
+
+#readAloudChoiceCancel:hover{
+  color:#ccc;
+
+  background:transparent;
 }
 
 /* ============================================================
@@ -1688,7 +2165,7 @@ body.reading-mode #readingModeFloat{
 
   right:16px;
 
-  bottom:16px;
+  bottom:calc(16px + var(--read-bar-lift));
 
   background:
     rgba(40,40,40,.88);
@@ -1807,7 +2284,7 @@ body.reading-mode #readingModeFloat{
 
     right:14px;
 
-    bottom:var(--content-bottom-gap);
+    bottom:calc(var(--content-bottom-gap) + var(--read-bar-lift));
 
     width:46px;
     height:46px;
@@ -1819,14 +2296,14 @@ body.reading-mode #readingModeFloat{
 
     right:12px;
 
-    bottom:12px;
+    bottom:calc(12px + var(--read-bar-lift));
   }
 
   #tocButton{
 
     right:14px;
 
-    bottom:calc(var(--content-bottom-gap) + 56px);
+    bottom:calc(var(--content-bottom-gap) + 56px + var(--read-bar-lift));
 
     width:46px;
     height:46px;
@@ -1838,7 +2315,51 @@ body.reading-mode #readingModeFloat{
 
     right:12px;
 
-    bottom:68px;
+    bottom:calc(68px + var(--read-bar-lift));
+  }
+
+  #readAloudFloat{
+
+    right:14px;
+
+    bottom:calc(var(--content-bottom-gap) + 112px + var(--read-bar-lift));
+
+    width:46px;
+    height:46px;
+  }
+
+  body.reading-mode #readAloudFloat{
+
+    right:12px;
+
+    bottom:calc(124px + var(--read-bar-lift));
+  }
+
+  #readAloudControls{
+
+    left:8px;
+    right:8px;
+
+    bottom:calc(var(--title-bar-height) + 8px);
+
+    transform:none;
+
+    max-width:none;
+
+    flex-wrap:wrap;
+
+    justify-content:center;
+  }
+
+  #readAloudStatus{
+
+    order:5;
+
+    flex:1 1 100%;
+
+    text-align:center;
+
+    white-space:normal;
   }
 
   .title-badges{
@@ -1909,7 +2430,7 @@ body.reading-mode #readingModeFloat{
      TOOLBAR
 ========================================================== -->
 <div id="toolbar">
-<button id="searchButton" class="toolButton" title="Search PDF">⌕</button>
+<button id="searchButton" class="toolButton" title="Search PDF"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5"></circle><line x1="19" y1="19" x2="15.2" y2="15.2"></line></svg></button>
 
 <div class="zoomControls">
 <button id="zoomOut" title="Zoom out">−</button>
@@ -1983,6 +2504,40 @@ body.reading-mode #readingModeFloat{
 ========================================================== -->
 <button id="tocButton" aria-label="Table of Contents" title="Table of Contents">TOC</button>
 <!-- ==========================================================
+     FLOATING READ ALOUD
+========================================================== -->
+<button id="readAloudFloat" aria-label="Read Aloud" title="Read Aloud"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 5V4L8 9H4z" fill="currentColor" stroke="none"></path><path d="M16.3 8.5a5 5 0 0 1 0 7"></path><path d="M19 6a9 9 0 0 1 0 12"></path></svg></button>
+<!-- ==========================================================
+     READ ALOUD CONTROL BAR
+========================================================== -->
+<div id="readAloudControls" class="hidden">
+<button id="readAloudPrevPage" class="readAloudBtn" title="Previous page" aria-label="Read previous page">⏮</button>
+<button id="readAloudPlayPause" class="readAloudBtn" title="Pause" aria-label="Pause reading"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"></rect><rect x="14" y="5" width="4" height="14" rx="1"></rect></svg></button>
+<button id="readAloudNextPage" class="readAloudBtn" title="Next page" aria-label="Read next page">⏭</button>
+<div id="readAloudRate">
+<button id="readAloudRateDown" aria-label="Slower">−</button>
+<span id="readAloudRateLabel" role="button" tabindex="0" aria-haspopup="true" title="Choose a reading speed">1.0×</span>
+<button id="readAloudRateUp" aria-label="Faster">+</button>
+<div id="readAloudRateMenu" class="hidden" role="menu"></div>
+</div>
+<span id="readAloudStatus">Reading page 1</span>
+<button id="readAloudStop" class="readAloudBtn" title="Stop reading" aria-label="Stop reading">✕</button>
+</div>
+<!-- ==========================================================
+     READ ALOUD START CHOICE
+========================================================== -->
+<div id="readAloudChoice" class="hidden">
+<div id="readAloudChoiceCard">
+<h3>Start Reading</h3>
+<p>You're on page <span id="readAloudChoiceCurrentPage">1</span>. Start from the beginning, or from here?</p>
+<div class="readAloudChoiceButtons">
+<button id="readAloudFromCurrent">Start from Page <span id="readAloudChoiceCurrentPage2">1</span></button>
+<button id="readAloudFromStart">Start from the Beginning</button>
+</div>
+<button id="readAloudChoiceCancel">Cancel</button>
+</div>
+</div>
+<!-- ==========================================================
      SIDE SCROLLER
 ========================================================== -->
 <div id="sideScroller" aria-hidden="true">
@@ -2042,6 +2597,23 @@ const sideScrollerThumb = document.getElementById("sideScrollerThumb");
 const sideScrollerPageBadge = document.getElementById("sideScrollerPageBadge");
 const titleBar = document.getElementById("titleBar");
 const lockButton = document.getElementById("lockButton");
+const readAloudFloat = document.getElementById("readAloudFloat");
+const readAloudControls = document.getElementById("readAloudControls");
+const readAloudPlayPause = document.getElementById("readAloudPlayPause");
+const readAloudPrevPage = document.getElementById("readAloudPrevPage");
+const readAloudNextPage = document.getElementById("readAloudNextPage");
+const readAloudStop = document.getElementById("readAloudStop");
+const readAloudRateDown = document.getElementById("readAloudRateDown");
+const readAloudRateUp = document.getElementById("readAloudRateUp");
+const readAloudRateLabel = document.getElementById("readAloudRateLabel");
+const readAloudRateMenu = document.getElementById("readAloudRateMenu");
+const readAloudStatus = document.getElementById("readAloudStatus");
+const readAloudChoice = document.getElementById("readAloudChoice");
+const readAloudChoiceCurrentPage = document.getElementById("readAloudChoiceCurrentPage");
+const readAloudChoiceCurrentPage2 = document.getElementById("readAloudChoiceCurrentPage2");
+const readAloudFromCurrent = document.getElementById("readAloudFromCurrent");
+const readAloudFromStart = document.getElementById("readAloudFromStart");
+const readAloudChoiceCancel = document.getElementById("readAloudChoiceCancel");
 
 /* ============================================================
    CHROME HEIGHT
@@ -2383,6 +2955,9 @@ function layoutPage(view, scale){
   view.textLayerDiv.style.width = width;
   view.textLayerDiv.style.height = height;
 
+  view.readHighlightLayerDiv.style.width = width;
+  view.readHighlightLayerDiv.style.height = height;
+
   view.searchLayerDiv.style.width = width;
   view.searchLayerDiv.style.height = height;
 
@@ -2415,12 +2990,21 @@ function resetRenderedPage(view){
   }catch{}
 
   view.textLayerDiv.replaceChildren();
+  view.readHighlightLayerDiv.replaceChildren();
   view.searchLayerDiv.replaceChildren();
   view.linkLayerDiv.replaceChildren();
   view.emailLinkLayerDiv.replaceChildren();
 
   view.textLayer = null;
   view.textLayerEnd = null;
+
+  // The text layer's DOM nodes are being torn down and rebuilt -
+  // any cached node references for Read Aloud highlighting are
+  // now dangling and must be rebuilt from scratch next time
+  // they're needed. The parsed reading blocks themselves
+  // (view.readAloudBlocks) don't depend on the DOM, so they're
+  // left alone.
+  view.readTextIndex = null;
 }
 
 /* ============================================================
@@ -2698,6 +3282,10 @@ function createPageShell(pageNumber, page){
 
   textLayerDiv.className = "textLayer";
 
+  const readHighlightLayerDiv = document.createElement("div");
+
+  readHighlightLayerDiv.className = "readHighlightLayer";
+
   const searchLayerDiv = document.createElement("div");
 
   searchLayerDiv.className = "searchHighlightLayer";
@@ -2712,6 +3300,7 @@ function createPageShell(pageNumber, page){
 
   pageDiv.appendChild(canvas);
   pageDiv.appendChild(textLayerDiv);
+  pageDiv.appendChild(readHighlightLayerDiv);
   pageDiv.appendChild(searchLayerDiv);
   pageDiv.appendChild(linkLayerDiv);
   pageDiv.appendChild(emailLinkLayerDiv);
@@ -2724,6 +3313,7 @@ function createPageShell(pageNumber, page){
     pageDiv,
     canvas,
     textLayerDiv,
+    readHighlightLayerDiv,
     searchLayerDiv,
     linkLayerDiv,
     emailLinkLayerDiv,
@@ -2733,7 +3323,14 @@ function createPageShell(pageNumber, page){
     textLayer:null,
     textLayerEnd:null,
     renderedScale:null,
-    renderingPromise:null
+    renderingPromise:null,
+    // Read Aloud caches - see the READ ALOUD section below.
+    // readAloudBlocks survives a rescale (it's built from
+    // scale-independent PDF text, not pixels); readTextIndex does
+    // not, since it points at DOM text nodes that get torn down
+    // and rebuilt whenever the page is re-rendered.
+    readAloudBlocks:null,
+    readTextIndex:null
   };
 
   pageViews[pageNumber - 1] = view;
@@ -3037,6 +3634,8 @@ function setReadingMode(enabled){
 
     updateSideScroller();
 
+    syncReadBarLift();
+
   });
 }
 
@@ -3044,6 +3643,1314 @@ readingModeFloat.addEventListener("click", event => {
   event.stopPropagation();
   setReadingMode(!readingMode);
 });
+
+/* ============================================================
+   READ ALOUD
+
+   Reads the paper aloud using the browser's own text-to-speech
+   engine (SpeechSynthesis) - the "universal" reader built into
+   effectively every modern browser, so nothing extra has to be
+   shipped or loaded.
+
+   A PDF's text layer has no semantic tags, so headings,
+   citation markers, page numbers, captions, and links are told
+   apart from ordinary body text using plain signals already
+   present in that text layer (the same data the search feature
+   reads from):
+
+     - font size relative to the page's most common ("body")
+       size flags headings (bigger) and citation marks (smaller,
+       glued onto the end of a word - "governmentA1")
+     - a short ALL-CAPS line is also read as a heading, since
+       many papers set headings that way regardless of size
+     - a short, mostly-italic line on its own is treated as an
+       image caption and skipped
+     - a bare line of digits (optionally with one leading letter,
+       like a lone "E1") is skipped as a page number or footnote
+       mark
+     - long dot leaders ("......") with a trailing number, as in
+       a table of contents, are trimmed off
+     - URLs and email addresses are swapped for the spoken word
+       "link" instead of being spelled out
+
+   Every kept line also carries a character-by-character map back
+   to its exact position in the PDF's own text layer. That map is
+   what makes the live highlighting possible: as the browser's
+   speech engine reports which word it's saying, that word's
+   position in the (cleaned, "link"-ified) spoken text is traced
+   back through the map to the real text in the page, and a
+   rectangle is drawn there - a soft yellow wash over the whole
+   line, a darker box over the exact word.
+
+   This is a best-effort reading of whatever text layer a given
+   PDF happens to expose, not a guarantee - but it keeps the
+   audio free of citation clutter, page numbers, and raw URLs for
+   the overwhelming majority of papers, and it fails safe: if a
+   line can't be matched back onto the page for highlighting,
+   playback just continues without it rather than stalling.
+============================================================ */
+
+const SUPPORTS_SPEECH = "speechSynthesis" in window && typeof SpeechSynthesisUtterance === "function";
+
+if(!SUPPORTS_SPEECH){
+  readAloudFloat.style.display = "none";
+}
+
+/* ------------------------------------------------------------
+   ICONS
+
+   Plain inline SVGs in currentColor, rather than emoji or
+   font glyphs - guarantees they're monochrome, crisply centered,
+   and a consistent size no matter what font the device has.
+------------------------------------------------------------ */
+
+const ICON_SPEAKER =
+  '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+  '<path d="M4 9v6h4l5 5V4L8 9H4z" fill="currentColor" stroke="none"/>' +
+  '<path d="M16.3 8.5a5 5 0 0 1 0 7"/>' +
+  '<path d="M19 6a9 9 0 0 1 0 12"/>' +
+  '</svg>';
+
+const ICON_PAUSE =
+  '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">' +
+  '<rect x="6" y="5" width="4" height="14" rx="1"/>' +
+  '<rect x="14" y="5" width="4" height="14" rx="1"/>' +
+  '</svg>';
+
+const ICON_PLAY =
+  '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">' +
+  '<path d="M8 5v14l11-7z"/>' +
+  '</svg>';
+
+/* ------------------------------------------------------------
+   VOICE SELECTION
+------------------------------------------------------------ */
+
+let availableVoices = [];
+
+function refreshVoices(){
+  try{
+    availableVoices = window.speechSynthesis.getVoices() || [];
+  }catch{
+    availableVoices = [];
+  }
+}
+
+if(SUPPORTS_SPEECH){
+
+  refreshVoices();
+
+  // Chrome (among others) reports an empty voice list until this
+  // fires at least once - refreshing again here is what makes a
+  // non-default voice available on the very first read.
+  window.speechSynthesis.onvoiceschanged = refreshVoices;
+}
+
+function pickVoice(){
+
+  if(!availableVoices.length){
+    return null;
+  }
+
+  const english = availableVoices.filter(voice => /^en/i.test(voice.lang || ""));
+  const pool = english.length ? english : availableVoices;
+
+  const enhanced = pool.find(voice => /natural|enhanced|premium|google/i.test(voice.name || ""));
+
+  return enhanced || pool[0];
+}
+
+/* ------------------------------------------------------------
+   TEXT CLASSIFICATION
+------------------------------------------------------------ */
+
+const CITATION_MARK_RE = /^[A-Za-z]{0,2}\d{1,3}$/;
+const BARE_NUMBER_LINE_RE = /^[A-Za-z]{0,2}\d{1,4}$/;
+const URL_RE = /\bhttps?:\/\/\S+/gi;
+const WWW_RE = /\bwww\.\S+\.\S+/gi;
+const EMAIL_RE = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/g;
+const DOT_LEADER_RE = /\.{5,}\s*\d*\s*$/;
+const BRACKET_CITE_RE = /^\[[A-Za-z]{1,3}\d{1,3}\]\s*/;
+
+function itemFontSize(item){
+  const size = Math.hypot(item.transform[2], item.transform[3]);
+  return size > 0.1 ? size : (Math.abs(item.transform[3]) || 1);
+}
+
+function isItalicFont(fontName, styles){
+  const family = (styles && styles[fontName] && styles[fontName].fontFamily) || "";
+  return /italic|oblique/i.test(family) || /italic|oblique/i.test(fontName || "");
+}
+
+// Groups the flat item list from getTextContent() into visual
+// lines, using pdf.js's own hasEOL flag as the line-break signal.
+function groupIntoLines(items){
+
+  const lines = [];
+  let current = [];
+
+  for(const item of items){
+
+    if(typeof item.str === "string" && item.str !== ""){
+      current.push(item);
+    }
+
+    if(item.hasEOL){
+      if(current.length){
+        lines.push(current);
+      }
+      current = [];
+    }
+  }
+
+  if(current.length){
+    lines.push(current);
+  }
+
+  return lines;
+}
+
+function dominantFontSize(lines){
+
+  const counts = new Map();
+
+  for(const line of lines){
+    for(const item of line){
+
+      const size = Math.round(itemFontSize(item) * 2) / 2;
+      const weight = (item.str || "").trim().length || 1;
+
+      counts.set(size, (counts.get(size) || 0) + weight);
+    }
+  }
+
+  let bestSize = 12;
+  let bestWeight = -1;
+
+  for(const [size, weight] of counts){
+    if(weight > bestWeight){
+      bestWeight = weight;
+      bestSize = size;
+    }
+  }
+
+  return bestSize || 12;
+}
+
+function lineIsItalic(line, styles){
+
+  let italicChars = 0;
+  let totalChars = 0;
+
+  for(const item of line){
+
+    const length = (item.str || "").trim().length;
+
+    if(!length){
+      continue;
+    }
+
+    totalChars += length;
+
+    if(isItalicFont(item.fontName, styles)){
+      italicChars += length;
+    }
+  }
+
+  return totalChars > 0 && (italicChars / totalChars) > 0.6;
+}
+
+/* ------------------------------------------------------------
+   CHARACTER-MAPPED TEXT CLEANUP
+
+   Everything below builds the spoken text for a line alongside a
+   same-length `map` array where map[i] is the character's offset
+   in that line's original, uncleaned text (`rawLine`). Dropped
+   characters (citation marks) simply have no entry; a
+   multi-character replacement like "link" maps every one of its
+   characters back to where the original URL started. That map is
+   what makes it possible to trace a spoken word back to an exact
+   spot in the PDF for highlighting.
+------------------------------------------------------------ */
+
+function appendMapped(state, raw){
+
+  for(let k = 0; k < raw.length; k++){
+
+    const ch = raw[k];
+    const isSpace = ch === " " || ch === "\t" || ch === "\u00a0";
+
+    if(isSpace){
+
+      if(state.text.length === 0 || state.text[state.text.length - 1] === " "){
+        state.rawLine += ch;
+        state.rawCursor++;
+        continue;
+      }
+
+      state.text += " ";
+      state.map.push(state.rawCursor);
+      state.rawLine += ch;
+      state.rawCursor++;
+      continue;
+    }
+
+    state.text += ch;
+    state.map.push(state.rawCursor);
+    state.rawLine += ch;
+    state.rawCursor++;
+  }
+}
+
+// Builds the (text, map, rawLine) triple for one visual line,
+// dropping small glued-on citation marks as it goes.
+function cleanLineMapped(line, bodySize){
+
+  const state = { text:"", map:[], rawLine:"", rawCursor:0 };
+
+  for(const item of line){
+
+    const raw = item.str;
+
+    if(!raw){
+      continue;
+    }
+
+    const trimmed = raw.trim();
+    const isSmall = itemFontSize(item) < bodySize * 0.82;
+    const isCitation = isSmall && trimmed && trimmed.length <= 5 && CITATION_MARK_RE.test(trimmed);
+
+    if(isCitation){
+      state.rawLine += raw;
+      state.rawCursor += raw.length;
+      continue;
+    }
+
+    appendMapped(state, raw);
+  }
+
+  let start = 0;
+  let end = state.text.length;
+
+  while(start < end && state.text[start] === " "){
+    start++;
+  }
+  while(end > start && state.text[end - 1] === " "){
+    end--;
+  }
+
+  return {
+    text: state.text.slice(start, end),
+    map: state.map.slice(start, end),
+    rawLine: state.rawLine
+  };
+}
+
+function trimMappedStart(text, map, re){
+  const match = text.match(re);
+  if(match && match.index === 0){
+    const cut = match[0].length;
+    return { text: text.slice(cut), map: map.slice(cut) };
+  }
+  return { text, map };
+}
+
+function trimMappedEnd(text, map, re){
+  const match = text.match(re);
+  if(match){
+    return { text: text.slice(0, match.index), map: map.slice(0, match.index) };
+  }
+  return { text, map };
+}
+
+// Replaces every URL/email in a mapped (text, map) pair with the
+// spoken word "link". The replacement text has no source
+// characters of its own, so every character of "link" maps back
+// to wherever the original URL started.
+function replaceLinksMapped(text, map){
+
+  const spans = [];
+
+  for(const re of [URL_RE, WWW_RE, EMAIL_RE]){
+
+    re.lastIndex = 0;
+
+    let match;
+
+    while((match = re.exec(text))){
+
+      spans.push({ start: match.index, end: match.index + match[0].length });
+
+      if(match[0].length === 0){
+        re.lastIndex++;
+      }
+    }
+  }
+
+  if(!spans.length){
+    return { text, map };
+  }
+
+  spans.sort((a, b) => a.start - b.start);
+
+  const merged = [];
+
+  for(const span of spans){
+    const last = merged[merged.length - 1];
+    if(last && span.start <= last.end){
+      last.end = Math.max(last.end, span.end);
+    }else{
+      merged.push({ ...span });
+    }
+  }
+
+  let newText = "";
+  const newMap = [];
+  let cursor = 0;
+
+  for(const span of merged){
+
+    newText += text.slice(cursor, span.start);
+    for(let i = cursor; i < span.start; i++){
+      newMap.push(map[i]);
+    }
+
+    const anchor = map[span.start] ?? map[cursor] ?? 0;
+    const word = "link";
+
+    newText += word;
+    for(let i = 0; i < word.length; i++){
+      newMap.push(anchor);
+    }
+
+    cursor = span.end;
+  }
+
+  newText += text.slice(cursor);
+  for(let i = cursor; i < text.length; i++){
+    newMap.push(map[i]);
+  }
+
+  return { text: newText, map: newMap };
+}
+
+// Turns one page's raw text items into an ordered list of
+// speakable blocks: { type:"heading"|"line", text, map, rawLine }.
+// "line" here means one original visual line of the PDF - reading
+// at that granularity (rather than merging wrapped lines into
+// paragraphs) is what lets the highlight track the exact line
+// currently being spoken.
+function buildReadableBlocks(textContent){
+
+  const items = (textContent && textContent.items) || [];
+  const styles = (textContent && textContent.styles) || {};
+
+  if(!items.length){
+    return [];
+  }
+
+  const lines = groupIntoLines(items);
+  const bodySize = dominantFontSize(lines);
+
+  const blocks = [];
+
+  for(const line of lines){
+
+    const rawJoined = line.map(item => item.str).join("").trim();
+
+    // A line that's nothing but digits (with maybe one stray
+    // leading letter) is either a page number or a lone footnote
+    // mark sitting on its own line - skip it either way.
+    if(rawJoined.length <= 5 && BARE_NUMBER_LINE_RE.test(rawJoined)){
+      continue;
+    }
+
+    let { text, map, rawLine } = cleanLineMapped(line, bodySize);
+
+    if(!text){
+      continue;
+    }
+
+    ({ text, map } = trimMappedStart(text, map, BRACKET_CITE_RE));
+    ({ text, map } = trimMappedEnd(text, map, DOT_LEADER_RE));
+    ({ text, map } = trimMappedStart(text, map, /^\s+/));
+    ({ text, map } = trimMappedEnd(text, map, /\s+$/));
+
+    if(!text){
+      continue;
+    }
+
+    ({ text, map } = replaceLinksMapped(text, map));
+
+    const wordCount = text.split(/\s+/).filter(Boolean).length;
+    const letters = text.replace(/[^A-Za-z]/g, "");
+    const isAllCaps = letters.length >= 3 && text === text.toUpperCase() && text !== text.toLowerCase();
+    const isBigFont = dominantFontSize([line]) >= bodySize * 1.15;
+    const endsLikeSentence = /[.!?]["')\]]?$/.test(text);
+
+    if(wordCount <= 12 && (isAllCaps || isBigFont) && !endsLikeSentence){
+      blocks.push({ type:"heading", text, map, rawLine });
+      continue;
+    }
+
+    // A short, mostly-italic line standing alone reads as an
+    // image caption in most papers - skip it rather than read it.
+    if(wordCount <= 10 && lineIsItalic(line, styles)){
+      continue;
+    }
+
+    blocks.push({ type:"line", text, map, rawLine });
+  }
+
+  return blocks;
+}
+
+/* ------------------------------------------------------------
+   READING STATE
+
+   currentToken (not a boolean) is what lets an intentionally
+   cancelled utterance's "end" event be told apart from a real
+   one: every utterance gets its own token, and its onend/onerror
+   only act if that token is still the current one. That stays
+   correct however cancel() happens to behave (some browsers fire
+   "end" on a cancelled utterance, some don't).
+------------------------------------------------------------ */
+
+const reading = {
+  active:false,
+  paused:false,
+  pageNumber:1,
+  blocks:[],
+  blockIndex:0,
+  generation:0,
+  gapTimer:null,
+  currentToken:0
+};
+
+let utteranceToken = 0;
+
+const READ_RATE_STEPS = [0.5, 0.75, 1, 1.1, 1.25, 1.5, 1.75, 2, 2.5, 3];
+const READ_RATE_LABELS = ["0.5×", "0.75×", "1.0×", "1.1×", "1.25×", "1.5×", "1.75×", "2.0×", "2.5×", "3.0×"];
+let readRateIndex = 2;
+
+function currentReadRate(){
+  return READ_RATE_STEPS[readRateIndex];
+}
+
+function updateRateLabel(){
+
+  readAloudRateLabel.textContent = READ_RATE_LABELS[readRateIndex];
+
+  for(const button of readAloudRateMenu.children){
+    button.classList.toggle("active", Number(button.dataset.index) === readRateIndex);
+  }
+}
+
+// Built once, from the same step/label arrays the +/- buttons
+// use, so the two controls can never drift out of sync with
+// each other.
+function buildRateMenu(){
+
+  readAloudRateMenu.replaceChildren();
+
+  READ_RATE_LABELS.forEach((label, index) => {
+
+    const button = document.createElement("button");
+
+    button.type = "button";
+    button.textContent = label;
+    button.dataset.index = String(index);
+    button.setAttribute("role", "menuitemradio");
+
+    button.addEventListener("click", event => {
+      event.stopPropagation();
+      readRateIndex = index;
+      updateRateLabel();
+      closeRateMenu();
+    });
+
+    readAloudRateMenu.appendChild(button);
+  });
+}
+
+function openRateMenu(){
+  buildRateMenu();
+  readAloudRateMenu.classList.remove("hidden");
+}
+
+function closeRateMenu(){
+  readAloudRateMenu.classList.add("hidden");
+}
+
+function toggleRateMenu(){
+  if(readAloudRateMenu.classList.contains("hidden")){
+    openRateMenu();
+  }else{
+    closeRateMenu();
+  }
+}
+
+async function getPageBlocks(view){
+
+  if(view.readAloudBlocks){
+    return view.readAloudBlocks;
+  }
+
+  try{
+    const textContent = await ensureTextContent(view);
+    view.readAloudBlocks = buildReadableBlocks(textContent);
+  }catch(error){
+    console.warn(`Read Aloud: could not read page ${view.pageNumber}:`, error);
+    view.readAloudBlocks = [];
+  }
+
+  return view.readAloudBlocks;
+}
+
+/* ------------------------------------------------------------
+   LIVE HIGHLIGHTING
+
+   Reuses the same DOM-Range technique the search feature uses
+   (getRelativeRects, defined further down) rather than any of
+   pdf.js's internal span layout - so this stays correct however
+   the text layer happens to be built. A page's full rendered
+   text is only walked once per render (cached on the view as
+   readTextIndex) and reused for every line on that page.
+------------------------------------------------------------ */
+
+function buildPageTextIndex(view){
+
+  const nodes = getTextNodes(view);
+
+  let fullText = "";
+  const positions = [];
+
+  for(const node of nodes){
+
+    const nodeText = node.nodeValue || "";
+    const start = fullText.length;
+
+    fullText += nodeText;
+
+    positions.push({ node, start, end: fullText.length });
+  }
+
+  return { fullText, positions };
+}
+
+function locateOffset(positions, index){
+
+  for(const info of positions){
+    if(index >= info.start && index <= info.end){
+      return { node: info.node, offset: index - info.start };
+    }
+  }
+
+  return null;
+}
+
+function drawHighlightRects(layer, className, rects){
+  for(const rect of rects){
+    const el = document.createElement("div");
+    el.className = className;
+    el.style.left = `${rect.left}px`;
+    el.style.top = `${rect.top}px`;
+    el.style.width = `${rect.width}px`;
+    el.style.height = `${rect.height}px`;
+    layer.appendChild(el);
+  }
+}
+
+const readHighlight = {
+  view:null,
+  lineAbsStart:-1
+};
+
+function clearReadHighlights(){
+
+  for(const view of pageViews){
+    if(view?.readHighlightLayerDiv){
+      view.readHighlightLayerDiv.replaceChildren();
+    }
+  }
+
+  readHighlight.view = null;
+  readHighlight.lineAbsStart = -1;
+}
+
+// Highlights the whole line a block came from, in a soft yellow.
+// Failure anywhere here (a line that can't be located, a stale
+// DOM reference) is swallowed - a missing highlight should never
+// interrupt playback.
+function highlightLine(view, block){
+
+  try{
+
+    clearReadHighlights();
+
+    if(!block?.rawLine || !block.rawLine.trim()){
+      return;
+    }
+
+    if(!view.readTextIndex){
+      view.readTextIndex = buildPageTextIndex(view);
+    }
+
+    const index = view.readTextIndex;
+    const at = index.fullText.indexOf(block.rawLine);
+
+    if(at === -1){
+      return;
+    }
+
+    const startPos = locateOffset(index.positions, at);
+    const endPos = locateOffset(index.positions, at + block.rawLine.length);
+
+    if(!startPos || !endPos){
+      return;
+    }
+
+    const rects = getRelativeRects(view, startPos.node, startPos.offset, endPos.node, endPos.offset);
+
+    readHighlight.view = view;
+    readHighlight.lineAbsStart = at;
+
+    drawHighlightRects(view.readHighlightLayerDiv, "read-line-highlight", rects);
+
+  }catch(error){
+    console.warn("Read Aloud: line highlight failed:", error);
+  }
+}
+
+// Highlights the specific word currently being spoken, using the
+// speech engine's own reported charIndex/charLength into the
+// block's spoken text, traced back through block.map to the raw
+// line and then to the page's DOM.
+function highlightWord(block, charIndex, charLength){
+
+  try{
+
+    if(!readHighlight.view || readHighlight.lineAbsStart < 0){
+      return;
+    }
+
+    if(!block?.map?.length){
+      return;
+    }
+
+    const from = Math.max(0, Math.min(charIndex, block.map.length - 1));
+    const to = Math.max(from, Math.min(charIndex + Math.max(charLength, 1) - 1, block.map.length - 1));
+
+    const rawStart = block.map[from];
+    const rawEnd = block.map[to] + 1;
+
+    const index = readHighlight.view.readTextIndex;
+
+    if(!index){
+      return;
+    }
+
+    const absStart = readHighlight.lineAbsStart + rawStart;
+    const absEnd = readHighlight.lineAbsStart + rawEnd;
+
+    const startPos = locateOffset(index.positions, absStart);
+    const endPos = locateOffset(index.positions, absEnd);
+
+    if(!startPos || !endPos){
+      return;
+    }
+
+    const rects = getRelativeRects(readHighlight.view, startPos.node, startPos.offset, endPos.node, endPos.offset);
+
+    const layer = readHighlight.view.readHighlightLayerDiv;
+
+    for(const el of layer.querySelectorAll(".read-word-highlight")){
+      el.remove();
+    }
+
+    drawHighlightRects(layer, "read-word-highlight", rects);
+
+  }catch(error){
+    console.warn("Read Aloud: word highlight failed:", error);
+  }
+}
+
+/* ------------------------------------------------------------
+   SCREEN-AWAKE ROBUSTNESS
+
+   Two independent safety nets so a long reading session doesn't
+   get cut short:
+
+   - Screen Wake Lock keeps the display from auto-dimming/locking
+     from inactivity while actively reading. This is the one part
+     of "keep playing with the screen off" a web page can actually
+     guarantee - a wake lock does NOT stop the person from
+     manually pressing the power button, and if they do, whether
+     speech keeps going after that is entirely up to the phone's
+     OS/browser (Android Chrome generally keeps speaking; iOS
+     Safari is known to suspend speech synthesis once the screen
+     locks or the tab is backgrounded, with no web API able to
+     override that).
+   - A small periodic pause/resume "nudge" works around a
+     long-standing Chrome bug where speech synthesis silently
+     stops after ~15 seconds unless kicked like this - harmless on
+     browsers that don't have the bug.
+------------------------------------------------------------ */
+
+let wakeLockSentinel = null;
+
+async function acquireWakeLock(){
+
+  if(!("wakeLock" in navigator)){
+    return;
+  }
+
+  try{
+    wakeLockSentinel = await navigator.wakeLock.request("screen");
+    wakeLockSentinel.addEventListener("release", () => {
+      wakeLockSentinel = null;
+    });
+  }catch(error){
+    // Refused (low battery, unsupported context, etc.) - reading
+    // still works, the screen just won't be kept awake for it.
+    console.warn("Read Aloud: wake lock unavailable:", error);
+  }
+}
+
+function releaseWakeLock(){
+  if(wakeLockSentinel){
+    try{
+      wakeLockSentinel.release();
+    }catch{}
+    wakeLockSentinel = null;
+  }
+}
+
+let keepAliveTimer = null;
+
+function startKeepAlive(){
+
+  stopKeepAlive();
+
+  keepAliveTimer = setInterval(() => {
+
+    if(!reading.active || reading.paused){
+      return;
+    }
+
+    try{
+      window.speechSynthesis.pause();
+      window.speechSynthesis.resume();
+    }catch{}
+
+  }, 9000);
+}
+
+function stopKeepAlive(){
+  if(keepAliveTimer){
+    clearInterval(keepAliveTimer);
+    keepAliveTimer = null;
+  }
+}
+
+if(SUPPORTS_SPEECH){
+
+  document.addEventListener("visibilitychange", () => {
+
+    if(document.visibilityState !== "visible"){
+      return;
+    }
+
+    if(!reading.active || reading.paused){
+      return;
+    }
+
+    void acquireWakeLock();
+
+    // Some browsers silently pause an in-flight utterance when a
+    // tab is backgrounded and don't resume it on their own -
+    // this is a harmless no-op if playback wasn't actually stuck.
+    try{
+      window.speechSynthesis.resume();
+    }catch{}
+  });
+}
+
+/* ------------------------------------------------------------
+   UI
+------------------------------------------------------------ */
+
+function updateReadAloudUI(){
+
+  if(!reading.active){
+
+    readAloudControls.classList.add("hidden");
+    closeRateMenu();
+
+    readAloudFloat.classList.remove("active");
+    readAloudFloat.innerHTML = ICON_SPEAKER;
+    readAloudFloat.title = "Read Aloud";
+    readAloudFloat.setAttribute("aria-label", "Read Aloud");
+
+    syncReadBarLift();
+
+    return;
+  }
+
+  readAloudControls.classList.remove("hidden");
+  readAloudFloat.classList.add("active");
+
+  const totalPages = pdfDoc ? pdfDoc.numPages : reading.pageNumber;
+
+  if(reading.paused){
+
+    readAloudFloat.innerHTML = ICON_PLAY;
+    readAloudFloat.title = "Resume Reading";
+    readAloudFloat.setAttribute("aria-label", "Resume reading");
+
+    readAloudPlayPause.innerHTML = ICON_PLAY;
+    readAloudPlayPause.title = "Resume";
+    readAloudPlayPause.setAttribute("aria-label", "Resume reading");
+
+    readAloudStatus.textContent = `Paused – page ${reading.pageNumber} of ${totalPages}`;
+
+  }else{
+
+    readAloudFloat.innerHTML = ICON_PAUSE;
+    readAloudFloat.title = "Pause Reading";
+    readAloudFloat.setAttribute("aria-label", "Pause reading");
+
+    readAloudPlayPause.innerHTML = ICON_PAUSE;
+    readAloudPlayPause.title = "Pause";
+    readAloudPlayPause.setAttribute("aria-label", "Pause reading");
+
+    readAloudStatus.textContent = `Reading page ${reading.pageNumber} of ${totalPages}`;
+  }
+
+  syncReadBarLift();
+}
+
+// Measures the control bar's real, current height and pushes that
+// (plus a small gap) into --read-bar-lift so the three floating
+// buttons rise to clear it, in both the normal viewer and reflow
+// reading mode. Runs after a frame so the bar's just-changed
+// visibility has actually been laid out before it's measured.
+function syncReadBarLift(){
+
+  requestAnimationFrame(() => {
+
+    if(reading.active && !readAloudControls.classList.contains("hidden")){
+
+      const height = readAloudControls.getBoundingClientRect().height || 52;
+
+      document.documentElement.style.setProperty("--read-bar-lift", `${Math.ceil(height) + 14}px`);
+
+    }else{
+      document.documentElement.style.setProperty("--read-bar-lift", "0px");
+    }
+  });
+}
+
+/* ------------------------------------------------------------
+   PLAYBACK CONTROL
+------------------------------------------------------------ */
+
+function stopUtteranceQuietly(){
+
+  reading.currentToken = -1;
+
+  clearTimeout(reading.gapTimer);
+  reading.gapTimer = null;
+
+  try{
+    window.speechSynthesis.cancel();
+  }catch{}
+}
+
+function stopReading(){
+
+  reading.active = false;
+  reading.paused = false;
+  reading.generation++;
+
+  stopUtteranceQuietly();
+  clearReadHighlights();
+  stopKeepAlive();
+  releaseWakeLock();
+
+  updateReadAloudUI();
+}
+
+function pauseReading(){
+
+  if(!reading.active || reading.paused){
+    return;
+  }
+
+  reading.paused = true;
+
+  stopUtteranceQuietly();
+  stopKeepAlive();
+  releaseWakeLock();
+
+  updateReadAloudUI();
+}
+
+function resumeReading(){
+
+  if(!reading.active || !reading.paused){
+    return;
+  }
+
+  reading.paused = false;
+
+  updateReadAloudUI();
+
+  void acquireWakeLock();
+  startKeepAlive();
+
+  speakCurrentBlock();
+}
+
+function speakCurrentBlock(){
+
+  if(!reading.active || reading.paused){
+    return;
+  }
+
+  if(reading.blockIndex >= reading.blocks.length){
+    void advanceToPage(reading.pageNumber + 1);
+    return;
+  }
+
+  const block = reading.blocks[reading.blockIndex];
+  const generation = reading.generation;
+  const isHeading = block.type === "heading";
+
+  const speakNow = () => {
+
+    if(generation !== reading.generation || reading.paused || !reading.active){
+      return;
+    }
+
+    const token = ++utteranceToken;
+    reading.currentToken = token;
+
+    const view = pageViews[reading.pageNumber - 1];
+
+    if(view){
+      highlightLine(view, block);
+    }
+
+    const utterance = new SpeechSynthesisUtterance(block.text);
+
+    utterance.rate = currentReadRate();
+    utterance.lang = "en-US";
+
+    const voice = pickVoice();
+
+    if(voice){
+      utterance.voice = voice;
+    }
+
+    utterance.onboundary = event => {
+
+      if(token !== reading.currentToken){
+        return;
+      }
+
+      // Some engines also report sentence boundaries on the same
+      // event - only act on word-level ones.
+      if(event?.name && event.name !== "word"){
+        return;
+      }
+
+      const length = (typeof event?.charLength === "number" && event.charLength > 0) ? event.charLength : 1;
+
+      highlightWord(block, event?.charIndex || 0, length);
+    };
+
+    const handleFinished = () => {
+
+      // A stale or intentionally-cancelled utterance - a real
+      // page turn, a pause, a stop - has since replaced this one.
+      if(token !== reading.currentToken){
+        return;
+      }
+
+      if(generation !== reading.generation || reading.paused || !reading.active){
+        return;
+      }
+
+      reading.blockIndex++;
+
+      const gap = isHeading ? 420 : 45;
+
+      reading.gapTimer = setTimeout(() => {
+        if(generation === reading.generation && reading.active && !reading.paused){
+          speakCurrentBlock();
+        }
+      }, gap);
+    };
+
+    utterance.onend = handleFinished;
+
+    utterance.onerror = event => {
+      // "canceled"/"interrupted" are expected whenever we cut an
+      // utterance short on purpose (pause, stop, skip) - only log
+      // genuine synthesis failures.
+      if(event && event.error !== "canceled" && event.error !== "interrupted"){
+        console.warn("Read Aloud: speech synthesis error:", event.error);
+      }
+      handleFinished();
+    };
+
+    try{
+      window.speechSynthesis.speak(utterance);
+    }catch(error){
+      console.warn("Read Aloud: speech synthesis failed:", error);
+      stopReading();
+    }
+  };
+
+  // A short beat before headings, so they land as a small pause
+  // in the flow rather than running straight out of the body text.
+  if(isHeading){
+    reading.gapTimer = setTimeout(speakNow, 320);
+  }else{
+    speakNow();
+  }
+}
+
+async function advanceToPage(pageNumber){
+
+  const generation = reading.generation;
+
+  if(!pdfDoc || pageNumber > pdfDoc.numPages){
+    stopReading();
+    return;
+  }
+
+  const view = await ensurePageView(pageNumber);
+
+  if(generation !== reading.generation || !view){
+    return;
+  }
+
+  await scrollToView(view);
+
+  if(generation !== reading.generation){
+    return;
+  }
+
+  const blocks = await getPageBlocks(view);
+
+  if(generation !== reading.generation){
+    return;
+  }
+
+  reading.pageNumber = pageNumber;
+  reading.blocks = blocks;
+  reading.blockIndex = 0;
+
+  updateReadAloudUI();
+
+  if(!blocks.length){
+    // Nothing readable on this page (a cover image, a blank
+    // page) - move straight on rather than sitting there silent.
+    void advanceToPage(pageNumber + 1);
+    return;
+  }
+
+  speakCurrentBlock();
+}
+
+function startReading(fromPage){
+
+  reading.active = true;
+  reading.paused = false;
+  reading.generation++;
+
+  updateReadAloudUI();
+
+  void acquireWakeLock();
+  startKeepAlive();
+
+  void advanceToPage(fromPage);
+}
+
+function skipPage(delta){
+
+  if(!reading.active || !pdfDoc){
+    return;
+  }
+
+  const target = reading.pageNumber + delta;
+
+  if(target < 1 || target > pdfDoc.numPages){
+    return;
+  }
+
+  reading.generation++;
+  reading.paused = false;
+
+  stopUtteranceQuietly();
+  clearReadHighlights();
+
+  void advanceToPage(target);
+}
+
+/* ------------------------------------------------------------
+   START CHOICE
+------------------------------------------------------------ */
+
+function openReadAloudChoice(){
+
+  const current = getNearestVisiblePage();
+
+  if(current <= 1){
+    startReading(1);
+    return;
+  }
+
+  readAloudChoiceCurrentPage.textContent = String(current);
+  readAloudChoiceCurrentPage2.textContent = String(current);
+  readAloudFromCurrent.dataset.page = String(current);
+
+  readAloudChoice.classList.remove("hidden");
+}
+
+function closeReadAloudChoice(){
+  readAloudChoice.classList.add("hidden");
+}
+
+/* ------------------------------------------------------------
+   EVENTS
+------------------------------------------------------------ */
+
+readAloudFloat.addEventListener("click", event => {
+
+  event.stopPropagation();
+
+  if(!SUPPORTS_SPEECH){
+    return;
+  }
+
+  if(!reading.active){
+    openReadAloudChoice();
+    return;
+  }
+
+  if(reading.paused){
+    resumeReading();
+  }else{
+    pauseReading();
+  }
+});
+
+readAloudControls.addEventListener("click", event => event.stopPropagation());
+
+readAloudPlayPause.addEventListener("click", event => {
+  event.stopPropagation();
+  if(reading.paused){
+    resumeReading();
+  }else{
+    pauseReading();
+  }
+});
+
+readAloudStop.addEventListener("click", event => {
+  event.stopPropagation();
+  stopReading();
+});
+
+readAloudPrevPage.addEventListener("click", event => {
+  event.stopPropagation();
+  skipPage(-1);
+});
+
+readAloudNextPage.addEventListener("click", event => {
+  event.stopPropagation();
+  skipPage(1);
+});
+
+readAloudRateDown.addEventListener("click", event => {
+  event.stopPropagation();
+  readRateIndex = Math.max(0, readRateIndex - 1);
+  updateRateLabel();
+  closeRateMenu();
+});
+
+readAloudRateUp.addEventListener("click", event => {
+  event.stopPropagation();
+  readRateIndex = Math.min(READ_RATE_STEPS.length - 1, readRateIndex + 1);
+  updateRateLabel();
+  closeRateMenu();
+});
+
+readAloudRateLabel.addEventListener("click", event => {
+  event.stopPropagation();
+  toggleRateMenu();
+});
+
+readAloudRateLabel.addEventListener("keydown", event => {
+  if(event.key === "Enter" || event.key === " "){
+    event.preventDefault();
+    event.stopPropagation();
+    toggleRateMenu();
+  }
+});
+
+readAloudRateMenu.addEventListener("click", event => event.stopPropagation());
+
+document.addEventListener("click", event => {
+  if(readAloudRateMenu.classList.contains("hidden")){
+    return;
+  }
+  if(event.target.closest("#readAloudRate")){
+    return;
+  }
+  closeRateMenu();
+});
+
+readAloudFromStart.addEventListener("click", event => {
+  event.stopPropagation();
+  closeReadAloudChoice();
+  startReading(1);
+});
+
+readAloudFromCurrent.addEventListener("click", event => {
+  event.stopPropagation();
+  const page = parseInt(readAloudFromCurrent.dataset.page, 10) || getNearestVisiblePage();
+  closeReadAloudChoice();
+  startReading(page);
+});
+
+readAloudChoiceCancel.addEventListener("click", event => {
+  event.stopPropagation();
+  closeReadAloudChoice();
+});
+
+readAloudChoice.addEventListener("click", event => {
+  if(event.target === readAloudChoice){
+    closeReadAloudChoice();
+  }
+});
+
+document.addEventListener("keydown", event => {
+  if(event.key !== "Escape"){
+    return;
+  }
+  if(!readAloudChoice.classList.contains("hidden")){
+    closeReadAloudChoice();
+    return;
+  }
+  if(!readAloudRateMenu.classList.contains("hidden")){
+    closeRateMenu();
+  }
+});
+
+updateRateLabel();
 
 /* ============================================================
    MOVEMENT LOCK (Free / Vertical)
@@ -5262,6 +7169,7 @@ window.addEventListener("resize", () => {
   resizeTimer = setTimeout(async () => {
 
     syncViewerTop();
+    syncReadBarLift();
 
     if(!pageViews.length){
       return;
@@ -5304,11 +7212,13 @@ if("ResizeObserver" in window){
   const chromeObserver = new ResizeObserver(() => {
     syncViewerTop();
     syncBottomGap();
+    syncReadBarLift();
   });
 
   chromeObserver.observe(header);
   chromeObserver.observe(toolbar);
   chromeObserver.observe(titleBar);
+  chromeObserver.observe(readAloudControls);
 }
 
 scheduleChromeSync();
@@ -5432,6 +7342,14 @@ window.addEventListener("beforeunload", () => {
   searchGeneration++;
 
   clearTimeout(searchTimer);
+
+  if(SUPPORTS_SPEECH){
+    try{
+      reading.generation++;
+      clearTimeout(reading.gapTimer);
+      window.speechSynthesis.cancel();
+    }catch{}
+  }
 
   for(const view of pageViews){
 
