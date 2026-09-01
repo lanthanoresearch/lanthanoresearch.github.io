@@ -268,47 +268,146 @@ select:focus-visible{
 
 /* ============================================================
    SPEED CONTROL
+
+   A single toolbar button that opens a popover, styled to match
+   pdf.html's Read Aloud "Speed & voice" settings popover
+   (#readAloudSettingsMenu / .readAloudOption) - same dark panel,
+   same checkmark option-row list, same active/hover states.
 ============================================================ */
 
-.speedControl{
-  display:flex;
+#speedWrap{
+  position:relative;
+
+  flex:0 0 auto;
+}
+
+#speedBtn{
+  display:inline-flex;
 
   align-items:center;
 
   gap:6px;
-
-  height:32px;
-
-  padding:0 10px;
-
-  background:#242424;
-
-  border:1px solid #353535;
-
-  border-radius:7px;
 }
 
-.speedControl label{
-  color:#aaa;
+#speedBtn .speedBtnValue{
+  color:#fff;
 
-  font-size:12px;
-
-  white-space:nowrap;
+  font-weight:bold;
 }
 
-#speed{
+#speedMenu{
+  position:absolute;
 
-  height:26px;
+  left:50%;
+  top:calc(100% + 8px);
 
-  padding:0 6px;
+  transform:translateX(-50%);
 
-  background:#1d1d1d;
+  display:flex;
+  flex-direction:column;
+
+  gap:4px;
+
+  width:150px;
+  max-width:calc(100vw - 24px);
+  max-height:min(60vh, 420px);
+
+  overflow-y:auto;
+
+  padding:8px;
+
+  background:#222;
+
+  border:1px solid #444;
+
+  border-radius:11px;
+
+  box-shadow:
+    0 8px 24px rgba(0,0,0,.5);
+
+  z-index:9600;
+}
+
+#speedMenu.hidden{
+  display:none;
+}
+
+.speedSettingsHeading{
+  padding:6px 8px 2px;
+
+  color:#888;
+
+  font-size:11px;
+  font-weight:bold;
+
+  text-transform:uppercase;
+  letter-spacing:.05em;
+}
+
+.speedOptionList{
+  display:flex;
+  flex-direction:column;
+}
+
+.speedOption{
+  display:flex;
+
+  align-items:center;
+
+  gap:8px;
+
+  width:100%;
+
+  padding:8px 8px;
 
   border:0;
+  border-radius:7px;
 
-  border-radius:4px;
+  background:transparent;
 
-  font-size:12px;
+  color:#ddd;
+
+  font-size:13px;
+
+  text-align:left;
+
+  white-space:nowrap;
+
+  overflow:hidden;
+
+  text-overflow:ellipsis;
+}
+
+.speedOption:hover{
+  background:#333;
+}
+
+.speedOption.active{
+  background:#2f7cff;
+
+  color:#fff;
+}
+
+.speedOption .speedOptionCheck{
+  flex:0 0 auto;
+
+  width:14px;
+
+  opacity:0;
+}
+
+.speedOption.active .speedOptionCheck{
+  opacity:1;
+}
+
+.speedOption .speedOptionLabel{
+  flex:1 1 auto;
+
+  min-width:0;
+
+  overflow:hidden;
+
+  text-overflow:ellipsis;
 }
 
 /* ============================================================
@@ -584,18 +683,6 @@ body.reading-mode #readingModeFloat{
     font-size:12px;
   }
 
-  .speedControl{
-    height:30px;
-  }
-
-  .speedControl label{
-    display:none;
-  }
-
-  #speed{
-    height:25px;
-  }
-
   #readingModeFloat{
 
     right:14px;
@@ -659,63 +746,27 @@ body.reading-mode #readingModeFloat{
 
 <div id="toolbar">
 
-  <div class="speedControl">
+  <div id="speedWrap">
 
-    <label for="speed">
-      Speed
-    </label>
+    <button
+      id="speedBtn"
+      class="toolButton"
+      aria-haspopup="true"
+      aria-expanded="false"
+      title="Playback speed"
+    >
+      Speed: <span class="speedBtnValue" id="speedBtnValue">1×</span>
+    </button>
 
-    <select id="speed">
+    <div id="speedMenu" class="hidden" role="menu">
 
-      <option value="0.1">
-        0.1×
-      </option>
+      <div class="speedSettingsHeading">
+        Speed
+      </div>
 
-      <option value="0.25">
-        0.25×
-      </option>
+      <div id="speedList" class="speedOptionList"></div>
 
-      <option value="0.5">
-        0.5×
-      </option>
-
-      <option value="0.75">
-        0.75×
-      </option>
-
-      <option value="1" selected>
-        1×
-      </option>
-
-      <option value="1.25">
-        1.25×
-      </option>
-
-      <option value="1.5">
-        1.5×
-      </option>
-
-      <option value="1.75">
-        1.75×
-      </option>
-
-      <option value="2">
-        2×
-      </option>
-
-      <option value="2.5">
-        2.5×
-      </option>
-
-      <option value="3">
-        3×
-      </option>
-
-      <option value="4">
-        4×
-      </option>
-
-    </select>
+    </div>
 
   </div>
 
@@ -934,8 +985,20 @@ const shareButton =
 const fullscreenButton =
     document.getElementById("fullscreenBtn");
 
-const speed =
-    document.getElementById("speed");
+const speedWrap =
+    document.getElementById("speedWrap");
+
+const speedBtn =
+    document.getElementById("speedBtn");
+
+const speedBtnValue =
+    document.getElementById("speedBtnValue");
+
+const speedMenu =
+    document.getElementById("speedMenu");
+
+const speedList =
+    document.getElementById("speedList");
 
 const header =
     document.querySelector("header");
@@ -1131,16 +1194,297 @@ video.addEventListener(
 );
 
 
-/* ---------- Playback Speed ---------- */
+/* =========================================================
+   PLAYBACK SPEED
 
-speed.addEventListener(
-    "change",
-    function(){
+   A single toolbar button that opens a popover of speed
+   options, styled and behaved just like pdf.html's Read
+   Aloud "Speed & voice" settings popover: a floating panel
+   with a heading and a list of rows, each with a checkmark
+   that shows the active choice. Selecting a row updates the
+   video immediately and the panel stays open (matching the
+   read-aloud popover), closing only on an outside click,
+   Escape, or the toggle button itself.
+   ========================================================= */
 
-        video.playbackRate =
-            parseFloat(
-                speed.value
+const SPEED_STEPS =
+    [0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3, 4];
+
+const SPEED_LABELS =
+    SPEED_STEPS.map(function(value){
+
+        return value.toString().replace(/(\.\d*?)0+$/, "$1").replace(/\.$/, "") + "×";
+
+    });
+
+let speedIndex =
+    SPEED_STEPS.indexOf(1);
+
+
+function currentSpeed(){
+
+    return SPEED_STEPS[speedIndex];
+
+}
+
+
+function optionRow(
+    {
+        label,
+        active,
+        index,
+        onSelect
+    }
+){
+
+    const button =
+        document.createElement("button");
+
+    button.type =
+        "button";
+
+    button.className =
+        "speedOption" + (active ? " active" : "");
+
+    button.setAttribute(
+        "role",
+        "menuitemradio"
+    );
+
+    button.setAttribute(
+        "aria-checked",
+        active ? "true" : "false"
+    );
+
+    button.dataset.index =
+        String(index);
+
+
+    const check =
+        document.createElement("span");
+
+    check.className =
+        "speedOptionCheck";
+
+    check.textContent =
+        "✓";
+
+
+    const text =
+        document.createElement("span");
+
+    text.className =
+        "speedOptionLabel";
+
+    text.textContent =
+        label;
+
+
+    button.append(
+        check,
+        text
+    );
+
+
+    button.addEventListener(
+        "click",
+        function(event){
+
+            event.stopPropagation();
+
+            onSelect();
+
+            refreshSpeedSelection();
+
+        }
+    );
+
+
+    return button;
+
+}
+
+
+function buildSpeedList(){
+
+    speedList.replaceChildren();
+
+    SPEED_LABELS.forEach(
+        function(label, index){
+
+            speedList.appendChild(
+                optionRow({
+                    label:label,
+                    active:index === speedIndex,
+                    index:index,
+                    onSelect(){
+
+                        speedIndex =
+                            index;
+
+                        video.playbackRate =
+                            currentSpeed();
+
+                    }
+                })
             );
+
+        }
+    );
+
+}
+
+
+function refreshSpeedSelection(){
+
+    for(const button of speedList.children){
+
+        const active =
+            Number(button.dataset.index) === speedIndex;
+
+        button.classList.toggle(
+            "active",
+            active
+        );
+
+        button.setAttribute(
+            "aria-checked",
+            active ? "true" : "false"
+        );
+
+    }
+
+    speedBtnValue.textContent =
+        SPEED_LABELS[speedIndex];
+
+}
+
+
+function openSpeedMenu(){
+
+    speedMenu.classList.remove(
+        "hidden"
+    );
+
+    speedBtn.setAttribute(
+        "aria-expanded",
+        "true"
+    );
+
+}
+
+
+function closeSpeedMenu(){
+
+    speedMenu.classList.add(
+        "hidden"
+    );
+
+    speedBtn.setAttribute(
+        "aria-expanded",
+        "false"
+    );
+
+}
+
+
+function toggleSpeedMenu(){
+
+    if(speedMenu.classList.contains("hidden")){
+
+        openSpeedMenu();
+
+    }else{
+
+        closeSpeedMenu();
+
+    }
+
+}
+
+
+buildSpeedList();
+
+refreshSpeedSelection();
+
+
+speedBtn.addEventListener(
+    "click",
+    function(event){
+
+        event.stopPropagation();
+
+        toggleSpeedMenu();
+
+    }
+);
+
+
+speedBtn.addEventListener(
+    "keydown",
+    function(event){
+
+        if(event.key === "Enter" || event.key === " "){
+
+            event.preventDefault();
+
+            event.stopPropagation();
+
+            toggleSpeedMenu();
+
+        }
+
+    }
+);
+
+
+speedMenu.addEventListener(
+    "click",
+    function(event){
+
+        event.stopPropagation();
+
+    }
+);
+
+
+document.addEventListener(
+    "click",
+    function(event){
+
+        if(speedMenu.classList.contains("hidden")){
+
+            return;
+
+        }
+
+        if(event.target.closest("#speedWrap")){
+
+            return;
+
+        }
+
+        closeSpeedMenu();
+
+    }
+);
+
+
+document.addEventListener(
+    "keydown",
+    function(event){
+
+        if(event.key !== "Escape"){
+
+            return;
+
+        }
+
+        if(!speedMenu.classList.contains("hidden")){
+
+            closeSpeedMenu();
+
+        }
 
     }
 );
