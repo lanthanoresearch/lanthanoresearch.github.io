@@ -412,8 +412,18 @@ select:focus-visible{
 ============================================================ */
 
 #speedWrap{
-  position:relative;
-
+  /*
+     Deliberately NOT position:relative - #speedMenu needs to
+     anchor to the whole toolbar (#toolbar, which is already
+     position:fixed), not to this small wrapper specifically.
+     Centering on just this wrapper broke once Speed ended up
+     positioned toward the right side of the toolbar (after the
+     skip/frame group and the download button): centering a
+     150px-wide menu on a narrow trigger sitting near the right
+     edge pushes it straight off the screen. Anchoring to the full
+     toolbar instead keeps it centered on the *screen*, which
+     always has room for it.
+  */
   flex:0 0 auto;
 }
 
