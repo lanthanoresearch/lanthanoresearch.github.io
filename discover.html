@@ -209,15 +209,16 @@ flex:1;
 }
 
 .quiz-option-tag{
-width:32px;
-height:32px;
+width:36px;
+height:36px;
 border-radius:50%;
-background:#1d1d1d;
-border:1px solid #333;
+background:radial-gradient(circle at 32% 28%, #2e2e2e, #131313);
+border:1.5px solid #4a4a4a;
+box-shadow:0 3px 8px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.06);
 display:flex;
 align-items:center;
 justify-content:center;
-font-size:1em;
+font-size:1.05em;
 flex-shrink:0;
 }
 
@@ -261,8 +262,19 @@ height:100%;
 display:flex;
 align-items:center;
 justify-content:center;
-font-size:52px;
-color:#888;
+}
+
+.result-icon-frame{
+width:78px;
+height:78px;
+border-radius:50%;
+background:radial-gradient(circle at 32% 28%, #333, #151515);
+border:2px solid #4a4a4a;
+box-shadow:0 4px 12px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.07);
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:34px;
 }
 
 .result-body{
@@ -1186,7 +1198,8 @@ img.loading = "lazy";
 let idx = 0;
 function tryNext(){
 if(idx >= sources.length){
-wrapper.innerHTML = `<div class="result-icon">📄</div>`;
+const fallbackEmoji = emojiFor((paper.category && paper.category[0]) || "");
+wrapper.innerHTML = `<div class="result-icon"><div class="result-icon-frame">${fallbackEmoji}</div></div>`;
 return;
 }
 img.src = sources[idx];
