@@ -662,6 +662,12 @@ return pool.filter(p => !isHeavyPaper(p));
 let poolAll = [];               // every paper, as {key, ...fields}
 let currentPool = [];           // papers still matching answers so far
 let primaryCategory = null;
+// Tracks which category's emoji should currently be shown. Starts at
+// the category picked in question 1, stays put through non-category
+// questions (length/recency/breadth), and only moves when a
+// category-crossing question is answered "yes" — since that's the
+// only point where the pool actually represents a different category.
+let currentCategoryContext = null;
 let history = [];               // [{type, value, answer}]
 let usedDims = new Set();
 let questionCount = 0;          // total questions asked so far (incl. category pick)
@@ -750,6 +756,7 @@ return [...set];
 function startQuiz(){
 currentPool = [];
 primaryCategory = null;
+currentCategoryContext = null;
 history = [];
 usedDims = new Set();
 questionCount = 1;
@@ -780,6 +787,7 @@ onClick: () => chooseCategory(cat)
 
 function chooseCategory(cat){
 primaryCategory = cat;
+currentCategoryContext = cat;
 history.push({ type: "category-root", value: cat });
 currentPool = poolAll.filter(p => (p.category || []).includes(cat));
 advance();
@@ -964,17 +972,17 @@ icon = emojiFor(split.value);
 questionText = pickRandom(LENGTH_TEMPLATES);
 yesLabel = pickRandom(LENGTH_YES_LABELS);
 noLabel = pickRandom(LENGTH_NO_LABELS);
-icon = "📄";
+icon = emojiFor(currentCategoryContext);
 }else if(split.type === "recency"){
 questionText = pickRandom(RECENCY_TEMPLATES);
 yesLabel = pickRandom(RECENCY_YES_LABELS);
 noLabel = pickRandom(RECENCY_NO_LABELS);
-icon = "🕒";
+icon = emojiFor(currentCategoryContext);
 }else{
 questionText = pickRandom(BREADTH_TEMPLATES);
 yesLabel = pickRandom(BREADTH_YES_LABELS);
 noLabel = pickRandom(BREADTH_NO_LABELS);
-icon = "🔗";
+icon = emojiFor(currentCategoryContext);
 }
 
 setHeader("compact");
@@ -987,6 +995,13 @@ onClick: () => {
 usedDims.add(split.dimKey);
 history.push({ type: split.type, value: split.value, answer: "yes" });
 currentPool = split.yes;
+// A "yes" to a category-crossing question means the pool now
+// genuinely represents that other category too, so the tracked
+// emoji should follow — everything after this reflects the new
+// context, right up through the final result card.
+if(split.type === "category"){
+currentCategoryContext = split.value;
+}
 advance();
 }
 },
@@ -1198,7 +1213,7 @@ img.loading = "lazy";
 let idx = 0;
 function tryNext(){
 if(idx >= sources.length){
-const fallbackEmoji = emojiFor((paper.category && paper.category[0]) || "");
+const fallbackEmoji = emojiFor(currentCategoryContext || primaryCategory);
 wrapper.innerHTML = `<div class="result-icon"><div class="result-icon-frame">${fallbackEmoji}</div></div>`;
 return;
 }
@@ -1320,6 +1335,7 @@ mediaSources: payload.mediaSources,
 introText: payload.introText,
 progressDotsTypes: progressDots.map(d => d.type),
 primaryCategory,
+currentCategoryContext,
 history
 }));
 }catch(e){
@@ -1387,6 +1403,7 @@ return;
 }
 
 primaryCategory = saved.primaryCategory || null;
+currentCategoryContext = saved.currentCategoryContext || saved.primaryCategory || null;
 history = saved.history || [];
 replayHistoryIntoPool();
 
