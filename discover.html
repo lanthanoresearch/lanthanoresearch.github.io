@@ -197,22 +197,24 @@ color:#6fa8ff;
 color:#ffb0b0;
 }
 
-.quiz-option.has-icon{
+.quiz-option-group{
+display:flex;
+flex-direction:column;
+align-items:center;
+gap:8px;
+}
+
+.quiz-option-tag{
+width:36px;
+height:36px;
+border-radius:50%;
+background:#1d1d1d;
+border:1px solid #333;
 display:flex;
 align-items:center;
-gap:12px;
-text-align:left;
-font-weight:normal;
-}
-
-.quiz-option.has-icon .opt-emoji{
-font-size:1.3em;
+justify-content:center;
+font-size:1.05em;
 flex-shrink:0;
-}
-
-.quiz-option.has-icon .opt-text{
-flex:1;
-line-height:1.35;
 }
 
 .quiz-loading{
@@ -520,51 +522,50 @@ return CATEGORY_EMOJI[cat] || "🔎";
 
 const CATEGORY_HOOKS = {
 biblical: [
-"Scripture, doctrine, and everything argued about in between",
-"What the Bible actually says, once assumptions get set aside",
-"Faith, practice, and the questions that come with both",
-"A closer look at belief and where it comes from"
+"Scripture, doctrine, and how it all fits together",
+"A closer look at what the Bible actually says",
+"Faith and practice — the study of it and the living of it",
+"Prophecy, symbols, and scripture worth a second look"
 ],
 historical: [
-"History, re-examined without the textbook filter",
+"History, and the parts that don't quite add up",
 "Events, timelines, and the record behind them",
-"The past, looked at more closely than the summary version",
-"How things actually unfolded, beyond the headline version"
+"Ancient civilizations, disasters, and the mysteries around both",
+"A closer look at the past, beyond the textbook version"
 ],
 political: [
 "Power, policy, and the stories told about both",
-"Where politics and propaganda blur together",
+"Where politics, power, and disputed narratives meet",
 "Government, conflict, and who benefits from each",
 "A closer look at power and how it's used"
 ],
 scientific: [
-"What the data actually shows, once you look closely",
-"Claims, evidence, and how the two line up",
-"Research worth reading past the headline",
-"The stuff textbooks simplify, in more detail"
+"Everyday claims, tested against the evidence",
+"What the data actually shows, once you look closer",
+"Science, and the bigger questions it runs into",
+"Research worth reading past the headline"
 ],
 astronomy: [
-"What's actually up there, from ancient skies to modern missions",
-"Space missions, old cosmologies, and everything in between",
-"How the sky has been pictured, studied, and explained over time",
-"Photos, missions, and ideas about what's overhead"
+"Space missions, old cosmologies, and the questions raised about both",
+"What's actually up there, from ancient skies to modern rockets",
+"Photos, missions, and the anomalies people point to",
+"How the sky has been pictured, explained, and re-examined"
 ],
 medical: [
-"What your body's being told, in more depth",
-"Health claims and the research behind them",
-"Health advice, examined a little more closely",
-"Substances, safety, and the studies behind the claims"
+"Health claims, common wisdom, and what holds up",
+"The body, medicine, and the studies behind the claims",
+"Substances, safety, and the research on both",
+"A closer look at health advice you've probably heard before"
 ],
 technology: [
-"The systems running quietly in the background of daily life",
-"From what's tracking you to what's flying overhead",
-"Where surveillance and space technology both live",
-"The tech shaping your world, on the ground and off it"
+"The tech shaping your world, from your phone to the launch pad",
+"Surveillance and space — the systems running quietly behind both",
+"From what's tracking you to what's flying overhead"
 ],
 philosophy: [
 "The big questions sitting underneath everything else",
-"What reality actually is, once you ask hard enough",
-"Meaning, existence, and the frameworks we use to explain them"
+"Meaning, existence, and the frameworks we use to explain them",
+"Symbols, cosmology, and the ideas underneath both"
 ]
 };
 
@@ -1046,20 +1047,7 @@ options.forEach(opt => {
 const btn = document.createElement("button");
 btn.type = "button";
 btn.className = "quiz-option" + (opt.extraClass ? " " + opt.extraClass : "");
-
-if(opt.icon){
-btn.classList.add("has-icon");
-const iconSpan = document.createElement("span");
-iconSpan.className = "opt-emoji";
-iconSpan.textContent = opt.icon;
-const textSpan = document.createElement("span");
-textSpan.className = "opt-text";
-textSpan.textContent = opt.label;
-btn.appendChild(iconSpan);
-btn.appendChild(textSpan);
-}else{
 btn.textContent = opt.label;
-}
 
 btn.addEventListener("click", () => {
 if(answered) return;
@@ -1067,7 +1055,19 @@ answered = true;
 optWrap.style.pointerEvents = "none";
 transitionOut(card, () => opt.onClick());
 });
+
+if(opt.icon){
+const group = document.createElement("div");
+group.className = "quiz-option-group";
+const tag = document.createElement("div");
+tag.className = "quiz-option-tag";
+tag.textContent = opt.icon;
+group.appendChild(tag);
+group.appendChild(btn);
+optWrap.appendChild(group);
+}else{
 optWrap.appendChild(btn);
+}
 });
 
 card.appendChild(iconEl);
