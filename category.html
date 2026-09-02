@@ -1423,9 +1423,12 @@ document
 
             localStorage.setItem("paperSort", sortType);
             applySortUI();
-            sortPanel.classList.remove("open");
-            sortDropdown.classList.remove("open");
             withPreservedState(renderPapers);
+
+            // Deliberately left open here - the panel now only
+            // closes when the person scrolls or taps elsewhere
+            // (see the outside-click and scroll listeners above),
+            // not automatically the moment an option is picked.
 
         });
     });
