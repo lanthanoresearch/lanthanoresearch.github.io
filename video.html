@@ -348,13 +348,24 @@ select:focus-visible{
    SKIP / FRAME STEP CONTROLS
 
    Grouped into one connected pill the same way pdf.html groups
-   its zoom out/percentage/zoom in controls (.zoomControls) - a
-   single bordered container with transparent buttons packed
-   together inside it, rather than four separate toolbar buttons
-   with gaps between them. Icons follow the same "single chevron
-   for the small step, doubled chevron for the big step" pairing
-   media players have used forever - one arrow for a frame,
-   two for a 10-second jump.
+   its zoom out/percentage/zoom in controls (.zoomControls) and,
+   more recently, its Read Aloud prev/play/next row
+   (.readAloudNavGroup) - a single bordered container with
+   buttons packed together inside it, rather than separate
+   toolbar buttons with gaps between them. Icons follow the same
+   "single chevron for the small step, doubled chevron for the
+   big step" pairing media players have used forever - one arrow
+   for a frame, two for a 10-second jump.
+
+   Play/Pause sits in the middle of that same pill, matching
+   pdf.html's layout - accented and a touch larger than its four
+   flanking skip buttons so it still reads as the primary
+   control, but part of the same connected group rather than a
+   separate floating button. It mirrors the *video element's own*
+   play/paused state (see the "play"/"pause"/"ended" listeners
+   below), so it stays correct no matter what actually started or
+   stopped playback - this button, the native controls, the
+   spacebar shortcut, or tapping the replay cover.
 ============================================================ */
 
 .skipControls{
@@ -364,7 +375,7 @@ select:focus-visible{
 
   gap:3px;
 
-  height:32px;
+  height:34px;
 
   padding:0 3px;
 
@@ -394,6 +405,25 @@ select:focus-visible{
 
 .skipControls button:hover{
   background:#353535;
+}
+
+.skipControls #videoPlayPauseBtn{
+  width:32px;
+  height:32px;
+
+  background:#2f7cff;
+
+  color:#fff;
+
+  border-radius:6px;
+}
+
+.skipControls #videoPlayPauseBtn:hover{
+  background:#4a8dff;
+}
+
+.skipControls #videoPlayPauseBtn:active{
+  background:#2666db;
 }
 
 #downloadFrameBtn{
@@ -1467,6 +1497,22 @@ body.reading-mode #readingModeFloat{
     padding:5px;
   }
 
+  .skipControls{
+    height:30px;
+  }
+
+  .skipControls button{
+    width:28px;
+
+    height:24px;
+  }
+
+  .skipControls #videoPlayPauseBtn{
+    width:28px;
+
+    height:28px;
+  }
+
   .toolButton{
     height:30px;
 
@@ -1541,6 +1587,7 @@ body.reading-mode #readingModeFloat{
   <div class="skipControls">
     <button id="skipBackBtn" title="Back 10 seconds" aria-label="Back 10 seconds"><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor"><rect x="2" y="6" width="2" height="12" rx="0.5"></rect><path d="M21 6l-7 6 7 6V6z"></path><path d="M12 6l-7 6 7 6V6z"></path></svg></button>
     <button id="frameBackBtn" title="Back 1 frame" aria-label="Back 1 frame"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-7 6 7 6"></path></svg></button>
+    <button id="videoPlayPauseBtn" title="Play" aria-label="Play"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg></button>
     <button id="frameForwardBtn" title="Forward 1 frame" aria-label="Forward 1 frame"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l7 6-7 6"></path></svg></button>
     <button id="skipForwardBtn" title="Forward 10 seconds" aria-label="Forward 10 seconds"><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor"><path d="M3 6l7 6-7 6V6z"></path><path d="M12 6l7 6-7 6V6z"></path><rect x="20" y="6" width="2" height="12" rx="0.5"></rect></svg></button>
   </div>
@@ -1933,6 +1980,9 @@ const skipBackButton =
 const frameBackButton =
     document.getElementById("frameBackBtn");
 
+const playPauseButton =
+    document.getElementById("videoPlayPauseBtn");
+
 const frameForwardButton =
     document.getElementById("frameForwardBtn");
 
@@ -2269,6 +2319,110 @@ replayButton.addEventListener(
 
     }
 );
+
+
+/* ---------- Play/Pause button ----------
+
+   Reflects the *video element's own* paused state rather than
+   tracking "did the user click this button" - so it stays
+   perfectly in sync no matter what actually started or stopped
+   playback: this button, the native browser controls, the
+   spacebar shortcut, or the replay cover. Same icon swap
+   pdf.html's Read Aloud play/pause button uses.
+*/
+
+const ICON_PLAY =
+    '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">' +
+    '<path d="M8 5v14l11-7z"/>' +
+    '</svg>';
+
+const ICON_PAUSE =
+    '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">' +
+    '<rect x="6" y="5" width="4" height="14" rx="1"/>' +
+    '<rect x="14" y="5" width="4" height="14" rx="1"/>' +
+    '</svg>';
+
+function updatePlayPauseButton(){
+
+    if(video.paused){
+
+        playPauseButton.innerHTML =
+            ICON_PLAY;
+
+        playPauseButton.title =
+            "Play";
+
+        playPauseButton.setAttribute(
+            "aria-label",
+            "Play"
+        );
+
+    }else{
+
+        playPauseButton.innerHTML =
+            ICON_PAUSE;
+
+        playPauseButton.title =
+            "Pause";
+
+        playPauseButton.setAttribute(
+            "aria-label",
+            "Pause"
+        );
+
+    }
+
+}
+
+["play", "pause", "ended"].forEach(
+    function(eventName){
+
+        video.addEventListener(
+            eventName,
+            updatePlayPauseButton
+        );
+
+    }
+);
+
+playPauseButton.addEventListener(
+    "click",
+    function(){
+
+        /*
+            Once the video has actually ended, currentTime sits at
+            duration - calling play() there is a no-op in most
+            browsers, so this button should restart it exactly the
+            way the replay cover's own button does, rather than
+            silently doing nothing.
+        */
+        if(video.ended){
+
+            hideCoverOverlay();
+
+            video.currentTime =
+                0;
+
+            video.play();
+
+            return;
+
+        }
+
+        if(video.paused){
+
+            video.play();
+
+        }else{
+
+            video.pause();
+
+        }
+
+    }
+);
+
+updatePlayPauseButton();
 
 
 /* =========================================================
