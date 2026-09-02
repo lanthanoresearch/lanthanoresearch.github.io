@@ -84,31 +84,32 @@ h1{
 }
 
 .category-btn{
+  box-sizing:border-box;
+
   display:flex;
   align-items:center;
   justify-content:space-between;
   gap:10px;
-  width:190px;
-  background:#222;
+  width:150px;
+  background:#2e2e2e;
   color:#eee;
-  border:1px solid #333;
+  border:0;
   border-radius:8px;
-  padding:10px 14px;
-  font-size:.95em;
+  padding:10px 16px;
+  font-size:13.5px;
   font-family:inherit;
   cursor:pointer;
   min-height:40px;
   text-align:left;
-  box-sizing:border-box;
 }
 
 .category-btn:hover{
-  background:#262626;
+  background:#383838;
 }
 
-.category-btn:focus{
-  outline:none;
-  border-color:#555;
+.category-btn:focus-visible{
+  outline:1px solid #555;
+  outline-offset:1px;
 }
 
 .category-btn-label{
@@ -134,6 +135,8 @@ h1{
 }
 
 .category-panel{
+  box-sizing:border-box;
+
   display:none;
   position:absolute;
   top:calc(100% + 10px);
@@ -142,27 +145,39 @@ h1{
   border:1px solid #2c2c2c;
   border-radius:10px;
   padding:10px;
-  width:190px;
+  width:180px;
   max-height:320px;
   overflow-y:auto;
-  box-sizing:border-box;
   box-shadow:0 6px 18px rgba(0,0,0,.5);
   z-index:1600;
   text-align:left;
 }
 
 .category-panel.open{
-  display:block;
+  display:flex;
+  flex-direction:column;
 }
 
+/* Checkmarked option row - matches video.html's .videoOption
+   exactly (used for its Speed picker), so this dropdown's option
+   list looks and behaves the same way. */
 .category-option{
   display:flex;
   align-items:center;
+  justify-content:space-between;
   gap:8px;
+  width:100%;
   padding:8px 8px;
+  border:0;
   border-radius:6px;
-  font-size:.92em;
+  background:transparent;
   color:#ddd;
+  font-size:13px;
+  font-family:inherit;
+  text-align:left;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
   cursor:pointer;
 }
 
@@ -170,15 +185,28 @@ h1{
   background:#262626;
 }
 
-.category-option input{
-  cursor:pointer;
-  flex-shrink:0;
+.category-option.active{
+  background:#262626;
+  color:#fff;
 }
 
-.category-option span{
+.category-option-label{
+  flex:1 1 auto;
+  min-width:0;
   overflow:hidden;
   text-overflow:ellipsis;
-  white-space:nowrap;
+}
+
+.category-option-check{
+  flex:0 0 auto;
+  min-width:14px;
+  text-align:center;
+  color:#999;
+  visibility:hidden;
+}
+
+.category-option.active .category-option-check{
+  visibility:visible;
 }
 
 @media (max-width:600px){
@@ -934,11 +962,11 @@ h1{
   .category-btn{
     padding:10px 14px;
     min-height:40px;
-    width:170px;
+    width:130px;
   }
 
   .category-panel{
-    width:170px;
+    width:160px;
   }
 
   .timeline{
@@ -2497,10 +2525,16 @@ function buildControls(){
       .map(
         opt =>
           `
-          <label class="category-option">
-            <input type="radio" name="categoryOption" value="${escapeHtml(opt.value)}">
-            <span>${escapeHtml(opt.label)}</span>
-          </label>
+          <button
+            type="button"
+            class="category-option"
+            data-value="${escapeHtml(opt.value)}"
+            role="menuitemradio"
+            aria-checked="false"
+          >
+            <span class="category-option-label">${escapeHtml(opt.label)}</span>
+            <span class="category-option-check" aria-hidden="true">✓</span>
+          </button>
           `
       )
       .join("");
@@ -2536,11 +2570,23 @@ function buildControls(){
 
     categoryPanel
       .querySelectorAll(
-        'input[name="categoryOption"]'
+        ".category-option"
       )
-      .forEach(input => {
-        input.checked =
-          input.value === activeFilter;
+      .forEach(btn => {
+
+        const isActive =
+          btn.dataset.value === activeFilter;
+
+        btn.classList.toggle(
+          "active",
+          isActive
+        );
+
+        btn.setAttribute(
+          "aria-checked",
+          isActive ? "true" : "false"
+        );
+
       });
   }
 
@@ -2548,20 +2594,16 @@ function buildControls(){
 
   categoryPanel
     .querySelectorAll(
-      'input[name="categoryOption"]'
+      ".category-option"
     )
-    .forEach(input => {
+    .forEach(btn => {
 
-      input.addEventListener(
-        "change",
+      btn.addEventListener(
+        "click",
         () => {
 
-          if(!input.checked){
-            return;
-          }
-
           activeFilter =
-            input.value;
+            btn.dataset.value;
 
           localStorage.setItem(
             "timelineFilter",
