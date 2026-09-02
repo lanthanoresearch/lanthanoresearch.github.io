@@ -28,6 +28,8 @@
   --viewer-top:106px;
   --titlebar-h:56px;
   --float-gap:18px;
+  --video-bar-lift:0px;
+  --content-bottom:0px;
 }
 
 *{
@@ -113,7 +115,7 @@ header{
 
   left:0;
   right:0;
-  bottom:0;
+  bottom:var(--content-bottom);
 
   height:auto;
 }
@@ -497,6 +499,23 @@ select:focus-visible{
   background:#2666db;
 }
 
+/* A thin vertical rule between the transport controls
+   (.videoNavGroup) and the Settings gear - group boundary made
+   visible rather than left to the gap alone to carry it, matching
+   pdf.html's #readAloudControlsDivider between its own nav group
+   and its settings-and-exit controls. */
+#videoControlsDivider{
+  align-self:stretch;
+
+  width:1px;
+
+  margin:2px 2px;
+
+  background:#3a3a3a;
+
+  flex:0 0 auto;
+}
+
 /* ============================================================
    PLAYBACK SETTINGS (SPEED)
 
@@ -528,8 +547,12 @@ select:focus-visible{
   display:flex;
   flex-direction:column;
 
+  /* Matches #readAloudSettingsMenu's width exactly (which in turn
+     matches #bookmarkPopup's own width) - one shared "how wide a
+     settings panel is" convention, rather than a narrower panel
+     just because this one only holds a single row. */
   width:calc(100vw - 24px);
-  max-width:260px;
+  max-width:420px;
   max-height:min(60vh, 420px);
 
   padding:8px;
@@ -1449,7 +1472,14 @@ select:focus-visible{
 
   right:var(--float-gap);
 
-  bottom:calc(var(--titlebar-h) + var(--float-gap));
+  /*
+     Scooted up above the floating #videoControls bar by
+     --video-bar-lift (the bar's own measured height plus a gap -
+     see syncVideoBarLift()), the same "lift the floating buttons
+     clear of the control bar" idea pdf.html uses for its own
+     reading-mode/TOC/read-aloud float stack.
+  */
+  bottom:calc(var(--titlebar-h) + var(--float-gap) + var(--video-bar-lift));
 
   width:48px;
   height:48px;
@@ -1483,7 +1513,8 @@ select:focus-visible{
 
   transition:
     transform .15s ease,
-    background .15s ease;
+    background .15s ease,
+    bottom .15s ease;
 }
 
 #readingModeFloat:hover{
@@ -1658,10 +1689,20 @@ body.reading-mode #readingModeFloat{
 
   right:16px;
 
-  bottom:16px;
+  bottom:calc(16px + var(--video-bar-lift));
 
   background:
     rgba(40,40,40,.88);
+}
+
+/* Matches pdf.html's body.reading-mode #readAloudControls exactly:
+   an explicit bottom offset rather than leaning on --titlebar-h,
+   which collapses to 0 the moment #titleBar itself goes
+   display:none above. */
+body.reading-mode #videoControls{
+
+  bottom:16px;
+
 }
 
 /* ============================================================
@@ -1728,7 +1769,7 @@ body.reading-mode #readingModeFloat{
 
     right:14px;
 
-    bottom:calc(var(--titlebar-h) + 14px);
+    bottom:calc(var(--titlebar-h) + 14px + var(--video-bar-lift));
 
     width:46px;
     height:46px;
@@ -1740,7 +1781,7 @@ body.reading-mode #readingModeFloat{
 
     right:12px;
 
-    bottom:12px;
+    bottom:calc(12px + var(--video-bar-lift));
   }
 
   #title{
@@ -1813,6 +1854,8 @@ body.reading-mode #readingModeFloat{
     <button id="frameForwardBtn" class="videoCtrlBtn" title="Forward 1 frame" aria-label="Forward 1 frame"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l7 6-7 6"></path></svg></button>
     <button id="skipForwardBtn" class="videoCtrlBtn" title="Forward 10 seconds" aria-label="Forward 10 seconds"><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor"><path d="M3 6l7 6-7 6V6z"></path><path d="M12 6l7 6-7 6V6z"></path><rect x="20" y="6" width="2" height="12" rx="0.5"></rect></svg></button>
   </div>
+
+  <div id="videoControlsDivider" aria-hidden="true"></div>
 
   <div id="videoSettingsWrap">
 
@@ -2306,6 +2349,77 @@ function syncTitleBarHeight(){
     document.documentElement.style.setProperty(
         "--titlebar-h",
         `${Math.ceil(height)}px`
+    );
+
+}
+
+
+/*
+   Measures the floating #videoControls bar's own real, current
+   height and pushes that (plus a small gap) into --video-bar-lift,
+   so #readingModeFloat rises to clear it - the same "lift the
+   floating button clear of the control bar" idea pdf.html uses via
+   its own --read-bar-lift, just always active here since
+   #videoControls (unlike pdf.html's #readAloudControls) is never
+   hidden. Runs after a frame so a just-changed bar (e.g. wrapping
+   to two lines on a narrow screen) has actually been laid out
+   before it's measured.
+*/
+function syncVideoBarLift(){
+
+    requestAnimationFrame(
+        function(){
+
+            const barHeight =
+                videoControls.getBoundingClientRect()
+                    .height || 52;
+
+            document.documentElement.style.setProperty(
+                "--video-bar-lift",
+                `${Math.ceil(barHeight) + 14}px`
+            );
+
+            syncContentBottom();
+
+        }
+    );
+
+}
+
+
+/*
+   Offsets #layout's own bottom edge to sit just above the floating
+   #videoControls bar (plus a small gap), so the video recenters in
+   the space between the toolbar and the bar instead of being
+   partly covered by it. Skipped in reading mode, where #layout's
+   top+height are pinned directly to fill the whole screen (see the
+   body.reading-mode #layout rule) - a bottom offset would be
+   ignored there anyway, since a box with top, height, AND bottom
+   all specified simply drops bottom from the calculation.
+*/
+function syncContentBottom(){
+
+    if(
+        document.body.classList.contains(
+            "reading-mode"
+        )
+    ){
+
+        return;
+
+    }
+
+    const barRect =
+        videoControls.getBoundingClientRect();
+
+    const spaceFromBottom =
+        window.innerHeight -
+        barRect.top +
+        16;
+
+    document.documentElement.style.setProperty(
+        "--content-bottom",
+        `${Math.ceil(spaceFromBottom)}px`
     );
 
 }
@@ -4402,6 +4516,8 @@ function setReadingMode(
 
         syncViewerTop();
 
+        syncContentBottom();
+
     }
 
 }
@@ -4437,6 +4553,8 @@ if(
 
                 syncTitleBarHeight();
 
+                syncVideoBarLift();
+
             }
         );
 
@@ -4452,12 +4570,22 @@ if(
         titleBar
     );
 
+    chromeObserver.observe(
+        videoControls
+    );
+
 }
 
 
 window.addEventListener(
     "resize",
     syncViewerTop
+);
+
+
+window.addEventListener(
+    "resize",
+    syncVideoBarLift
 );
 
 
@@ -4480,6 +4608,8 @@ window.addEventListener(
 syncViewerTop();
 
 syncTitleBarHeight();
+
+syncVideoBarLift();
 
 
 /* ---------- Initialize ---------- */
