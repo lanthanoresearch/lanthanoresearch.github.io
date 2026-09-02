@@ -96,8 +96,6 @@ box-shadow:0 0 0 4px rgba(255,255,255,.12);
 }
 
 .progress-dot.endpoint{
-width:6px;
-height:6px;
 background:#555;
 }
 
@@ -522,39 +520,39 @@ return CATEGORY_EMOJI[cat] || "🔎";
 
 const CATEGORY_HOOKS = {
 biblical: [
-"Scripture, examined closely: doctrine, prophecy, and everything argued about in between",
+"Scripture, doctrine, and everything argued about in between",
 "What the Bible actually says, once assumptions get set aside",
-"The debates believers still haven't settled",
-"Faith questions worth digging into properly"
+"Faith, practice, and the questions that come with both",
+"A closer look at belief and where it comes from"
 ],
 historical: [
 "History, re-examined without the textbook filter",
-"Where the official record gets shaky",
-"Timelines, disasters, and events worth a second look",
-"The past, and the questions still hanging over it"
+"Events, timelines, and the record behind them",
+"The past, looked at more closely than the summary version",
+"How things actually unfolded, beyond the headline version"
 ],
 political: [
-"What power doesn't want closely examined",
+"Power, policy, and the stories told about both",
 "Where politics and propaganda blur together",
-"Power, conflict, and the stories told about both",
-"Control, secrecy, and who benefits"
+"Government, conflict, and who benefits from each",
+"A closer look at power and how it's used"
 ],
 scientific: [
-"Scientific \"facts\" that are really just assumptions",
 "What the data actually shows, once you look closely",
-"Long-held claims, tested against the evidence",
-"The stuff textbooks present as settled, but isn't"
+"Claims, evidence, and how the two line up",
+"Research worth reading past the headline",
+"The stuff textbooks simplify, in more detail"
 ],
 astronomy: [
 "What's actually up there, from ancient skies to modern missions",
-"Space missions, old cosmologies, and the doubts raised about each",
-"How the sky has been pictured, described, and questioned over time",
-"Photos, missions, and older ideas about what's overhead"
+"Space missions, old cosmologies, and everything in between",
+"How the sky has been pictured, studied, and explained over time",
+"Photos, missions, and ideas about what's overhead"
 ],
 medical: [
-"What your body's being told, and what's left out",
-"Health claims that deserve a second look",
-"Health advice's track record, warts and all",
+"What your body's being told, in more depth",
+"Health claims and the research behind them",
+"Health advice, examined a little more closely",
 "Substances, safety, and the studies behind the claims"
 ],
 technology: [
@@ -564,7 +562,7 @@ technology: [
 "The tech shaping your world, on the ground and off it"
 ],
 philosophy: [
-"The big question sitting underneath everything else",
+"The big questions sitting underneath everything else",
 "What reality actually is, once you ask hard enough",
 "Meaning, existence, and the frameworks we use to explain them"
 ]
@@ -650,7 +648,7 @@ let primaryCategory = null;
 let history = [];               // [{type, value, answer}]
 let usedDims = new Set();
 let questionCount = 0;          // total questions asked so far (incl. category pick)
-const MAX_QUESTIONS = 3;
+let MAX_QUESTIONS = 3;          // varies per session so the quiz doesn't always run the same length
 
 const stage = document.getElementById("quizStage");
 const progressTrack = document.getElementById("progressTrack");
@@ -719,7 +717,11 @@ const CATEGORY_INTROS = [
 "Pick the one you can't stop thinking about.",
 "Which thread do you want to pull on first?",
 "What's worth a closer look today?",
-"Where should we start digging?"
+"Where should we start digging?",
+"Which one's been on your mind lately?",
+"What are you in the mood to think about?",
+"Pick a starting point.",
+"Which of these would you actually click on?"
 ];
 
 function getAllCategories(){
@@ -734,15 +736,17 @@ primaryCategory = null;
 history = [];
 usedDims = new Set();
 questionCount = 1;
+MAX_QUESTIONS = pickRandom([3, 4, 4, 5, 5, 6]); // total questions per session, category included
 
 setHeader("full", pickRandom(INTRO_SUBS));
 
 // Draw from every category in the archive, not just the biggest ones,
-// so repeat visits surface different subjects over time. Still only
-// show a handful at once so it doesn't overwhelm.
+// so repeat visits surface different subjects over time. The number
+// of options offered also varies each time, so the opening question
+// doesn't always look the same.
 const all = getAllCategories();
-const showFour = all.length >= 4 && Math.random() < 0.3;
-const chosen = shuffle(all).slice(0, showFour ? 4 : Math.min(3, all.length));
+const optionCount = Math.max(2, Math.min(all.length, 2 + Math.floor(Math.random() * 4))); // 2 to 5
+const chosen = shuffle(all).slice(0, optionCount);
 
 resetProgress();
 addProgressStep("question");
@@ -787,7 +791,9 @@ const LENGTH_TEMPLATES = [
 "Do you want a shorter read to start with?",
 "Should we keep this brief?",
 "Would a quick one suit you better right now?",
-"Short and to the point, or willing to go longer?"
+"Short and to the point, or willing to go longer?",
+"How much time do you actually have for this?",
+"Quick read or a real sit-down?"
 ];
 
 const LENGTH_YES_LABELS = ["Something quick", "Keep it short", "Yes, brief is good", "Short and sweet", "Quick one, please"];
@@ -799,11 +805,25 @@ const RECENCY_TEMPLATES = [
 "Should this lean toward the newer material?",
 "Interested in what's been added lately?",
 "Do you want something from the more recent additions?",
-"Does it matter if this has been in the archive a while?"
+"Does it matter if this has been in the archive a while?",
+"New to the archive, or doesn't matter either way?"
 ];
 
 const RECENCY_YES_LABELS = ["Something recent", "Yes, newest first", "Fresh research", "The newer stuff"];
 const RECENCY_NO_LABELS = ["Doesn't matter", "No preference", "Classic is fine", "Age doesn't matter"];
+
+const BREADTH_TEMPLATES = [
+"Do you want something that connects a few different areas, or stays in one lane?",
+"Would you rather this crossed into other topics too, or stayed narrowly focused?",
+"Should this pull in more than one angle, or keep it to just the one?",
+"Are you looking for something that branches out, or something more contained?",
+"Do you want the wider picture, or a tighter focus?",
+"Should this wander into other territory, or stay in its own lane?",
+"Interested in how this connects to other things, or just the thing itself?"
+];
+
+const BREADTH_YES_LABELS = ["Connect the dots", "Cross-topic is good", "Branch out", "Multiple angles", "Give me the wider picture", "Let it wander"];
+const BREADTH_NO_LABELS = ["Keep it focused", "Just the one topic", "Stay narrow", "Single lane is fine", "Tighter is better", "Just the thing itself"];
 
 function bestSecondarySplit(pool){
 const catCounts = {};
@@ -866,12 +886,33 @@ const balance = Math.abs(0.5 - yes.length / pool.length);
 return { dimKey, type: "recency", value: cutoff, yes, no, balance };
 }
 
+function breadthSplit(pool){
+const dimKey = "breadth";
+if(usedDims.has(dimKey)) return null;
+const yes = pool.filter(p => (p.category || []).length > 1);
+const no = pool.filter(p => (p.category || []).length <= 1);
+if(yes.length === 0 || no.length === 0) return null;
+const balance = Math.abs(0.5 - yes.length / pool.length);
+return { dimKey, type: "breadth", value: null, yes, no, balance };
+}
+
+/* Picking which question to ask next: rather than always taking the
+   single most-balanced split, every valid split gets a chance,
+   weighted toward the better-balanced ones. This keeps the "shape" of
+   the quiz from settling into the same predictable sequence every
+   time the pool composition is similar. */
 function pickSplit(pool){
-const candidates = [bestSecondarySplit(pool), lengthSplit(pool), recencySplit(pool)].filter(Boolean);
+const candidates = [bestSecondarySplit(pool), lengthSplit(pool), recencySplit(pool), breadthSplit(pool)].filter(Boolean);
 if(!candidates.length) return null;
-candidates.sort((a, b) => a.balance - b.balance);
-const top = candidates.slice(0, Math.min(3, candidates.length));
-return pickRandom(top);
+
+const weights = candidates.map(c => 1 / (c.balance + 0.15));
+const total = weights.reduce((a, b) => a + b, 0);
+let roll = Math.random() * total;
+for(let i = 0; i < candidates.length; i++){
+roll -= weights[i];
+if(roll <= 0) return candidates[i];
+}
+return candidates[candidates.length - 1];
 }
 
 function advance(){
@@ -888,14 +929,6 @@ return showResult();
 const split = pickSplit(currentPool);
 
 if(!split){
-return showResult();
-}
-
-const askedNarrowing = questionCount - 1;
-if(currentPool.length <= 3 && askedNarrowing >= 2){
-return showResult();
-}
-if(askedNarrowing >= 2 && Math.random() < 0.55){
 return showResult();
 }
 
@@ -916,11 +949,16 @@ questionText = pickRandom(LENGTH_TEMPLATES);
 yesLabel = pickRandom(LENGTH_YES_LABELS);
 noLabel = pickRandom(LENGTH_NO_LABELS);
 icon = "📄";
-}else{
+}else if(split.type === "recency"){
 questionText = pickRandom(RECENCY_TEMPLATES);
 yesLabel = pickRandom(RECENCY_YES_LABELS);
 noLabel = pickRandom(RECENCY_NO_LABELS);
 icon = "🕒";
+}else{
+questionText = pickRandom(BREADTH_TEMPLATES);
+yesLabel = pickRandom(BREADTH_YES_LABELS);
+noLabel = pickRandom(BREADTH_NO_LABELS);
+icon = "🔗";
 }
 
 setHeader("compact");
@@ -1002,6 +1040,8 @@ qEl.textContent = question;
 const optWrap = document.createElement("div");
 optWrap.className = "quiz-options";
 
+let answered = false;
+
 options.forEach(opt => {
 const btn = document.createElement("button");
 btn.type = "button";
@@ -1022,6 +1062,9 @@ btn.textContent = opt.label;
 }
 
 btn.addEventListener("click", () => {
+if(answered) return;
+answered = true;
+optWrap.style.pointerEvents = "none";
 transitionOut(card, () => opt.onClick());
 });
 optWrap.appendChild(btn);
@@ -1050,14 +1093,18 @@ const RESULT_INTROS = [
 "We found something you might be interested in.",
 "Here's something from the archive that fits.",
 "This one matches where your answers pointed.",
-"Found it. Take a look."
+"Found it. Take a look.",
+"This is where your answers led.",
+"Here's what fit best."
 ];
 
 const WHY_INTROS = [
 "You pointed toward {cat} research",
 "Your answers led toward {cat}",
 "This matches the {cat} thread you were pulling on",
-"Rooted in the {cat} category"
+"Rooted in the {cat} category",
+"This grew out of the {cat} angle you picked",
+"Traced back to where you started: {cat}"
 ];
 
 function formatDate(dateStr){
@@ -1092,6 +1139,13 @@ if(h.answer === "yes"){
 clauses.push(dateLabel ? `one of the newer additions to the archive (added ${dateLabel})` : "one of the newer additions to the archive");
 }else{
 clauses.push(dateLabel ? `a longer-standing piece in the archive (added ${dateLabel})` : "an established piece in the archive");
+}
+}else if(h.type === "breadth"){
+const catCount = (paper.category || []).length;
+if(h.answer === "yes"){
+clauses.push(catCount > 1 ? `spans a few different angles (${(paper.category || []).map(titleCase).join(", ")})` : "connects a few different angles");
+}else{
+clauses.push("stays focused on one lane rather than spreading out");
 }
 }
 });
@@ -1192,18 +1246,29 @@ inner.appendChild(body);
 
 const actions = document.createElement("div");
 actions.className = "result-actions";
+let actionTaken = false;
 
 const againBtn = document.createElement("button");
 againBtn.type = "button";
 againBtn.className = "result-secondary";
 againBtn.textContent = "Try a different topic";
-againBtn.addEventListener("click", () => transitionOut(wrap, startQuiz));
+againBtn.addEventListener("click", () => {
+if(actionTaken) return;
+actionTaken = true;
+actions.style.pointerEvents = "none";
+transitionOut(wrap, startQuiz);
+});
 
 const rerollBtn = document.createElement("button");
 rerollBtn.type = "button";
 rerollBtn.className = "result-secondary";
 rerollBtn.textContent = "Show me another";
-rerollBtn.addEventListener("click", () => transitionOut(wrap, showResult));
+rerollBtn.addEventListener("click", () => {
+if(actionTaken) return;
+actionTaken = true;
+actions.style.pointerEvents = "none";
+transitionOut(wrap, showResult);
+});
 
 actions.appendChild(rerollBtn);
 actions.appendChild(againBtn);
@@ -1277,6 +1342,12 @@ currentPool = currentPool.filter(p =>
 h.answer === "yes"
 ? (p.updated && new Date(p.updated) >= cutoff)
 : (!p.updated || new Date(p.updated) < cutoff)
+);
+}else if(h.type === "breadth"){
+currentPool = currentPool.filter(p =>
+h.answer === "yes"
+? (p.category || []).length > 1
+: (p.category || []).length <= 1
 );
 }
 });
