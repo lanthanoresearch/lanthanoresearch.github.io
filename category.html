@@ -229,15 +229,24 @@ h1{
     text-align:center;
 }
 
+/* ============================================================
+   SETTINGS BUTTON + PANEL
+
+   Matches video.html's floating Settings gear/popover treatment
+   exactly - same gear icon, same panel background/border/radius/
+   shadow, same picker-row and toggle-switch styling - just
+   anchored under this page's own gear button instead of a
+   floating bottom bar.
+============================================================ */
+
 .settings-btn{
-    background:#222;
+    background:#292929;
     color:#eee;
-    border:none;
-    border-radius:50%;
-    width:44px;
-    height:44px;
+    border:1px solid #383838;
+    border-radius:8px;
+    width:36px;
+    height:36px;
     padding:0;
-    font-size:1.15em;
     cursor:pointer;
     line-height:1;
     display:flex;
@@ -246,62 +255,309 @@ h1{
 }
 
 .settings-btn:hover{
-    background:#262626;
+    background:#353535;
 }
 
 .settings-panel{
+    box-sizing:border-box;
+
     display:none;
     position:absolute;
     top:calc(100% + 10px);
     right:0;
-    background:#1d1d1d;
-    border:1px solid #2c2c2c;
-    border-radius:10px;
-    padding:18px;
+
+    flex-direction:column;
+
     width:230px;
-    box-shadow:0 6px 18px rgba(0,0,0,.5);
+    max-width:calc(100vw - 24px);
+
+    padding:8px;
+
+    background:#222;
+
+    border:1px solid #333;
+
+    border-radius:10px;
+
+    box-shadow:0 8px 24px rgba(0,0,0,.5);
+
     z-index:1600;
+
     text-align:left;
 }
 
 .settings-panel.open{
-    display:block;
+    display:flex;
 }
 
-.settings-panel h3{
-    margin:0 0 12px 0;
-    font-size:.95em;
-    color:#ccc;
-    text-transform:uppercase;
-    letter-spacing:.5px;
-}
-
-.settings-group{
-    margin-bottom:16px;
-}
-
-.settings-group:last-child{
-    margin-bottom:0;
-}
-
-.settings-option{
+.settingsMenuHeader{
     display:flex;
     align-items:center;
+    justify-content:space-between;
+    gap:10px;
+
+    margin:0 0 8px;
+    padding-bottom:8px;
+
+    border-bottom:1px solid #333;
+}
+
+.settingsMenuHeader h3{
+    margin:0;
+    font-size:14px;
+    font-weight:600;
+    color:#eee;
+}
+
+.settingsScroll{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+}
+
+/* Picker row: label on the left, current value + chevron on the
+   right - tapping it opens the option popup below. Matches
+   video.html's .videoPickerRow exactly. */
+.videoPickerRow{
+    box-sizing:border-box;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    gap:10px;
+
+    width:100%;
+
+    padding:10px 16px;
+
+    border:0;
+    border-radius:8px;
+
+    background:#2e2e2e;
+
+    color:#eee;
+
+    font-size:13.5px;
+
+    font-family:inherit;
+
+    cursor:pointer;
+}
+
+.videoPickerRow:hover{
+    background:#383838;
+}
+
+.videoPickerValue{
+    display:flex;
+
+    align-items:center;
+
+    justify-content:flex-end;
+
     gap:8px;
-    padding:6px 0;
-    font-size:.92em;
+
+    flex:1 1 auto;
+    min-width:0;
+
+    color:#eee;
+
+    font-size:13.5px;
+}
+
+.videoPickerValue span{
+    overflow:hidden;
+
+    text-overflow:ellipsis;
+
+    white-space:nowrap;
+
+    min-width:0;
+}
+
+.videoPickerCaret{
+    flex-shrink:0;
+
+    width:0;
+    height:0;
+
+    border-left:6px solid transparent;
+    border-right:6px solid transparent;
+    border-top:7px solid #999;
+
+    transition:transform .15s ease;
+}
+
+.videoPickerRow.open .videoPickerCaret{
+    transform:rotate(180deg);
+}
+
+/* Bare "mere popup" - no header/back button, just the option
+   list - anchored above/below its own trigger row via inline
+   left/top set in JS at open-time. Matches video.html's
+   #videoSpeedPopup exactly. */
+.videoOptionPopup{
+    box-sizing:border-box;
+
+    position:fixed;
+
+    display:none;
+    flex-direction:column;
+
+    width:190px;
+    max-width:calc(100vw - 24px);
+    max-height:min(60vh, 420px);
+
+    padding:10px;
+
+    background:#1d1d1d;
+
+    border:1px solid #2c2c2c;
+
+    border-radius:10px;
+
+    box-shadow:0 6px 18px rgba(0,0,0,.5);
+
+    z-index:1700;
+}
+
+.videoOptionPopup.open{
+    display:flex;
+}
+
+.videoOptionList{
+    display:flex;
+    flex-direction:column;
+
+    flex:1 1 auto;
+
+    min-height:0;
+
+    overflow-y:auto;
+}
+
+.videoOption{
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    gap:8px;
+
+    width:100%;
+
+    padding:8px 8px;
+
+    border:0;
+    border-radius:6px;
+
+    background:transparent;
+
     color:#ddd;
+
+    font-size:13px;
+
+    font-family:inherit;
+
+    text-align:left;
+
+    white-space:nowrap;
+
+    overflow:hidden;
+
+    text-overflow:ellipsis;
+
     cursor:pointer;
 }
 
-.settings-option input{
+.videoOption:hover{
+    background:#262626;
+}
+
+.videoOption.active{
+    background:#262626;
+
+    color:#fff;
+}
+
+.videoOption .videoOptionCheck{
+    flex:0 0 auto;
+
+    min-width:14px;
+
+    text-align:center;
+
+    color:#999;
+
+    visibility:hidden;
+}
+
+.videoOption.active .videoOptionCheck{
+    visibility:visible;
+}
+
+.videoOption .videoOptionLabel{
+    flex:1 1 auto;
+
+    min-width:0;
+
+    overflow:hidden;
+
+    text-overflow:ellipsis;
+}
+
+/* Toggle switch, matching video.html's .toggleSwitch exactly -
+   used for the boolean "Show supporting images by default"
+   setting instead of a checkbox. */
+.toggleSwitch{
+    position:relative;
+
+    flex:0 0 auto;
+
+    width:42px;
+    height:24px;
+
+    padding:0;
+
+    background:#3a3a3a;
+
+    border:1px solid #444;
+
+    border-radius:999px;
+
     cursor:pointer;
 }
 
-.settings-divider{
-    border:none;
-    border-top:1px solid #2c2c2c;
-    margin:14px 0;
+.toggleSwitch .toggleKnob{
+    position:absolute;
+
+    top:2px;
+    left:2px;
+
+    width:18px;
+    height:18px;
+
+    border-radius:50%;
+
+    background:#ccc;
+
+    transition:left .15s ease, background .15s ease;
+}
+
+.toggleSwitch.active{
+    background:#2f7cff;
+
+    border-color:#2f7cff;
+}
+
+.toggleSwitch.active .toggleKnob{
+    left:20px;
+
+    background:#fff;
 }
 
     
@@ -597,61 +853,37 @@ summary:hover{
 
 <div class="top-settings">
 
-<button class="settings-btn" id="settingsButton" type="button" aria-label="Settings">⚙</button>
+<button class="settings-btn" id="settingsButton" type="button" aria-label="Settings" aria-haspopup="true" aria-expanded="false"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1z"></path></svg></button>
 
-<div class="settings-panel" id="settingsPanel">
+<div class="settings-panel" id="settingsPanel" role="menu">
 
-    <div class="settings-group">
-        <h3>Viewing Option</h3>
-
-        <label class="settings-option">
-            <input type="radio" name="viewMode" value="compact">
-            Compact
-        </label>
-
-        <label class="settings-option">
-            <input type="radio" name="viewMode" value="comfy">
-            Comfy
-        </label>
-
-        <label class="settings-option">
-            <input type="radio" name="viewMode" value="detailed">
-            Detailed
-        </label>
+    <div class="settingsMenuHeader">
+        <h3>Settings</h3>
     </div>
 
-    <hr class="settings-divider">
+    <div class="settingsScroll">
 
-    <div class="settings-group">
-        <h3>Supporting Images</h3>
+        <button type="button" class="videoPickerRow" id="viewModeOpen" data-picker="viewMode" aria-haspopup="true" aria-expanded="false">
+            <span>View</span>
+            <span class="videoPickerValue"><span id="viewModeValueLabel">Detailed</span><span class="videoPickerCaret" aria-hidden="true"></span></span>
+        </button>
 
-        <label class="settings-option">
-            <input type="checkbox" id="imagesDefaultOpen">
-            Show supporting images by default
-        </label>
+        <div class="videoPickerRow" id="imagesDefaultOpenRow">
+            <span>Show images</span>
+            <button type="button" class="toggleSwitch" id="imagesDefaultOpenToggle" role="switch" aria-checked="false" aria-label="Show supporting images by default"><span class="toggleKnob"></span></button>
+        </div>
+
+        <button type="button" class="videoPickerRow" id="readingLevelOpen" data-picker="readingLevel" aria-haspopup="true" aria-expanded="false">
+            <span>Reading Speed</span>
+            <span class="videoPickerValue"><span id="readingLevelValueLabel">Average</span><span class="videoPickerCaret" aria-hidden="true"></span></span>
+        </button>
+
     </div>
 
-    <hr class="settings-divider">
+</div>
 
-    <div class="settings-group">
-        <h3>Reading Speed</h3>
-
-        <label class="settings-option">
-            <input type="radio" name="readingLevel" value="slow">
-            Slow
-        </label>
-
-        <label class="settings-option">
-            <input type="radio" name="readingLevel" value="average">
-            Average
-        </label>
-
-        <label class="settings-option">
-            <input type="radio" name="readingLevel" value="fast">
-            Fast
-        </label>
-    </div>
-
+<div class="videoOptionPopup" id="optionPopup" role="menu">
+    <div class="videoOptionList" id="optionList"></div>
 </div>
 
 </div>
@@ -812,22 +1044,60 @@ function withPreservedState(fn){
 
 }
 
+// Picker rows in the Settings panel (View, Reading Speed) - each
+// backed by a small popup of checkmarked options, exactly like
+// video.html's Speed picker. One shared popup (#optionPopup) is
+// reused for whichever row was tapped, rather than a separate
+// popup per row.
+const PICKER_GROUPS = {
+    viewMode: {
+        options: [
+            { value:"compact", label:"Compact" },
+            { value:"comfy", label:"Comfy" },
+            { value:"detailed", label:"Detailed" }
+        ],
+        get(){ return viewMode; },
+        set(value){
+            viewMode = value;
+            localStorage.setItem("viewMode", viewMode);
+        }
+    },
+    readingLevel: {
+        options: [
+            { value:"slow", label:"Slow" },
+            { value:"average", label:"Average" },
+            { value:"fast", label:"Fast" }
+        ],
+        get(){ return readingLevel; },
+        set(value){
+            readingLevel = value;
+            localStorage.setItem("readingLevel", readingLevel);
+        }
+    }
+};
+
+function pickerValueLabel(key){
+
+    const group = PICKER_GROUPS[key];
+    const current = group.options.find(opt => opt.value === group.get());
+
+    return current ? current.label : "";
+
+}
+
 function applySettingsUI(){
 
-    document
-        .querySelectorAll('input[name="viewMode"]')
-        .forEach(input => {
-            input.checked = input.value === viewMode;
-        });
+    document.getElementById("viewModeValueLabel").textContent =
+        pickerValueLabel("viewMode");
 
-    document.getElementById("imagesDefaultOpen").checked =
-        imagesDefaultOpen;
+    document.getElementById("readingLevelValueLabel").textContent =
+        pickerValueLabel("readingLevel");
 
-    document
-        .querySelectorAll('input[name="readingLevel"]')
-        .forEach(input => {
-            input.checked = input.value === readingLevel;
-        });
+    imagesDefaultOpenToggle.classList.toggle("active", imagesDefaultOpen);
+    imagesDefaultOpenToggle.setAttribute(
+        "aria-checked",
+        imagesDefaultOpen ? "true" : "false"
+    );
 
     applySortUI();
 
@@ -871,17 +1141,52 @@ const sortPanel =
 const sortDropdown =
     document.getElementById("sortDropdown");
 
+const imagesDefaultOpenToggle =
+    document.getElementById("imagesDefaultOpenToggle");
+
+const optionPopup =
+    document.getElementById("optionPopup");
+const optionList =
+    document.getElementById("optionList");
+
+let openPickerKey =
+    null;
+
+function closeOptionPopup(){
+
+    if(openPickerKey){
+
+        const rowEl =
+            document.getElementById(openPickerKey + "Open");
+
+        if(rowEl){
+            rowEl.classList.remove("open");
+            rowEl.setAttribute("aria-expanded", "false");
+        }
+
+    }
+
+    optionPopup.classList.remove("open");
+    openPickerKey = null;
+
+}
+
 function closeMenus(){
     settingsPanel.classList.remove("open");
+    settingsButton.setAttribute("aria-expanded", "false");
     sortPanel.classList.remove("open");
     sortDropdown.classList.remove("open");
+    closeOptionPopup();
 }
 
 settingsButton.addEventListener("click", (e) => {
     e.stopPropagation();
     const willOpen = !settingsPanel.classList.contains("open");
     closeMenus();
-    if(willOpen) settingsPanel.classList.add("open");
+    if(willOpen){
+        settingsPanel.classList.add("open");
+        settingsButton.setAttribute("aria-expanded", "true");
+    }
 });
 
 sortButton.addEventListener("click", (e) => {
@@ -894,15 +1199,29 @@ sortButton.addEventListener("click", (e) => {
     }
 });
 
-// Tapping/clicking anywhere outside either menu closes whichever
-// one is open.
+// Tapping/clicking anywhere outside either menu (or the shared
+// option popup) closes whichever one is open.
 document.addEventListener("click", (e) => {
+
+    if(
+        !optionPopup.classList.contains("open") ||
+        optionPopup.contains(e.target) ||
+        e.target.closest(".videoPickerRow[data-picker]")
+    ){
+        // handled below / left alone
+    }else{
+        closeOptionPopup();
+    }
+
     if(
         settingsPanel.classList.contains("open") &&
         !settingsPanel.contains(e.target) &&
-        e.target !== settingsButton
+        e.target !== settingsButton &&
+        !optionPopup.contains(e.target)
     ){
         settingsPanel.classList.remove("open");
+        settingsButton.setAttribute("aria-expanded", "false");
+        closeOptionPopup();
     }
     if(
         sortPanel.classList.contains("open") &&
@@ -920,40 +1239,173 @@ window.addEventListener("scroll", () => {
     closeMenus();
 }, { passive: true });
 
+document.addEventListener("keydown", (e) => {
+
+    if(e.key !== "Escape") return;
+
+    if(optionPopup.classList.contains("open")){
+        closeOptionPopup();
+        return;
+    }
+
+    if(settingsPanel.classList.contains("open")){
+        settingsPanel.classList.remove("open");
+        settingsButton.setAttribute("aria-expanded", "false");
+    }
+
+});
+
+function buildOptionList(key){
+
+    const group = PICKER_GROUPS[key];
+
+    optionList.replaceChildren();
+
+    group.options.forEach(opt => {
+
+        const isActive =
+            opt.value === group.get();
+
+        const button =
+            document.createElement("button");
+
+        button.type = "button";
+        button.className = "videoOption" + (isActive ? " active" : "");
+        button.setAttribute("role", "menuitemradio");
+        button.setAttribute("aria-checked", isActive ? "true" : "false");
+
+        const label =
+            document.createElement("span");
+
+        label.className = "videoOptionLabel";
+        label.textContent = opt.label;
+
+        const check =
+            document.createElement("span");
+
+        check.className = "videoOptionCheck";
+        check.textContent = "✓";
+
+        button.append(label, check);
+
+        button.addEventListener("click", (event) => {
+
+            event.stopPropagation();
+
+            group.set(opt.value);
+
+            applySettingsUI();
+            closeOptionPopup();
+            withPreservedState(renderPapers);
+
+        });
+
+        optionList.appendChild(button);
+
+    });
+
+}
+
+// Anchors the popup to the picker row that opened it - preferring
+// to open just below the row (since the Settings panel itself
+// drops down from the gear button), but flipping upward if there
+// genuinely isn't room below, then clamping on-screen as a final
+// safety net. Mirrors video.html's positionVideoSpeedPopup.
+function positionOptionPopup(rowEl){
+
+    const rect =
+        rowEl.getBoundingClientRect();
+
+    const popupWidth =
+        Math.min(190, window.innerWidth - 24);
+
+    const margin =
+        12;
+
+    let left =
+        rect.left + (rect.width / 2) - (popupWidth / 2);
+
+    left =
+        Math.max(margin, Math.min(left, window.innerWidth - popupWidth - margin));
+
+    optionPopup.style.left =
+        left + "px";
+
+    const spaceBelow =
+        window.innerHeight - rect.bottom - 8;
+
+    const spaceAbove =
+        rect.top - 8;
+
+    if(spaceBelow >= 160 || spaceBelow >= spaceAbove){
+
+        optionPopup.style.top = (rect.bottom + 8) + "px";
+        optionPopup.style.bottom = "auto";
+
+    }else{
+
+        optionPopup.style.bottom = (window.innerHeight - rect.top + 8) + "px";
+        optionPopup.style.top = "auto";
+
+    }
+
+}
+
+function openOptionPopup(key, rowEl){
+
+    openPickerKey = key;
+
+    buildOptionList(key);
+    optionPopup.classList.add("open");
+    positionOptionPopup(rowEl);
+
+    rowEl.classList.add("open");
+    rowEl.setAttribute("aria-expanded", "true");
+
+}
+
+optionPopup.addEventListener("click", (e) => e.stopPropagation());
+
+window.addEventListener("resize", () => {
+    if(openPickerKey){
+        positionOptionPopup(document.getElementById(openPickerKey + "Open"));
+    }
+});
+
 document
-    .querySelectorAll('input[name="viewMode"]')
-    .forEach(input => {
-        input.addEventListener("change", () => {
-            if(input.checked){
-                viewMode = input.value;
-                localStorage.setItem("viewMode", viewMode);
-                withPreservedState(renderPapers);
+    .querySelectorAll(".videoPickerRow[data-picker]")
+    .forEach(row => {
+        row.addEventListener("click", (e) => {
+
+            e.stopPropagation();
+
+            const key = row.dataset.picker;
+            const wasOpen = openPickerKey === key;
+
+            closeOptionPopup();
+
+            if(!wasOpen){
+                openOptionPopup(key, row);
             }
+
         });
     });
 
-document
-    .getElementById("imagesDefaultOpen")
-    .addEventListener("change", (e) => {
-        imagesDefaultOpen = e.target.checked;
-        localStorage.setItem(
-            "imagesDefaultOpen",
-            imagesDefaultOpen
-        );
-        withPreservedState(renderPapers);
-    });
+imagesDefaultOpenToggle.addEventListener("click", (e) => {
 
-document
-    .querySelectorAll('input[name="readingLevel"]')
-    .forEach(input => {
-        input.addEventListener("change", () => {
-            if(input.checked){
-                readingLevel = input.value;
-                localStorage.setItem("readingLevel", readingLevel);
-                withPreservedState(renderPapers);
-            }
-        });
-    });
+    e.stopPropagation();
+
+    imagesDefaultOpen = !imagesDefaultOpen;
+
+    localStorage.setItem(
+        "imagesDefaultOpen",
+        imagesDefaultOpen
+    );
+
+    applySettingsUI();
+    withPreservedState(renderPapers);
+
+});
 
 document
     .querySelectorAll(".sort-option")
@@ -1175,11 +1627,29 @@ function getContentPageCount(key, paper){
 
 }
 
-// Rough reading pace for a research paper, in minutes per page.
-const READING_MINUTES_PER_PAGE = {
-    slow: 3.5,
-    average: 2.5,
-    fast: 1.5
+// Reading time is estimated from an approximate word count rather
+// than a flat "minutes per page" guess, so it scales the same way
+// real reading speed does (word-by-word) instead of just being an
+// arbitrary per-page number.
+//
+// WORDS_PER_PAGE: a standard estimate for a single-spaced,
+// 12-point page of body text with normal margins - the same figure
+// commonly used by word-count-to-page conversions. Research PDFs
+// vary (dense two-column layouts run higher, pages heavy with
+// figures/tables run lower), but this is a reasonable average
+// across a typical paper's content pages.
+const WORDS_PER_PAGE = 500;
+
+// READING_WPM: silent reading speed in words per minute. "Average"
+// reflects the commonly cited adult silent-reading rate for
+// nonfiction/technical text (~200 wpm); "slow" reflects careful,
+// close reading of dense academic material; "fast" reflects a
+// fluent reader moving efficiently through familiar material while
+// still reading every word (not skimming).
+const READING_WPM = {
+    slow: 150,
+    average: 200,
+    fast: 300
 };
 
 // Formats a minute count as "18 min", "59 min", "1 hr 30 min",
@@ -1203,13 +1673,18 @@ function getReadMinutes(key, paper){
 
     const pages = getContentPageCount(key, paper);
 
-    const minutesPerPage =
-        READING_MINUTES_PER_PAGE[readingLevel] ||
-        READING_MINUTES_PER_PAGE.average;
+    if(pages <= 0){
+        return 0;
+    }
 
-    return pages > 0
-        ? Math.max(1, Math.round(pages * minutesPerPage))
-        : 0;
+    const wordsPerMinute =
+        READING_WPM[readingLevel] ||
+        READING_WPM.average;
+
+    const estimatedWords =
+        pages * WORDS_PER_PAGE;
+
+    return Math.max(1, Math.round(estimatedWords / wordsPerMinute));
 
 }
 
