@@ -540,7 +540,7 @@ const CATEGORY_HOOKS = {
 biblical: [
 "Scripture, doctrine, and how it all fits together",
 "A closer look at what the Bible actually says",
-"Faith and practice — the study of it and the living of it",
+"Faith and practice, the study of it and the living of it",
 "Prophecy, symbols, and scripture worth a second look"
 ],
 historical: [
@@ -565,7 +565,7 @@ astronomy: [
 "Space missions, old cosmologies, and the questions raised about both",
 "What's actually up there, from ancient skies to modern rockets",
 "Photos, missions, and the anomalies people point to",
-"How the sky has been pictured, explained, and re-examined"
+"How the sky has been pictured, explained, and looked at again"
 ],
 medical: [
 "Health claims, common wisdom, and what holds up",
@@ -575,7 +575,7 @@ medical: [
 ],
 technology: [
 "The tech shaping your world, from your phone to the launch pad",
-"Surveillance and space — the systems running quietly behind both",
+"Surveillance and space, the systems running quietly behind both",
 "From what's tracking you to what's flying overhead"
 ],
 philosophy: [
@@ -753,6 +753,96 @@ poolAll.forEach(p => (p.category || []).forEach(c => set.add(c)));
 return [...set];
 }
 
+// What does picking category X actually make reachable this round?
+// X itself, plus any category that shares a paper with X (since that
+// paper could surface as a subcategory question later).
+function reachableFrom(cat){
+const reach = new Set([cat]);
+poolAll.forEach(p => {
+const tags = p.category || [];
+if(tags.includes(cat)){
+tags.forEach(t => reach.add(t));
+}
+});
+return reach;
+}
+
+function pickCoveringCategories(all){
+const picks = [];
+let covered = new Set();
+
+const remainingForRandom = shuffle(all);
+while(picks.length < 2 && remainingForRandom.length){
+const next = remainingForRandom.shift();
+picks.push(next);
+reachableFrom(next).forEach(c => covered.add(c));
+}
+
+function missingSet(){
+const missing = new Set();
+all.forEach(c => { if(!covered.has(c)) missing.add(c); });
+return missing;
+}
+
+// If the 2 random picks already cover everything, the 3rd is just
+// another random one for variety, no constraint needed.
+if(covered.size === all.length){
+const rest = all.filter(c => !picks.includes(c));
+if(rest.length) picks.push(pickRandom(rest));
+return shuffle(picks);
+}
+
+// Otherwise, find every remaining category that would, on its own,
+// close the rest of the gap — there's often more than one that
+// works. Pick randomly among them so the "filler" pick varies
+// session to session instead of always being the same one.
+let missing = missingSet();
+const fullCompleters = all.filter(cat => {
+if(picks.includes(cat)) return false;
+const reach = reachableFrom(cat);
+for(const m of missing){ if(!reach.has(m)) return false; }
+return true;
+});
+
+if(fullCompleters.length){
+picks.push(pickRandom(fullCompleters));
+return shuffle(picks);
+}
+
+// No single category can finish the job alone (rare), so fall back
+// to a greedy fill, randomizing among ties at each step, up to 4
+// total picks.
+while(picks.length < 4 && covered.size < all.length){
+let bestCount = 0;
+let bestCandidates = [];
+all.forEach(cat => {
+if(picks.includes(cat)) return;
+const reach = reachableFrom(cat);
+let newCount = 0;
+reach.forEach(c => { if(!covered.has(c)) newCount++; });
+if(newCount > bestCount){
+bestCount = newCount;
+bestCandidates = [cat];
+}else if(newCount === bestCount && newCount > 0){
+bestCandidates.push(cat);
+}
+});
+if(!bestCandidates.length) break;
+const pick = pickRandom(bestCandidates);
+picks.push(pick);
+reachableFrom(pick).forEach(c => covered.add(c));
+}
+
+// Safety net: always at least 3 shown, even in edge cases.
+while(picks.length < 3){
+const rest = all.filter(c => !picks.includes(c));
+if(!rest.length) break;
+picks.push(pickRandom(rest));
+}
+
+return shuffle(picks);
+}
+
 function startQuiz(){
 currentPool = [];
 primaryCategory = null;
@@ -764,13 +854,15 @@ MAX_QUESTIONS = pickRandom([3, 4, 4, 5, 5, 6]); // total questions per session, 
 
 setHeader("full", pickRandom(INTRO_SUBS));
 
-// Draw from every category in the archive, not just the biggest ones,
-// so repeat visits surface different subjects over time. The number
-// of options offered also varies each time, so the opening question
-// doesn't always look the same.
+// Pick which categories to offer on the opening question. Two are
+// picked at random so it never settles into a rut. The rest are
+// filled in, greedily, to make sure every category in the archive is
+// reachable this round: either shown directly, or reachable as a
+// subcategory of a paper tagged with one of the shown categories.
+// Stops as soon as everything's covered (usually 3 picks); adds a
+// 4th only if it's still needed. Always at least 3.
 const all = getAllCategories();
-const optionCount = Math.max(2, Math.min(all.length, 2 + Math.floor(Math.random() * 3))); // 2 to 4
-const chosen = shuffle(all).slice(0, optionCount);
+const chosen = pickCoveringCategories(all);
 
 resetProgress();
 addProgressStep("question");
@@ -817,7 +909,7 @@ const LENGTH_TEMPLATES = [
 "Would a quick one suit you better right now?",
 "Short and to the point, or willing to go longer?",
 "How much time do you actually have for this?",
-"Quick read or a real sit-down?"
+"Quick read or a real sit down?"
 ];
 
 const LENGTH_YES_LABELS = ["Something quick", "Keep it short", "Yes, brief is good", "Short and sweet", "Quick one, please"];
@@ -846,7 +938,7 @@ const BREADTH_TEMPLATES = [
 "Interested in how this connects to other things, or just the thing itself?"
 ];
 
-const BREADTH_YES_LABELS = ["Connect the dots", "Cross-topic is good", "Branch out", "Multiple angles", "Give me the wider picture", "Let it wander"];
+const BREADTH_YES_LABELS = ["Connect the dots", "Multiple topics is good", "Branch out", "Multiple angles", "Give me the wider picture", "Let it wander"];
 const BREADTH_NO_LABELS = ["Keep it focused", "Just the one topic", "Stay narrow", "Single lane is fine", "Tighter is better", "Just the thing itself"];
 
 function bestSecondarySplit(pool){
@@ -1174,7 +1266,7 @@ const dateLabel = formatDate(paper.updated);
 if(h.answer === "yes"){
 clauses.push(dateLabel ? `one of the newer additions to the archive (added ${dateLabel})` : "one of the newer additions to the archive");
 }else{
-clauses.push(dateLabel ? `a longer-standing piece in the archive (added ${dateLabel})` : "an established piece in the archive");
+clauses.push(dateLabel ? `a longstanding piece in the archive (added ${dateLabel})` : "an established piece in the archive");
 }
 }else if(h.type === "breadth"){
 const catCount = (paper.category || []).length;
@@ -1282,7 +1374,7 @@ inner.appendChild(media);
 inner.appendChild(body);
 
 const actions = document.createElement("div");
-actions.className = "result-actions";
+actions.className = "result-actions" + (payload.onlyOneOption ? " single" : "");
 let actionTaken = false;
 
 const againBtn = document.createElement("button");
@@ -1296,6 +1388,12 @@ actions.style.pointerEvents = "none";
 transitionOut(wrap, startQuiz);
 });
 
+actions.appendChild(againBtn);
+
+// Only offer a reroll if there was ever more than one candidate in
+// the final pool. Otherwise "show me another" would just show the
+// exact same paper again, which isn't a real option.
+if(!payload.onlyOneOption){
 const rerollBtn = document.createElement("button");
 rerollBtn.type = "button";
 rerollBtn.className = "result-secondary";
@@ -1306,9 +1404,8 @@ actionTaken = true;
 actions.style.pointerEvents = "none";
 transitionOut(wrap, showResult);
 });
-
-actions.appendChild(rerollBtn);
-actions.appendChild(againBtn);
+actions.insertBefore(rerollBtn, againBtn);
+}
 
 wrap.appendChild(inner);
 wrap.appendChild(actions);
@@ -1341,6 +1438,7 @@ introText: payload.introText,
 progressDotsTypes: progressDots.map(d => d.type),
 primaryCategory,
 currentCategoryContext,
+onlyOneOption: payload.onlyOneOption,
 history
 }));
 }catch(e){
@@ -1425,7 +1523,8 @@ const sources = saved.mediaSources && saved.mediaSources.length
 renderResultCard(paper, {
 catText: saved.catText,
 whyHtml: saved.whyHtml,
-mediaSources: sources
+mediaSources: sources,
+onlyOneOption: saved.onlyOneOption
 });
 }
 
@@ -1490,7 +1589,7 @@ const mediaSources = [];
 if(visible.length) mediaSources.push(pickRandom(visible));
 mediaSources.push(`covers/${paper.key}.png`);
 
-const payload = { introText, catText, whyHtml, mediaSources };
+const payload = { introText, catText, whyHtml, mediaSources, onlyOneOption: pool.length <= 1 };
 
 renderResultCard(paper, payload);
 saveResultState(paper, payload);
