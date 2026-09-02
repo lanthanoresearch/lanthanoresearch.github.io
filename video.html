@@ -159,6 +159,84 @@ header{
 }
 
 /* ============================================================
+   END-OF-VIDEO COVER
+
+   Shown in place of whatever a browser does by default once a
+   video ends (usually just the frozen last frame) - the same
+   cover art the video started on, with a plain replay button, the
+   same "here's the poster again, tap to watch it again" pattern
+   most video platforms use rather than leaving a stalled-looking
+   frozen frame on screen. Only appears at all if a cover image was
+   actually supplied for this video - see the `poster` URL param.
+============================================================ */
+
+#coverOverlay{
+  position:absolute;
+
+  inset:0;
+
+  display:flex;
+
+  align-items:center;
+  justify-content:center;
+
+  background:#000;
+
+  z-index:10;
+}
+
+#coverOverlay.hidden{
+  display:none;
+}
+
+#coverImage{
+  position:absolute;
+
+  inset:0;
+
+  width:100%;
+  height:100%;
+
+  object-fit:contain;
+}
+
+#replayBtn{
+  position:relative;
+
+  width:64px;
+  height:64px;
+
+  padding:0;
+
+  display:flex;
+
+  align-items:center;
+  justify-content:center;
+
+  border-radius:50%;
+
+  background:rgba(20,20,20,.72);
+
+  border:1px solid rgba(255,255,255,.35);
+
+  color:#fff;
+
+  box-shadow:0 6px 20px rgba(0,0,0,.5);
+}
+
+#replayBtn svg{
+  /* Nudged half a pixel right so the play triangle's own visual
+     weight looks centered in the circle instead of left-shifted -
+     same optical-centering idea used elsewhere in this app's
+     icon buttons. */
+  margin-left:3px;
+}
+
+#replayBtn:hover{
+  background:rgba(40,40,40,.85);
+}
+
+/* ============================================================
    BUTTONS
 ============================================================ */
 
@@ -267,12 +345,70 @@ select:focus-visible{
 }
 
 /* ============================================================
+   SKIP / FRAME STEP CONTROLS
+
+   Grouped into one connected pill the same way pdf.html groups
+   its zoom out/percentage/zoom in controls (.zoomControls) - a
+   single bordered container with transparent buttons packed
+   together inside it, rather than four separate toolbar buttons
+   with gaps between them. Icons follow the same "single chevron
+   for the small step, doubled chevron for the big step" pairing
+   media players have used forever - one arrow for a frame,
+   two for a 10-second jump.
+============================================================ */
+
+.skipControls{
+  display:flex;
+
+  align-items:center;
+
+  gap:3px;
+
+  height:32px;
+
+  padding:0 3px;
+
+  background:#242424;
+
+  border:1px solid #353535;
+
+  border-radius:7px;
+}
+
+.skipControls button{
+  width:32px;
+  height:28px;
+
+  padding:0;
+
+  border:0;
+
+  background:transparent;
+
+  display:flex;
+
+  align-items:center;
+
+  justify-content:center;
+}
+
+.skipControls button:hover{
+  background:#353535;
+}
+
+#downloadFrameBtn{
+  gap:6px;
+}
+
+/* ============================================================
    SPEED CONTROL
 
-   A single toolbar button that opens a popover, styled to match
-   pdf.html's Read Aloud "Speed & voice" settings popover
-   (#readAloudSettingsMenu / .readAloudOption) - same dark panel,
-   same checkmark option-row list, same active/hover states.
+   Matches category.html's sort-dropdown look (.sort-btn /
+   .sort-panel / .sort-option), the same treatment pdf.html's own
+   Speed/Voice pickers now use - a solid pill-shaped trigger with a
+   CSS-triangle caret that flips on open, and a dark panel with
+   subtly-highlighted rows for the options, rather than inventing
+   its own separate style.
 ============================================================ */
 
 #speedWrap{
@@ -286,13 +422,32 @@ select:focus-visible{
 
   align-items:center;
 
-  gap:6px;
+  gap:8px;
 }
 
 #speedBtn .speedBtnValue{
   color:#fff;
 
   font-weight:bold;
+}
+
+/* A plain CSS triangle rather than an SVG chevron - flips via
+   transform when the menu it belongs to is open. */
+.speedCaret{
+  flex-shrink:0;
+
+  width:0;
+  height:0;
+
+  border-left:6px solid transparent;
+  border-right:6px solid transparent;
+  border-top:7px solid #999;
+
+  transition:transform .15s ease;
+}
+
+#speedBtn.open .speedCaret{
+  transform:rotate(180deg);
 }
 
 #speedMenu{
@@ -306,24 +461,23 @@ select:focus-visible{
   display:flex;
   flex-direction:column;
 
-  gap:4px;
-
   width:150px;
   max-width:calc(100vw - 24px);
   max-height:min(60vh, 420px);
 
   overflow-y:auto;
 
-  padding:8px;
+  padding:10px;
 
-  background:#222;
+  /* Matches category.html's .sort-panel exactly. */
+  background:#1d1d1d;
 
-  border:1px solid #444;
+  border:1px solid #2c2c2c;
 
-  border-radius:11px;
+  border-radius:10px;
 
   box-shadow:
-    0 8px 24px rgba(0,0,0,.5);
+    0 6px 18px rgba(0,0,0,.5);
 
   z-index:9600;
 }
@@ -332,27 +486,21 @@ select:focus-visible{
   display:none;
 }
 
-.speedSettingsHeading{
-  padding:6px 8px 2px;
-
-  color:#888;
-
-  font-size:11px;
-  font-weight:bold;
-
-  text-transform:uppercase;
-  letter-spacing:.05em;
-}
-
 .speedOptionList{
   display:flex;
   flex-direction:column;
 }
 
+/* Same row treatment as category.html's .sort-option: label on the
+   left, a small indicator pinned to the right (there, a direction
+   arrow; here, a checkmark on whichever speed is currently picked),
+   a plain hover/active highlight rather than a bright accent color. */
 .speedOption{
   display:flex;
 
   align-items:center;
+
+  justify-content:space-between;
 
   gap:8px;
 
@@ -361,7 +509,7 @@ select:focus-visible{
   padding:8px 8px;
 
   border:0;
-  border-radius:7px;
+  border-radius:6px;
 
   background:transparent;
 
@@ -379,11 +527,11 @@ select:focus-visible{
 }
 
 .speedOption:hover{
-  background:#333;
+  background:#262626;
 }
 
 .speedOption.active{
-  background:#2f7cff;
+  background:#262626;
 
   color:#fff;
 }
@@ -391,13 +539,17 @@ select:focus-visible{
 .speedOption .speedOptionCheck{
   flex:0 0 auto;
 
-  width:14px;
+  min-width:14px;
 
-  opacity:0;
+  text-align:center;
+
+  color:#999;
+
+  visibility:hidden;
 }
 
 .speedOption.active .speedOptionCheck{
-  opacity:1;
+  visibility:visible;
 }
 
 .speedOption .speedOptionLabel{
@@ -411,17 +563,594 @@ select:focus-visible{
 }
 
 /* ============================================================
-   TOOLBAR DIVIDER
+   BOOKMARKS
+
+   Timestamp bookmarks for video, ported straight from pdf.html's
+   bookmark popup - same structure, same class names, same visual
+   language, just "page" swapped for "timestamp" throughout. See
+   pdf.html for the reasoning behind each piece; kept here rather
+   than repeated since this is a direct port, not a redesign.
 ============================================================ */
 
-.toolbarDivider{
-  width:1px;
+#bookmarkPopup{
+  position:fixed;
 
-  height:22px;
+  top:calc(var(--viewer-top) + 10px);
+  left:50%;
 
-  background:#383838;
+  transform:translateX(-50%);
 
-  margin:0 2px;
+  width:calc(100vw - 24px);
+  max-width:420px;
+
+  max-height:calc(100vh - 130px);
+
+  display:flex;
+  flex-direction:column;
+
+  overflow:hidden;
+
+  background:#222;
+
+  border:1px solid #333;
+
+  border-radius:10px;
+
+  padding:8px;
+
+  z-index:9200;
+}
+
+#bookmarkPopup.hidden{
+  display:none;
+}
+
+.bookmarkView.hidden{
+  display:none;
+}
+
+.bookmarkView{
+  display:flex;
+
+  flex-direction:column;
+
+  min-height:0;
+
+  flex:1 1 auto;
+}
+
+.bookmarkMenuItem{
+  width:100%;
+
+  text-align:left;
+
+  margin:3px 0;
+}
+
+.bookmarkViewHeader{
+  display:flex;
+
+  align-items:center;
+
+  gap:8px;
+
+  margin:0 0 8px;
+
+  padding-bottom:8px;
+
+  border-bottom:1px solid #333;
+
+  flex:0 0 auto;
+}
+
+.bookmarkViewHeader h4{
+  margin:0;
+
+  font-size:14px;
+
+  color:#eee;
+}
+
+.bookmarkBackBtn{
+  width:28px;
+  height:28px;
+
+  padding:0;
+
+  display:flex;
+
+  align-items:center;
+  justify-content:center;
+
+  flex:0 0 auto;
+
+  border-radius:6px;
+
+  font-size:13px;
+
+  line-height:1;
+
+  text-indent:-1px;
+}
+
+.bookmarkMenuHeader{
+  display:flex;
+
+  align-items:center;
+
+  justify-content:space-between;
+
+  gap:8px;
+
+  margin:0 0 8px;
+
+  padding-bottom:8px;
+
+  border-bottom:1px solid #333;
+}
+
+.bookmarkMenuTitle{
+  font-size:14px;
+
+  font-weight:600;
+
+  color:#eee;
+}
+
+.bookmarkGearBtn{
+  width:28px;
+  height:28px;
+
+  padding:0;
+
+  display:flex;
+
+  align-items:center;
+  justify-content:center;
+
+  flex:0 0 auto;
+
+  border-radius:6px;
+}
+
+#bookmarkListContent{
+  flex:1 1 auto;
+
+  min-height:0;
+
+  overflow-y:auto;
+}
+
+.tocEmptyMessage{
+  padding:8px 4px;
+
+  color:#aaa;
+
+  font-size:13px;
+
+  line-height:1.4;
+}
+
+.bookmarkItem{
+  display:flex;
+
+  align-items:stretch;
+
+  gap:4px;
+
+  margin:4px 0;
+}
+
+.bookmarkItemMain{
+  flex:1 1 auto;
+
+  min-width:0;
+
+  text-align:left;
+
+  padding:8px;
+}
+
+.bookmarkItemName{
+  overflow:hidden;
+
+  text-overflow:ellipsis;
+
+  white-space:nowrap;
+
+  font-size:13.5px;
+
+  color:#f0f0f0;
+}
+
+.bookmarkItemMeta{
+  margin-top:2px;
+
+  font-size:11.5px;
+
+  color:#999;
+}
+
+.bookmarkItemDelete{
+  flex:0 0 auto;
+
+  width:32px;
+
+  padding:0;
+
+  color:#aaa;
+
+  font-size:13px;
+}
+
+.bookmarkItemDelete:hover{
+  color:#ff6b6b;
+}
+
+.bookmarkItemDelete.confirming{
+  width:auto;
+
+  padding:0 8px;
+
+  background:#3a1a1a;
+
+  border-color:#6b2a2a;
+
+  color:#ff8080;
+
+  font-size:11px;
+
+  font-weight:600;
+
+  white-space:nowrap;
+}
+
+.bookmarkItemDelete.confirming:hover{
+  background:#4a2020;
+}
+
+.bookmarkItemAutoTag{
+  display:inline-block;
+
+  margin-left:6px;
+
+  padding:1px 6px;
+
+  border-radius:999px;
+
+  background:#2a3a4a;
+
+  color:#8ab4e8;
+
+  font-size:10px;
+
+  font-weight:600;
+
+  text-transform:uppercase;
+
+  letter-spacing:.3px;
+}
+
+.bookmarkFieldLabel{
+  display:block;
+
+  margin:2px 0 6px;
+
+  font-size:12px;
+
+  color:#999;
+}
+
+#bookmarkNameInput{
+  width:100%;
+
+  margin-bottom:10px;
+}
+
+.bookmarkPrimaryBtn{
+  width:100%;
+
+  background:#2f7cff;
+
+  border-color:#2f7cff;
+}
+
+.bookmarkPrimaryBtn:hover{
+  background:#4a8dff;
+}
+
+.bookmarkSettingRow{
+  display:flex;
+
+  align-items:center;
+
+  justify-content:space-between;
+
+  gap:12px;
+
+  padding:4px 2px;
+}
+
+.bookmarkSettingRowNested{
+  margin-left:20px;
+
+  padding-left:10px;
+
+  border-left:2px solid #333;
+}
+
+.bookmarkSettingLabel{
+  font-size:13.5px;
+
+  color:#f0f0f0;
+}
+
+.bookmarkSettingDesc{
+  margin-top:3px;
+
+  max-width:180px;
+
+  font-size:11.5px;
+
+  line-height:1.4;
+
+  color:#999;
+}
+
+.toggleSwitch{
+  position:relative;
+
+  flex:0 0 auto;
+
+  width:42px;
+  height:24px;
+
+  padding:0;
+
+  background:#3a3a3a;
+
+  border:1px solid #444;
+
+  border-radius:999px;
+}
+
+.toggleSwitch .toggleKnob{
+  position:absolute;
+
+  top:2px;
+  left:2px;
+
+  width:18px;
+  height:18px;
+
+  border-radius:50%;
+
+  background:#ccc;
+
+  transition:left .15s ease, background .15s ease;
+}
+
+.toggleSwitch.active{
+  background:#2f7cff;
+
+  border-color:#2f7cff;
+}
+
+.toggleSwitch.active .toggleKnob{
+  left:20px;
+
+  background:#fff;
+}
+
+.toggleSwitch:disabled{
+  opacity:.4;
+
+  cursor:default;
+}
+
+#bookmarkSettingsScroll{
+  flex:1 1 auto;
+
+  min-height:0;
+
+  overflow-y:auto;
+}
+
+.bookmarkSettingRowStacked{
+  padding:8px 2px;
+}
+
+.bookmarkSettingRowStacked .bookmarkSettingDesc{
+  max-width:none;
+}
+
+.bookmarkPillRow{
+  display:flex;
+
+  flex-wrap:wrap;
+
+  gap:6px;
+
+  margin-top:10px;
+}
+
+.bookmarkPill{
+  padding:6px 12px;
+
+  font-size:12.5px;
+
+  border-radius:999px;
+
+  background:#2a2a2a;
+}
+
+.bookmarkPill.active{
+  background:#2f7cff;
+
+  border-color:#2f7cff;
+}
+
+.bookmarkDangerBtn{
+  width:100%;
+
+  margin-top:14px;
+
+  padding:9px 10px;
+
+  background:transparent;
+
+  border:1px solid #5a2c2c;
+
+  border-radius:8px;
+
+  color:#ff8080;
+
+  font-size:13px;
+}
+
+.bookmarkDangerBtn:hover{
+  background:#301a1a;
+
+  border-color:#7a3a3a;
+}
+
+/* ============================================================
+   CLEAR ALL BOOKMARKS CONFIRMATION / RESUME PROMPT
+
+   Both share this same centered-modal treatment - Clear All with
+   a destructive-red primary action, Resume with the usual blue.
+============================================================ */
+
+.choiceModalButtons{
+  display:flex;
+
+  flex-direction:column;
+
+  gap:8px;
+}
+
+.choiceModalButtons button{
+  width:100%;
+}
+
+#clearBookmarksConfirm,
+#resumeChoice{
+  position:fixed;
+
+  inset:0;
+
+  display:flex;
+
+  align-items:center;
+  justify-content:center;
+
+  padding:20px;
+
+  background:rgba(0,0,0,.55);
+
+  z-index:9800;
+}
+
+#clearBookmarksConfirm.hidden,
+#resumeChoice.hidden{
+  display:none;
+}
+
+#clearBookmarksCard,
+#resumeChoiceCard{
+  width:100%;
+  max-width:320px;
+
+  padding:20px;
+
+  background:#1e1e1e;
+
+  border:1px solid #3a3a3a;
+
+  border-radius:13px;
+
+  box-shadow:
+    0 12px 32px rgba(0,0,0,.55);
+
+  text-align:center;
+}
+
+#clearBookmarksCard h3,
+#resumeChoiceCard h3{
+  margin:0 0 8px;
+
+  font-size:16px;
+
+  color:#fff;
+}
+
+#clearBookmarksCard p,
+#resumeChoiceCard p{
+  margin:0 0 16px;
+
+  color:#bbb;
+
+  font-size:13px;
+
+  line-height:1.45;
+}
+
+.bookmarkDangerPrimaryBtn{
+  width:100%;
+
+  padding:11px 10px;
+
+  font-size:14px;
+
+  border-radius:8px;
+
+  background:#c0392b;
+
+  border-color:#c0392b;
+}
+
+.bookmarkDangerPrimaryBtn:hover{
+  background:#d8493a;
+}
+
+#resumeChoicePrimary{
+  width:100%;
+
+  padding:11px 10px;
+
+  font-size:14px;
+
+  border-radius:8px;
+
+  background:#2f7cff;
+
+  border-color:#2f7cff;
+}
+
+#resumeChoicePrimary:hover{
+  background:#4a8dff;
+}
+
+#clearBookmarksCancelBtn,
+#resumeChoiceCancel{
+  margin-top:2px;
+
+  background:transparent;
+
+  border:0;
+
+  color:#999;
+
+  font-size:12px;
+
+  padding:6px;
+}
+
+#clearBookmarksCancelBtn:hover,
+#resumeChoiceCancel:hover{
+  color:#ccc;
+
+  background:transparent;
 }
 
 /* ============================================================
@@ -746,6 +1475,17 @@ body.reading-mode #readingModeFloat{
 
 <div id="toolbar">
 
+  <div class="skipControls">
+    <button id="skipBackBtn" title="Back 10 seconds" aria-label="Back 10 seconds"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6l-7 6 7 6"></path><path d="M11 6l-7 6 7 6"></path></svg></button>
+    <button id="frameBackBtn" title="Back 1 frame" aria-label="Back 1 frame"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-7 6 7 6"></path></svg></button>
+    <button id="frameForwardBtn" title="Forward 1 frame" aria-label="Forward 1 frame"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l7 6-7 6"></path></svg></button>
+    <button id="skipForwardBtn" title="Forward 10 seconds" aria-label="Forward 10 seconds"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l7 6-7 6"></path><path d="M13 6l7 6-7 6"></path></svg></button>
+  </div>
+
+  <button id="downloadFrameBtn" class="toolButton" title="Download current frame" aria-label="Download current frame"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M5 21h14"></path></svg><span>Frame</span></button>
+
+  <button id="bookmarkButton" class="toolButton iconButton" title="Bookmarks" aria-haspopup="true"><svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor"><path d="M6 3a1 1 0 0 0-1 1v17l7-4.5 7 4.5V4a1 1 0 0 0-1-1H6z"></path></svg></button>
+
   <div id="speedWrap">
 
     <button
@@ -755,14 +1495,10 @@ body.reading-mode #readingModeFloat{
       aria-expanded="false"
       title="Playback speed"
     >
-      Speed: <span class="speedBtnValue" id="speedBtnValue">1×</span>
+      <span class="speedBtnValue" id="speedBtnValue">1×</span><span class="speedCaret" aria-hidden="true"></span>
     </button>
 
     <div id="speedMenu" class="hidden" role="menu">
-
-      <div class="speedSettingsHeading">
-        Speed
-      </div>
 
       <div id="speedList" class="speedOptionList"></div>
 
@@ -795,12 +1531,18 @@ body.reading-mode #readingModeFloat{
       controls
       playsinline
       preload="metadata"
-      poster="prediction.jpg"
     >
 
       Your browser does not support HTML5 video.
 
     </video>
+
+    <div id="coverOverlay" class="hidden">
+      <img id="coverImage" alt="">
+      <button id="replayBtn" aria-label="Replay">
+        <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>
+      </button>
+    </div>
 
   </div>
 
@@ -855,6 +1597,113 @@ body.reading-mode #readingModeFloat{
 >
   ▣
 </button>
+
+<!-- ==========================================================
+     BOOKMARKS
+========================================================== -->
+
+<div id="bookmarkPopup" class="hidden">
+
+<div id="bookmarkMenuView" class="bookmarkView">
+<div class="bookmarkMenuHeader">
+<div class="bookmarkMenuTitle">Bookmarks</div>
+<button id="bookmarkSettingsOpen" class="bookmarkGearBtn" title="Bookmark settings" aria-label="Bookmark settings" aria-haspopup="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1z"></path></svg></button>
+</div>
+<button id="bookmarkLoadOpen" class="bookmarkMenuItem">Load Bookmark</button>
+<button id="bookmarkDropOpen" class="bookmarkMenuItem">Drop Bookmark</button>
+</div>
+
+<div id="bookmarkLoadView" class="bookmarkView hidden">
+<div class="bookmarkViewHeader">
+<button class="bookmarkBackBtn" data-back aria-label="Back">◀</button>
+<h4>Bookmarks</h4>
+</div>
+<div id="bookmarkListContent"></div>
+</div>
+
+<div id="bookmarkDropView" class="bookmarkView hidden">
+<div class="bookmarkViewHeader">
+<button class="bookmarkBackBtn" data-back aria-label="Back">◀</button>
+<h4>Drop Bookmark</h4>
+</div>
+<div id="bookmarkDropForm">
+<label for="bookmarkNameInput" class="bookmarkFieldLabel">Name</label>
+<input id="bookmarkNameInput" type="text" placeholder="Bookmark name" maxlength="80" autocomplete="off">
+<button id="bookmarkSaveBtn" class="bookmarkPrimaryBtn">Save Bookmark</button>
+</div>
+</div>
+
+<div id="bookmarkSettingsView" class="bookmarkView hidden">
+<div class="bookmarkViewHeader">
+<button class="bookmarkBackBtn" data-back aria-label="Back">◀</button>
+<h4>Settings</h4>
+</div>
+<div id="bookmarkSettingsScroll">
+<div class="bookmarkSettingRow">
+<div>
+<div class="bookmarkSettingLabel">Resume prompt</div>
+<div class="bookmarkSettingDesc">Ask to resume from your last bookmark when this video has one.</div>
+</div>
+<button id="bookmarkResumeToggle" class="toggleSwitch" role="switch" aria-checked="true"><span class="toggleKnob"></span></button>
+</div>
+
+<div class="bookmarkSettingRow bookmarkSettingRowNested">
+<div>
+<div class="bookmarkSettingLabel">Resume automatically</div>
+<div class="bookmarkSettingDesc">Skip the prompt above and just resume, no asking.</div>
+</div>
+<button id="bookmarkAutoResumeToggle" class="toggleSwitch" role="switch" aria-checked="false"><span class="toggleKnob"></span></button>
+</div>
+
+<div class="bookmarkSettingRow">
+<div>
+<div class="bookmarkSettingLabel">Auto-bookmark on exit</div>
+<div class="bookmarkSettingDesc">Silently save where you left off every time you leave this video.</div>
+</div>
+<button id="bookmarkAutoToggle" class="toggleSwitch" role="switch" aria-checked="false"><span class="toggleKnob"></span></button>
+</div>
+
+<div class="bookmarkSettingRowStacked">
+<div class="bookmarkSettingLabel">Max bookmarks per video</div>
+<div class="bookmarkSettingDesc">Oldest bookmarks are dropped once you go over this.</div>
+<div id="bookmarkMaxOptions" class="bookmarkPillRow"></div>
+</div>
+
+<button id="bookmarkClearAllBtn" class="bookmarkDangerBtn">Clear All Bookmarks</button>
+</div>
+</div>
+
+</div>
+
+<!-- ==========================================================
+     CLEAR ALL BOOKMARKS CONFIRMATION
+========================================================== -->
+
+<div id="clearBookmarksConfirm" class="hidden">
+<div id="clearBookmarksCard">
+<h3>Clear All Bookmarks?</h3>
+<p id="clearBookmarksDescription">This removes every bookmark saved for this video.</p>
+<div class="choiceModalButtons">
+<button id="clearBookmarksConfirmBtn" class="bookmarkDangerPrimaryBtn">Clear All</button>
+</div>
+<button id="clearBookmarksCancelBtn">Cancel</button>
+</div>
+</div>
+
+<!-- ==========================================================
+     RESUME BOOKMARK PROMPT
+========================================================== -->
+
+<div id="resumeChoice" class="hidden">
+<div id="resumeChoiceCard">
+<h3 id="resumeChoiceTitle">Resume Watching?</h3>
+<p id="resumeChoiceDescription">You have a bookmark here.</p>
+<div class="choiceModalButtons">
+<button id="resumeChoicePrimary">Resume</button>
+</div>
+<button id="resumeChoiceCancel">Not Now</button>
+</div>
+</div>
 
 <script>
 
@@ -950,6 +1799,15 @@ const returnPage =
     params.get("return") || "index.html";
 
 
+/*
+    No hardcoded fallback image here on purpose - a poster/cover is
+    optional and specific to whatever video gets fed to this player
+    via the URL, not something this page can assume exists.
+*/
+const poster =
+    params.get("poster") || "";
+
+
 /* ---------- Elements ---------- */
 
 const video =
@@ -1000,6 +1858,24 @@ const speedMenu =
 const speedList =
     document.getElementById("speedList");
 
+const skipBackButton =
+    document.getElementById("skipBackBtn");
+
+const frameBackButton =
+    document.getElementById("frameBackBtn");
+
+const frameForwardButton =
+    document.getElementById("frameForwardBtn");
+
+const skipForwardButton =
+    document.getElementById("skipForwardBtn");
+
+const downloadFrameButton =
+    document.getElementById("downloadFrameBtn");
+
+const bookmarkButton =
+    document.getElementById("bookmarkButton");
+
 const header =
     document.querySelector("header");
 
@@ -1014,6 +1890,15 @@ const titleBar =
 
 const readingModeFloat =
     document.getElementById("readingModeFloat");
+
+const coverOverlay =
+    document.getElementById("coverOverlay");
+
+const coverImage =
+    document.getElementById("coverImage");
+
+const replayButton =
+    document.getElementById("replayBtn");
 
 
 /* ---------- Chrome Height Sync ---------- */
@@ -1106,6 +1991,16 @@ if(!src){
     video.src =
         src;
 
+    if(poster){
+
+        video.poster =
+            poster;
+
+        coverImage.src =
+            poster;
+
+    }
+
     video.load();
 
 }
@@ -1192,6 +2087,1017 @@ video.addEventListener(
 
     }
 );
+
+
+/* ---------- End-of-video cover ---------- */
+
+function showCoverOverlay(){
+
+    if(!poster){
+
+        return;
+
+    }
+
+    coverOverlay.classList.remove(
+        "hidden"
+    );
+
+}
+
+function hideCoverOverlay(){
+
+    coverOverlay.classList.add(
+        "hidden"
+    );
+
+}
+
+video.addEventListener(
+    "ended",
+    showCoverOverlay
+);
+
+/*
+    Covers every way playback could resume without going through
+    the replay button itself - scrubbing back in on the native
+    controls, hitting play again there, or anything else that
+    starts the video moving - so the cover never lingers over an
+    actually-playing video.
+*/
+["play", "playing", "seeking"].forEach(
+    function(eventName){
+
+        video.addEventListener(
+            eventName,
+            hideCoverOverlay
+        );
+
+    }
+);
+
+replayButton.addEventListener(
+    "click",
+    function(){
+
+        hideCoverOverlay();
+
+        video.currentTime =
+            0;
+
+        video.play();
+
+    }
+);
+
+
+/* =========================================================
+   SKIP / FRAME STEP
+
+   Back 10s and forward 10s are exact - video.currentTime is
+   just nudged by 10 real seconds either way. "Forward 1 frame"
+   has no universally reliable way to know a video's exact frame
+   rate up front (containers/codecs don't expose it consistently
+   across browsers), so this assumes a common 30fps to start and
+   quietly refines that assumption using getVideoPlaybackQuality()
+   once enough of the video has actually played to estimate its
+   real frame rate - close enough to work reasonably for
+   *whatever* video gets loaded, without needing to know anything
+   about it ahead of time.
+   ========================================================= */
+
+let estimatedFrameDuration =
+    1 / 30;
+
+/*
+    Deliberately a *local* delta between two samples taken only
+    while the video is genuinely playing forward, not a running
+    "frames so far ÷ current position" average - that average
+    looks reasonable right after a fresh load, but falls apart the
+    moment someone seeks around: every frame decoded while seeking
+    (including ones the player briefly passes through on the way
+    to a target) counts toward the total, badly inflating the
+    estimate relative to how much time has actually elapsed. A
+    short window sampled only during real, continuous playback
+    isn't affected by that at all.
+*/
+let lastFrameSample =
+    null;
+
+function refineFrameDurationEstimate(){
+
+    if(
+        !video.getVideoPlaybackQuality ||
+        video.paused ||
+        video.seeking
+    ){
+
+        lastFrameSample =
+            null;
+
+        return;
+
+    }
+
+    const quality =
+        video.getVideoPlaybackQuality();
+
+    const sample = {
+        frames: quality.totalVideoFrames,
+        time: video.currentTime
+    };
+
+    if(lastFrameSample){
+
+        const frameDelta =
+            sample.frames - lastFrameSample.frames;
+
+        const timeDelta =
+            sample.time - lastFrameSample.time;
+
+        if(frameDelta > 5 && timeDelta > 0.2){
+
+            const estimatedFps =
+                frameDelta / timeDelta;
+
+            if(estimatedFps > 1 && estimatedFps < 121){
+
+                estimatedFrameDuration =
+                    1 / estimatedFps;
+
+            }
+
+        }
+
+    }
+
+    lastFrameSample =
+        sample;
+
+}
+
+video.addEventListener(
+    "timeupdate",
+    refineFrameDurationEstimate
+);
+
+function skipSeconds(seconds){
+
+    if(!Number.isFinite(video.duration)){
+
+        return;
+
+    }
+
+    video.currentTime =
+        Math.min(
+            video.duration,
+            Math.max(0, video.currentTime + seconds)
+        );
+
+}
+
+function stepOneFrame(direction){
+
+    if(!Number.isFinite(video.duration)){
+
+        return;
+
+    }
+
+    /*
+        Pausing first matches how frame-stepping behaves in every
+        other video tool - stepping while playing would just get
+        immediately overtaken by normal playback a moment later.
+    */
+    video.pause();
+
+    video.currentTime =
+        Math.min(
+            video.duration,
+            Math.max(0, video.currentTime + (direction * estimatedFrameDuration))
+        );
+
+}
+
+skipBackButton.addEventListener(
+    "click",
+    function(){
+
+        skipSeconds(-10);
+
+    }
+);
+
+skipForwardButton.addEventListener(
+    "click",
+    function(){
+
+        skipSeconds(10);
+
+    }
+);
+
+frameBackButton.addEventListener(
+    "click",
+    function(){
+
+        stepOneFrame(-1);
+
+    }
+);
+
+frameForwardButton.addEventListener(
+    "click",
+    function(){
+
+        stepOneFrame(1);
+
+    }
+);
+
+
+/* =========================================================
+   DOWNLOAD FRAME
+
+   Draws whatever's currently on screen into a canvas and saves
+   it as a PNG. Works for any same-origin video source; a
+   cross-origin one without permissive CORS headers will "taint"
+   the canvas and throw on export, which is a real browser
+   security restriction (not something this app can work around),
+   so that failure is caught and surfaced as a message rather than
+   a silent no-op or a console-only error.
+   ========================================================= */
+
+function formatTimeForFilename(seconds){
+
+    const totalSeconds =
+        Math.max(0, Math.floor(seconds || 0));
+
+    const mins =
+        Math.floor(totalSeconds / 60);
+
+    const secs =
+        totalSeconds % 60;
+
+    return `${mins}m${String(secs).padStart(2, "0")}s`;
+
+}
+
+downloadFrameButton.addEventListener(
+    "click",
+    function(){
+
+        if(!video.videoWidth || !video.videoHeight){
+
+            return;
+
+        }
+
+        const canvas =
+            document.createElement("canvas");
+
+        canvas.width =
+            video.videoWidth;
+
+        canvas.height =
+            video.videoHeight;
+
+        const ctx =
+            canvas.getContext("2d");
+
+        ctx.drawImage(
+            video,
+            0, 0,
+            canvas.width, canvas.height
+        );
+
+        canvas.toBlob(
+            function(blob){
+
+                if(!blob){
+
+                    alert(
+                        "Couldn't capture this frame."
+                    );
+
+                    return;
+
+                }
+
+                const url =
+                    URL.createObjectURL(blob);
+
+                const link =
+                    document.createElement("a");
+
+                link.href =
+                    url;
+
+                link.download =
+                    `${(title.textContent || "frame").replace(/[^\w\- ]+/g, "").trim() || "frame"}-${formatTimeForFilename(video.currentTime)}.png`;
+
+                document.body.appendChild(link);
+
+                link.click();
+
+                link.remove();
+
+                URL.revokeObjectURL(url);
+
+            },
+            "image/png"
+        );
+
+    }
+);
+
+/* =========================================================
+   BOOKMARKS
+
+   Ported straight from pdf.html's bookmark system - same
+   structure, same behavior, same settings, "page" swapped for
+   "timestamp" throughout. See pdf.html for the reasoning behind
+   each individual piece.
+   ========================================================= */
+
+const bookmarkPopup =
+    document.getElementById("bookmarkPopup");
+
+const bookmarkMenuView =
+    document.getElementById("bookmarkMenuView");
+
+const bookmarkLoadView =
+    document.getElementById("bookmarkLoadView");
+
+const bookmarkDropView =
+    document.getElementById("bookmarkDropView");
+
+const bookmarkSettingsView =
+    document.getElementById("bookmarkSettingsView");
+
+const bookmarkListContent =
+    document.getElementById("bookmarkListContent");
+
+const bookmarkNameInput =
+    document.getElementById("bookmarkNameInput");
+
+const bookmarkSaveBtn =
+    document.getElementById("bookmarkSaveBtn");
+
+const bookmarkDropOpen =
+    document.getElementById("bookmarkDropOpen");
+
+const bookmarkResumeToggle =
+    document.getElementById("bookmarkResumeToggle");
+
+const bookmarkAutoResumeToggle =
+    document.getElementById("bookmarkAutoResumeToggle");
+
+const bookmarkAutoToggle =
+    document.getElementById("bookmarkAutoToggle");
+
+const bookmarkMaxOptionsEl =
+    document.getElementById("bookmarkMaxOptions");
+
+const bookmarkClearAllBtn =
+    document.getElementById("bookmarkClearAllBtn");
+
+const clearBookmarksConfirm =
+    document.getElementById("clearBookmarksConfirm");
+
+const clearBookmarksDescription =
+    document.getElementById("clearBookmarksDescription");
+
+const clearBookmarksConfirmBtn =
+    document.getElementById("clearBookmarksConfirmBtn");
+
+const clearBookmarksCancelBtn =
+    document.getElementById("clearBookmarksCancelBtn");
+
+const resumeChoice =
+    document.getElementById("resumeChoice");
+
+const resumeChoiceTitle =
+    document.getElementById("resumeChoiceTitle");
+
+const resumeChoiceDescription =
+    document.getElementById("resumeChoiceDescription");
+
+const resumeChoicePrimary =
+    document.getElementById("resumeChoicePrimary");
+
+const resumeChoiceCancel =
+    document.getElementById("resumeChoiceCancel");
+
+
+const BOOKMARK_SETTINGS_KEY =
+    "videoBookmarkSettings";
+
+const AUTO_BOOKMARK_ID =
+    "auto-last-position";
+
+/*
+    Time 0 is already where a video starts, so treating it as a
+    *resume* target - prompted, automatic, or via an auto-saved
+    "last position" bookmark - would only ever be pointless at
+    best and confusing at worst ("resume" landing you right back
+    at the very beginning). A person can still manually drop a
+    named bookmark at 0:00 if they want one there for their own
+    reasons; this only gates the auto-bookmark-on-exit save path
+    and the resume-candidate read path.
+*/
+const BOOKMARK_MIN_TIME =
+    0;
+
+const BOOKMARK_MAX_OPTIONS = [
+    { value:5, label:"5" },
+    { value:10, label:"10" },
+    { value:15, label:"15" },
+    { value:20, label:"20" },
+    { value:100, label:"No limit" }
+];
+
+function escapeHtml(value){
+    return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+/*
+    Bookmarks are scoped per video (keyed off the same `src` URL
+    used to load it), so opening a different video never shows
+    another one's bookmarks. The resume-prompt toggle, on the
+    other hand, is one setting for the whole player - it lives
+    under its own fixed key.
+*/
+function bookmarksStorageKey(){
+    return `videoBookmarks:${src}`;
+}
+
+function loadBookmarkSettings(){
+    try{
+        const raw = window.localStorage.getItem(BOOKMARK_SETTINGS_KEY);
+        const parsed = raw ? JSON.parse(raw) : null;
+        return {
+            promptResume: parsed && typeof parsed.promptResume === "boolean" ? parsed.promptResume : true,
+            autoResume: parsed && typeof parsed.autoResume === "boolean" ? parsed.autoResume : false,
+            autoBookmark: parsed && typeof parsed.autoBookmark === "boolean" ? parsed.autoBookmark : false,
+            maxBookmarks: parsed && BOOKMARK_MAX_OPTIONS.some(opt => opt.value === parsed.maxBookmarks) ? parsed.maxBookmarks : 100
+        };
+    }catch{
+        return { promptResume:true, autoResume:false, autoBookmark:false, maxBookmarks:100 };
+    }
+}
+
+function saveBookmarkSettings(settings){
+    try{
+        window.localStorage.setItem(BOOKMARK_SETTINGS_KEY, JSON.stringify(settings));
+    }catch{
+        /* Storage unavailable - the setting just won't persist. */
+    }
+}
+
+let bookmarkSettings =
+    loadBookmarkSettings();
+
+function loadBookmarks(){
+    try{
+        const raw = window.localStorage.getItem(bookmarksStorageKey());
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed) ? parsed : [];
+    }catch{
+        return [];
+    }
+}
+
+/*
+    The cap is enforced right here, in the one function everything
+    else already funnels through to persist a bookmark list - so
+    every write path (dropping one, auto-saving on exit, deleting
+    one) automatically respects whatever the person has it set to.
+*/
+function saveBookmarks(list){
+
+    let toSave = list;
+
+    if(list.length > bookmarkSettings.maxBookmarks){
+        toSave = sortByDateCreatedDesc(list).slice(0, bookmarkSettings.maxBookmarks);
+    }
+
+    try{
+        window.localStorage.setItem(bookmarksStorageKey(), JSON.stringify(toSave));
+    }catch{
+        /* Storage unavailable - bookmarks just won't persist past this session. */
+    }
+}
+
+function sortByDateCreatedDesc(list){
+    return list.slice().sort((a, b) => new Date(b.dateCreated) - new Date(a.dateCreated));
+}
+
+function formatBookmarkDate(iso){
+    try{
+        return new Date(iso).toLocaleDateString(undefined, { year:"numeric", month:"short", day:"numeric" });
+    }catch{
+        return "";
+    }
+}
+
+/*
+    "1:23" for anything under an hour, "1:02:03" once it reaches
+    one - the standard video-timestamp format, used both as the
+    bookmark's pre-filled name (there's no page heading to guess
+    the way pdf.html does, so the timestamp itself is the obvious
+    stand-in) and in the bookmark list's own metadata line.
+*/
+function formatTimestamp(seconds){
+
+    const totalSeconds =
+        Math.max(0, Math.floor(seconds || 0));
+
+    const hrs =
+        Math.floor(totalSeconds / 3600);
+
+    const mins =
+        Math.floor((totalSeconds % 3600) / 60);
+
+    const secs =
+        totalSeconds % 60;
+
+    if(hrs > 0){
+        return `${hrs}:${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+    }
+
+    return `${mins}:${String(secs).padStart(2, "0")}`;
+
+}
+
+function showBookmarkView(view){
+    for(const candidate of [bookmarkMenuView, bookmarkLoadView, bookmarkDropView, bookmarkSettingsView]){
+        candidate.classList.toggle("hidden", candidate !== view);
+    }
+}
+
+function closeBookmarkPopup(){
+    bookmarkPopup.classList.add("hidden");
+}
+
+let pendingDeleteId =
+    null;
+
+let pendingDeleteTimer =
+    null;
+
+function renderBookmarkList(){
+
+    pendingDeleteId = null;
+    clearTimeout(pendingDeleteTimer);
+
+    const bookmarks =
+        sortByDateCreatedDesc(loadBookmarks());
+
+    if(!bookmarks.length){
+        bookmarkListContent.innerHTML = `<div class="tocEmptyMessage">No bookmarks yet. Drop one from the menu.</div>`;
+        return;
+    }
+
+    bookmarkListContent.innerHTML = bookmarks.map(bookmark => `
+        <div class="bookmarkItem">
+            <button class="bookmarkItemMain" data-goto="${escapeHtml(bookmark.id)}">
+                <div class="bookmarkItemName">${escapeHtml(bookmark.name)}${bookmark.auto ? '<span class="bookmarkItemAutoTag">Auto</span>' : ""}</div>
+                <div class="bookmarkItemMeta">${escapeHtml(formatTimestamp(bookmark.time))} · ${escapeHtml(formatBookmarkDate(bookmark.dateCreated))}</div>
+            </button>
+            <button class="bookmarkItemDelete" data-delete="${escapeHtml(bookmark.id)}" aria-label="Delete bookmark" title="Delete bookmark">✕</button>
+        </div>
+    `).join("");
+}
+
+/*
+    CSS.escape isn't available in every runtime this might land in,
+    and bookmark ids here are always our own generated
+    timestamp-random strings (never raw user text), so a plain
+    quote-escape is all attribute-selector safety actually requires.
+*/
+function previousSelectorEscape(id){
+    return String(id).replace(/"/g, '\\"');
+}
+
+bookmarkListContent.addEventListener("click", event => {
+
+    const deleteBtn =
+        event.target.closest("[data-delete]");
+
+    if(deleteBtn){
+
+        const id =
+            deleteBtn.dataset.delete;
+
+        /*
+            First tap arms a "really delete this?" confirmation
+            right on the button itself; a second tap within a few
+            seconds actually deletes. Tapping any other bookmark's
+            delete button disarms this one.
+        */
+        if(pendingDeleteId !== id){
+
+            const previous =
+                pendingDeleteId
+                    ? bookmarkListContent.querySelector(`[data-delete="${previousSelectorEscape(pendingDeleteId)}"]`)
+                    : null;
+
+            if(previous){
+                previous.classList.remove("confirming");
+                previous.textContent = "✕";
+            }
+
+            pendingDeleteId = id;
+            deleteBtn.classList.add("confirming");
+            deleteBtn.textContent = "Delete?";
+
+            clearTimeout(pendingDeleteTimer);
+            pendingDeleteTimer = setTimeout(() => {
+                if(pendingDeleteId === id){
+                    deleteBtn.classList.remove("confirming");
+                    deleteBtn.textContent = "✕";
+                    pendingDeleteId = null;
+                }
+            }, 3000);
+
+            return;
+        }
+
+        clearTimeout(pendingDeleteTimer);
+        pendingDeleteId = null;
+
+        saveBookmarks(loadBookmarks().filter(b => b.id !== id));
+        renderBookmarkList();
+        return;
+    }
+
+    const gotoId =
+        event.target.closest("[data-goto]")?.dataset.goto;
+
+    if(gotoId){
+
+        const bookmark =
+            loadBookmarks().find(b => b.id === gotoId);
+
+        if(!bookmark){
+            return;
+        }
+
+        if(Number.isFinite(video.duration)){
+            video.currentTime = Math.min(video.duration, bookmark.time);
+        }else{
+            video.currentTime = bookmark.time;
+        }
+
+        closeBookmarkPopup();
+    }
+});
+
+bookmarkButton.addEventListener("click", event => {
+
+    event.stopPropagation();
+
+    closeSpeedMenu();
+
+    menu.style.display = "none";
+
+    if(bookmarkPopup.classList.contains("hidden")){
+        showBookmarkView(bookmarkMenuView);
+        bookmarkPopup.classList.remove("hidden");
+    }else{
+        closeBookmarkPopup();
+    }
+
+});
+
+bookmarkPopup.addEventListener("click", event => event.stopPropagation());
+
+document.addEventListener("click", event => {
+
+    if(bookmarkPopup.classList.contains("hidden")){
+        return;
+    }
+
+    /*
+        The Clear All confirmation is a full-screen overlay that
+        sits as a sibling of #bookmarkPopup, not inside it, so a
+        tap anywhere on it - including its own Cancel/Confirm
+        buttons - needs to be excused here too, or it reads as
+        "outside" and closes the bookmark popup out from under the
+        very confirmation it opened.
+    */
+    if(bookmarkPopup.contains(event.target) || event.target.closest("#bookmarkButton") || clearBookmarksConfirm.contains(event.target)){
+        return;
+    }
+
+    closeBookmarkPopup();
+});
+
+document.getElementById("bookmarkLoadOpen").addEventListener("click", () => {
+    renderBookmarkList();
+    showBookmarkView(bookmarkLoadView);
+});
+
+bookmarkDropOpen.addEventListener("click", () => {
+
+    showBookmarkView(bookmarkDropView);
+
+    bookmarkNameInput.value = formatTimestamp(video.currentTime);
+    bookmarkNameInput.focus();
+    bookmarkNameInput.select();
+
+});
+
+document.getElementById("bookmarkSettingsOpen").addEventListener("click", () => {
+    showBookmarkView(bookmarkSettingsView);
+});
+
+for(const backBtn of bookmarkPopup.querySelectorAll("[data-back]")){
+    backBtn.addEventListener("click", () => showBookmarkView(bookmarkMenuView));
+}
+
+bookmarkSaveBtn.addEventListener("click", () => {
+
+    const time =
+        video.currentTime;
+
+    const name =
+        bookmarkNameInput.value.trim() || formatTimestamp(time);
+
+    const bookmarks =
+        loadBookmarks();
+
+    bookmarks.push({
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        name,
+        time,
+        dateCreated: new Date().toISOString()
+    });
+
+    saveBookmarks(bookmarks);
+
+    closeBookmarkPopup();
+});
+
+bookmarkNameInput.addEventListener("keydown", event => {
+
+    if(event.key === "Enter"){
+        event.preventDefault();
+        bookmarkSaveBtn.click();
+    }
+
+});
+
+/* ------------------------------------------------------------
+   RESUME-PROMPT / AUTO-RESUME TOGGLES
+------------------------------------------------------------ */
+
+function syncResumeToggleUI(){
+    bookmarkResumeToggle.classList.toggle("active", bookmarkSettings.promptResume);
+    bookmarkResumeToggle.setAttribute("aria-checked", bookmarkSettings.promptResume ? "true" : "false");
+    syncAutoResumeToggleUI();
+}
+
+/*
+    Grayed out and inert whenever "Resume prompt" is off - "Resume
+    automatically" is a refinement of *how* asking behaves, so it
+    doesn't mean anything with nothing above it to refine (see
+    maybeOfferResume). The stored preference itself is left alone
+    while disabled, so re-enabling "Resume prompt" later restores
+    whatever "Resume automatically" was set to.
+*/
+function syncAutoResumeToggleUI(){
+    bookmarkAutoResumeToggle.classList.toggle("active", bookmarkSettings.autoResume);
+    bookmarkAutoResumeToggle.setAttribute("aria-checked", bookmarkSettings.autoResume ? "true" : "false");
+    bookmarkAutoResumeToggle.disabled = !bookmarkSettings.promptResume;
+}
+
+syncResumeToggleUI();
+
+bookmarkResumeToggle.addEventListener("click", () => {
+    bookmarkSettings.promptResume = !bookmarkSettings.promptResume;
+    saveBookmarkSettings(bookmarkSettings);
+    syncResumeToggleUI();
+});
+
+bookmarkAutoResumeToggle.addEventListener("click", () => {
+    if(bookmarkAutoResumeToggle.disabled){
+        return;
+    }
+    bookmarkSettings.autoResume = !bookmarkSettings.autoResume;
+    saveBookmarkSettings(bookmarkSettings);
+    syncAutoResumeToggleUI();
+});
+
+/* ------------------------------------------------------------
+   AUTO-BOOKMARK TOGGLE
+------------------------------------------------------------ */
+
+function syncAutoToggleUI(){
+    bookmarkAutoToggle.classList.toggle("active", bookmarkSettings.autoBookmark);
+    bookmarkAutoToggle.setAttribute("aria-checked", bookmarkSettings.autoBookmark ? "true" : "false");
+}
+
+syncAutoToggleUI();
+
+bookmarkAutoToggle.addEventListener("click", () => {
+    bookmarkSettings.autoBookmark = !bookmarkSettings.autoBookmark;
+    saveBookmarkSettings(bookmarkSettings);
+    syncAutoToggleUI();
+});
+
+/*
+    Saves (or refreshes) a single, silently-overwritten bookmark
+    representing wherever the person was when they left - so
+    Resume always has something to offer even if they never
+    dropped one on purpose. Fixed id means each call replaces the
+    last one instead of piling up a new entry every time the tab
+    is backgrounded.
+*/
+function saveAutoBookmark(){
+
+    if(!bookmarkSettings.autoBookmark || !Number.isFinite(video.duration)){
+        return;
+    }
+
+    const time =
+        video.currentTime;
+
+    if(time <= BOOKMARK_MIN_TIME){
+        return;
+    }
+
+    const bookmarks =
+        loadBookmarks().filter(b => b.id !== AUTO_BOOKMARK_ID);
+
+    bookmarks.push({
+        id: AUTO_BOOKMARK_ID,
+        name: "Last Position",
+        time,
+        dateCreated: new Date().toISOString(),
+        auto: true
+    });
+
+    saveBookmarks(bookmarks);
+}
+
+document.addEventListener("visibilitychange", () => {
+    if(document.visibilityState === "hidden"){
+        saveAutoBookmark();
+    }
+});
+
+window.addEventListener("pagehide", () => {
+    saveAutoBookmark();
+});
+
+/* ------------------------------------------------------------
+   MAX BOOKMARKS
+------------------------------------------------------------ */
+
+function buildBookmarkMaxOptions(){
+
+    bookmarkMaxOptionsEl.replaceChildren();
+
+    for(const option of BOOKMARK_MAX_OPTIONS){
+
+        const pill =
+            document.createElement("button");
+
+        pill.type = "button";
+        pill.className = "bookmarkPill" + (bookmarkSettings.maxBookmarks === option.value ? " active" : "");
+        pill.textContent = option.label;
+
+        pill.addEventListener("click", () => {
+
+            bookmarkSettings.maxBookmarks = option.value;
+            saveBookmarkSettings(bookmarkSettings);
+
+            saveBookmarks(loadBookmarks());
+
+            buildBookmarkMaxOptions();
+        });
+
+        bookmarkMaxOptionsEl.appendChild(pill);
+    }
+}
+
+buildBookmarkMaxOptions();
+
+/* ------------------------------------------------------------
+   CLEAR ALL BOOKMARKS
+------------------------------------------------------------ */
+
+bookmarkClearAllBtn.addEventListener("click", () => {
+
+    const count =
+        loadBookmarks().length;
+
+    if(!count){
+        return;
+    }
+
+    clearBookmarksDescription.textContent =
+        `This removes all ${count} bookmark${count === 1 ? "" : "s"} saved for this video. This can't be undone.`;
+
+    clearBookmarksConfirm.classList.remove("hidden");
+});
+
+clearBookmarksConfirmBtn.addEventListener("click", () => {
+    saveBookmarks([]);
+    clearBookmarksConfirm.classList.add("hidden");
+    closeBookmarkPopup();
+});
+
+clearBookmarksCancelBtn.addEventListener("click", () => {
+    clearBookmarksConfirm.classList.add("hidden");
+});
+
+clearBookmarksConfirm.addEventListener("click", event => {
+    if(event.target === clearBookmarksConfirm){
+        clearBookmarksConfirm.classList.add("hidden");
+    }
+});
+
+/* ------------------------------------------------------------
+   RESUME PROMPT
+
+   Offered at most once, right after the video's metadata is
+   ready - only when the setting is on and at least one bookmark
+   already exists for this exact video. "Last position" is read
+   as the most recently *created* bookmark, i.e. wherever the
+   person last chose to drop one, not wherever playback happened
+   to be sitting when they left.
+------------------------------------------------------------ */
+
+function closeResumeChoice(){
+    resumeChoice.classList.add("hidden");
+}
+
+resumeChoice.addEventListener("click", event => {
+    if(event.target === resumeChoice){
+        closeResumeChoice();
+    }
+});
+
+let hasOfferedResume =
+    false;
+
+function maybeOfferResume(){
+
+    if(hasOfferedResume){
+        return;
+    }
+
+    hasOfferedResume = true;
+
+    if(!bookmarkSettings.promptResume){
+        return;
+    }
+
+    const bookmarks =
+        loadBookmarks().filter(b => b.time > BOOKMARK_MIN_TIME);
+
+    if(!bookmarks.length){
+        return;
+    }
+
+    const latest =
+        sortByDateCreatedDesc(bookmarks)[0];
+
+    function jumpToLatest(){
+        video.currentTime = Number.isFinite(video.duration)
+            ? Math.min(video.duration, latest.time)
+            : latest.time;
+    }
+
+    if(bookmarkSettings.autoResume){
+        jumpToLatest();
+        return;
+    }
+
+    resumeChoiceTitle.textContent = latest.name;
+    resumeChoiceDescription.textContent = `Bookmarked at ${formatTimestamp(latest.time)} on ${formatBookmarkDate(latest.dateCreated)}.`;
+    resumeChoicePrimary.textContent = "Resume Here";
+
+    resumeChoicePrimary.onclick = () => {
+        closeResumeChoice();
+        jumpToLatest();
+    };
+
+    resumeChoiceCancel.onclick = () => closeResumeChoice();
+
+    resumeChoice.classList.remove("hidden");
+}
+
+video.addEventListener("loadedmetadata", maybeOfferResume);
 
 
 /* =========================================================
@@ -1281,8 +3187,8 @@ function optionRow(
 
 
     button.append(
-        check,
-        text
+        text,
+        check
     );
 
 
@@ -1366,6 +3272,10 @@ function openSpeedMenu(){
         "hidden"
     );
 
+    speedBtn.classList.add(
+        "open"
+    );
+
     speedBtn.setAttribute(
         "aria-expanded",
         "true"
@@ -1378,6 +3288,10 @@ function closeSpeedMenu(){
 
     speedMenu.classList.add(
         "hidden"
+    );
+
+    speedBtn.classList.remove(
+        "open"
     );
 
     speedBtn.setAttribute(
@@ -1413,6 +3327,11 @@ speedBtn.addEventListener(
     function(event){
 
         event.stopPropagation();
+
+        closeBookmarkPopup();
+
+        menu.style.display =
+            "none";
 
         toggleSpeedMenu();
 
@@ -1497,6 +3416,10 @@ menuButton.addEventListener(
     function(event){
 
         event.stopPropagation();
+
+        closeBookmarkPopup();
+
+        closeSpeedMenu();
 
         menu.style.display =
             menu.style.display === "block"
