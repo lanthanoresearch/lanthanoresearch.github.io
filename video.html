@@ -344,38 +344,105 @@ select:focus-visible{
   border-radius:6px;
 }
 
+#downloadFrameBtn{
+  gap:6px;
+}
+
 /* ============================================================
-   SKIP / FRAME STEP CONTROLS
+   FLOATING VIDEO CONTROL BAR
 
-   Grouped into one connected pill the same way pdf.html groups
-   its zoom out/percentage/zoom in controls (.zoomControls) and,
-   more recently, its Read Aloud prev/play/next row
-   (.readAloudNavGroup) - a single bordered container with
-   buttons packed together inside it, rather than separate
-   toolbar buttons with gaps between them. Icons follow the same
-   "single chevron for the small step, doubled chevron for the
-   big step" pairing media players have used forever - one arrow
-   for a frame, two for a 10-second jump.
-
-   Play/Pause sits in the middle of that same pill, matching
-   pdf.html's layout - accented and a touch larger than its four
-   flanking skip buttons so it still reads as the primary
-   control, but part of the same connected group rather than a
-   separate floating button. It mirrors the *video element's own*
-   play/paused state (see the "play"/"pause"/"ended" listeners
-   below), so it stays correct no matter what actually started or
-   stopped playback - this button, the native controls, the
-   spacebar shortcut, or tapping the replay cover.
+   Ported straight from pdf.html's #readAloudControls "now
+   playing" bar - a compact pill docked just above the title bar,
+   same background/border/radius/shadow, same z-index. Holds the
+   transport controls (skip/frame/play) in one connected pill
+   (.videoNavGroup, identical treatment to pdf.html's
+   .readAloudNavGroup) plus a Settings gear that opens a popover
+   for playback speed, mirroring pdf.html's Read Aloud settings
+   popover (minus the Voice row and Skip Tables toggle, which
+   don't apply to video).
 ============================================================ */
 
-.skipControls{
+#videoControls{
+  position:fixed;
+
+  left:50%;
+
+  bottom:calc(var(--titlebar-h) + 12px);
+
+  transform:translateX(-50%);
+
   display:flex;
 
   align-items:center;
 
-  gap:3px;
+  gap:8px;
 
-  height:34px;
+  max-width:calc(100% - 24px);
+
+  padding:8px 10px;
+
+  background:#222;
+
+  border:1px solid #444;
+
+  border-radius:11px;
+
+  box-shadow:
+    0 8px 24px rgba(0,0,0,.5);
+
+  z-index:6500;
+}
+
+/* Same escape hatch as pdf.html's #readAloudControls.settings-open
+   - lifts this bar's own stacking context above the reading-mode
+   float while its Settings popover is open (see openVideoSettingsMenu
+   below). */
+#videoControls.settings-open{
+  z-index:9700;
+}
+
+.videoCtrlBtn{
+  width:36px;
+  height:36px;
+
+  padding:0;
+
+  display:flex;
+
+  align-items:center;
+  justify-content:center;
+
+  flex:0 0 auto;
+
+  border-radius:8px;
+
+  font-size:16px;
+  line-height:1;
+}
+
+.videoCtrlBtn svg{
+  display:block;
+}
+
+/* Groups all five transport controls - back 10s, back 1 frame,
+   play/pause, forward 1 frame, forward 10s - into one connected
+   pill, identical to pdf.html's .readAloudNavGroup (prev page/prev
+   section/play/next section/next page). Play/Pause keeps its spot
+   in the middle, accented and a touch larger than its four
+   flanking buttons so it still reads as the primary control. It
+   mirrors the *video element's own* play/paused state (see the
+   "play"/"pause"/"ended" listeners below), so it stays correct no
+   matter what actually started or stopped playback - this button,
+   the native controls, the spacebar shortcut, or tapping the
+   replay cover. */
+.videoNavGroup{
+  display:flex;
+
+  align-items:center;
+
+  gap:2px;
+
+  height:36px;
 
   padding:0 3px;
 
@@ -383,85 +450,208 @@ select:focus-visible{
 
   border:1px solid #353535;
 
-  border-radius:7px;
+  border-radius:9px;
+
+  flex:0 0 auto;
 }
 
-.skipControls button{
+.videoNavGroup .videoCtrlBtn{
   width:32px;
-  height:28px;
-
-  padding:0;
+  height:32px;
 
   border:0;
 
   background:transparent;
 
-  display:flex;
+  border-radius:6px;
 
-  align-items:center;
-
-  justify-content:center;
+  flex:0 0 auto;
 }
 
-.skipControls button:hover{
+.videoNavGroup .videoCtrlBtn:hover{
   background:#353535;
 }
 
-.skipControls #videoPlayPauseBtn{
-  width:32px;
-  height:32px;
+.videoNavGroup .videoCtrlBtn:active{
+  background:#414141;
+}
+
+.videoNavGroup #videoPlayPauseBtn{
+  width:34px;
+  height:34px;
 
   background:#2f7cff;
 
   color:#fff;
 
-  border-radius:6px;
+  border-radius:7px;
+
+  font-size:17px;
 }
 
-.skipControls #videoPlayPauseBtn:hover{
+.videoNavGroup #videoPlayPauseBtn:hover{
   background:#4a8dff;
 }
 
-.skipControls #videoPlayPauseBtn:active{
+.videoNavGroup #videoPlayPauseBtn:active{
   background:#2666db;
 }
 
-#downloadFrameBtn{
-  gap:6px;
-}
-
 /* ============================================================
-   SPEED CONTROL
+   PLAYBACK SETTINGS (SPEED)
 
-   Matches category.html's sort-dropdown look (.sort-btn /
-   .sort-panel / .sort-option), the same treatment pdf.html's own
-   Speed/Voice pickers now use - a solid pill-shaped trigger with a
-   CSS-triangle caret that flips on open, and a dark panel with
-   subtly-highlighted rows for the options, rather than inventing
-   its own separate style.
+   One gear button opens a popover with a Speed picker row -
+   tapping it opens a second popup listing every speed as a
+   checkmarked option - exactly pdf.html's Read Aloud settings
+   popover pattern (#readAloudSettingsMenu / #readAloudSpeedPopup),
+   just without the Voice row or Skip Tables toggle.
 ============================================================ */
 
-#speedWrap{
+#videoSettingsWrap{
+  /*
+     Deliberately NOT position:relative - #videoSettingsMenu
+     anchors to the whole bar (#videoControls, itself
+     position:fixed), matching pdf.html's own
+     #readAloudSettingsWrap reasoning exactly.
+  */
   flex:0 0 auto;
 }
 
-#speedBtn{
-  display:inline-flex;
+#videoSettingsMenu{
+  position:absolute;
+
+  left:50%;
+  bottom:calc(100% + 8px);
+
+  transform:translateX(-50%);
+
+  display:flex;
+  flex-direction:column;
+
+  width:calc(100vw - 24px);
+  max-width:260px;
+  max-height:min(60vh, 420px);
+
+  padding:8px;
+
+  background:#222;
+
+  border:1px solid #333;
+
+  border-radius:10px;
+
+  box-shadow:
+    0 8px 24px rgba(0,0,0,.5);
+
+  z-index:9600;
+}
+
+#videoSettingsMenu.hidden,
+#videoSpeedPopup.hidden{
+  display:none;
+}
+
+.videoSettingsMenuHeader{
+  display:flex;
 
   align-items:center;
 
-  gap:8px;
+  justify-content:space-between;
+
+  gap:10px;
+
+  margin:0 0 8px;
+
+  padding-bottom:8px;
+
+  border-bottom:1px solid #333;
+
+  flex:0 0 auto;
 }
 
-#speedBtn .speedBtnValue{
-  color:#fff;
+.videoSettingsMenuHeader h4{
+  margin:0;
 
-  font-weight:bold;
+  font-size:14px;
+
+  font-weight:600;
+
+  color:#eee;
+}
+
+#videoSettingsScroll{
+  display:flex;
+  flex-direction:column;
+
+  gap:4px;
+
+  flex:1 1 auto;
+
+  min-height:0;
+
+  overflow-y:auto;
+}
+
+/* Matches pdf.html's .readAloudPickerRow exactly: label on the
+   left, current value + chevron on the right, tapping it opens
+   the Speed picker popup below. */
+.videoPickerRow{
+  display:flex;
+
+  align-items:center;
+
+  justify-content:space-between;
+
+  gap:10px;
+
+  width:100%;
+
+  padding:10px 16px;
+
+  border:0;
+  border-radius:8px;
+
+  background:#2e2e2e;
+
+  color:#eee;
+
+  font-size:13.5px;
+}
+
+.videoPickerRow:hover{
+  background:#383838;
+}
+
+.videoPickerValue{
+  display:flex;
+
+  align-items:center;
+
+  justify-content:flex-end;
+
+  gap:8px;
+
+  flex:1 1 auto;
+  min-width:0;
+
+  color:#eee;
+
+  font-size:13.5px;
+}
+
+.videoPickerValue span{
+  overflow:hidden;
+
+  text-overflow:ellipsis;
+
+  white-space:nowrap;
+
+  min-width:0;
 }
 
 /* A plain CSS triangle rather than an SVG chevron - flips via
-   transform when the menu it belongs to is open. */
-.speedCaret{
+   transform when its row's picker is open. */
+.videoPickerCaret{
   flex-shrink:0;
 
   width:0;
@@ -474,34 +664,26 @@ select:focus-visible{
   transition:transform .15s ease;
 }
 
-#speedBtn.open .speedCaret{
+.videoPickerRow.open .videoPickerCaret{
   transform:rotate(180deg);
 }
 
-#speedMenu{
-  /*
-     position:fixed with left/top set from JS (see
-     positionSpeedMenu()) rather than CSS centering - the menu is
-     anchored to #speedBtn's own on-screen position and then
-     clamped to stay within the viewport, so it sits right under
-     the button when there's room and only slides over as far as
-     it has to when the button is near an edge, instead of always
-     jumping to the middle of the screen.
-  */
+/* Bare "mere popup" - no header/back button, just the option list -
+   anchored above its own trigger row via inline left/bottom set in
+   JS at open-time (positionVideoSpeedPopup), exactly like
+   pdf.html's #readAloudSpeedPopup. */
+#videoSpeedPopup{
   position:fixed;
 
   display:flex;
   flex-direction:column;
 
-  width:150px;
+  width:190px;
   max-width:calc(100vw - 24px);
   max-height:min(60vh, 420px);
 
-  overflow-y:auto;
-
   padding:10px;
 
-  /* Matches category.html's .sort-panel exactly. */
   background:#1d1d1d;
 
   border:1px solid #2c2c2c;
@@ -511,23 +693,22 @@ select:focus-visible{
   box-shadow:
     0 6px 18px rgba(0,0,0,.5);
 
-  z-index:9600;
+  z-index:9650;
 }
 
-#speedMenu.hidden{
-  display:none;
-}
-
-.speedOptionList{
+.videoOptionList{
   display:flex;
   flex-direction:column;
+
+  flex:1 1 auto;
+
+  min-height:0;
+
+  overflow-y:auto;
 }
 
-/* Same row treatment as category.html's .sort-option: label on the
-   left, a small indicator pinned to the right (there, a direction
-   arrow; here, a checkmark on whichever speed is currently picked),
-   a plain hover/active highlight rather than a bright accent color. */
-.speedOption{
+/* Same checkmarked row treatment as pdf.html's .readAloudOption. */
+.videoOption{
   display:flex;
 
   align-items:center;
@@ -558,17 +739,17 @@ select:focus-visible{
   text-overflow:ellipsis;
 }
 
-.speedOption:hover{
+.videoOption:hover{
   background:#262626;
 }
 
-.speedOption.active{
+.videoOption.active{
   background:#262626;
 
   color:#fff;
 }
 
-.speedOption .speedOptionCheck{
+.videoOption .videoOptionCheck{
   flex:0 0 auto;
 
   min-width:14px;
@@ -580,11 +761,11 @@ select:focus-visible{
   visibility:hidden;
 }
 
-.speedOption.active .speedOptionCheck{
+.videoOption.active .videoOptionCheck{
   visibility:visible;
 }
 
-.speedOption .speedOptionLabel{
+.videoOption .videoOptionLabel{
   flex:1 1 auto;
 
   min-width:0;
@@ -1497,20 +1678,42 @@ body.reading-mode #readingModeFloat{
     padding:5px;
   }
 
-  .skipControls{
-    height:30px;
+  .videoNavGroup{
+    height:32px;
   }
 
-  .skipControls button{
-    width:28px;
-
-    height:24px;
-  }
-
-  .skipControls #videoPlayPauseBtn{
+  .videoNavGroup .videoCtrlBtn{
     width:28px;
 
     height:28px;
+  }
+
+  .videoNavGroup #videoPlayPauseBtn{
+    width:30px;
+
+    height:30px;
+  }
+
+  .videoCtrlBtn{
+    width:32px;
+
+    height:32px;
+  }
+
+  #videoControls{
+
+    left:8px;
+    right:8px;
+
+    bottom:calc(var(--titlebar-h) + 8px);
+
+    transform:none;
+
+    max-width:none;
+
+    flex-wrap:wrap;
+
+    justify-content:center;
   }
 
   .toolButton{
@@ -1584,34 +1787,54 @@ body.reading-mode #readingModeFloat{
 
 <div id="toolbar">
 
-  <div class="skipControls">
-    <button id="skipBackBtn" title="Back 10 seconds" aria-label="Back 10 seconds"><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor"><rect x="2" y="6" width="2" height="12" rx="0.5"></rect><path d="M21 6l-7 6 7 6V6z"></path><path d="M12 6l-7 6 7 6V6z"></path></svg></button>
-    <button id="frameBackBtn" title="Back 1 frame" aria-label="Back 1 frame"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-7 6 7 6"></path></svg></button>
-    <button id="videoPlayPauseBtn" title="Play" aria-label="Play"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg></button>
-    <button id="frameForwardBtn" title="Forward 1 frame" aria-label="Forward 1 frame"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l7 6-7 6"></path></svg></button>
-    <button id="skipForwardBtn" title="Forward 10 seconds" aria-label="Forward 10 seconds"><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor"><path d="M3 6l7 6-7 6V6z"></path><path d="M12 6l7 6-7 6V6z"></path><rect x="20" y="6" width="2" height="12" rx="0.5"></rect></svg></button>
-  </div>
-
   <button id="downloadFrameBtn" class="toolButton" title="Download current frame" aria-label="Download current frame"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M5 21h14"></path></svg><span>Frame</span></button>
 
   <button id="bookmarkButton" class="toolButton iconButton" title="Bookmarks" aria-haspopup="true"><svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor"><path d="M6 3a1 1 0 0 0-1 1v17l7-4.5 7 4.5V4a1 1 0 0 0-1-1H6z"></path></svg></button>
 
-  <div id="speedWrap">
+</div>
 
-    <button
-      id="speedBtn"
-      class="toolButton"
-      aria-haspopup="true"
-      aria-expanded="false"
-      title="Playback speed"
-    >
-      <span class="speedBtnValue" id="speedBtnValue">1×</span><span class="speedCaret" aria-hidden="true"></span>
-    </button>
+<!-- ==========================================================
+     FLOATING VIDEO CONTROL BAR
 
-    <div id="speedMenu" class="hidden" role="menu">
+     Styled exactly like pdf.html's #readAloudControls bar - a
+     compact pill docked just above the title bar, holding the
+     transport controls in one connected pill (.videoNavGroup)
+     plus a Settings gear that opens a popover for playback speed
+     (mirrors pdf.html's Read Aloud Speed/Voice settings popover,
+     minus the Voice row and Skip Tables toggle).
+========================================================== -->
 
-      <div id="speedList" class="speedOptionList"></div>
+<div id="videoControls">
 
+  <div class="videoNavGroup">
+    <button id="skipBackBtn" class="videoCtrlBtn" title="Back 10 seconds" aria-label="Back 10 seconds"><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor"><rect x="2" y="6" width="2" height="12" rx="0.5"></rect><path d="M21 6l-7 6 7 6V6z"></path><path d="M12 6l-7 6 7 6V6z"></path></svg></button>
+    <button id="frameBackBtn" class="videoCtrlBtn" title="Back 1 frame" aria-label="Back 1 frame"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-7 6 7 6"></path></svg></button>
+    <button id="videoPlayPauseBtn" class="videoCtrlBtn" title="Play" aria-label="Play"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg></button>
+    <button id="frameForwardBtn" class="videoCtrlBtn" title="Forward 1 frame" aria-label="Forward 1 frame"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l7 6-7 6"></path></svg></button>
+    <button id="skipForwardBtn" class="videoCtrlBtn" title="Forward 10 seconds" aria-label="Forward 10 seconds"><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor"><path d="M3 6l7 6-7 6V6z"></path><path d="M12 6l7 6-7 6V6z"></path><rect x="20" y="6" width="2" height="12" rx="0.5"></rect></svg></button>
+  </div>
+
+  <div id="videoSettingsWrap">
+
+    <button id="videoSettingsBtn" class="videoCtrlBtn" title="Playback speed" aria-label="Playback speed settings" aria-haspopup="true" aria-expanded="false"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1z"></path></svg></button>
+
+    <div id="videoSettingsMenu" class="hidden" role="menu">
+
+      <div class="videoSettingsMenuHeader">
+        <h4>Playback Settings</h4>
+      </div>
+
+      <div id="videoSettingsScroll">
+        <button id="videoSpeedOpen" class="videoPickerRow">
+          <span>Speed</span>
+          <span class="videoPickerValue"><span id="videoSpeedValueLabel">1×</span><span class="videoPickerCaret" aria-hidden="true"></span></span>
+        </button>
+      </div>
+
+    </div>
+
+    <div id="videoSpeedPopup" class="hidden" role="menu">
+      <div id="videoSpeedList" class="videoOptionList"></div>
     </div>
 
   </div>
@@ -1959,20 +2182,29 @@ const shareButton =
 const fullscreenButton =
     document.getElementById("fullscreenBtn");
 
-const speedWrap =
-    document.getElementById("speedWrap");
+const videoControls =
+    document.getElementById("videoControls");
 
-const speedBtn =
-    document.getElementById("speedBtn");
+const videoSettingsWrap =
+    document.getElementById("videoSettingsWrap");
 
-const speedBtnValue =
-    document.getElementById("speedBtnValue");
+const videoSettingsBtn =
+    document.getElementById("videoSettingsBtn");
 
-const speedMenu =
-    document.getElementById("speedMenu");
+const videoSettingsMenu =
+    document.getElementById("videoSettingsMenu");
 
-const speedList =
-    document.getElementById("speedList");
+const videoSpeedOpen =
+    document.getElementById("videoSpeedOpen");
+
+const videoSpeedValueLabel =
+    document.getElementById("videoSpeedValueLabel");
+
+const videoSpeedPopup =
+    document.getElementById("videoSpeedPopup");
+
+const videoSpeedList =
+    document.getElementById("videoSpeedList");
 
 const skipBackButton =
     document.getElementById("skipBackBtn");
@@ -3060,7 +3292,7 @@ bookmarkButton.addEventListener("click", event => {
 
     event.stopPropagation();
 
-    closeSpeedMenu();
+    closeVideoSettingsMenu();
 
     menu.style.display = "none";
 
@@ -3397,16 +3629,17 @@ video.addEventListener("loadedmetadata", maybeOfferResume);
 
 
 /* =========================================================
-   PLAYBACK SPEED
+   PLAYBACK SETTINGS (SPEED)
 
-   A single toolbar button that opens a popover of speed
-   options, styled and behaved just like pdf.html's Read
-   Aloud "Speed & voice" settings popover: a floating panel
-   with a heading and a list of rows, each with a checkmark
-   that shows the active choice. Selecting a row updates the
-   video immediately and the panel stays open (matching the
-   read-aloud popover), closing only on an outside click,
-   Escape, or the toggle button itself.
+   Ported from pdf.html's Read Aloud settings popover
+   (openSettingsMenu/closeSettingsMenu plus
+   positionReadAloudPickerPopup): a Settings gear button opens a
+   small popover with a single "Speed" picker row - tapping that
+   row opens a second popup listing every speed as a checkmarked
+   option, anchored above the row it belongs to. Picking a speed
+   applies it immediately and closes the popup; the settings
+   popover itself stays open until dismissed some other way,
+   matching pdf.html's behavior exactly.
    ========================================================= */
 
 const SPEED_STEPS =
@@ -3430,7 +3663,7 @@ function currentSpeed(){
 }
 
 
-function optionRow(
+function videoOptionRow(
     {
         label,
         active,
@@ -3446,7 +3679,7 @@ function optionRow(
         "button";
 
     button.className =
-        "speedOption" + (active ? " active" : "");
+        "videoOption" + (active ? " active" : "");
 
     button.setAttribute(
         "role",
@@ -3462,24 +3695,24 @@ function optionRow(
         String(index);
 
 
-    const check =
-        document.createElement("span");
-
-    check.className =
-        "speedOptionCheck";
-
-    check.textContent =
-        "✓";
-
-
     const text =
         document.createElement("span");
 
     text.className =
-        "speedOptionLabel";
+        "videoOptionLabel";
 
     text.textContent =
         label;
+
+
+    const check =
+        document.createElement("span");
+
+    check.className =
+        "videoOptionCheck";
+
+    check.textContent =
+        "✓";
 
 
     button.append(
@@ -3496,8 +3729,6 @@ function optionRow(
 
             onSelect();
 
-            refreshSpeedSelection();
-
         }
     );
 
@@ -3509,13 +3740,13 @@ function optionRow(
 
 function buildSpeedList(){
 
-    speedList.replaceChildren();
+    videoSpeedList.replaceChildren();
 
     SPEED_LABELS.forEach(
         function(label, index){
 
-            speedList.appendChild(
-                optionRow({
+            videoSpeedList.appendChild(
+                videoOptionRow({
                     label:label,
                     active:index === speedIndex,
                     index:index,
@@ -3527,6 +3758,10 @@ function buildSpeedList(){
                         video.playbackRate =
                             currentSpeed();
 
+                        updateSpeedValueLabel();
+
+                        closeVideoSpeedPopup();
+
                     }
                 })
             );
@@ -3537,135 +3772,152 @@ function buildSpeedList(){
 }
 
 
-function refreshSpeedSelection(){
+function updateSpeedValueLabel(){
 
-    for(const button of speedList.children){
-
-        const active =
-            Number(button.dataset.index) === speedIndex;
-
-        button.classList.toggle(
-            "active",
-            active
-        );
-
-        button.setAttribute(
-            "aria-checked",
-            active ? "true" : "false"
-        );
-
-    }
-
-    speedBtnValue.textContent =
+    videoSpeedValueLabel.textContent =
         SPEED_LABELS[speedIndex];
 
 }
 
 
-function positionSpeedMenu(){
+/* ---------- Speed popup ----------
 
-    const btnRect =
-        speedBtn.getBoundingClientRect();
+   Bare "mere popup" anchored directly above its own trigger row
+   (#videoSpeedOpen), the same treatment pdf.html's
+   positionReadAloudPickerPopup uses for #readAloudSpeedPopup. */
 
-    const menuWidth =
-        speedMenu.offsetWidth;
+function positionVideoSpeedPopup(){
 
-    const gap =
-        8;
+    const rect =
+        videoSpeedOpen.getBoundingClientRect();
 
-    const edgeMargin =
-        8;
+    const popupWidth =
+        Math.min(190, window.innerWidth - 24);
 
+    const margin =
+        12;
 
     let left =
-        btnRect.left +
-        (btnRect.width / 2) -
-        (menuWidth / 2);
+        rect.left +
+        (rect.width / 2) -
+        (popupWidth / 2);
 
-    const maxLeft =
-        window.innerWidth - menuWidth - edgeMargin;
+    left =
+        Math.max(
+            margin,
+            Math.min(
+                left,
+                window.innerWidth - popupWidth - margin
+            )
+        );
 
-    if(left > maxLeft){
-
-        left = maxLeft;
-
-    }
-
-    if(left < edgeMargin){
-
-        left = edgeMargin;
-
-    }
-
-
-    speedMenu.style.left =
+    videoSpeedPopup.style.left =
         left + "px";
 
-    speedMenu.style.top =
-        (btnRect.bottom + gap) + "px";
+    videoSpeedPopup.style.bottom =
+        (window.innerHeight - rect.top + 8) + "px";
 
 }
 
 
-function openSpeedMenu(){
+function closeVideoSpeedPopup(){
 
-    speedMenu.classList.remove(
+    videoSpeedPopup.classList.add(
         "hidden"
     );
 
-    positionSpeedMenu();
-
-    speedBtn.classList.add(
+    videoSpeedOpen.classList.remove(
         "open"
     );
 
-    speedBtn.setAttribute(
+}
+
+
+function openVideoSpeedPopup(){
+
+    buildSpeedList();
+
+    positionVideoSpeedPopup();
+
+    videoSpeedPopup.classList.remove(
+        "hidden"
+    );
+
+    videoSpeedOpen.classList.add(
+        "open"
+    );
+
+}
+
+
+/* ---------- Settings menu (gear button) ----------
+
+   Mirrors pdf.html's openSettingsMenu/closeSettingsMenu, including
+   the .settings-open escape hatch that lifts #videoControls' own
+   stacking context above the reading-mode float while the popover
+   is open (see the .settings-open CSS rule's comment for why). */
+
+function openVideoSettingsMenu(){
+
+    updateSpeedValueLabel();
+
+    closeVideoSpeedPopup();
+
+    videoSettingsMenu.classList.remove(
+        "hidden"
+    );
+
+    videoSettingsBtn.setAttribute(
         "aria-expanded",
         "true"
     );
 
+    videoControls.classList.add(
+        "settings-open"
+    );
+
 }
 
 
-function closeSpeedMenu(){
+function closeVideoSettingsMenu(){
 
-    speedMenu.classList.add(
+    videoSettingsMenu.classList.add(
         "hidden"
     );
 
-    speedBtn.classList.remove(
-        "open"
-    );
-
-    speedBtn.setAttribute(
+    videoSettingsBtn.setAttribute(
         "aria-expanded",
         "false"
     );
 
+    videoControls.classList.remove(
+        "settings-open"
+    );
+
+    closeVideoSpeedPopup();
+
 }
 
 
-function toggleSpeedMenu(){
+function toggleVideoSettingsMenu(){
 
-    if(speedMenu.classList.contains("hidden")){
+    if(videoSettingsMenu.classList.contains("hidden")){
 
-        openSpeedMenu();
+        openVideoSettingsMenu();
 
     }else{
 
-        closeSpeedMenu();
+        closeVideoSettingsMenu();
 
     }
 
 }
 
 
-buildSpeedList();
-
-refreshSpeedSelection();
+updateSpeedValueLabel();
 
 
-speedBtn.addEventListener(
+videoSettingsBtn.addEventListener(
     "click",
     function(event){
 
@@ -3676,13 +3928,13 @@ speedBtn.addEventListener(
         menu.style.display =
             "none";
 
-        toggleSpeedMenu();
+        toggleVideoSettingsMenu();
 
     }
 );
 
 
-speedBtn.addEventListener(
+videoSettingsBtn.addEventListener(
     "keydown",
     function(event){
 
@@ -3692,7 +3944,7 @@ speedBtn.addEventListener(
 
             event.stopPropagation();
 
-            toggleSpeedMenu();
+            toggleVideoSettingsMenu();
 
         }
 
@@ -3700,7 +3952,38 @@ speedBtn.addEventListener(
 );
 
 
-speedMenu.addEventListener(
+videoSettingsMenu.addEventListener(
+    "click",
+    function(event){
+
+        event.stopPropagation();
+
+    }
+);
+
+
+videoSpeedOpen.addEventListener(
+    "click",
+    function(event){
+
+        event.stopPropagation();
+
+        const wasHidden =
+            videoSpeedPopup.classList.contains("hidden");
+
+        closeVideoSpeedPopup();
+
+        if(wasHidden){
+
+            openVideoSpeedPopup();
+
+        }
+
+    }
+);
+
+
+videoSpeedPopup.addEventListener(
     "click",
     function(event){
 
@@ -3714,19 +3997,32 @@ document.addEventListener(
     "click",
     function(event){
 
-        if(speedMenu.classList.contains("hidden")){
+        if(!videoSpeedPopup.classList.contains("hidden")){
+
+            if(
+                !videoSpeedPopup.contains(event.target) &&
+                !event.target.closest("#videoSpeedOpen")
+            ){
+
+                closeVideoSpeedPopup();
+
+            }
+
+        }
+
+        if(videoSettingsMenu.classList.contains("hidden")){
 
             return;
 
         }
 
-        if(event.target.closest("#speedWrap")){
+        if(event.target.closest("#videoSettingsWrap")){
 
             return;
 
         }
 
-        closeSpeedMenu();
+        closeVideoSettingsMenu();
 
     }
 );
@@ -3742,9 +4038,17 @@ document.addEventListener(
 
         }
 
-        if(!speedMenu.classList.contains("hidden")){
+        if(!videoSpeedPopup.classList.contains("hidden")){
 
-            closeSpeedMenu();
+            closeVideoSpeedPopup();
+
+            return;
+
+        }
+
+        if(!videoSettingsMenu.classList.contains("hidden")){
+
+            closeVideoSettingsMenu();
 
         }
 
@@ -3762,7 +4066,7 @@ menuButton.addEventListener(
 
         closeBookmarkPopup();
 
-        closeSpeedMenu();
+        closeVideoSettingsMenu();
 
         menu.style.display =
             menu.style.display === "block"
@@ -4161,13 +4465,13 @@ window.addEventListener(
     "resize",
     function(){
 
-        if(speedMenu.classList.contains("hidden")){
+        if(videoSpeedPopup.classList.contains("hidden")){
 
             return;
 
         }
 
-        positionSpeedMenu();
+        positionVideoSpeedPopup();
 
     }
 );
