@@ -412,18 +412,6 @@ select:focus-visible{
 ============================================================ */
 
 #speedWrap{
-  /*
-     Deliberately NOT position:relative - #speedMenu needs to
-     anchor to the whole toolbar (#toolbar, which is already
-     position:fixed), not to this small wrapper specifically.
-     Centering on just this wrapper broke once Speed ended up
-     positioned toward the right side of the toolbar (after the
-     skip/frame group and the download button): centering a
-     150px-wide menu on a narrow trigger sitting near the right
-     edge pushes it straight off the screen. Anchoring to the full
-     toolbar instead keeps it centered on the *screen*, which
-     always has room for it.
-  */
   flex:0 0 auto;
 }
 
@@ -461,12 +449,16 @@ select:focus-visible{
 }
 
 #speedMenu{
-  position:absolute;
-
-  left:50%;
-  top:calc(100% + 8px);
-
-  transform:translateX(-50%);
+  /*
+     position:fixed with left/top set from JS (see
+     positionSpeedMenu()) rather than CSS centering - the menu is
+     anchored to #speedBtn's own on-screen position and then
+     clamped to stay within the viewport, so it sits right under
+     the button when there's room and only slides over as far as
+     it has to when the button is near an edge, instead of always
+     jumping to the middle of the screen.
+  */
+  position:fixed;
 
   display:flex;
   flex-direction:column;
@@ -2341,8 +2333,11 @@ frameForwardButton.addEventListener(
 
 function formatTimeForFilename(seconds){
 
+    const clampedSeconds =
+        Math.max(0, seconds || 0);
+
     const totalSeconds =
-        Math.max(0, Math.floor(seconds || 0));
+        Math.floor(clampedSeconds);
 
     const mins =
         Math.floor(totalSeconds / 60);
@@ -2350,7 +2345,22 @@ function formatTimeForFilename(seconds){
     const secs =
         totalSeconds % 60;
 
-    return `${mins}m${String(secs).padStart(2, "0")}s`;
+    /*
+        Frame number *within* the current second, derived from the
+        same estimatedFrameDuration used by the frame-step buttons
+        - so "3m45s-f12" is however far into second 45 this frame
+        sits, given the video's (estimated) frame rate. Floored
+        rather than rounded so floating-point drift right at a
+        second boundary can't bump it up to a frame index equal to
+        the frame rate itself (e.g. "f30" on a 30fps video).
+    */
+    const fractionalSeconds =
+        clampedSeconds - totalSeconds;
+
+    const frameNumber =
+        Math.floor(fractionalSeconds / estimatedFrameDuration);
+
+    return `${mins}m${String(secs).padStart(2, "0")}s-f${String(frameNumber).padStart(2, "0")}`;
 
 }
 
@@ -3276,11 +3286,58 @@ function refreshSpeedSelection(){
 }
 
 
+function positionSpeedMenu(){
+
+    const btnRect =
+        speedBtn.getBoundingClientRect();
+
+    const menuWidth =
+        speedMenu.offsetWidth;
+
+    const gap =
+        8;
+
+    const edgeMargin =
+        8;
+
+
+    let left =
+        btnRect.left +
+        (btnRect.width / 2) -
+        (menuWidth / 2);
+
+    const maxLeft =
+        window.innerWidth - menuWidth - edgeMargin;
+
+    if(left > maxLeft){
+
+        left = maxLeft;
+
+    }
+
+    if(left < edgeMargin){
+
+        left = edgeMargin;
+
+    }
+
+
+    speedMenu.style.left =
+        left + "px";
+
+    speedMenu.style.top =
+        (btnRect.bottom + gap) + "px";
+
+}
+
+
 function openSpeedMenu(){
 
     speedMenu.classList.remove(
         "hidden"
     );
+
+    positionSpeedMenu();
 
     speedBtn.classList.add(
         "open"
@@ -3817,6 +3874,22 @@ if(
 window.addEventListener(
     "resize",
     syncViewerTop
+);
+
+
+window.addEventListener(
+    "resize",
+    function(){
+
+        if(speedMenu.classList.contains("hidden")){
+
+            return;
+
+        }
+
+        positionSpeedMenu();
+
+    }
 );
 
 
