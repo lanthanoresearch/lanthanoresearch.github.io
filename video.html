@@ -1286,6 +1286,67 @@ select:focus-visible{
 }
 
 /* ============================================================
+   TOAST
+
+   A brief, non-blocking status message (e.g. "Downloading...")
+   that fades in near the bottom of the screen and fades itself
+   back out - unlike alert(), it never blocks interaction or
+   needs to be dismissed.
+============================================================ */
+
+#toast{
+  position:fixed;
+
+  left:50%;
+  bottom:calc(var(--titlebar-h) + var(--float-gap));
+
+  transform:
+    translateX(-50%) translateY(8px);
+
+  max-width:calc(100vw - 32px);
+
+  padding:10px 18px;
+
+  background:rgba(30,30,30,.94);
+
+  border:1px solid #444;
+
+  border-radius:20px;
+
+  color:#fff;
+
+  font-size:14px;
+
+  text-align:center;
+
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+
+  box-shadow:
+    0 5px 18px rgba(0,0,0,.45);
+
+  backdrop-filter:blur(6px);
+
+  pointer-events:none;
+
+  opacity:0;
+
+  z-index:9800;
+
+  transition:
+    opacity .18s ease,
+    transform .18s ease;
+}
+
+#toast.show{
+  opacity:1;
+
+  transform:
+    translateX(-50%) translateY(0);
+}
+
+/* ============================================================
    STATUS / LOADING
 ============================================================ */
 
@@ -1601,6 +1662,12 @@ body.reading-mode #readingModeFloat{
 </button>
 
 <!-- ==========================================================
+     TOAST
+========================================================== -->
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<!-- ==========================================================
      BOOKMARKS
 ========================================================== -->
 
@@ -1893,6 +1960,9 @@ const titleBar =
 const readingModeFloat =
     document.getElementById("readingModeFloat");
 
+const toast =
+    document.getElementById("toast");
+
 const coverOverlay =
     document.getElementById("coverOverlay");
 
@@ -1955,6 +2025,54 @@ function syncTitleBarHeight(){
         "--titlebar-h",
         `${Math.ceil(height)}px`
     );
+
+}
+
+
+/* =========================================================
+   TOAST
+
+   Brief, self-dismissing status messages (e.g. "Downloading...")
+   shown near the bottom of the screen - see #toast in the CSS.
+   Re-showing the toast while one is already visible just resets
+   its dismiss timer rather than stacking messages, since only
+   one is ever shown at a time.
+   ========================================================= */
+
+let toastHideTimer =
+    null;
+
+function showToast(message){
+
+    toast.textContent =
+        message;
+
+    toast.classList.add(
+        "show"
+    );
+
+    if(toastHideTimer){
+
+        clearTimeout(
+            toastHideTimer
+        );
+
+    }
+
+    toastHideTimer =
+        setTimeout(
+            function(){
+
+                toast.classList.remove(
+                    "show"
+                );
+
+                toastHideTimer =
+                    null;
+
+            },
+            1500
+        );
 
 }
 
@@ -2373,6 +2491,10 @@ downloadFrameButton.addEventListener(
             return;
 
         }
+
+        showToast(
+            "Downloading..."
+        );
 
         const canvas =
             document.createElement("canvas");
@@ -3530,6 +3652,10 @@ downloadButton.addEventListener(
         if(!src){
             return;
         }
+
+        showToast(
+            "Downloading..."
+        );
 
 
         const link =
