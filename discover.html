@@ -520,7 +520,7 @@ biblical:"📖",
 historical:"🏛️",
 political:"🏳️",
 scientific:"🧪",
-medical:"⚕️",
+medical:"🩺",
 astronomy:"🚀",
 technology:"💻",
 philosophy:"🧠"
@@ -963,11 +963,14 @@ askSplitQuestion(split);
 function askSplitQuestion(split){
 let questionText, yesLabel, noLabel, icon;
 
+let optionIcons = null; // per-option icons, only used for category-crossing questions
+
 if(split.type === "category"){
 questionText = pickRandom(CATEGORY_TEMPLATES).replace("{cat}", split.value);
 yesLabel = pickRandom(CATEGORY_YES_LABELS);
 noLabel = pickRandom(CATEGORY_NO_LABELS);
-icon = emojiFor(split.value);
+icon = emojiFor(currentCategoryContext);
+optionIcons = { yes: emojiFor(split.value), no: emojiFor(currentCategoryContext) };
 }else if(split.type === "length"){
 questionText = pickRandom(LENGTH_TEMPLATES);
 yesLabel = pickRandom(LENGTH_YES_LABELS);
@@ -991,6 +994,7 @@ const options = shuffle([
 {
 label: yesLabel,
 extraClass: "yes-lean",
+icon: optionIcons ? optionIcons.yes : null,
 onClick: () => {
 usedDims.add(split.dimKey);
 history.push({ type: split.type, value: split.value, answer: "yes" });
@@ -1008,6 +1012,7 @@ advance();
 {
 label: noLabel,
 extraClass: "no-lean",
+icon: optionIcons ? optionIcons.no : null,
 onClick: () => {
 usedDims.add(split.dimKey);
 history.push({ type: split.type, value: split.value, answer: "no" });
