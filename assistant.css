@@ -59,8 +59,6 @@ body{
 
     opacity:1;
 
-    transform:translateY(0);
-
     pointer-events:auto;
 
 }
@@ -69,9 +67,18 @@ body{
 
     opacity:0;
 
-    transform:translateY(35px);
-
     pointer-events:none;
+
+}
+
+/* Belt-and-suspenders: the window keeps its own pointer-events
+   state via its .open class, so when the root fades out at the
+   hero we explicitly disable interaction on its children too,
+   rather than relying on inheritance alone. */
+#lr-ai-root.hidden #lr-ai-window,
+#lr-ai-root.hidden #lr-ai-button{
+
+    pointer-events:none !important;
 
 }
 
@@ -161,13 +168,10 @@ body{
 
     opacity:0;
 
-    transform:translateY(35px);
-
     pointer-events:none;
 
     transition:
-        opacity .35s ease,
-        transform .35s ease;
+        opacity .35s ease;
 
 }
 
@@ -514,3 +518,310 @@ body{
 }
 
 
+
+/* ==========================================================
+   Header actions (clear / close)
+   ========================================================== */
+
+#lr-ai-header-actions{
+
+    display:flex;
+    align-items:center;
+    gap:6px;
+    flex-shrink:0;
+
+}
+
+#lr-ai-clear{
+
+    width:36px;
+    height:36px;
+    border:none;
+    border-radius:10px;
+    background:transparent;
+    color:#ddd;
+    cursor:pointer;
+    font-size:16px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:background .2s ease, color .2s ease;
+
+}
+
+#lr-ai-clear:hover{
+
+    background:#2f2f2f;
+    color:#fff;
+
+}
+
+#lr-ai-info-btn{
+
+    width:36px;
+    height:36px;
+    border:none;
+    border-radius:10px;
+    background:transparent;
+    color:#ddd;
+    cursor:pointer;
+    font-size:16px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:background .2s ease, color .2s ease;
+
+}
+
+#lr-ai-info-btn:hover{
+
+    background:#2f2f2f;
+    color:#fff;
+
+}
+
+/* ==========================================================
+   Info panel
+   ========================================================== */
+
+#lr-ai-info-panel{
+
+    display:none;
+    flex-direction:column;
+    gap:12px;
+    padding:16px 20px;
+    background:#20262f;
+    border-bottom:1px solid #2d2d2d;
+    color:#d8def0;
+    font-size:13px;
+    line-height:1.5;
+    flex-shrink:0;
+
+}
+
+#lr-ai-info-panel.open{
+
+    display:flex;
+
+}
+
+#lr-ai-info-panel p{
+
+    margin:0;
+
+}
+
+#lr-ai-info-close{
+
+    align-self:flex-start;
+    padding:7px 14px;
+    border:1px solid #3a4252;
+    border-radius:8px;
+    background:transparent;
+    color:#d8def0;
+    font-size:12.5px;
+    cursor:pointer;
+    transition:background .15s ease;
+
+}
+
+#lr-ai-info-close:hover{
+
+    background:#2a3140;
+
+}
+
+/* ==========================================================
+   Messages
+   ========================================================== */
+
+.lr-msg{
+
+    display:flex;
+    max-width:88%;
+
+}
+
+.lr-msg-user{
+
+    align-self:flex-end;
+    justify-content:flex-end;
+
+}
+
+.lr-msg-ai{
+
+    align-self:flex-start;
+    justify-content:flex-start;
+
+}
+
+.lr-msg-bubble{
+
+    padding:12px 14px;
+    border-radius:16px;
+    font-size:14.5px;
+    line-height:1.5;
+    white-space:pre-wrap;
+    word-break:break-word;
+
+}
+
+.lr-msg-user .lr-msg-bubble{
+
+    background:#4c7bff;
+    color:#fff;
+    border-bottom-right-radius:4px;
+
+}
+
+.lr-msg-ai .lr-msg-bubble{
+
+    background:#232323;
+    border:1px solid #2d2d2d;
+    color:#f1f1f1;
+    border-bottom-left-radius:4px;
+
+}
+
+/* ==========================================================
+   Citations
+   ========================================================== */
+
+.lr-citations{
+
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    margin-top:8px;
+    width:100%;
+
+}
+
+.lr-citation{
+
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:10px 12px;
+    background:#1f1f1f;
+    border:1px solid #2d2d2d;
+    border-radius:12px;
+    text-decoration:none;
+    color:#f1f1f1;
+    transition:background .15s ease, border-color .15s ease;
+
+}
+
+.lr-citation:hover{
+
+    background:#272727;
+    border-color:#4c7bff;
+
+}
+
+.lr-citation-icon{
+
+    font-size:18px;
+    flex-shrink:0;
+
+}
+
+.lr-citation-text{
+
+    display:flex;
+    flex-direction:column;
+    min-width:0;
+
+}
+
+.lr-citation-title{
+
+    font-size:13.5px;
+    font-weight:600;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+
+}
+
+.lr-citation-subtitle{
+
+    font-size:12px;
+    color:#9c9c9c;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+
+}
+
+.lr-citation-warning{
+
+    margin-left:auto;
+    flex-shrink:0;
+    font-size:14px;
+
+}
+
+/* ==========================================================
+   Typing indicator
+   ========================================================== */
+
+.lr-typing .lr-msg-bubble{
+
+    display:flex;
+    align-items:center;
+    gap:10px;
+    color:#9c9c9c;
+    font-size:13.5px;
+
+}
+
+.lr-typing-dots{
+
+    display:inline-flex;
+    gap:4px;
+
+}
+
+.lr-typing-dots i{
+
+    width:5px;
+    height:5px;
+    border-radius:50%;
+    background:#9c9c9c;
+    display:inline-block;
+    animation:lr-typing-bounce 1.1s infinite ease-in-out;
+
+}
+
+.lr-typing-dots i:nth-child(2){ animation-delay:.15s; }
+.lr-typing-dots i:nth-child(3){ animation-delay:.3s; }
+
+@keyframes lr-typing-bounce{
+
+    0%, 60%, 100%{ transform:translateY(0); opacity:.5; }
+    30%{ transform:translateY(-4px); opacity:1; }
+
+}
+
+/* ==========================================================
+   Send button state
+   ========================================================== */
+
+#lr-ai-send:disabled{
+
+    opacity:.6;
+    cursor:default;
+
+}
+
+@media (max-width:768px){
+
+    .lr-msg{
+
+        max-width:92%;
+
+    }
+
+}
