@@ -113,15 +113,19 @@ body{
     width:clamp(56px, 9vw, 72px);
     height:clamp(56px, 9vw, 72px);
 
-    padding:0;
-    border:none;
-    background:transparent;
+    padding:3px;
+    /* A border and background of its own, so the button reads as a
+       real piece of the site's UI, framed and grounded, rather than
+       a loose image floating unattached over the page. */
+    border:2px solid var(--lr-border);
+    background:var(--lr-bg-panel);
     border-radius:50%;
     cursor:pointer;
     display:flex;
     align-items:center;
     justify-content:center;
-    transition:transform .2s ease, filter .2s ease;
+    box-shadow:0 8px 22px rgba(0,0,0,.45);
+    transition:transform .2s ease, filter .2s ease, border-color .2s ease;
     user-select:none;
 
 }
@@ -130,6 +134,7 @@ body{
 
     transform:scale(1.08);
     filter:brightness(1.08);
+    border-color:var(--lr-accent);
 
 }
 
@@ -144,12 +149,11 @@ body{
     width:100%;
     height:100%;
     display:block;
-    object-fit:contain;
+    object-fit:cover;
     border-radius:50%;
     pointer-events:none;
     user-select:none;
     -webkit-user-drag:none;
-    filter:drop-shadow(0 10px 28px rgba(0,0,0,.45));
 
 }
 
