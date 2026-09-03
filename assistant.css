@@ -40,12 +40,12 @@ body{
     --lr-accent:#2f7cff;
     --lr-accent-hover:#4a8bff;
     --lr-bg-page:#141414;
-    --lr-bg-panel:#1d1d1d;
-    --lr-bg-button:#333333;
-    --lr-bg-button-hover:#3f3f3f;
+    --lr-bg-panel:#222;
+    --lr-bg-button:#2e2e2e;
+    --lr-bg-button-hover:#383838;
     --lr-bg-row:#2e2e2e;
     --lr-bg-row-hover:#3a3a3a;
-    --lr-border:#4a4a4a;
+    --lr-border:#444;
     --lr-border-soft:#2c2c2c;
     --lr-text:#eee;
     --lr-text-dim:#999;
@@ -259,7 +259,7 @@ body{
 
 #lr-ai-header{
 
-    min-height:clamp(58px, 9vh, 72px);
+    min-height:clamp(66px, 10vh, 80px);
     display:flex;
     align-items:center;
     justify-content:space-between;
@@ -285,8 +285,8 @@ body{
 
 #lr-ai-title img{
 
-    width:34px;
-    height:34px;
+    width:46px;
+    height:46px;
     border-radius:50%;
     flex-shrink:0;
 
@@ -303,7 +303,7 @@ body{
 
 #lr-ai-title-text strong{
 
-    font-size:15px;
+    font-size:18px;
     font-weight:700;
     overflow:hidden;
     text-overflow:ellipsis;
@@ -513,60 +513,43 @@ body{
 
 }
 
-.lr-toggle{
+.toggleSwitch{
 
     position:relative;
     flex-shrink:0;
     width:42px;
     height:24px;
-
-}
-
-.lr-toggle input{
-
-    position:absolute;
-    opacity:0;
-    width:100%;
-    height:100%;
-    margin:0;
+    padding:0;
+    background:#3a3a3a;
+    border:1px solid #444;
+    border-radius:999px;
     cursor:pointer;
 
 }
 
-.lr-toggle-track{
+.toggleSwitch .toggleKnob{
 
     position:absolute;
-    inset:0;
-    background:#3a3a3a;
-    border:1px solid #444;
-    border-radius:999px;
-    transition:background .15s ease, border-color .15s ease;
-
-}
-
-.lr-toggle-thumb{
-
-    position:absolute;
-    top:1px;
-    left:1px;
+    top:2px;
+    left:2px;
     width:18px;
     height:18px;
-    background:#ccc;
     border-radius:50%;
-    transition:transform .15s ease, background .15s ease;
+    background:#ccc;
+    transition:left .15s ease, background .15s ease;
 
 }
 
-.lr-toggle input:checked + .lr-toggle-track{
+.toggleSwitch.active{
 
     background:var(--lr-accent);
     border-color:var(--lr-accent);
 
 }
 
-.lr-toggle input:checked + .lr-toggle-track .lr-toggle-thumb{
+.toggleSwitch.active .toggleKnob{
 
-    transform:translateX(18px);
+    left:20px;
     background:#fff;
 
 }
@@ -662,16 +645,16 @@ body{
     display:flex;
     align-items:center;
     width:100%;
-    padding:10px 12px;
-    border:1px solid var(--lr-border);
+    padding:10px 16px;
+    border:0;
     border-radius:var(--lr-radius-sm);
     background:var(--lr-bg-button);
     color:#eee;
-    font-size:13px;
+    font-size:13.5px;
     font-family:inherit;
     text-align:left;
     cursor:pointer;
-    transition:background .15s ease, border-color .15s ease;
+    transition:background .15s ease;
 
 }
 
@@ -980,7 +963,7 @@ body{
 #lr-ai-input-area{
 
     display:flex;
-    align-items:flex-end;
+    align-items:center;
     gap:8px;
     padding:12px clamp(10px, 3vw, 16px);
     border-top:1px solid var(--lr-border-soft);
@@ -989,13 +972,14 @@ body{
 
 }
 
-/* Square, bordered icon button — matches .settings-btn from the
-   rest of the site exactly (same gear icon too, see the SVG in
-   assistant-window.js), instead of a circular gear glyph. */
+/* Square, bordered icon button, matching .settings-btn from the rest
+   of the site (same gear icon too, see the SVG in assistant-window.js).
+   Same height as the text input and the send button, so the whole
+   row reads as one aligned control instead of three different sizes. */
 #lr-ai-settings-btn{
 
-    width:40px;
-    height:40px;
+    width:46px;
+    height:46px;
     flex-shrink:0;
     background:var(--lr-bg-button);
     color:var(--lr-text);
@@ -1019,7 +1003,7 @@ body{
 
     flex:1 1 auto;
     min-width:0;
-    height:44px;
+    height:46px;
     border:1px solid var(--lr-border);
     background:#2a2a2a;
     color:#fff;
@@ -1045,10 +1029,17 @@ body{
 
 }
 
+#lr-ai-input[readonly]{
+
+    cursor:pointer;
+    color:#999;
+
+}
+
 #lr-ai-send{
 
-    width:44px;
-    height:44px;
+    width:46px;
+    height:46px;
     flex-shrink:0;
     border:none;
     border-radius:var(--lr-radius-sm);
@@ -1090,7 +1081,7 @@ body{
 
     #lr-ai-title-text strong{
 
-        font-size:14px;
+        font-size:16px;
 
     }
 
@@ -1102,9 +1093,116 @@ body{
 
     #lr-ai-title img{
 
-        width:28px;
-        height:28px;
+        width:38px;
+        height:38px;
 
     }
+
+}
+
+/* ==========================================================
+   Download modal — matches video.html's own confirmation modal
+   pattern (#resumeChoice / #resumeChoiceCard) exactly: a centered
+   card over a dark overlay, one primary action and one plain text
+   "not now" beneath it. Scoped to the assistant window itself
+   (position:absolute against #lr-ai-window's own position:fixed),
+   not the whole page, so it never blocks the rest of the site.
+   ========================================================== */
+
+#lr-ai-download-modal{
+
+    position:absolute;
+    inset:0;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    background:rgba(0,0,0,.55);
+    z-index:20000;
+
+}
+
+#lr-ai-download-modal.open{
+
+    display:flex;
+
+}
+
+#lr-ai-download-card{
+
+    width:100%;
+    max-width:300px;
+    padding:20px;
+    background:#1e1e1e;
+    border:1px solid #3a3a3a;
+    border-radius:13px;
+    box-shadow:0 12px 32px rgba(0,0,0,.55);
+    text-align:center;
+
+}
+
+#lr-ai-download-card h3{
+
+    margin:0 0 8px;
+    font-size:16px;
+    color:#fff;
+
+}
+
+#lr-ai-download-card p{
+
+    margin:0 0 16px;
+    color:#bbb;
+    font-size:13px;
+    line-height:1.45;
+
+}
+
+.choiceModalButtons{
+
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+
+}
+
+#lr-ai-download-confirm{
+
+    width:100%;
+    padding:11px 10px;
+    font-size:14px;
+    font-family:inherit;
+    border:1px solid var(--lr-accent);
+    border-radius:8px;
+    background:var(--lr-accent);
+    color:#fff;
+    cursor:pointer;
+    transition:background .15s ease;
+
+}
+
+#lr-ai-download-confirm:hover{
+
+    background:var(--lr-accent-hover);
+
+}
+
+#lr-ai-download-cancel{
+
+    margin-top:2px;
+    background:transparent;
+    border:0;
+    color:#999;
+    font-size:12px;
+    font-family:inherit;
+    padding:6px;
+    cursor:pointer;
+    transition:color .15s ease;
+
+}
+
+#lr-ai-download-cancel:hover{
+
+    color:#ccc;
 
 }
