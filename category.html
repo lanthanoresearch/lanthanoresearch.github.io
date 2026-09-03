@@ -92,7 +92,7 @@ section{
     position:relative;
     max-width:1000px;
     margin:auto;
-    padding:40px 20px;
+    padding:40px 20px 110px;
 }
 
 h1{
@@ -723,6 +723,16 @@ summary{
 summary:hover{
     color:#999;
     background:#1a1a1a;
+}
+
+/* ---- End of list message ---- */
+
+.end-of-list{
+    text-align:center;
+    color:#555;
+    font-size:.85em;
+    letter-spacing:.4px;
+    margin:34px 0 6px;
 }
 
 /* ---- Compact view ---- */
@@ -2024,6 +2034,13 @@ ${getPaperBadge(key, paper)}
     
 
 });
+
+if(filteredPapers.length > 0){
+
+    container.innerHTML += `<p class="end-of-list">— No more papers —</p>`;
+
+}
+
    if(returning){
 
     const openDetails =
