@@ -36,6 +36,9 @@ const DEEP_EXCERPT_CHAR_LIMIT = 1600;
 const HISTORY_KEY = "lr-ai-history";
 const MAX_STORED_MESSAGES = 60;
 const MEMORY_ENABLED_KEY = "lr-ai-memory-enabled";
+// Must match the mobile breakpoint in assistant.css, where the panel
+// switches from a docked side window to a full-screen takeover.
+const MOBILE_BREAKPOINT = 768;
 
 // How many past exchanges (user question + assistant answer) the
 // model is shown alongside the current question, when memory is on
@@ -385,7 +388,20 @@ let webllmBroken = false;
 // download button both reflect reality instead of just "the API
 // object exists" — those aren't the same thing.
 let nanoBroken = false;
+// A single hiccup on an already-working engine (a one-off timeout, a
+// dropped GPU context, etc.) shouldn't permanently give up for the
+// rest of the session — that's what caused "it always says it didn't
+// work now." Only repeated, consecutive failures count as genuinely
+// broken. Any success resets the count back to zero.
+const MAX_CONSECUTIVE_FAILURES = 2;
+let webllmFailureCount = 0;
+let nanoFailureCount = 0;
 let lastEngineError = ""; // surfaced in the settings panel for diagnostics
+
+function resetFailureCounters() {
+    webllmFailureCount = 0;
+    nanoFailureCount = 0;
+}
 
 async function isNanoActuallyAvailable() {
     if (typeof LanguageModel === "undefined" || nanoBroken) return false;
@@ -419,6 +435,7 @@ function resetWebLLMState() {
     webllmEnginePromise = null;
     webllmDownloading = false;
     webllmBroken = false;
+    webllmFailureCount = 0;
     lastEngineError = "";
 }
 
@@ -518,18 +535,21 @@ async function tryNano(userPromptText, recentExchanges, onProgress) {
     } catch (error) {
         console.error("Lanthano Assistant: nano session creation failed", error);
         lastEngineError = "This browser's built-in AI failed to start: " + (error?.message || error);
-        nanoBroken = true;
+        nanoFailureCount++;
+        if (nanoFailureCount >= MAX_CONSECUTIVE_FAILURES) nanoBroken = true;
         return null;
     }
 
     try {
         const reply = await session.prompt(userPromptText);
         lastEngineError = "";
+        nanoFailureCount = 0;
         return reply.trim();
     } catch (error) {
         console.error("Lanthano Assistant: nano prompt failed", error);
         lastEngineError = "This browser's built-in AI failed to respond: " + (error?.message || error);
-        nanoBroken = true;
+        nanoFailureCount++;
+        if (nanoFailureCount >= MAX_CONSECUTIVE_FAILURES) nanoBroken = true;
         return null;
     } finally {
         if (typeof session.destroy === "function") {
@@ -559,13 +579,17 @@ async function tryWebGPU(userPromptText, recentExchanges, onProgress) {
         }
 
         lastEngineError = "";
+        webllmFailureCount = 0;
         return text.trim();
     } catch (error) {
         console.error("Lanthano Assistant: WebLLM prompt failed", error);
         lastEngineError = "The downloaded model failed to respond: " + (error?.message || error);
-        // Don't retry-download on every future message after a real
-        // failure — require an explicit retry from Settings instead.
-        webllmBroken = true;
+        // The model is already downloaded at this point, so a retry here
+        // is cheap (unlike a download failure) — a one-off hiccup
+        // shouldn't nuke the whole session. Only give up for good after
+        // a couple of failures in a row.
+        webllmFailureCount++;
+        if (webllmFailureCount >= MAX_CONSECUTIVE_FAILURES) webllmBroken = true;
         return null;
     }
 }
@@ -686,39 +710,46 @@ class AssistantWindow {
             </div>
 
             <div id="lr-ai-settings-panel">
-                <p id="lr-ai-settings-about">${escapeHTML(INFO_TEXT)}</p>
+                <div id="lr-ai-settings-header">
+                    <button id="lr-ai-settings-back" type="button">
+                        <span id="lr-ai-settings-back-arrow">←</span> Back to chat
+                    </button>
+                    <span id="lr-ai-settings-heading">Settings</span>
+                </div>
 
-                <label id="lr-ai-memory-row">
-                    <span>
-                        <span class="lr-settings-row-title">Remember recent messages</span>
-                        <span class="lr-settings-row-desc">Lets it understand quick follow-ups without you repeating yourself. Turn off for no memory at all — every question stands alone.</span>
-                    </span>
-                    <span class="lr-toggle">
-                        <input id="lr-ai-memory-toggle" type="checkbox">
-                        <span class="lr-toggle-track"><span class="lr-toggle-thumb"></span></span>
-                    </span>
-                </label>
+                <div id="lr-ai-settings-body">
+                    <p id="lr-ai-settings-about">${escapeHTML(INFO_TEXT)}</p>
 
-                <div id="lr-ai-engine-status">
-                    <div id="lr-ai-engine-status-text"></div>
-                    <div id="lr-ai-progress-track">
-                        <div id="lr-ai-progress-fill"></div>
+                    <label id="lr-ai-memory-row">
+                        <span>
+                            <span class="lr-settings-row-title">Remember recent messages</span>
+                            <span class="lr-settings-row-desc">Lets it understand quick follow-ups without you repeating yourself. Turn off for no memory at all — every question stands alone.</span>
+                        </span>
+                        <span class="lr-toggle">
+                            <input id="lr-ai-memory-toggle" type="checkbox">
+                            <span class="lr-toggle-track"><span class="lr-toggle-thumb"></span></span>
+                        </span>
+                    </label>
+
+                    <div id="lr-ai-engine-status">
+                        <div id="lr-ai-engine-status-text"></div>
+                        <div id="lr-ai-progress-track">
+                            <div id="lr-ai-progress-fill"></div>
+                        </div>
+                    </div>
+
+                    <div id="lr-ai-settings-actions">
+                        <button id="lr-ai-download-model" type="button" class="lr-settings-action">
+                            <span class="lr-settings-action-icon">⬇</span> Set up / retry on-device AI
+                        </button>
+                        <button id="lr-ai-clear" type="button" class="lr-settings-action lr-settings-action-danger">
+                            <span class="lr-settings-action-icon">🗑</span> Erase all history
+                        </button>
+                        <button id="lr-ai-uninstall" type="button" class="lr-settings-action lr-settings-action-danger">
+                            <span class="lr-settings-action-icon">🧨</span> Uninstall — clear all AI data
+                        </button>
                     </div>
                 </div>
-
-                <div id="lr-ai-settings-actions">
-                    <button id="lr-ai-clear" type="button" class="lr-settings-action">
-                        <span class="lr-settings-action-icon">🗑</span> Clear conversation
-                    </button>
-                    <button id="lr-ai-download-model" type="button" class="lr-settings-action">
-                        <span class="lr-settings-action-icon">⬇</span> Prepare on-device AI model
-                    </button>
-                    <button id="lr-ai-uninstall" type="button" class="lr-settings-action lr-settings-action-danger">
-                        <span class="lr-settings-action-icon">🧨</span> Remove all local data (uninstall)
-                    </button>
-                </div>
-
-                <button id="lr-ai-settings-close" type="button">Done</button>
             </div>
 
             <div id="lr-ai-messages"></div>
@@ -743,7 +774,7 @@ class AssistantWindow {
         this.clearButton = this.window.querySelector("#lr-ai-clear");
         this.settingsButton = this.window.querySelector("#lr-ai-settings-btn");
         this.settingsPanel = this.window.querySelector("#lr-ai-settings-panel");
-        this.settingsCloseButton = this.window.querySelector("#lr-ai-settings-close");
+        this.settingsBackButton = this.window.querySelector("#lr-ai-settings-back");
         this.downloadModelButton = this.window.querySelector("#lr-ai-download-model");
         this.uninstallButton = this.window.querySelector("#lr-ai-uninstall");
         this.memoryToggle = this.window.querySelector("#lr-ai-memory-toggle");
@@ -758,19 +789,12 @@ class AssistantWindow {
     bindEvents() {
         this.closeButton.addEventListener("click", () => this.close());
 
-        this.settingsButton.addEventListener("click", () => {
-            const opening = !this.settingsPanel.classList.contains("open");
-            this.settingsPanel.classList.toggle("open");
-            if (opening) this.refreshEngineStatus();
-        });
-
-        this.settingsCloseButton.addEventListener("click", () => {
-            this.settingsPanel.classList.remove("open");
-        });
+        this.settingsButton.addEventListener("click", () => this.openSettings());
+        this.settingsBackButton.addEventListener("click", () => this.closeSettings());
 
         this.clearButton.addEventListener("click", () => {
             if (!this.history.length) return;
-            const confirmed = window.confirm("Clear this conversation? This cannot be undone.");
+            const confirmed = window.confirm("Erase the entire conversation history? This cannot be undone.");
             if (!confirmed) return;
             this.history = [];
             this.lastPapers = [];
@@ -778,6 +802,10 @@ class AssistantWindow {
             saveHistory(this.history);
             this.messages.innerHTML = "";
             this.renderWelcomeIfEmpty();
+            // Jump back to the chat view so the visitor can immediately
+            // see it actually worked, instead of trusting a settings
+            // screen with nothing visibly different on it.
+            this.closeSettings();
         });
 
         this.memoryToggle.addEventListener("change", () => {
@@ -785,6 +813,11 @@ class AssistantWindow {
         });
 
         this.downloadModelButton.addEventListener("click", async () => {
+            // "Try again" means everything gets a fresh chance, including
+            // the browser's own built-in AI if it had been marked broken.
+            nanoBroken = false;
+            nanoFailureCount = 0;
+
             if (await isNanoActuallyAvailable()) {
                 this.setEngineStatus("This browser already has a working built-in AI — no download needed.", null);
                 return;
@@ -824,19 +857,46 @@ class AssistantWindow {
         this.sendButton.addEventListener("click", () => this.handleSend());
 
         this.input.addEventListener("keydown", event => {
-            if (event.key === "Escape") {
-                this.close();
-                return;
-            }
             if (event.key === "Enter") {
                 event.preventDefault();
                 this.handleSend();
+            }
+        });
+
+        // Escape from anywhere in the widget: back out of Settings
+        // first if it's open, only closing the whole assistant if it
+        // wasn't — so Escape can never skip past an open settings
+        // screen straight to closing everything.
+        this.window.addEventListener("keydown", event => {
+            if (event.key !== "Escape") return;
+            if (this.settingsPanel.classList.contains("open")) {
+                this.closeSettings();
+            } else {
+                this.close();
             }
         });
     }
 
     refreshEngineStatus() {
         this.setEngineStatus(getEngineStatusText(), webllmDownloading ? 0 : (webllmEnginePromise ? 1 : null));
+    }
+
+    /**
+     * Settings takes over the entire window — chat and the input bar
+     * are hidden while it's open (see .settings-open in the CSS) —
+     * so there's no ambiguity about being "in settings" vs "in chat."
+     * The only way out is the explicit Back button; closing the
+     * whole assistant still needs the × in the header.
+     */
+    openSettings() {
+        this.settingsPanel.classList.add("open");
+        this.window.classList.add("settings-open");
+        this.refreshEngineStatus();
+    }
+
+    closeSettings() {
+        this.settingsPanel.classList.remove("open");
+        this.window.classList.remove("settings-open");
     }
 
     /**
@@ -884,6 +944,7 @@ class AssistantWindow {
         }
 
         resetWebLLMState();
+        resetFailureCounters();
         nanoBroken = false;
         engineKindPromise = null;
 
@@ -1068,6 +1129,8 @@ class AssistantWindow {
         this.window.classList.add("open");
         this.isOpen = true;
 
+        this.lockBodyScroll();
+
         if (this._applyViewportSize) this._applyViewportSize();
 
         requestAnimationFrame(() => this.input.focus());
@@ -1082,12 +1145,60 @@ class AssistantWindow {
         this.window.classList.remove("open");
         this.isOpen = false;
 
+        this.unlockBodyScroll();
+
+        // Reset back to the chat view for next time, rather than
+        // reopening straight into Settings.
+        this.closeSettings();
+
         // Let the CSS defaults take back over for next time, rather
         // than leaving stale inline sizing from a keyboard that was
         // open when this closed.
         this.window.style.top = "";
         this.window.style.height = "";
         this.window.style.bottom = "";
+    }
+
+    isMobileViewport() {
+        return typeof window !== "undefined" &&
+            window.matchMedia &&
+            window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT}px)`).matches;
+    }
+
+    /**
+     * On mobile the panel is a full-screen takeover, so the page
+     * behind it shouldn't scroll or otherwise be interactive until
+     * it's closed — the visitor has to explicitly close it first.
+     * Plain `overflow: hidden` on the body isn't fully reliable on
+     * iOS Safari (rubber-band scrolling can still leak through), so
+     * this also pins the body in place with a fixed position and
+     * restores the exact scroll offset on close. Desktop/tablet,
+     * where this sits as a side panel instead, is left alone —
+     * the background stays fully usable there, matching a normal
+     * docked panel rather than a modal takeover.
+     */
+    lockBodyScroll() {
+        if (!this.isMobileViewport()) return;
+
+        this._lockedScrollY = window.scrollY || window.pageYOffset || 0;
+        document.body.classList.add("lr-ai-body-locked");
+        document.body.style.position = "fixed";
+        document.body.style.top = `-${this._lockedScrollY}px`;
+        document.body.style.left = "0";
+        document.body.style.right = "0";
+        document.body.style.width = "100%";
+    }
+
+    unlockBodyScroll() {
+        if (!document.body.classList.contains("lr-ai-body-locked")) return;
+
+        document.body.classList.remove("lr-ai-body-locked");
+        document.body.style.position = "";
+        document.body.style.top = "";
+        document.body.style.left = "";
+        document.body.style.right = "";
+        document.body.style.width = "";
+        window.scrollTo(0, this._lockedScrollY || 0);
     }
 
     toggle() {
@@ -1107,10 +1218,13 @@ class AssistantWindow {
         if (typeof window === "undefined" || !window.visualViewport) return;
 
         const vv = window.visualViewport;
-        const margin = 12;
 
         const apply = () => {
             if (!this.isOpen) return;
+            // Full-screen on mobile means edge-to-edge — no margin to
+            // preserve there. The side-panel view on desktop/tablet
+            // keeps its small breathing room.
+            const margin = this.isMobileViewport() ? 0 : 12;
             const top = Math.max(margin, vv.offsetTop + margin);
             const height = Math.max(240, vv.height - margin * 2);
             this.window.style.top = `${top}px`;
