@@ -596,6 +596,40 @@ h1{
   display:inline-block;
 }
 
+/* =========================================================
+   BACK TO TOP BUTTON
+
+   Sits above the fixed legend bar rather than at a flat
+   bottom:20px, since the legend already occupies that space.
+   Its exact "bottom" offset is set in JS from the legend's
+   measured height, so it always clears the legend regardless
+   of how many categories are in it or how the layout wraps.
+   ========================================================= */
+
+.top-button{
+  position:fixed;
+  bottom:70px;
+  left:50%;
+  transform:translateX(-50%);
+  width:50px;
+  height:50px;
+  background:#2a2a2a;
+  color:white;
+  text-decoration:none;
+  border-radius:50%;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  font-size:24px;
+  z-index:2147483647;
+  opacity:.6;
+}
+
+.top-button:hover{
+  opacity:.6;
+  background:#2a2a2a;
+}
+
 
 /* =========================================================
    PORTRAIT
@@ -604,7 +638,7 @@ h1{
 @media (orientation:portrait){
 
   main{
-    padding:40px 20px 72px;
+    padding:40px 20px 132px;
   }
 
   h1{
@@ -838,7 +872,7 @@ h1{
   }
 
   main{
-    padding:40px 20px 82px;
+    padding:40px 20px 142px;
   }
 
   .timeline{
@@ -935,7 +969,7 @@ h1{
 @media (orientation:landscape) and (max-height:600px){
 
   main{
-    padding:20px 16px 70px;
+    padding:20px 16px 130px;
   }
 
   h1{
@@ -1121,6 +1155,10 @@ h1{
 <div class="legend" id="legend"></div>
 
 </main>
+
+<a href="#" class="top-button" id="topButton">
+  <span style="position:relative; top:-3px;">▲</span>
+</a>
 
 
 <script>
@@ -2630,6 +2668,8 @@ function buildControls(){
           `
       )
       .join("");
+
+  positionTopButtonAboveLegend();
 }
 
 
@@ -2670,6 +2710,57 @@ window.addEventListener(
   () => closeCategoryDropdown(),
   { passive:true }
 );
+
+
+/*
+ * BACK TO TOP BUTTON
+ *
+ * The legend bar is fixed to the bottom of the viewport and its
+ * height changes with orientation/category count/text wrapping,
+ * so the button's position is measured from the legend's actual
+ * rendered height rather than a hardcoded offset - this is what
+ * keeps the two from ever overlapping.
+ */
+
+const topButton = document.getElementById("topButton");
+
+function positionTopButtonAboveLegend(){
+
+  const legendHeight =
+    legend.offsetHeight || 0;
+
+  topButton.style.bottom =
+    (legendHeight + 14) + "px";
+
+}
+
+function updateTopButton(){
+  if(window.scrollY > 10){
+    topButton.style.display = "flex";
+  }else{
+    topButton.style.display = "none";
+  }
+}
+
+topButton.addEventListener("click", function(e){
+  e.preventDefault();
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+});
+
+window.addEventListener("scroll", updateTopButton);
+
+window.addEventListener("load", function(){
+  positionTopButtonAboveLegend();
+  updateTopButton();
+});
+
+window.addEventListener("resize", function(){
+  positionTopButtonAboveLegend();
+  updateTopButton();
+});
 
 
 async function load(){
