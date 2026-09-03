@@ -180,19 +180,59 @@ body{
 }
 
 /* ==========================================================
-   Header — one line, never overflows. The title truncates
-   with an ellipsis before it can push the action buttons off
-   the edge or wrap awkwardly.
+   Mobile: full-screen takeover instead of a floating panel.
+   The visitor has to close it to get back to the page — see
+   body.lr-ai-body-locked below, which backs up the JS scroll
+   lock with a plain CSS fallback.
+   ========================================================== */
+
+@media (max-width:768px){
+
+    #lr-ai-window{
+
+        top:0;
+        right:0;
+        bottom:0;
+        left:0;
+        width:100%;
+        height:100%;
+        border-radius:0;
+        border:none;
+        box-shadow:none;
+        transform:translateY(16px) scale(1);
+
+    }
+
+    #lr-ai-window.open{
+
+        transform:translateY(0) scale(1);
+
+    }
+
+    body.lr-ai-body-locked{
+
+        overflow:hidden;
+
+    }
+
+}
+
+/* ==========================================================
+   Header — icon, two-line title (name + subtitle), and just a
+   close button. No settings icon here by design, so there's
+   plenty of room and nothing to fight over — the title can
+   truncate with an ellipsis if it ever needs to, but at this
+   width it shouldn't have to.
    ========================================================== */
 
 #lr-ai-header{
 
-    height:clamp(56px, 9vh, 68px);
+    min-height:clamp(58px, 9vh, 72px);
     display:flex;
     align-items:center;
     justify-content:space-between;
     gap:10px;
-    padding:0 clamp(12px, 3vw, 20px);
+    padding:10px clamp(12px, 3vw, 20px);
     border-bottom:1px solid #2a2a2a;
     background:#171717;
     flex-shrink:0;
@@ -203,7 +243,7 @@ body{
 
     display:flex;
     align-items:center;
-    gap:10px;
+    gap:12px;
     color:#fff;
     min-width:0;
     flex:1 1 auto;
@@ -213,14 +253,23 @@ body{
 
 #lr-ai-title img{
 
-    width:30px;
-    height:30px;
+    width:34px;
+    height:34px;
     border-radius:50%;
     flex-shrink:0;
 
 }
 
-#lr-ai-title strong{
+#lr-ai-title-text{
+
+    display:flex;
+    flex-direction:column;
+    min-width:0;
+    line-height:1.25;
+
+}
+
+#lr-ai-title-text strong{
 
     font-size:15px;
     font-weight:600;
@@ -231,16 +280,18 @@ body{
 
 }
 
-#lr-ai-header-actions{
+#lr-ai-title-text span{
 
-    display:flex;
-    align-items:center;
-    gap:2px;
-    flex:0 0 auto;
+    font-size:11.5px;
+    color:#9aa0ab;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    min-width:0;
+    margin-top:2px;
 
 }
 
-#lr-ai-settings-btn,
 #lr-ai-close{
 
     width:34px;
@@ -250,37 +301,19 @@ body{
     background:transparent;
     color:#c7c7c7;
     cursor:pointer;
+    font-size:20px;
     display:flex;
     align-items:center;
     justify-content:center;
     flex-shrink:0;
-    transition:background .15s ease, color .15s ease, transform .15s ease;
+    transition:background .15s ease, color .15s ease;
 
 }
 
-#lr-ai-settings-btn{
-
-    font-size:16px;
-
-}
-
-#lr-ai-close{
-
-    font-size:20px;
-
-}
-
-#lr-ai-settings-btn:hover,
 #lr-ai-close:hover{
 
     background:#2a2a2a;
     color:#fff;
-
-}
-
-#lr-ai-settings-btn:active{
-
-    transform:rotate(30deg);
 
 }
 
@@ -317,15 +350,137 @@ body{
 
 }
 
+/* ==========================================================
+   Memory toggle row
+   ========================================================== */
+
+#lr-ai-memory-row{
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:10px 12px;
+    border:1px solid #333a47;
+    border-radius:10px;
+    cursor:pointer;
+
+}
+
+.lr-settings-row-title{
+
+    display:block;
+    font-size:12.5px;
+    font-weight:600;
+    color:#e2e7f0;
+
+}
+
+.lr-settings-row-desc{
+
+    display:block;
+    font-size:11px;
+    color:#8f9ab0;
+    line-height:1.4;
+    margin-top:3px;
+
+}
+
+.lr-toggle{
+
+    position:relative;
+    flex-shrink:0;
+    width:40px;
+    height:24px;
+
+}
+
+.lr-toggle input{
+
+    position:absolute;
+    opacity:0;
+    width:100%;
+    height:100%;
+    margin:0;
+    cursor:pointer;
+
+}
+
+.lr-toggle-track{
+
+    position:absolute;
+    inset:0;
+    background:#3a4252;
+    border-radius:999px;
+    transition:background .15s ease;
+
+}
+
+.lr-toggle-thumb{
+
+    position:absolute;
+    top:3px;
+    left:3px;
+    width:18px;
+    height:18px;
+    background:#c9d1e0;
+    border-radius:50%;
+    transition:transform .15s ease, background .15s ease;
+
+}
+
+.lr-toggle input:checked + .lr-toggle-track{
+
+    background:#4c7bff;
+
+}
+
+.lr-toggle input:checked + .lr-toggle-track .lr-toggle-thumb{
+
+    transform:translateX(16px);
+    background:#fff;
+
+}
+
 #lr-ai-engine-status{
 
-    font-size:11.5px;
-    color:#8f9ab0;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
     padding:8px 10px;
     background:#171b21;
     border-radius:8px;
     border:1px solid #2a2f3a;
+
+}
+
+#lr-ai-engine-status-text{
+
+    font-size:11.5px;
+    color:#8f9ab0;
     min-height:14px;
+    line-height:1.5;
+
+}
+
+#lr-ai-progress-track{
+
+    display:none;
+    width:100%;
+    height:6px;
+    background:#2a2f3a;
+    border-radius:4px;
+    overflow:hidden;
+
+}
+
+#lr-ai-progress-fill{
+
+    height:100%;
+    width:0%;
+    background:#4c7bff;
+    border-radius:4px;
+    transition:width .2s ease;
 
 }
 
@@ -370,6 +525,19 @@ body{
 .lr-settings-action-icon{
 
     font-size:14px;
+
+}
+
+.lr-settings-action-danger{
+
+    border-color:#5a2c2c;
+    color:#f0b4b4;
+
+}
+
+.lr-settings-action-danger:hover{
+
+    background:#3a1f1f;
 
 }
 
@@ -641,6 +809,37 @@ body{
 
 }
 
+#lr-ai-settings-btn{
+
+    width:40px;
+    height:40px;
+    flex-shrink:0;
+    border:none;
+    border-radius:50%;
+    background:#2a2a2a;
+    color:#c7c7c7;
+    cursor:pointer;
+    font-size:16px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:background .15s ease, color .15s ease, transform .15s ease;
+
+}
+
+#lr-ai-settings-btn:hover{
+
+    background:#333;
+    color:#fff;
+
+}
+
+#lr-ai-settings-btn:active{
+
+    transform:rotate(30deg);
+
+}
+
 #lr-ai-input{
 
     flex:1 1 auto;
@@ -713,16 +912,22 @@ body{
 
 @media (max-width:380px){
 
-    #lr-ai-title strong{
+    #lr-ai-title-text strong{
 
         font-size:14px;
 
     }
 
+    #lr-ai-title-text span{
+
+        font-size:10.5px;
+
+    }
+
     #lr-ai-title img{
 
-        width:26px;
-        height:26px;
+        width:28px;
+        height:28px;
 
     }
 
