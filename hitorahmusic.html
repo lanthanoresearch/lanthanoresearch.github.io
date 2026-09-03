@@ -11,11 +11,11 @@
 
 html{
     scroll-behavior:smooth;
+    background:#111;
 }
 
 body {
     margin: 0;
-    min-height: 100vh;
     position: relative;
 
     background: #111;
@@ -146,6 +146,10 @@ body::before {
     max-width: 900px;
     margin: auto;
     padding: 24px 20px 40px;
+}
+
+.container.extra-scroll-padding{
+    padding-bottom: 110px;
 }
 
 .back {
@@ -351,6 +355,10 @@ function loadSong(index){
 
             cover.style.opacity = 1;
 
+            if(typeof adjustForScrollButton === "function"){
+                adjustForScrollButton();
+            }
+
         }, 200);
 
     };
@@ -419,6 +427,7 @@ player.addEventListener("ended", () => {
 loadSong(0);
 
 const topButton = document.getElementById("topButton");
+const pageContainer = document.querySelector(".container");
 
 function updateTopButton(){
     if(window.scrollY > 10){
@@ -426,6 +435,26 @@ function updateTopButton(){
     }else{
         topButton.style.display = "none";
     }
+}
+
+function adjustForScrollButton(){
+
+    // Reset first so we measure the page's natural height,
+    // not the height inflated by our own extra padding.
+    pageContainer.classList.remove("extra-scroll-padding");
+
+    // Force a reflow so the browser recalculates height
+    // before we measure it.
+    void pageContainer.offsetHeight;
+
+    const pageScrolls =
+        document.documentElement.scrollHeight >
+        window.innerHeight;
+
+    if(pageScrolls){
+        pageContainer.classList.add("extra-scroll-padding");
+    }
+
 }
 
 topButton.addEventListener("click", function(e){
@@ -437,7 +466,16 @@ topButton.addEventListener("click", function(e){
 });
 
 window.addEventListener("scroll", updateTopButton);
-window.addEventListener("load", updateTopButton);
+
+window.addEventListener("load", function(){
+    adjustForScrollButton();
+    updateTopButton();
+});
+
+window.addEventListener("resize", function(){
+    adjustForScrollButton();
+    updateTopButton();
+});
 
 </script>
 </body>
