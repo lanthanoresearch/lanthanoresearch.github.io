@@ -51,6 +51,34 @@ p{
     line-height:1.7;
 }
 
+html{
+    scroll-behavior:smooth;
+}
+
+.top-button{
+    position:fixed;
+    bottom:20px;
+    left:50%;
+    transform:translateX(-50%);
+    width:50px;
+    height:50px;
+    background:#2a2a2a;
+    color:white;
+    text-decoration:none;
+    border-radius:50%;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    font-size:24px;
+    z-index:1000;
+    opacity:.6;
+}
+
+.top-button:hover{
+    opacity:.6;
+    background:#2a2a2a;
+}
+
     </style>
 </head>
 
@@ -100,6 +128,14 @@ p{
         <p>
             Lanthano exists to explore what others overlook, and to find out truth.
         </p>
+
+        <p>
+            Lanthano Research is a collection of alternative history, conspiracy theories, controversial ideas, unique biblical interpretations and frameworks, and much more. It is not built around the modern consensus. Instead, it focuses on preserving ideas, claims, theories, and evidence that may otherwise become difficult to find or eventually disappear from the internet.
+        </p>
+
+        <p>
+            The goal is not necessarily to be the final word on any subject. It is to be a launching point. Rather than forcing someone to spend hours searching through scattered websites to find different theories and their supporting evidence, Lanthano brings them together in one clean, accessible place. Whether someone ultimately accepts, rejects, or simply investigates a theory further, Lanthano gives them a significant head start in their research.
+        </p>
     </div>
 
     <div class="update-note" id="lastUpdate">
@@ -107,6 +143,10 @@ p{
     </div>
 
 </section>
+
+<a href="#" class="top-button" id="topButton">
+    <span style="position:relative; top:-3px;">▲</span>
+</a>
 
 <script>
 
@@ -142,6 +182,27 @@ fetch("descriptions.json")
         formattedDate + ".";
 
 });
+
+const topButton = document.getElementById("topButton");
+
+function updateTopButton(){
+    if(window.scrollY > 10){
+        topButton.style.display = "flex";
+    }else{
+        topButton.style.display = "none";
+    }
+}
+
+topButton.addEventListener("click", function(e){
+    e.preventDefault();
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+});
+
+window.addEventListener("scroll", updateTopButton);
+window.addEventListener("load", updateTopButton);
 
 </script>
 
