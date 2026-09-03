@@ -13,6 +13,11 @@
 
 <style>
 
+html{
+    scroll-behavior:smooth;
+    background:#111;
+}
+
 body{
     margin:0;
     background:#111;
@@ -36,7 +41,11 @@ body{
 .container{
     max-width:1100px;
     margin:auto;
-    padding:40px 20px 80px;
+    padding:24px 20px 30px;
+}
+
+.container.extra-scroll-padding{
+    padding-bottom:100px;
 }
 
 .back{
@@ -44,7 +53,7 @@ body{
     text-align:left;
     color:#fff;
     text-decoration:none;
-    margin-bottom:30px;
+    margin-bottom:16px;
     font-size:1rem;
 }
 
@@ -53,34 +62,34 @@ body{
 }
 
 h1{
-    font-size:3em;
-    margin-bottom:15px;
+    font-size:2.3em;
+    margin:0 0 10px;
 }
 
 .subtitle{
     color:#bdbdbd;
-    font-size:1.15rem;
-    line-height:1.8;
-    max-width:750px;
-    margin:0 auto 45px;
+    font-size:1rem;
+    line-height:1.5;
+    max-width:650px;
+    margin:0 auto 22px;
 }
 
 .store-preview{
     width:100%;
-    max-width:900px;
+    max-width:420px;
     border-radius:14px;
     border:2px solid #2b2b2b;
     box-shadow:0 15px 45px rgba(0,0,0,.45);
-    margin-bottom:55px;
+    margin-bottom:22px;
 }
 
 .shop-button{
     display:inline-block;
-    padding:18px 60px;
+    padding:14px 45px;
 
     color:white;
     text-decoration:none;
-    font-size:1.2rem;
+    font-size:1.1rem;
     font-weight:bold;
 
     border-radius:999px;
@@ -109,25 +118,49 @@ h1{
 }
 
 .footer{
-    margin-top:40px;
+    margin-top:20px;
     color:#777;
     font-size:.95rem;
+}
+
+.top-button{
+    position:fixed;
+    bottom:20px;
+    left:50%;
+    transform:translateX(-50%);
+    width:50px;
+    height:50px;
+    background:#2a2a2a;
+    color:white;
+    text-decoration:none;
+    border-radius:50%;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    font-size:24px;
+    z-index:1000;
+    opacity:.6;
+}
+
+.top-button:hover{
+    opacity:.6;
+    background:#2a2a2a;
 }
 
 @media (max-width:700px){
 
     h1{
-        font-size:2.3em;
+        font-size:2em;
     }
 
     .subtitle{
-        font-size:1rem;
+        font-size:.95rem;
     }
 
     .shop-button{
         width:90%;
         max-width:340px;
-        padding:18px 0;
+        padding:15px 0;
     }
 
 }
@@ -175,7 +208,65 @@ Ideas Worth Representing.
 
 </div>
 
+<a href="#" class="top-button" id="topButton">
+    <span style="position:relative; top:-3px;">▲</span>
+</a>
+
+<script>
+
+const topButton = document.getElementById("topButton");
+const pageContainer = document.querySelector(".container");
+
+function updateTopButton(){
+    if(window.scrollY > 10){
+        topButton.style.display = "flex";
+    }else{
+        topButton.style.display = "none";
+    }
+}
+
+function adjustForScrollButton(){
+
+    // Reset first so we measure the page's natural height,
+    // not the height inflated by our own extra padding.
+    pageContainer.classList.remove("extra-scroll-padding");
+
+    // Force a reflow so the browser recalculates height
+    // before we measure it.
+    void pageContainer.offsetHeight;
+
+    const pageScrolls =
+        document.documentElement.scrollHeight >
+        window.innerHeight;
+
+    if(pageScrolls){
+        pageContainer.classList.add("extra-scroll-padding");
+    }
+
+}
+
+topButton.addEventListener("click", function(e){
+    e.preventDefault();
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+});
+
+window.addEventListener("scroll", updateTopButton);
+
+window.addEventListener("load", function(){
+    adjustForScrollButton();
+    updateTopButton();
+});
+
+window.addEventListener("resize", function(){
+    adjustForScrollButton();
+    updateTopButton();
+});
+
+</script>
+
 </body>
 
 </html>
-
