@@ -8,6 +8,14 @@
 <title>Discover Your Rabbit Hole</title>
 <style>
 
+html{
+scroll-behavior:smooth;
+}
+
+html,body{
+height:100%;
+}
+
 body{
 margin:0;
 background:#111;
@@ -20,10 +28,20 @@ text-decoration:none;
 color:inherit;
 }
 
+.page-frame{
+min-height:100vh;
+display:flex;
+flex-direction:column;
+justify-content:center;
+box-sizing:border-box;
+}
+
 .top-nav{
 max-width:640px;
 margin:0 auto;
-padding:40px 20px 0;
+width:100%;
+box-sizing:border-box;
+padding:clamp(14px,4vh,40px) 20px 0;
 }
 
 .back-link{
@@ -35,11 +53,16 @@ margin-bottom:20px;
 
 .discover-wrap{
 max-width:640px;
+width:100%;
 margin:0 auto;
-padding:0 20px 36px;
+padding:0 20px clamp(20px,4vh,36px);
 box-sizing:border-box;
 display:flex;
 flex-direction:column;
+}
+
+.discover-wrap.has-scroll-padding{
+padding-bottom:96px;
 }
 
 .discover-header{
@@ -436,6 +459,30 @@ background:#444;
 text-align:center;
 }
 
+.top-button{
+position:fixed;
+bottom:20px;
+left:50%;
+transform:translateX(-50%);
+width:50px;
+height:50px;
+background:#2a2a2a;
+color:white;
+text-decoration:none;
+border-radius:50%;
+display:none;
+align-items:center;
+justify-content:center;
+font-size:24px;
+z-index:1000;
+opacity:.6;
+}
+
+.top-button:hover{
+opacity:.6;
+background:#2a2a2a;
+}
+
 .share-button{
 display:block;
 margin:30px auto;
@@ -467,15 +514,17 @@ font-size:1.05em;
 </head>
 <body>
 
+<div class="page-frame">
+
 <div class="top-nav">
 <a href="index.html" class="back-link">◀ Home</a>
 </div>
 
-<div class="discover-wrap">
+<div class="discover-wrap" id="discoverWrap">
 
 <div class="discover-header" id="discoverHeader">
 <h1>Discover Your Rabbit Hole</h1>
-<p id="headerSub">Answer a couple of quick questions and we'll surface something from the archive worth reading.</p>
+<p id="headerSub">Answer three quick questions and we'll surface something from the archive worth reading.</p>
 </div>
 
 <div class="progress-track" id="progressTrack"></div>
@@ -489,6 +538,12 @@ font-size:1.05em;
 </div>
 
 </div>
+
+</div>
+
+<a href="#" class="top-button" id="topButton">
+<span style="position:relative; top:-3px;">▲</span>
+</a>
 
 <div id="discoverWarningOverlay">
 <div id="discoverWarningBox">
@@ -671,7 +726,7 @@ let currentCategoryContext = null;
 let history = [];               // [{type, value, answer}]
 let usedDims = new Set();
 let questionCount = 0;          // total questions asked so far (incl. category pick)
-let MAX_QUESTIONS = 3;          // varies per session so the quiz doesn't always run the same length
+let MAX_QUESTIONS = 3;          // always 3 questions total (category pick + 2 narrowing)
 
 const stage = document.getElementById("quizStage");
 const progressTrack = document.getElementById("progressTrack");
@@ -679,10 +734,10 @@ const headerEl = document.getElementById("discoverHeader");
 const headerSub = document.getElementById("headerSub");
 
 const INTRO_SUBS = [
-"Answer a couple of quick questions and we'll surface something from the archive worth reading.",
-"A few quick taps, then a paper picked just for where your curiosity is pointing.",
+"Answer three quick questions and we'll surface something from the archive worth reading.",
+"Three quick taps, then a paper picked just for where your curiosity is pointing.",
 "No wrong answers, just tell us where your attention wants to go.",
-"Two or three questions. One paper. Let's see what fits."
+"Three questions. One paper. Let's see what fits."
 ];
 
 function setHeader(mode, text){
@@ -850,7 +905,7 @@ currentCategoryContext = null;
 history = [];
 usedDims = new Set();
 questionCount = 1;
-MAX_QUESTIONS = pickRandom([3, 4, 4, 5, 5, 6]); // total questions per session, category included
+MAX_QUESTIONS = 3; // always 3 total questions per session, category included
 
 setHeader("full", pickRandom(INTRO_SUBS));
 
@@ -1688,6 +1743,47 @@ url
 }
 
 };
+
+/* ---------------- Back to top button ----------------
+   Only ever appears once the page has actually scrolled — on a
+   session short enough to fit on one screen, scrollY never exceeds
+   the threshold below, so the button simply never shows. When the
+   page IS taller than the viewport, a little extra bottom padding is
+   added so the fixed button doesn't sit on top of the last bit of
+   content (the share button). */
+
+const topButton = document.getElementById("topButton");
+const discoverWrapEl = document.getElementById("discoverWrap");
+
+function updateTopButton(){
+if(window.scrollY > 10){
+topButton.style.display = "flex";
+}else{
+topButton.style.display = "none";
+}
+}
+
+topButton.addEventListener("click", function(e){
+e.preventDefault();
+window.scrollTo({
+top: 0,
+behavior: "smooth"
+});
+});
+
+function updateScrollPadding(){
+const scrollable = document.documentElement.scrollHeight > window.innerHeight + 4;
+discoverWrapEl.classList.toggle("has-scroll-padding", scrollable);
+}
+
+window.addEventListener("scroll", updateTopButton);
+window.addEventListener("load", updateTopButton);
+window.addEventListener("load", updateScrollPadding);
+window.addEventListener("resize", updateScrollPadding);
+
+// Content height changes as the quiz progresses (new cards, results,
+// etc.), so re-check whenever the stage's content actually changes.
+new MutationObserver(updateScrollPadding).observe(stage, { childList: true, subtree: true });
 
 </script>
 
