@@ -638,6 +638,7 @@ body{
 .lr-msg{
 
     display:flex;
+    flex-direction:column;
     max-width:88%;
 
 }
@@ -645,14 +646,14 @@ body{
 .lr-msg-user{
 
     align-self:flex-end;
-    justify-content:flex-end;
+    align-items:flex-end;
 
 }
 
 .lr-msg-ai{
 
     align-self:flex-start;
-    justify-content:flex-start;
+    align-items:flex-start;
 
 }
 
