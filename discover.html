@@ -30,9 +30,10 @@ color:inherit;
 
 .page-frame{
 min-height:100vh;
+min-height:100dvh;
 display:flex;
 flex-direction:column;
-justify-content:center;
+justify-content:flex-start;
 box-sizing:border-box;
 }
 
@@ -459,6 +460,10 @@ background:#444;
 text-align:center;
 }
 
+.discover-footer.hidden{
+display:none;
+}
+
 .top-button{
 position:fixed;
 bottom:20px;
@@ -485,8 +490,8 @@ background:#2a2a2a;
 
 .share-button{
 display:block;
-margin:30px auto;
-padding:12px 24px;
+margin:18px auto 0;
+padding:10px 22px;
 background:#1d1d1d;
 color:#aaa;
 border:none;
@@ -499,6 +504,193 @@ font-family:inherit;
 .share-button:hover{
 background:#262626;
 color:#fff;
+}
+
+/* ---- Fit-to-screen compaction ----
+   Applied by JS when the rendered content is taller than the
+   viewport. Two tiers, each tighter than the last, so the quiz tries
+   hard to stay on one screen before ever relying on the back-to-top
+   button / scrolling as a fallback. */
+
+.page-frame.compact-fit .top-nav{
+padding-top:10px;
+}
+
+.page-frame.compact-fit .back-link{
+margin-bottom:10px;
+}
+
+.page-frame.compact-fit .discover-header{
+margin-bottom:2px;
+}
+
+.page-frame.compact-fit .discover-header h1{
+font-size:1.5em;
+margin-bottom:6px;
+}
+
+.page-frame.compact-fit .discover-header p{
+font-size:.85em;
+line-height:1.3;
+}
+
+.page-frame.compact-fit .progress-track{
+margin:8px 0 2px;
+}
+
+.page-frame.compact-fit .quiz-stage{
+gap:8px;
+padding-top:2px;
+}
+
+.page-frame.compact-fit .quiz-card{
+padding:14px 16px;
+border-radius:14px;
+}
+
+.page-frame.compact-fit .quiz-icon{
+font-size:1.4em;
+margin-bottom:2px;
+}
+
+.page-frame.compact-fit .quiz-question{
+font-size:1em;
+margin-bottom:10px;
+}
+
+.page-frame.compact-fit .quiz-options{
+gap:6px;
+}
+
+.page-frame.compact-fit .quiz-option{
+padding:9px 14px;
+}
+
+.page-frame.compact-fit .quiz-option-tag{
+width:30px;
+height:30px;
+}
+
+.page-frame.compact-fit .result-media{
+height:90px;
+}
+
+.page-frame.compact-fit .result-body{
+padding:12px 16px 14px;
+}
+
+.page-frame.compact-fit .result-title{
+font-size:1.1rem;
+margin-bottom:6px;
+}
+
+.page-frame.compact-fit .result-description{
+font-size:.88em;
+margin-bottom:8px;
+-webkit-line-clamp:2;
+}
+
+.page-frame.compact-fit .result-why{
+padding:8px 12px;
+margin-bottom:10px;
+font-size:.8em;
+}
+
+.page-frame.compact-fit .result-read{
+padding:10px;
+}
+
+.page-frame.compact-fit .result-actions{
+margin-top:8px;
+}
+
+.page-frame.compact-fit .discover-footer .share-button{
+margin:12px auto;
+padding:8px 18px;
+font-size:.9em;
+}
+
+.page-frame.compact-fit-2 .discover-header p{
+display:none;
+}
+
+.page-frame.compact-fit-2 .discover-header h1{
+font-size:1.3em;
+margin-bottom:2px;
+}
+
+.page-frame.compact-fit-2 .top-nav{
+padding-top:6px;
+}
+
+.page-frame.compact-fit-2 .back-link{
+margin-bottom:6px;
+font-size:.9em;
+}
+
+.page-frame.compact-fit-2 .progress-track{
+margin:4px 0 2px;
+}
+
+.page-frame.compact-fit-2 .quiz-card{
+padding:10px 12px;
+}
+
+.page-frame.compact-fit-2 .quiz-icon{
+font-size:1.1em;
+margin-bottom:0;
+}
+
+.page-frame.compact-fit-2 .quiz-question{
+font-size:.92em;
+margin-bottom:6px;
+}
+
+.page-frame.compact-fit-2 .quiz-options{
+gap:4px;
+}
+
+.page-frame.compact-fit-2 .quiz-option{
+padding:7px 12px;
+font-size:.9em;
+}
+
+.page-frame.compact-fit-2 .result-media{
+height:60px;
+}
+
+.page-frame.compact-fit-2 .result-body{
+padding:8px 12px;
+}
+
+.page-frame.compact-fit-2 .result-title{
+font-size:1em;
+margin-bottom:4px;
+}
+
+.page-frame.compact-fit-2 .result-description{
+display:none;
+}
+
+.page-frame.compact-fit-2 .result-why{
+padding:6px 10px;
+margin-bottom:6px;
+font-size:.75em;
+}
+
+.page-frame.compact-fit-2 .result-read{
+padding:8px;
+font-size:.9em;
+}
+
+.page-frame.compact-fit-2 .result-actions{
+margin-top:6px;
+}
+
+.page-frame.compact-fit-2 .discover-footer .share-button{
+margin:8px auto;
+padding:6px 14px;
+font-size:.82em;
 }
 
 @media (max-width:400px){
@@ -514,7 +706,7 @@ font-size:1.05em;
 </head>
 <body>
 
-<div class="page-frame">
+<div class="page-frame" id="pageFrame">
 
 <div class="top-nav">
 <a href="index.html" class="back-link">◀ Home</a>
@@ -533,7 +725,7 @@ font-size:1.05em;
 <div class="quiz-loading">Loading the archive…</div>
 </div>
 
-<div class="discover-footer">
+<div class="discover-footer" id="discoverFooter">
 <button type="button" class="share-button" onclick="shareDiscoverPage()">Share This Page</button>
 </div>
 
@@ -732,6 +924,15 @@ const stage = document.getElementById("quizStage");
 const progressTrack = document.getElementById("progressTrack");
 const headerEl = document.getElementById("discoverHeader");
 const headerSub = document.getElementById("headerSub");
+const footerEl = document.getElementById("discoverFooter");
+
+// The share button only makes sense before the person has answered
+// anything — once they're into the quiz (or looking at a result),
+// it's just competing for the same one screen with nothing to earn
+// its place there.
+function showFooter(show){
+footerEl.classList.toggle("hidden", !show);
+}
 
 const INTRO_SUBS = [
 "Answer three quick questions and we'll surface something from the archive worth reading.",
@@ -907,6 +1108,8 @@ usedDims = new Set();
 questionCount = 1;
 MAX_QUESTIONS = 3; // always 3 total questions per session, category included
 
+showFooter(true);
+
 setHeader("full", pickRandom(INTRO_SUBS));
 
 // Pick which categories to offer on the opening question. Two are
@@ -933,6 +1136,7 @@ onClick: () => chooseCategory(cat)
 }
 
 function chooseCategory(cat){
+showFooter(false);
 primaryCategory = cat;
 currentCategoryContext = cat;
 history.push({ type: "category-root", value: cat });
@@ -1272,15 +1476,6 @@ next();
 
 /* ---------------- Result ---------------- */
 
-const RESULT_INTROS = [
-"We found something you might be interested in.",
-"Here's something from the archive that fits.",
-"This one matches where your answers pointed.",
-"Found it. Take a look.",
-"This is where your answers led.",
-"Here's what fit best."
-];
-
 const WHY_INTROS = [
 "You pointed toward {cat} research",
 "Your answers led toward {cat}",
@@ -1489,7 +1684,6 @@ paperKey: paper.key,
 catText: payload.catText,
 whyHtml: payload.whyHtml,
 mediaSources: payload.mediaSources,
-introText: payload.introText,
 progressDotsTypes: progressDots.map(d => d.type),
 primaryCategory,
 currentCategoryContext,
@@ -1560,6 +1754,8 @@ startQuiz();
 return;
 }
 
+showFooter(false);
+
 primaryCategory = saved.primaryCategory || null;
 currentCategoryContext = saved.currentCategoryContext || saved.primaryCategory || null;
 history = saved.history || [];
@@ -1569,7 +1765,7 @@ resetProgress();
 (saved.progressDotsTypes || ["question", "end"]).forEach(t => addProgressStep(t));
 completeProgress();
 
-setHeader("full", saved.introText);
+setHeader("compact");
 
 const sources = saved.mediaSources && saved.mediaSources.length
 ? saved.mediaSources
@@ -1625,8 +1821,9 @@ addProgressStep("end");
 }
 completeProgress();
 
-const introText = pickRandom(RESULT_INTROS);
-setHeader("full", introText);
+// No subtitle text on the result screen — keeps the header compact
+// so the card has as much room as possible to fit on one screen.
+setHeader("compact");
 
 const catText = (paper.category || []).map(titleCase).join(" • ");
 
@@ -1644,7 +1841,7 @@ const mediaSources = [];
 if(visible.length) mediaSources.push(pickRandom(visible));
 mediaSources.push(`covers/${paper.key}.png`);
 
-const payload = { introText, catText, whyHtml, mediaSources, onlyOneOption: pool.length <= 1 };
+const payload = { catText, whyHtml, mediaSources, onlyOneOption: pool.length <= 1 };
 
 renderResultCard(paper, payload);
 saveResultState(paper, payload);
@@ -1745,15 +1942,16 @@ url
 };
 
 /* ---------------- Back to top button ----------------
-   Only ever appears once the page has actually scrolled — on a
-   session short enough to fit on one screen, scrollY never exceeds
-   the threshold below, so the button simply never shows. When the
-   page IS taller than the viewport, a little extra bottom padding is
-   added so the fixed button doesn't sit on top of the last bit of
-   content (the share button). */
+   A fallback safety net, not the primary strategy — fitToScreen()
+   below tries hard to keep everything on one screen first. This
+   button only matters for the rare case where even the tightest
+   compaction still doesn't fit (e.g. a very short viewport with
+   long question text). On a session that fits, scrollY never
+   exceeds the threshold below, so the button simply never shows. */
 
 const topButton = document.getElementById("topButton");
 const discoverWrapEl = document.getElementById("discoverWrap");
+const pageFrameEl = document.getElementById("pageFrame");
 
 function updateTopButton(){
 if(window.scrollY > 10){
@@ -1771,19 +1969,42 @@ behavior: "smooth"
 });
 });
 
-function updateScrollPadding(){
-const scrollable = document.documentElement.scrollHeight > window.innerHeight + 4;
-discoverWrapEl.classList.toggle("has-scroll-padding", scrollable);
+/* ---------------- Fit to one screen ----------------
+   Tries, in order: normal layout, then a compact tier, then an even
+   tighter tier, re-measuring after each step. Whatever's left after
+   that is handled by ordinary scrolling plus the back-to-top button
+   and a bit of extra bottom padding so the button never covers the
+   last bit of content. */
+
+function contentOverflows(){
+return document.documentElement.scrollHeight > window.innerHeight + 2;
+}
+
+function fitToScreen(){
+pageFrameEl.classList.remove("compact-fit", "compact-fit-2");
+
+if(contentOverflows()){
+pageFrameEl.classList.add("compact-fit");
+}
+if(contentOverflows()){
+pageFrameEl.classList.add("compact-fit-2");
+}
+
+discoverWrapEl.classList.toggle("has-scroll-padding", contentOverflows());
 }
 
 window.addEventListener("scroll", updateTopButton);
 window.addEventListener("load", updateTopButton);
-window.addEventListener("load", updateScrollPadding);
-window.addEventListener("resize", updateScrollPadding);
+window.addEventListener("load", fitToScreen);
+window.addEventListener("resize", fitToScreen);
+
+// Result-card images load asynchronously and can change the page's
+// height once they arrive, so re-check after any image load too.
+document.addEventListener("load", fitToScreen, true);
 
 // Content height changes as the quiz progresses (new cards, results,
 // etc.), so re-check whenever the stage's content actually changes.
-new MutationObserver(updateScrollPadding).observe(stage, { childList: true, subtree: true });
+new MutationObserver(fitToScreen).observe(stage, { childList: true, subtree: true });
 
 </script>
 
