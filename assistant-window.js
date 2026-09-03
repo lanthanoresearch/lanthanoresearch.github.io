@@ -549,12 +549,22 @@ async function getWebLLMEngine(onProgress) {
             // manually hit Retry for something that would have just
             // worked on its own a moment later.
             const MAX_LOAD_ATTEMPTS = 3;
+            // If nothing has happened for this long, this attempt is
+            // treated as stalled rather than left to hang indefinitely.
+            // A silent hang with zero feedback (no error, no progress,
+            // just nothing) is exactly what a stuck "downloading"
+            // state with no way out looks like from the outside.
+            const STALL_TIMEOUT_MS = 30000;
             let lastLoadError = null;
 
             for (let attempt = 1; attempt <= MAX_LOAD_ATTEMPTS; attempt++) {
                 try {
-                    const engine = await webllm.CreateMLCEngine(WEBLLM_MODEL_ID, {
+                    let lastProgressAt = Date.now();
+                    let stallInterval = null;
+
+                    const enginePromise = webllm.CreateMLCEngine(WEBLLM_MODEL_ID, {
                         initProgressCallback: report => {
+                            lastProgressAt = Date.now();
                             if (typeof onProgress === "function") {
                                 const fraction = typeof report.progress === "number" ? report.progress : 0;
                                 const label = report.text || `Downloading model… (${Math.round(fraction * 100)}%)`;
@@ -562,6 +572,22 @@ async function getWebLLMEngine(onProgress) {
                             }
                         }
                     });
+
+                    const stallPromise = new Promise((resolve, reject) => {
+                        stallInterval = setInterval(() => {
+                            if (Date.now() - lastProgressAt > STALL_TIMEOUT_MS) {
+                                clearInterval(stallInterval);
+                                reject(new Error("The download stalled and made no progress for a while. This looks like a network problem."));
+                            }
+                        }, 3000);
+                    });
+
+                    let engine;
+                    try {
+                        engine = await Promise.race([enginePromise, stallPromise]);
+                    } finally {
+                        clearInterval(stallInterval);
+                    }
 
                     // Verify the engine actually has the API surface we
                     // need before declaring success — catching a
@@ -578,7 +604,7 @@ async function getWebLLMEngine(onProgress) {
                     console.error(`Lanthano Assistant: engine load attempt ${attempt} failed`, error);
                     lastLoadError = error;
 
-                    const looksLikeNetworkHiccup = /network|fetch|cache/i.test(error?.message || "");
+                    const looksLikeNetworkHiccup = /network|fetch|cache|stalled/i.test(error?.message || "");
                     if (attempt < MAX_LOAD_ATTEMPTS && looksLikeNetworkHiccup) {
                         if (typeof onProgress === "function") {
                             onProgress("Download was interrupted. Trying again", 0);
@@ -753,6 +779,7 @@ class AssistantWindow {
         this.isOpen = false;
         this.isBusy = false;
         this.aiInputLocked = false;
+        this._downloadGeneration = 0;
         this.history = loadHistory();
 
         this.build();
@@ -830,6 +857,10 @@ class AssistantWindow {
                             Download AI model
                         </button>
 
+                        <button id="lr-ai-cancel-download" type="button" class="lr-settings-action lr-settings-action-danger" hidden>
+                            Cancel download
+                        </button>
+
                         <button id="lr-ai-diagnostics" type="button" class="lr-settings-action" hidden>
                             Copy diagnostics report
                         </button>
@@ -876,6 +907,7 @@ class AssistantWindow {
         this.settingsPanel = this.window.querySelector("#lr-ai-settings-panel");
         this.settingsBackButton = this.window.querySelector("#lr-ai-settings-back");
         this.downloadModelButton = this.window.querySelector("#lr-ai-download-model");
+        this.cancelDownloadButton = this.window.querySelector("#lr-ai-cancel-download");
         this.diagnosticsButton = this.window.querySelector("#lr-ai-diagnostics");
         this.uninstallButton = this.window.querySelector("#lr-ai-uninstall");
         this.memoryToggle = this.window.querySelector("#lr-ai-memory-toggle");
@@ -924,6 +956,10 @@ class AssistantWindow {
 
         this.downloadModelButton.addEventListener("click", async () => {
             await this.startDownload({ force: true });
+        });
+
+        this.cancelDownloadButton.addEventListener("click", () => {
+            this.cancelDownload();
         });
 
         this.downloadConfirmButton.addEventListener("click", () => {
@@ -1052,15 +1088,33 @@ class AssistantWindow {
             }
         }
 
+        // Identifies this specific attempt, so that if it gets
+        // cancelled, any progress callback that still fires afterward
+        // (the underlying fetch can't actually be aborted, just
+        // abandoned) is recognized as stale and ignored instead of
+        // overwriting the "cancelled" status with old progress.
+        const myGeneration = ++this._downloadGeneration;
+
         this.updateInputLock(true, "waiting");
         this.downloadModelButton.disabled = true;
+        this.cancelDownloadButton.hidden = false;
 
-        const engine = await getWebLLMEngine((label, fraction) => {
-            this.setEngineStatus(label, fraction);
-            this.updateInputLock(true, "downloading");
-        });
+        let engine;
+        try {
+            engine = await getWebLLMEngine((label, fraction) => {
+                if (myGeneration !== this._downloadGeneration) return;
+                this.setEngineStatus(label, fraction);
+                this.updateInputLock(true, "downloading");
+            });
+        } finally {
+            if (myGeneration === this._downloadGeneration) {
+                this.downloadModelButton.disabled = false;
+                this.cancelDownloadButton.hidden = true;
+            }
+        }
 
-        this.downloadModelButton.disabled = false;
+        if (myGeneration !== this._downloadGeneration) return; // cancelled while this was running
+
         this.refreshDownloadButton();
 
         if (!engine) {
@@ -1076,6 +1130,25 @@ class AssistantWindow {
 
         this.setEngineStatus("AI model downloaded and ready. It stays saved for next time.", 1);
         this.updateInputLock(false);
+    }
+
+    /**
+     * Gives up on waiting for the current attempt rather than a true
+     * network-level abort (browsers don't expose a clean way to cancel
+     * an in-flight fetch buried inside a third-party library like
+     * this). The generation counter means any late callback from the
+     * abandoned attempt is ignored, and the UI resets immediately so
+     * the visitor is never stuck looking at a permanently grayed out
+     * button while something they can no longer see is still trying.
+     */
+    cancelDownload() {
+        this._downloadGeneration++;
+        resetWebLLMState();
+        this.downloadModelButton.disabled = false;
+        this.cancelDownloadButton.hidden = true;
+        this.refreshDownloadButton();
+        this.updateInputLock(true, "waiting");
+        this.setEngineStatus("Download cancelled. You can try again anytime.", null);
     }
 
     /**
