@@ -8,14 +8,6 @@
 <title>Discover Your Rabbit Hole</title>
 <style>
 
-html{
-scroll-behavior:smooth;
-}
-
-html,body{
-height:100%;
-}
-
 body{
 margin:0;
 background:#111;
@@ -28,21 +20,10 @@ text-decoration:none;
 color:inherit;
 }
 
-.page-frame{
-min-height:100vh;
-min-height:100dvh;
-display:flex;
-flex-direction:column;
-justify-content:flex-start;
-box-sizing:border-box;
-}
-
 .top-nav{
 max-width:640px;
 margin:0 auto;
-width:100%;
-box-sizing:border-box;
-padding:clamp(14px,4vh,40px) 20px 0;
+padding:20px 20px 0;
 }
 
 .back-link{
@@ -54,28 +35,23 @@ margin-bottom:20px;
 
 .discover-wrap{
 max-width:640px;
-width:100%;
 margin:0 auto;
-padding:0 20px clamp(20px,4vh,36px);
+padding:0 20px 20px;
 box-sizing:border-box;
 display:flex;
 flex-direction:column;
 }
 
-.discover-wrap.has-scroll-padding{
-padding-bottom:96px;
-}
-
 .discover-header{
 text-align:center;
-margin:0 0 4px;
+margin:0 0 2px;
 transition:.2s;
 }
 
 .discover-header h1{
 font-size:2em;
 line-height:1.15;
-margin:0 0 10px 0;
+margin:0 0 6px 0;
 }
 
 .discover-header p{
@@ -98,7 +74,7 @@ display:none;
 display:flex;
 justify-content:center;
 gap:8px;
-margin:14px 0 4px;
+margin:10px 0 2px;
 }
 
 .progress-dot{
@@ -132,8 +108,8 @@ display:flex;
 flex-direction:column;
 align-items:stretch;
 justify-content:flex-start;
-gap:14px;
-padding:6px 0 0;
+gap:10px;
+padding:4px 0 0;
 }
 
 .quiz-card{
@@ -142,7 +118,7 @@ box-sizing:border-box;
 background:#181818;
 border:1px solid #2b2b2b;
 border-radius:16px;
-padding:22px 20px;
+padding:16px 18px;
 opacity:0;
 transform:translateY(10px);
 animation:cardIn .32s ease forwards;
@@ -170,7 +146,7 @@ transform:translateY(-8px);
 .quiz-icon{
 text-align:center;
 font-size:1.8em;
-margin-bottom:4px;
+margin-bottom:2px;
 }
 
 .quiz-question{
@@ -178,13 +154,13 @@ text-align:center;
 font-size:1.12em;
 font-weight:bold;
 line-height:1.35;
-margin:0 0 18px 0;
+margin:0 0 12px 0;
 }
 
 .quiz-options{
 display:flex;
 flex-direction:column;
-gap:10px;
+gap:8px;
 }
 
 .quiz-option{
@@ -197,7 +173,7 @@ border-radius:14px;
 color:#eee;
 font-size:1em;
 font-weight:bold;
-padding:13px 16px;
+padding:11px 14px;
 cursor:pointer;
 transition:.2s;
 text-align:center;
@@ -268,7 +244,7 @@ overflow:hidden;
 }
 
 .result-media{
-height:150px;
+height:110px;
 background:#2b2b2b;
 overflow:hidden;
 }
@@ -302,14 +278,14 @@ font-size:34px;
 }
 
 .result-body{
-padding:18px 20px 20px;
+padding:12px 16px 14px;
 }
 
 .result-category{
 text-align:center;
 color:#888;
 font-size:.85em;
-margin:0 0 6px 0;
+margin:0 0 4px 0;
 letter-spacing:.4px;
 }
 
@@ -318,7 +294,7 @@ text-align:center;
 font-weight:bold;
 font-size:1.32rem;
 line-height:1.22;
-margin:0 0 10px 0;
+margin:0 0 6px 0;
 display:-webkit-box;
 -webkit-line-clamp:2;
 -webkit-box-orient:vertical;
@@ -328,11 +304,11 @@ overflow:hidden;
 .result-description{
 color:#ccc;
 font-size:.95em;
-line-height:1.45;
+line-height:1.4;
 text-align:center;
-margin:0 0 14px 0;
+margin:0 0 10px 0;
 display:-webkit-box;
--webkit-line-clamp:3;
+-webkit-line-clamp:2;
 -webkit-box-orient:vertical;
 overflow:hidden;
 }
@@ -341,11 +317,11 @@ overflow:hidden;
 background:#151515;
 border:1px solid #2b2b2b;
 border-radius:12px;
-padding:10px 14px;
+padding:8px 12px;
 color:#aaa;
 font-size:.85em;
-line-height:1.45;
-margin:0 0 16px 0;
+line-height:1.4;
+margin:0 0 10px 0;
 }
 
 .result-why b{
@@ -361,7 +337,7 @@ background:#2f7cff;
 color:#fff;
 font-weight:bold;
 font-size:1em;
-padding:13px;
+padding:11px;
 border-radius:12px;
 border:none;
 cursor:pointer;
@@ -376,7 +352,7 @@ background:#4d8dff;
 display:flex;
 justify-content:center;
 gap:8px;
-margin-top:14px;
+margin-top:10px;
 flex-wrap:wrap;
 }
 
@@ -460,8 +436,26 @@ background:#444;
 text-align:center;
 }
 
-.discover-footer.hidden{
-display:none;
+.discover-wrap.extra-scroll-padding{
+padding-bottom:100px;
+}
+
+.share-button{
+display:block;
+margin:16px auto 0;
+padding:12px 24px;
+background:#1d1d1d;
+color:#aaa;
+border:none;
+border-radius:10px;
+cursor:pointer;
+font-size:1em;
+font-family:inherit;
+}
+
+.share-button:hover{
+background:#262626;
+color:#fff;
 }
 
 .top-button{
@@ -488,211 +482,6 @@ opacity:.6;
 background:#2a2a2a;
 }
 
-.share-button{
-display:block;
-margin:18px auto 0;
-padding:10px 22px;
-background:#1d1d1d;
-color:#aaa;
-border:none;
-border-radius:10px;
-cursor:pointer;
-font-size:1em;
-font-family:inherit;
-}
-
-.share-button:hover{
-background:#262626;
-color:#fff;
-}
-
-/* ---- Fit-to-screen compaction ----
-   Applied by JS when the rendered content is taller than the
-   viewport. Two tiers, each tighter than the last, so the quiz tries
-   hard to stay on one screen before ever relying on the back-to-top
-   button / scrolling as a fallback. */
-
-.page-frame.compact-fit .top-nav{
-padding-top:10px;
-}
-
-.page-frame.compact-fit .back-link{
-margin-bottom:10px;
-}
-
-.page-frame.compact-fit .discover-header{
-margin-bottom:2px;
-}
-
-.page-frame.compact-fit .discover-header h1{
-font-size:1.5em;
-margin-bottom:6px;
-}
-
-.page-frame.compact-fit .discover-header p{
-font-size:.85em;
-line-height:1.3;
-}
-
-.page-frame.compact-fit .progress-track{
-margin:8px 0 2px;
-}
-
-.page-frame.compact-fit .quiz-stage{
-gap:8px;
-padding-top:2px;
-}
-
-.page-frame.compact-fit .quiz-card{
-padding:14px 16px;
-border-radius:14px;
-}
-
-.page-frame.compact-fit .quiz-icon{
-font-size:1.4em;
-margin-bottom:2px;
-}
-
-.page-frame.compact-fit .quiz-question{
-font-size:1em;
-margin-bottom:10px;
-}
-
-.page-frame.compact-fit .quiz-options{
-gap:6px;
-}
-
-.page-frame.compact-fit .quiz-option{
-padding:9px 14px;
-}
-
-.page-frame.compact-fit .quiz-option-tag{
-width:30px;
-height:30px;
-}
-
-.page-frame.compact-fit .result-media{
-height:90px;
-}
-
-.page-frame.compact-fit .result-body{
-padding:12px 16px 14px;
-}
-
-.page-frame.compact-fit .result-title{
-font-size:1.1rem;
-margin-bottom:6px;
-}
-
-.page-frame.compact-fit .result-description{
-font-size:.88em;
-margin-bottom:8px;
--webkit-line-clamp:2;
-}
-
-.page-frame.compact-fit .result-why{
-padding:8px 12px;
-margin-bottom:10px;
-font-size:.8em;
-}
-
-.page-frame.compact-fit .result-read{
-padding:10px;
-}
-
-.page-frame.compact-fit .result-actions{
-margin-top:8px;
-}
-
-.page-frame.compact-fit .discover-footer .share-button{
-margin:12px auto;
-padding:8px 18px;
-font-size:.9em;
-}
-
-.page-frame.compact-fit-2 .discover-header p{
-display:none;
-}
-
-.page-frame.compact-fit-2 .discover-header h1{
-font-size:1.3em;
-margin-bottom:2px;
-}
-
-.page-frame.compact-fit-2 .top-nav{
-padding-top:6px;
-}
-
-.page-frame.compact-fit-2 .back-link{
-margin-bottom:6px;
-font-size:.9em;
-}
-
-.page-frame.compact-fit-2 .progress-track{
-margin:4px 0 2px;
-}
-
-.page-frame.compact-fit-2 .quiz-card{
-padding:10px 12px;
-}
-
-.page-frame.compact-fit-2 .quiz-icon{
-font-size:1.1em;
-margin-bottom:0;
-}
-
-.page-frame.compact-fit-2 .quiz-question{
-font-size:.92em;
-margin-bottom:6px;
-}
-
-.page-frame.compact-fit-2 .quiz-options{
-gap:4px;
-}
-
-.page-frame.compact-fit-2 .quiz-option{
-padding:7px 12px;
-font-size:.9em;
-}
-
-.page-frame.compact-fit-2 .result-media{
-height:60px;
-}
-
-.page-frame.compact-fit-2 .result-body{
-padding:8px 12px;
-}
-
-.page-frame.compact-fit-2 .result-title{
-font-size:1em;
-margin-bottom:4px;
-}
-
-.page-frame.compact-fit-2 .result-description{
-display:none;
-}
-
-.page-frame.compact-fit-2 .result-why{
-padding:6px 10px;
-margin-bottom:6px;
-font-size:.75em;
-}
-
-.page-frame.compact-fit-2 .result-read{
-padding:8px;
-font-size:.9em;
-}
-
-.page-frame.compact-fit-2 .result-actions{
-margin-top:6px;
-}
-
-.page-frame.compact-fit-2 .discover-footer .share-button{
-margin:8px auto;
-padding:6px 14px;
-font-size:.82em;
-}
-
 @media (max-width:400px){
 .result-title{
 font-size:1.18rem;
@@ -706,13 +495,11 @@ font-size:1.05em;
 </head>
 <body>
 
-<div class="page-frame" id="pageFrame">
-
 <div class="top-nav">
 <a href="index.html" class="back-link">◀ Home</a>
 </div>
 
-<div class="discover-wrap" id="discoverWrap">
+<div class="discover-wrap">
 
 <div class="discover-header" id="discoverHeader">
 <h1>Discover Your Rabbit Hole</h1>
@@ -725,10 +512,8 @@ font-size:1.05em;
 <div class="quiz-loading">Loading the archive…</div>
 </div>
 
-<div class="discover-footer" id="discoverFooter">
+<div class="discover-footer">
 <button type="button" class="share-button" onclick="shareDiscoverPage()">Share This Page</button>
-</div>
-
 </div>
 
 </div>
@@ -918,25 +703,16 @@ let currentCategoryContext = null;
 let history = [];               // [{type, value, answer}]
 let usedDims = new Set();
 let questionCount = 0;          // total questions asked so far (incl. category pick)
-let MAX_QUESTIONS = 3;          // always 3 questions total (category pick + 2 narrowing)
+let MAX_QUESTIONS = 3;          // always exactly 3 questions per session
 
 const stage = document.getElementById("quizStage");
 const progressTrack = document.getElementById("progressTrack");
 const headerEl = document.getElementById("discoverHeader");
 const headerSub = document.getElementById("headerSub");
-const footerEl = document.getElementById("discoverFooter");
-
-// The share button only makes sense before the person has answered
-// anything — once they're into the quiz (or looking at a result),
-// it's just competing for the same one screen with nothing to earn
-// its place there.
-function showFooter(show){
-footerEl.classList.toggle("hidden", !show);
-}
 
 const INTRO_SUBS = [
-"Answer three quick questions and we'll surface something from the archive worth reading.",
-"Three quick taps, then a paper picked just for where your curiosity is pointing.",
+"Answer a couple of quick questions and we'll surface something from the archive worth reading.",
+"Three quick questions, then a paper picked just for where your curiosity is pointing.",
 "No wrong answers, just tell us where your attention wants to go.",
 "Three questions. One paper. Let's see what fits."
 ];
@@ -1099,6 +875,16 @@ picks.push(pickRandom(rest));
 return shuffle(picks);
 }
 
+const shareFooter = document.querySelector(".discover-footer");
+
+function hideShareButton(){
+if(shareFooter) shareFooter.style.display = "none";
+}
+
+function showShareButton(){
+if(shareFooter) shareFooter.style.display = "";
+}
+
 function startQuiz(){
 currentPool = [];
 primaryCategory = null;
@@ -1106,9 +892,9 @@ currentCategoryContext = null;
 history = [];
 usedDims = new Set();
 questionCount = 1;
-MAX_QUESTIONS = 3; // always 3 total questions per session, category included
+MAX_QUESTIONS = 3; // always 3 questions per session
 
-showFooter(true);
+showShareButton();
 
 setHeader("full", pickRandom(INTRO_SUBS));
 
@@ -1136,7 +922,6 @@ onClick: () => chooseCategory(cat)
 }
 
 function chooseCategory(cat){
-showFooter(false);
 primaryCategory = cat;
 currentCategoryContext = cat;
 history.push({ type: "category-root", value: cat });
@@ -1435,6 +1220,7 @@ btn.addEventListener("click", () => {
 if(answered) return;
 answered = true;
 optWrap.style.pointerEvents = "none";
+hideShareButton();
 transitionOut(card, () => opt.onClick());
 });
 
@@ -1463,6 +1249,8 @@ card.appendChild(optWrap);
 
 stage.innerHTML = "";
 stage.appendChild(card);
+
+if(typeof adjustForScrollButton === "function") adjustForScrollButton();
 }
 
 function transitionOut(el, next){
@@ -1475,6 +1263,15 @@ next();
 }
 
 /* ---------------- Result ---------------- */
+
+const RESULT_INTROS = [
+"We found something you might be interested in.",
+"Here's something from the archive that fits.",
+"This one matches where your answers pointed.",
+"Found it. Take a look.",
+"This is where your answers led.",
+"Here's what fit best."
+];
 
 const WHY_INTROS = [
 "You pointed toward {cat} research",
@@ -1662,6 +1459,8 @@ wrap.appendChild(actions);
 
 stage.innerHTML = "";
 stage.appendChild(wrap);
+
+if(typeof adjustForScrollButton === "function") adjustForScrollButton();
 }
 
 /* ---------------- Remembering where you left off ----------------
@@ -1684,6 +1483,7 @@ paperKey: paper.key,
 catText: payload.catText,
 whyHtml: payload.whyHtml,
 mediaSources: payload.mediaSources,
+introText: payload.introText,
 progressDotsTypes: progressDots.map(d => d.type),
 primaryCategory,
 currentCategoryContext,
@@ -1749,12 +1549,12 @@ questionCount = 1 + history.filter(h => h.type !== "category-root").length;
 function restoreResult(saved){
 const paper = poolAll.find(p => p.key === saved.paperKey);
 
+hideShareButton();
+
 if(!paper){
 startQuiz();
 return;
 }
-
-showFooter(false);
 
 primaryCategory = saved.primaryCategory || null;
 currentCategoryContext = saved.currentCategoryContext || saved.primaryCategory || null;
@@ -1765,7 +1565,7 @@ resetProgress();
 (saved.progressDotsTypes || ["question", "end"]).forEach(t => addProgressStep(t));
 completeProgress();
 
-setHeader("compact");
+setHeader("full", saved.introText);
 
 const sources = saved.mediaSources && saved.mediaSources.length
 ? saved.mediaSources
@@ -1821,9 +1621,8 @@ addProgressStep("end");
 }
 completeProgress();
 
-// No subtitle text on the result screen — keeps the header compact
-// so the card has as much room as possible to fit on one screen.
-setHeader("compact");
+const introText = pickRandom(RESULT_INTROS);
+setHeader("full", introText);
 
 const catText = (paper.category || []).map(titleCase).join(" • ");
 
@@ -1841,7 +1640,7 @@ const mediaSources = [];
 if(visible.length) mediaSources.push(pickRandom(visible));
 mediaSources.push(`covers/${paper.key}.png`);
 
-const payload = { catText, whyHtml, mediaSources, onlyOneOption: pool.length <= 1 };
+const payload = { introText, catText, whyHtml, mediaSources, onlyOneOption: pool.length <= 1 };
 
 renderResultCard(paper, payload);
 saveResultState(paper, payload);
@@ -1941,17 +1740,14 @@ url
 
 };
 
-/* ---------------- Back to top button ----------------
-   A fallback safety net, not the primary strategy — fitToScreen()
-   below tries hard to keep everything on one screen first. This
-   button only matters for the rare case where even the tightest
-   compaction still doesn't fit (e.g. a very short viewport with
-   long question text). On a session that fits, scrollY never
-   exceeds the threshold below, so the button simply never shows. */
+/* ---------------- Back to top ----------------
+   Only ever appears (and only ever adds bottom room) if the
+   page is genuinely taller than the viewport - keeps the quiz
+   from scrolling for no reason on screens where everything
+   already fits. */
 
 const topButton = document.getElementById("topButton");
-const discoverWrapEl = document.getElementById("discoverWrap");
-const pageFrameEl = document.getElementById("pageFrame");
+const discoverWrap = document.querySelector(".discover-wrap");
 
 function updateTopButton(){
 if(window.scrollY > 10){
@@ -1961,50 +1757,31 @@ topButton.style.display = "none";
 }
 }
 
+function adjustForScrollButton(){
+discoverWrap.classList.remove("extra-scroll-padding");
+void discoverWrap.offsetHeight;
+const pageScrolls = document.documentElement.scrollHeight > window.innerHeight;
+if(pageScrolls){
+discoverWrap.classList.add("extra-scroll-padding");
+}
+}
+
 topButton.addEventListener("click", function(e){
 e.preventDefault();
-window.scrollTo({
-top: 0,
-behavior: "smooth"
+window.scrollTo({ top: 0, behavior: "smooth" });
 });
-});
-
-/* ---------------- Fit to one screen ----------------
-   Tries, in order: normal layout, then a compact tier, then an even
-   tighter tier, re-measuring after each step. Whatever's left after
-   that is handled by ordinary scrolling plus the back-to-top button
-   and a bit of extra bottom padding so the button never covers the
-   last bit of content. */
-
-function contentOverflows(){
-return document.documentElement.scrollHeight > window.innerHeight + 2;
-}
-
-function fitToScreen(){
-pageFrameEl.classList.remove("compact-fit", "compact-fit-2");
-
-if(contentOverflows()){
-pageFrameEl.classList.add("compact-fit");
-}
-if(contentOverflows()){
-pageFrameEl.classList.add("compact-fit-2");
-}
-
-discoverWrapEl.classList.toggle("has-scroll-padding", contentOverflows());
-}
 
 window.addEventListener("scroll", updateTopButton);
-window.addEventListener("load", updateTopButton);
-window.addEventListener("load", fitToScreen);
-window.addEventListener("resize", fitToScreen);
 
-// Result-card images load asynchronously and can change the page's
-// height once they arrive, so re-check after any image load too.
-document.addEventListener("load", fitToScreen, true);
+window.addEventListener("load", function(){
+adjustForScrollButton();
+updateTopButton();
+});
 
-// Content height changes as the quiz progresses (new cards, results,
-// etc.), so re-check whenever the stage's content actually changes.
-new MutationObserver(fitToScreen).observe(stage, { childList: true, subtree: true });
+window.addEventListener("resize", function(){
+adjustForScrollButton();
+updateTopButton();
+});
 
 </script>
 
