@@ -9,6 +9,10 @@
 
 <style>
 
+html{
+    scroll-behavior:smooth;
+}
+
 body {
     margin: 0;
     min-height: 100vh;
@@ -24,7 +28,7 @@ body {
     align-items:center;
     justify-content:center;
     gap:15px;
-    margin-bottom:20px;
+    margin-bottom:12px;
 }
 
 .arrow-btn{
@@ -52,13 +56,13 @@ body {
 
 .profile-wrapper{
     position:relative;
-    width:200px;
-    height:200px;
+    width:160px;
+    height:160px;
 }
 
 .profile{
-    width:200px;
-    height:200px;
+    width:160px;
+    height:160px;
     object-fit:cover;
     border-radius:50%;
     border:4px solid #333;
@@ -81,26 +85,26 @@ body {
     top:53%;
     transform:translate(-50%,-50%);
 
-    width:60px;
-    height:60px;
+    width:55px;
+    height:55px;
 
     border:none;
     border-radius:50%;
 
     background:rgba(0,0,0,.7);
     color:white;
-    font-size:24px;
+    font-size:22px;
     cursor:pointer;
 }
 
 .song-title{
-    margin-top:15px;
+    margin-top:10px;
     color:#ccc;
-    font-size:1.1em;
+    font-size:1.05em;
 }
 
 .song-dots{
-    margin-top:10px;
+    margin-top:8px;
 }
 
 .song-dot{
@@ -141,7 +145,7 @@ body::before {
 
     max-width: 900px;
     margin: auto;
-    padding: 40px 20px;
+    padding: 24px 20px 40px;
 }
 
 .back {
@@ -149,42 +153,41 @@ body::before {
     text-decoration: none;
     display: block;
     text-align: left;
-    margin-bottom: 20px;
+    margin-bottom: 12px;
 }
 
 .back:hover {
     color: #fff;
 }
 
-.profile {
-    width: 200px;
-    height: 200px;
-    object-fit: cover;
-    border-radius: 50%;
-    border: 4px solid #333;
-    margin-bottom: 20px;
-}
-
 h1 {
-    font-size: 3em;
-    margin-bottom: 10px;
+    font-size: 2.3em;
+    margin: 8px 0 4px;
 }
 
 .subtitle {
     color: #aaa;
-    margin-bottom: 40px;
+    margin-bottom: 16px;
+}
+
+.description{
+    max-width:700px;
+    margin:0 auto 20px;
+    line-height:1.5;
+    color:#ccc;
+    font-size:0.95em;
 }
 
 .button {
     display: block;
-    width: 250px;
-    margin: 15px auto;
-    padding: 15px;
+    width: 220px;
+    margin: 12px auto;
+    padding: 12px;
     background: #1d1d1d;
     color: white;
     text-decoration: none;
     border-radius: 10px;
-    font-size: 1.1em;
+    font-size: 1.05em;
 }
 
 .button:hover {
@@ -196,6 +199,30 @@ h1 {
     max-width: 900px;
     border-radius: 10px;
     margin-bottom: 40px;
+}
+
+.top-button{
+    position:fixed;
+    bottom:20px;
+    left:50%;
+    transform:translateX(-50%);
+    width:50px;
+    height:50px;
+    background:#2a2a2a;
+    color:white;
+    text-decoration:none;
+    border-radius:50%;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    font-size:24px;
+    z-index:1000;
+    opacity:.6;
+}
+
+.top-button:hover{
+    opacity:.6;
+    background:#2a2a2a;
 }
 
 </style>
@@ -264,6 +291,11 @@ Rumble
 </a>
 
 </div>
+
+<a href="#" class="top-button" id="topButton">
+    <span style="position:relative; top:-3px;">▲</span>
+</a>
+
 <script>
 
 const songs = [
@@ -385,6 +417,27 @@ player.addEventListener("ended", () => {
 });
 
 loadSong(0);
+
+const topButton = document.getElementById("topButton");
+
+function updateTopButton(){
+    if(window.scrollY > 10){
+        topButton.style.display = "flex";
+    }else{
+        topButton.style.display = "none";
+    }
+}
+
+topButton.addEventListener("click", function(e){
+    e.preventDefault();
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+});
+
+window.addEventListener("scroll", updateTopButton);
+window.addEventListener("load", updateTopButton);
 
 </script>
 </body>
