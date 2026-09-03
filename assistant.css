@@ -41,11 +41,11 @@ body{
     --lr-accent-hover:#4a8bff;
     --lr-bg-page:#141414;
     --lr-bg-panel:#1d1d1d;
-    --lr-bg-button:#292929;
-    --lr-bg-button-hover:#353535;
-    --lr-bg-row:#222;
-    --lr-bg-row-hover:#262626;
-    --lr-border:#383838;
+    --lr-bg-button:#333333;
+    --lr-bg-button-hover:#3f3f3f;
+    --lr-bg-row:#2e2e2e;
+    --lr-bg-row-hover:#3a3a3a;
+    --lr-border:#4a4a4a;
     --lr-border-soft:#2c2c2c;
     --lr-text:#eee;
     --lr-text-dim:#999;
@@ -663,21 +663,21 @@ body{
     align-items:center;
     width:100%;
     padding:10px 12px;
-    border:0;
+    border:1px solid var(--lr-border);
     border-radius:var(--lr-radius-sm);
-    background:var(--lr-bg-row);
-    color:#ddd;
+    background:var(--lr-bg-button);
+    color:#eee;
     font-size:13px;
     font-family:inherit;
     text-align:left;
     cursor:pointer;
-    transition:background .15s ease;
+    transition:background .15s ease, border-color .15s ease;
 
 }
 
 .lr-settings-action:hover{
 
-    background:var(--lr-bg-row-hover);
+    background:var(--lr-bg-button-hover);
 
 }
 
@@ -700,6 +700,7 @@ body{
 .lr-settings-action-danger{
 
     background:var(--lr-danger-bg);
+    border-color:#5a2c2c;
     color:#f0b4b4;
 
 }
@@ -764,6 +765,37 @@ body{
     align-self:stretch;
     align-items:flex-start;
     max-width:100%;
+
+}
+
+/* AI-generated vs. archive-search-only — a visible label so it's
+   never ambiguous which one produced a given reply. */
+.lr-msg-source{
+
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    font-size:10.5px;
+    font-weight:700;
+    letter-spacing:.03em;
+    text-transform:uppercase;
+    padding:3px 8px;
+    border-radius:999px;
+    margin-bottom:6px;
+
+}
+
+.lr-msg-source-ai{
+
+    background:rgba(47,124,255,.16);
+    color:#7aa6ff;
+
+}
+
+.lr-msg-source-search{
+
+    background:rgba(255,255,255,.06);
+    color:#999;
 
 }
 
