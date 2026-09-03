@@ -28,10 +28,14 @@ body{
     font-family:Arial,sans-serif;
 }
 
+html{
+    scroll-behavior:smooth;
+}
+
 section{
     max-width:850px;
     margin:auto;
-    padding:25px 20px;
+    padding:25px 20px 100px;
 }
 
 h1{
@@ -201,6 +205,35 @@ p{
 
 
 /* ======================================================
+   BACK TO TOP BUTTON
+   ====================================================== */
+
+.top-button{
+    position:fixed;
+    bottom:20px;
+    left:50%;
+    transform:translateX(-50%);
+    width:50px;
+    height:50px;
+    background:#2a2a2a;
+    color:white;
+    text-decoration:none;
+    border-radius:50%;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    font-size:24px;
+    z-index:1000;
+    opacity:.6;
+}
+
+.top-button:hover{
+    opacity:.6;
+    background:#2a2a2a;
+}
+
+
+/* ======================================================
    LEAVE PAGE POPUP
    ====================================================== */
 
@@ -277,7 +310,7 @@ p{
 @media(max-width:600px){
 
     section{
-        padding:20px 15px;
+        padding:20px 15px 100px;
     }
 
     h1{
@@ -498,6 +531,10 @@ p{
 
 </section>
 
+
+<a href="#" class="top-button" id="topButton">
+    <span style="position:relative; top:-3px;">▲</span>
+</a>
 
 
 <!-- ======================================================
@@ -2300,6 +2337,34 @@ document.addEventListener(
 
     }
 );
+
+
+/*
+==========================================================
+BACK TO TOP BUTTON
+==========================================================
+*/
+
+const topButton = document.getElementById("topButton");
+
+function updateTopButton(){
+    if(window.scrollY > 10){
+        topButton.style.display = "flex";
+    }else{
+        topButton.style.display = "none";
+    }
+}
+
+topButton.addEventListener("click", function(e){
+    e.preventDefault();
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+});
+
+window.addEventListener("scroll", updateTopButton);
+window.addEventListener("load", updateTopButton);
 
 </script>
 
