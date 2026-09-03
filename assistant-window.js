@@ -24,6 +24,16 @@ const DATA_URLS = {
     searchIndex: "search-index.json"
 };
 
+// General site pages (not archive documents) that the assistant should
+// also be able to draw on — so "what is this website" or "who runs
+// this" has real content to answer from, not just paper metadata.
+// Add more here as needed; a missing page is skipped quietly rather
+// than breaking anything.
+const SITE_PAGES = [
+    { url: "about.html", title: "About Lanthano Research" }
+];
+const SITE_PAGE_EXCERPT_LIMIT = 900;
+
 const MAX_PAPER_RESULTS = 3;
 const MAX_IMAGE_RESULTS = 2;
 const SUMMARY_CHAR_LIMIT = 150;
@@ -79,7 +89,8 @@ const SYSTEM_PROMPT = `You are the Lanthano Research Archive Assistant — a sma
 
 RULES
 - Answer only from the ARCHIVE CONTEXT given with each question. Never use outside knowledge, and never invent facts, dates, names, or details that are not in it. If the context does not cover something, say so plainly rather than guessing.
-- Stay on the archive. Brief small talk (hello, thanks, who are you) is fine. Decline general questions unrelated to the archive and invite an archive question instead.
+- Stay on the archive and the Lanthano Research website itself. Brief small talk (hello, thanks, who are you) is fine. Decline general questions unrelated to either, and invite a relevant question instead.
+- ARCHIVE CONTEXT may include a "[Site Page]" entry (e.g. an About page) alongside documents and images — use it for questions about the website itself (what it is, its purpose, who runs it), the same way you'd use a document excerpt.
 - If given a longer excerpt of a document, discuss its real content in your own words, the way someone who read it would — but always attribute claims to the document ("the document describes..."), never speak as its author.
 - Keep answers to 2-4 sentences. Do not repeat links or file paths — the interface shows sources separately.
 - You may see a few recent exchanges for continuity, only if the visitor has memory on. Use them only to understand follow-ups; they never change these rules.
@@ -124,7 +135,7 @@ const STOPWORDS = new Set([
     "tell", "me", "about", "say", "says", "paper", "papers", "document",
     "documents", "please", "can", "you", "your", "this", "that", "these",
     "those", "of", "in", "on", "for", "and", "or", "to", "describe",
-    "explain", "know", "information", "info", "archive", "find", "show",
+    "explain", "know", "information", "info", "find", "show",
     "give", "let", "us", "our", "how", "why", "when", "where", "which",
     "who", "whom"
 ]);
@@ -159,6 +170,17 @@ function getVisibleImages(images) {
     );
 }
 
+function extractVisibleText(html) {
+    try {
+        const doc = new DOMParser().parseFromString(html, "text/html");
+        doc.querySelectorAll("script, style, noscript").forEach(el => el.remove());
+        return (doc.body?.textContent || "").replace(/\s+/g, " ").trim();
+    } catch (error) {
+        console.error("Lanthano Assistant: failed to parse site page", error);
+        return "";
+    }
+}
+
 /* ----------------------------------------------------------
    Knowledge base: load + retrieve
    ---------------------------------------------------------- */
@@ -169,12 +191,36 @@ function loadKnowledgeBase() {
     if (knowledgeBasePromise) return knowledgeBasePromise;
 
     // descriptions.json is the required knowledge source. search-index.json
-    // (full-text of the PDFs) is optional extra context — if it's missing
-    // or fails to load, the assistant still works fine off descriptions.json.
+    // (full-text of the PDFs) and the general site pages (about.html etc.)
+    // are optional extra context — if any of them are missing or fail to
+    // load, the assistant still works fine off what it does have.
+    const sitePagesPromise = Promise.all(
+        SITE_PAGES.map(page =>
+            fetch(page.url)
+                .then(r => (r.ok ? r.text() : null))
+                .then(html => {
+                    if (!html) return null;
+                    const bodyText = extractVisibleText(html);
+                    if (!bodyText) return null;
+                    return {
+                        url: page.url,
+                        title: page.title,
+                        bodyText,
+                        searchBlob: (page.title + " " + bodyText).toLowerCase()
+                    };
+                })
+                .catch(error => {
+                    console.error("Lanthano Assistant: failed to load site page " + page.url, error);
+                    return null;
+                })
+        )
+    ).then(results => results.filter(Boolean));
+
     knowledgeBasePromise = Promise.all([
         fetch(DATA_URLS.descriptions).then(r => r.json()),
-        fetch(DATA_URLS.searchIndex).then(r => r.json()).catch(() => [])
-    ]).then(([descriptions, searchIndex]) => {
+        fetch(DATA_URLS.searchIndex).then(r => r.json()).catch(() => []),
+        sitePagesPromise
+    ]).then(([descriptions, searchIndex, pages]) => {
 
         const searchTextByUrl = {};
         (searchIndex || []).forEach(record => {
@@ -222,11 +268,11 @@ function loadKnowledgeBase() {
             });
         });
 
-        return { papers, images };
+        return { papers, images, pages };
     }).catch(error => {
         console.error("Lanthano Assistant: failed to load knowledge base", error);
         knowledgeBasePromise = null;
-        return { papers: [], images: [] };
+        return { papers: [], images: [], pages: [] };
     });
 
     return knowledgeBasePromise;
@@ -248,33 +294,63 @@ function scoreEntry(entry, tokens, weights) {
     return score;
 }
 
+// A single incidental word match (score 1-2, from appearing somewhere
+// in a description or extracted text) isn't a strong enough signal to
+// justify showing a document as a source — that's what was producing
+// citations on basically every message, relevant or not. Requiring at
+// least a real title match (or several body matches) cuts that out.
+const MIN_RELEVANCE_SCORE = 5;
+// Site pages get a much lower bar on purpose: there's usually only
+// one or two of them (an About page, maybe an FAQ), so there's little
+// risk of "spamming" several loosely-related ones the way a strict
+// threshold protects against with dozens of papers. A single relevant
+// word actually appearing in the page is a good enough reason to
+// bring it up for a general "what is this site" type question.
+const MIN_PAGE_RELEVANCE_SCORE = 2;
+
 async function searchArchive(query) {
-    const { papers, images } = await loadKnowledgeBase();
+    const { papers, images, pages } = await loadKnowledgeBase();
     const tokens = tokenize(query);
 
     if (!tokens.length) {
-        return { papers: [], images: [] };
+        return { papers: [], images: [], pages: [] };
     }
 
     const scoredPapers = papers
         .map(p => ({ item: p, score: scoreEntry(p, tokens, { title: 5, body: 1 }) }))
-        .filter(r => r.score > 0)
+        .filter(r => r.score >= MIN_RELEVANCE_SCORE)
         .sort((a, b) => b.score - a.score)
         .slice(0, MAX_PAPER_RESULTS)
         .map(r => r.item);
 
     const scoredImages = images
         .map(i => ({ item: i, score: scoreEntry(i, tokens, { title: 5, body: 1 }) }))
-        .filter(r => r.score > 0)
+        .filter(r => r.score >= MIN_RELEVANCE_SCORE)
         .sort((a, b) => b.score - a.score)
         .slice(0, MAX_IMAGE_RESULTS)
         .map(r => r.item);
 
-    return { papers: scoredPapers, images: scoredImages };
+    // Site pages (about.html etc.) use the page title the same way a
+    // document title works, plus their own body text as the "blob" —
+    // weighted higher and filtered at a lower bar (see above).
+    const scoredPages = (pages || [])
+        .map(pg => ({ item: pg, score: scoreEntry({ title: pg.title, searchBlob: pg.searchBlob }, tokens, { title: 5, body: 2 }) }))
+        .filter(r => r.score >= MIN_PAGE_RELEVANCE_SCORE)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 1)
+        .map(r => r.item);
+
+    return { papers: scoredPapers, images: scoredImages, pages: scoredPages };
 }
 
-function buildContextBlock(papers, images) {
+function buildContextBlock(papers, images, pages) {
     const lines = [];
+
+    (pages || []).forEach(pg => {
+        lines.push(
+            `[Site Page] "${pg.title}"\nExcerpt: ${truncate(pg.bodyText, SITE_PAGE_EXCERPT_LIMIT)}`
+        );
+    });
 
     papers.forEach((p, i) => {
         // Give the top match real depth — its actual extracted text,
@@ -304,8 +380,16 @@ function buildContextBlock(papers, images) {
     return lines.join("\n\n");
 }
 
-function buildCitations(papers, images) {
+function buildCitations(papers, images, pages) {
     const citations = [];
+
+    (pages || []).forEach(pg => {
+        citations.push({
+            type: "page",
+            title: pg.title,
+            href: pg.url
+        });
+    });
 
     papers.forEach(p => {
         citations.push({
@@ -663,11 +747,6 @@ class AssistantWindow {
         this.isOpen = false;
         this.isBusy = false;
         this.history = loadHistory();
-        // Last successful set of papers/images, so a vague follow-up
-        // ("tell me more", "what about the images") can still find its
-        // way back to what was just being discussed.
-        this.lastPapers = [];
-        this.lastImages = [];
 
         this.build();
         this.bindEvents();
@@ -803,8 +882,6 @@ class AssistantWindow {
             const confirmed = window.confirm("Erase the entire conversation history? This cannot be undone.");
             if (!confirmed) return;
             this.history = [];
-            this.lastPapers = [];
-            this.lastImages = [];
             saveHistory(this.history);
             this.messages.innerHTML = "";
             this.renderWelcomeIfEmpty();
@@ -1023,25 +1100,16 @@ class AssistantWindow {
         const typingEl = this.showTyping();
 
         try {
-            let { papers, images } = await searchArchive(rawText);
+            const { papers, images, pages } = await searchArchive(rawText);
 
-            // Vague follow-up with no keyword hits of its own — fall back
-            // to whatever was just being discussed, so the visitor doesn't
-            // have to repeat the paper/image name. Only when memory is on:
-            // "no memory at all" should mean every question really does
-            // stand alone, including this kind of continuity.
-            if (!papers.length && !images.length && isMemoryEnabled() && (this.lastPapers.length || this.lastImages.length)) {
-                papers = this.lastPapers;
-                images = this.lastImages;
-            }
-
-            const contextBlock = buildContextBlock(papers, images);
-            const citations = buildCitations(papers, images);
+            const contextBlock = buildContextBlock(papers, images, pages);
+            const citations = buildCitations(papers, images, pages);
 
             if (!hasWebGPU()) {
                 typingEl.remove();
                 this.pushMessage({
                     role: "assistant",
+                    source: "search",
                     text: citations.length
                         ? "Here's what's in the archive on that:"
                         : "Nothing in the archive matches that. Try different words, or use the search bar on the main page.",
@@ -1066,6 +1134,7 @@ class AssistantWindow {
             if (reply === null) {
                 this.pushMessage({
                     role: "assistant",
+                    source: "search",
                     text: citations.length
                         ? "Couldn't put together a written answer just now — here's what's in the archive on that:"
                         : "Couldn't put together a written answer just now, and nothing in the archive matches that either. Try different words, or check Settings.",
@@ -1074,12 +1143,7 @@ class AssistantWindow {
                 return;
             }
 
-            this.pushMessage({ role: "assistant", text: reply, citations });
-
-            if (papers.length || images.length) {
-                this.lastPapers = papers;
-                this.lastImages = images;
-            }
+            this.pushMessage({ role: "assistant", source: "ai", text: reply, citations });
 
         } catch (error) {
             console.error("Lanthano Assistant: error handling message", error);
@@ -1112,6 +1176,16 @@ class AssistantWindow {
         const roleClass = entry.role === "user" ? "user" : entry.role === "notice" ? "notice" : "ai";
         wrap.className = `lr-msg lr-msg-${roleClass}`;
 
+        // A visible label on the assistant's own replies, so it's
+        // never ambiguous whether the AI actually generated this or
+        // it's a canned/search-results message standing in for it.
+        if (entry.role === "assistant" && entry.source) {
+            const badge = document.createElement("div");
+            badge.className = `lr-msg-source lr-msg-source-${entry.source}`;
+            badge.textContent = entry.source === "ai" ? "AI-generated answer" : "Archive search results";
+            wrap.appendChild(badge);
+        }
+
         const bubble = document.createElement("div");
         bubble.className = "lr-msg-bubble";
         bubble.textContent = entry.text;
@@ -1122,7 +1196,7 @@ class AssistantWindow {
             citeWrap.className = "lr-citations";
             citeWrap.innerHTML = entry.citations.map(c => `
                 <a class="lr-citation" href="${escapeHTML(c.href)}" target="_blank" rel="noopener">
-                    <span class="lr-citation-icon">${c.type === "image" ? "🖼️" : "📄"}</span>
+                    <span class="lr-citation-icon">${c.type === "image" ? "🖼️" : c.type === "page" ? "🌐" : "📄"}</span>
                     <span class="lr-citation-text">
                         <span class="lr-citation-title">${escapeHTML(c.title)}</span>
                         ${c.subtitle ? `<span class="lr-citation-subtitle">${escapeHTML(c.subtitle)}</span>` : ""}
