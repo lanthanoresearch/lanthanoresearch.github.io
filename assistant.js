@@ -1,33 +1,26 @@
-
-
-
 /* ==========================================================
    assistant.js
-   Floating AI Button
+   Lanthano Research Assistant — Floating Button
+
+   Creates the floating button + its root container, hides it
+   while the hero banner is in view (fading back in once the
+   visitor scrolls past it), and hands off to AssistantWindow
+   (assistant-window.js) to actually open the chat.
    ========================================================== */
 
-
-
-
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded", () => {
 
     const ENABLE_AI_BUTTON = true;
 
+    if (!ENABLE_AI_BUTTON) return;
 
-   if (!ENABLE_AI_BUTTON) {
-    return;
-}
     // ---------------------------------------
-    // Create Root
+    // Create root + button
     // ---------------------------------------
 
     const root = document.createElement("div");
     root.id = "lr-ai-root";
     root.className = "hidden";
-
-    // ---------------------------------------
-    // Create Button
-    // ---------------------------------------
 
     const button = document.createElement("button");
     button.id = "lr-ai-button";
@@ -35,94 +28,58 @@ document.addEventListener("DOMContentLoaded", async () => {
     button.setAttribute("aria-label", "AI Assistant");
 
     const img = document.createElement("img");
-
     img.src = new URL("aiimage.png", import.meta.url).href;
-
     img.alt = "AI Assistant";
-
-    img.onerror = () => {
-
-        console.error("Failed to load aiimage.png");
-
-    };
+    img.onerror = () => console.error("Lanthano Assistant: failed to load aiimage.png");
 
     button.appendChild(img);
-
     root.appendChild(button);
-
     document.body.appendChild(root);
 
     // ---------------------------------------
-    // Create Assistant Window
+    // Create the assistant window
     // ---------------------------------------
 
     if (window.AssistantWindowClass) {
-
         window.AssistantWindow = new window.AssistantWindowClass();
-
     } else {
-
-        console.error("AssistantWindowClass is not available.");
-
+        console.error("Lanthano Assistant: AssistantWindowClass is not available — check that assistant-window.js loaded.");
     }
 
     // ---------------------------------------
-    // Hero Detection
+    // Hide the button (and, if open, the whole
+    // window) while the hero banner is in view
     // ---------------------------------------
 
     const hero = document.querySelector(".hero");
 
     function updateButtonVisibility() {
-
         if (!hero) {
-
             root.classList.remove("hidden");
             root.classList.add("visible");
-
             return;
-
         }
 
-        const rect = hero.getBoundingClientRect();
+        const heroStillInView = hero.getBoundingClientRect().bottom > 100;
 
-        if (rect.bottom > 100) {
-
-            root.classList.remove("visible");
-            root.classList.add("hidden");
-
-        } else {
-
-            root.classList.remove("hidden");
-            root.classList.add("visible");
-
-        }
-
+        root.classList.toggle("hidden", heroStillInView);
+        root.classList.toggle("visible", !heroStillInView);
     }
 
-    window.addEventListener("scroll", updateButtonVisibility, {
-        passive: true
-    });
-
+    window.addEventListener("scroll", updateButtonVisibility, { passive: true });
     window.addEventListener("resize", updateButtonVisibility);
-
     updateButtonVisibility();
 
     // ---------------------------------------
-    // Open Assistant
+    // Open/close on click
     // ---------------------------------------
 
     button.addEventListener("click", () => {
-
         if (!window.AssistantWindow) {
-
-            console.error("AssistantWindow has not loaded.");
-
+            console.error("Lanthano Assistant: AssistantWindow has not loaded.");
             return;
-
         }
-
         window.AssistantWindow.toggle();
-
     });
 
 });
