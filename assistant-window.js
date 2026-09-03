@@ -467,25 +467,57 @@ async function getWebLLMEngine(onProgress) {
                 throw importError || new Error("Could not load the WebLLM library from any source.");
             }
 
-            const engine = await webllm.CreateMLCEngine(WEBLLM_MODEL_ID, {
-                initProgressCallback: report => {
-                    if (typeof onProgress === "function") {
-                        const fraction = typeof report.progress === "number" ? report.progress : 0;
-                        onProgress(report.text || `Downloading model… (${Math.round(fraction * 100)}%)`, fraction);
-                    }
-                }
-            });
+            // The download itself (a few hundred MB, in many small pieces)
+            // is the single most likely thing to hit a transient network
+            // hiccup — a dropped connection partway through, a request
+            // that times out, that sort of thing. That's a self-correcting
+            // problem most of the time, so it gets one automatic retry
+            // before this counts as a real failure, rather than making
+            // the visitor manually hit Retry for something that would
+            // have just worked the second time.
+            const MAX_LOAD_ATTEMPTS = 2;
+            let lastLoadError = null;
 
-            // Verify the engine actually has the API surface we need
-            // before declaring success — catching a library/version
-            // mismatch right here, immediately, instead of discovering
-            // it on the first real chat message (which is what caused
-            // the "downloads, then never works" symptom).
-            if (!engine || typeof engine?.chat?.completions?.create !== "function") {
-                throw new Error("The downloaded model loaded but is missing its expected chat API.");
+            for (let attempt = 1; attempt <= MAX_LOAD_ATTEMPTS; attempt++) {
+                try {
+                    const engine = await webllm.CreateMLCEngine(WEBLLM_MODEL_ID, {
+                        initProgressCallback: report => {
+                            if (typeof onProgress === "function") {
+                                const fraction = typeof report.progress === "number" ? report.progress : 0;
+                                const label = report.text || `Downloading model… (${Math.round(fraction * 100)}%)`;
+                                onProgress(attempt > 1 ? `Retrying download… ${label}` : label, fraction);
+                            }
+                        }
+                    });
+
+                    // Verify the engine actually has the API surface we
+                    // need before declaring success — catching a
+                    // library/version mismatch right here, immediately,
+                    // instead of discovering it on the first real chat
+                    // message (which is what caused the "downloads, then
+                    // never works" symptom).
+                    if (!engine || typeof engine?.chat?.completions?.create !== "function") {
+                        throw new Error("The downloaded model loaded but is missing its expected chat API.");
+                    }
+
+                    return engine;
+                } catch (error) {
+                    console.error(`Lanthano Assistant: engine load attempt ${attempt} failed`, error);
+                    lastLoadError = error;
+
+                    const looksLikeNetworkHiccup = /network|fetch|cache/i.test(error?.message || "");
+                    if (attempt < MAX_LOAD_ATTEMPTS && looksLikeNetworkHiccup) {
+                        if (typeof onProgress === "function") {
+                            onProgress("Download was interrupted — trying again…", 0);
+                        }
+                        await new Promise(resolve => setTimeout(resolve, 1500));
+                        continue;
+                    }
+                    throw error;
+                }
             }
 
-            return engine;
+            throw lastLoadError || new Error("The model failed to load.");
         } finally {
             webllmDownloading = false;
         }
@@ -497,7 +529,11 @@ async function getWebLLMEngine(onProgress) {
         return engine;
     } catch (error) {
         console.error("Lanthano Assistant: WebLLM engine failed to load", error);
-        lastEngineError = "The downloadable model failed to load: " + (error?.message || error);
+        const rawMessage = error?.message || String(error);
+        const looksLikeNetworkHiccup = /network|fetch|cache/i.test(rawMessage);
+        lastEngineError = looksLikeNetworkHiccup
+            ? "The download kept getting interrupted (looks like a connection issue, not a compatibility one). Try switching to Wi-Fi if you're on mobile data, then tap retry. Details: " + rawMessage
+            : "The downloadable model failed to load: " + rawMessage;
         webllmEnginePromise = null;
         webllmBroken = true;
         return null;
@@ -567,6 +603,17 @@ function buildDiagnosticsReport() {
     lines.push("User agent: " + (typeof navigator !== "undefined" ? navigator.userAgent : "unknown"));
     lines.push("Screen: " + (typeof window !== "undefined" ? `${window.innerWidth}×${window.innerHeight}` : "unknown"));
     lines.push("WebGPU (navigator.gpu) present: " + hasWebGPU());
+
+    if (typeof navigator !== "undefined" && navigator.connection) {
+        const conn = navigator.connection;
+        lines.push(
+            "Network: " +
+            [conn.effectiveType, conn.downlink != null ? conn.downlink + "Mbps" : null, conn.saveData ? "data-saver on" : null]
+                .filter(Boolean)
+                .join(", ")
+        );
+    }
+
     lines.push("Model marked broken this session: " + webllmBroken + " (failures: " + webllmFailureCount + ")");
     lines.push("Model currently loaded: " + !!webllmEnginePromise);
     lines.push("Model id: " + WEBLLM_MODEL_ID);
