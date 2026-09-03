@@ -217,10 +217,20 @@ body{
 
         top:0;
         right:0;
-        bottom:0;
         left:0;
+        bottom:auto;
         width:100%;
-        height:100%;
+        /* 100vh first as a fallback for browsers that don't know
+           dvh; 100dvh (dynamic viewport height) after it is what
+           actually shrinks correctly when the on-screen keyboard
+           opens, without any JS math needed to track it. This
+           replaced an earlier JS-based approach (reading
+           visualViewport and setting inline height/top) that kept
+           producing a gap between the panel and the keyboard on
+           some devices — dvh is the standards-based tool built
+           specifically for this, and needs zero calculation. */
+        height:100vh;
+        height:100dvh;
         border-radius:0;
         border:none;
         box-shadow:none;
@@ -608,24 +618,50 @@ body{
 }
 
 /* ==========================================================
-   Settings action rows — matches .sort-option / .videoOption
-   from the rest of the site: flat rows on a slightly lighter
-   background, no border, that highlight on hover.
+   Settings sections — grouped with a small label per group
+   instead of one long unbroken list, so it's easy to scan.
    ========================================================== */
 
-#lr-ai-settings-actions{
+.lr-settings-section{
 
     display:flex;
     flex-direction:column;
-    gap:6px;
+    gap:8px;
+    padding-bottom:16px;
+    border-bottom:1px solid var(--lr-border-soft);
 
 }
+
+.lr-settings-section:last-child{
+
+    border-bottom:none;
+    padding-bottom:0;
+
+}
+
+.lr-settings-section-title{
+
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    color:#888;
+    margin-bottom:2px;
+
+}
+
+/* ==========================================================
+   Settings action rows — matches .sort-option / .videoOption
+   from the rest of the site: flat rows on a slightly lighter
+   background, no border, that highlight on hover. Plain text,
+   no icons — a short clear label reads faster than a glyph.
+   ========================================================== */
 
 .lr-settings-action{
 
     display:flex;
     align-items:center;
-    gap:10px;
+    width:100%;
     padding:10px 12px;
     border:0;
     border-radius:var(--lr-radius-sm);
@@ -652,9 +688,12 @@ body{
 
 }
 
-.lr-settings-action-icon{
+/* Higher specificity than .lr-settings-action's own display:flex,
+   so the native `hidden` attribute (used to show the diagnostics
+   button only when something's actually broken) reliably wins. */
+.lr-settings-action[hidden]{
 
-    font-size:14px;
+    display:none;
 
 }
 
