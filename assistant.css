@@ -367,8 +367,7 @@ body{
    ========================================================== */
 
 #lr-ai-window.settings-open #lr-ai-messages,
-#lr-ai-window.settings-open #lr-ai-input-area,
-#lr-ai-window.settings-open #lr-ai-header{
+#lr-ai-window.settings-open #lr-ai-input-area{
 
     display:none;
 
