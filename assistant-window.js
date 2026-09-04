@@ -481,6 +481,42 @@ function hasWebGPU() {
 }
 
 /**
+ * navigator.gpu existing only means the browser shipped the WebGPU
+ * API surface — it does not mean this device's actual GPU and driver
+ * can produce a working adapter. That gap is a real, silent failure
+ * mode: CreateMLCEngine would just sit there with zero progress
+ * forever, which looks identical to a stalled network but is a
+ * completely different, unfixable-by-waiting problem. Checking this
+ * directly, before attempting anything else, turns "waited 90
+ * seconds and nothing happened" into an immediate, accurate answer.
+ */
+async function checkWebGPUAdapter() {
+    if (!hasWebGPU()) {
+        return { ok: false, reason: "WebGPU is not available in this browser." };
+    }
+
+    try {
+        const adapterPromise = navigator.gpu.requestAdapter();
+        const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error("Checking for a usable GPU took too long.")), 10000);
+        });
+
+        const adapter = await Promise.race([adapterPromise, timeoutPromise]);
+
+        if (!adapter) {
+            return {
+                ok: false,
+                reason: "This browser reports WebGPU support, but no usable GPU adapter could be found on this specific device. The AI model needs a working GPU adapter to run at all, and no amount of waiting will change that."
+            };
+        }
+
+        return { ok: true, adapter };
+    } catch (error) {
+        return { ok: false, reason: "Checking for a usable GPU failed: " + (error?.message || error) };
+    }
+}
+
+/**
  * How long to wait for a progress update before treating a download
  * attempt as genuinely stalled rather than just slow. Scaled up on a
  * connection that self-reports as slow, since a fixed short timeout
@@ -551,6 +587,17 @@ async function getWebLLMEngine(onProgress) {
     webllmEnginePromise = (async () => {
         webllmDownloading = true;
         try {
+            // Check for a real, usable GPU adapter before doing
+            // anything else — this is the check that turns "waited the
+            // full stall timeout and got nothing" into an immediate,
+            // specific answer when the actual problem is that this
+            // device's GPU can't run WebGPU at all, despite the browser
+            // technically supporting the API.
+            const adapterCheck = await checkWebGPUAdapter();
+            if (!adapterCheck.ok) {
+                throw new Error(adapterCheck.reason);
+            }
+
             let webllm = null;
             let importError = null;
 
@@ -684,7 +731,10 @@ async function getWebLLMEngine(onProgress) {
         console.error("Lanthano Assistant: WebLLM engine failed to load", error);
         const rawMessage = error?.message || String(error);
         const looksLikeNetworkHiccup = /network|fetch|cache/i.test(rawMessage);
-        lastEngineError = looksLikeNetworkHiccup
+        const looksLikeNoAdapter = /adapter|gpu/i.test(rawMessage);
+        lastEngineError = looksLikeNoAdapter
+            ? rawMessage
+            : looksLikeNetworkHiccup
             ? "The download kept getting interrupted (looks like a connection issue, not a compatibility one). Try switching to Wi-Fi if you're on mobile data, then tap retry. Details: " + rawMessage
             : "The downloadable model failed to load: " + rawMessage;
         webllmEnginePromise = null;
@@ -754,12 +804,28 @@ async function runModelPrompt(userPromptText, recentExchanges, onProgress) {
  * the other end isn't very productive. Nothing here is sent
  * anywhere automatically; it only goes wherever the visitor pastes it.
  */
-function buildDiagnosticsReport() {
+async function buildDiagnosticsReport() {
     const lines = [];
     lines.push("Lanthano Research Assistant diagnostics");
     lines.push("User agent: " + (typeof navigator !== "undefined" ? navigator.userAgent : "unknown"));
     lines.push("Screen: " + (typeof window !== "undefined" ? `${window.innerWidth}×${window.innerHeight}` : "unknown"));
     lines.push("WebGPU (navigator.gpu) present: " + hasWebGPU());
+
+    const adapterCheck = await checkWebGPUAdapter();
+    if (adapterCheck.ok) {
+        let infoText = "";
+        try {
+            const info = adapterCheck.adapter?.info;
+            if (info) {
+                infoText = ` (${[info.vendor, info.architecture, info.device].filter(Boolean).join(", ")})`;
+            }
+        } catch (error) {
+            console.error("Lanthano Assistant: failed to read adapter info", error);
+        }
+        lines.push("GPU adapter: found" + infoText);
+    } else {
+        lines.push("GPU adapter: not usable, " + adapterCheck.reason);
+    }
 
     if (typeof navigator !== "undefined" && navigator.connection) {
         const conn = navigator.connection;
