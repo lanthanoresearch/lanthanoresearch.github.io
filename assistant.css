@@ -964,6 +964,29 @@ body{
    Input bar
    ========================================================== */
 
+/* Slim, always-visible download progress strip, sitting right above
+   the input bar. The full progress bar in Settings only shows up if
+   the visitor happens to have Settings open — this one is visible
+   from the ordinary chat view too, so a slow download still looks
+   like it's doing something instead of looking stuck. */
+#lr-ai-download-bar{
+
+    height:4px;
+    background:#2a2a2a;
+    flex-shrink:0;
+    overflow:hidden;
+
+}
+
+#lr-ai-download-bar-fill{
+
+    height:100%;
+    width:0%;
+    background:var(--lr-accent);
+    transition:width .3s ease;
+
+}
+
 #lr-ai-input-area{
 
     display:flex;
@@ -1105,15 +1128,19 @@ body{
 }
 
 /* ==========================================================
-   Download modal — matches video.html's own confirmation modal
-   pattern (#resumeChoice / #resumeChoiceCard) exactly: a centered
-   card over a dark overlay, one primary action and one plain text
-   "not now" beneath it. Scoped to the assistant window itself
-   (position:absolute against #lr-ai-window's own position:fixed),
-   not the whole page, so it never blocks the rest of the site.
+   Generic modal — used for every dialog in the assistant (download
+   consent, erase history, uninstall, diagnostics fallback) instead
+   of the browser's own confirm()/prompt() boxes, which look out of
+   place next to the rest of the site. Matches video.html's own
+   confirmation modal pattern (#resumeChoice / #resumeChoiceCard)
+   exactly: a centered card over a dark overlay, one primary action
+   and one plain text secondary action beneath it. Scoped to the
+   assistant window itself (position:absolute against #lr-ai-window's
+   own position:fixed), not the whole page, so it never blocks the
+   rest of the site.
    ========================================================== */
 
-#lr-ai-download-modal{
+#lr-ai-modal{
 
     position:absolute;
     inset:0;
@@ -1126,13 +1153,13 @@ body{
 
 }
 
-#lr-ai-download-modal.open{
+#lr-ai-modal.open{
 
     display:flex;
 
 }
 
-#lr-ai-download-card{
+#lr-ai-modal-card{
 
     width:100%;
     max-width:300px;
@@ -1145,7 +1172,7 @@ body{
 
 }
 
-#lr-ai-download-card h3{
+#lr-ai-modal-card h3{
 
     margin:0 0 8px;
     font-size:16px;
@@ -1153,12 +1180,41 @@ body{
 
 }
 
-#lr-ai-download-card p{
+#lr-ai-modal-card p{
 
     margin:0 0 16px;
     color:#bbb;
     font-size:13px;
     line-height:1.45;
+
+}
+
+#lr-ai-modal-textarea{
+
+    display:block;
+    width:100%;
+    height:110px;
+    margin:0 0 16px;
+    padding:10px;
+    background:#141414;
+    border:1px solid #3a3a3a;
+    border-radius:8px;
+    color:#ccc;
+    font-size:11px;
+    font-family:monospace;
+    resize:none;
+
+}
+
+/* Higher specificity than the rule above, so the native `hidden`
+   attribute reliably wins for the download/erase/uninstall modals,
+   where this textarea isn't used at all — without this, it was
+   rendering as an empty box in every single modal, since a plain
+   `display:block` rule and the browser's own `[hidden]` rule are
+   equally specific, and the later one in the stylesheet wins. */
+#lr-ai-modal-textarea[hidden]{
+
+    display:none;
 
 }
 
@@ -1170,7 +1226,7 @@ body{
 
 }
 
-#lr-ai-download-confirm{
+#lr-ai-modal-confirm{
 
     width:100%;
     padding:11px 10px;
@@ -1181,17 +1237,30 @@ body{
     background:var(--lr-accent);
     color:#fff;
     cursor:pointer;
-    transition:background .15s ease;
+    transition:background .15s ease, border-color .15s ease;
 
 }
 
-#lr-ai-download-confirm:hover{
+#lr-ai-modal-confirm:hover{
 
     background:var(--lr-accent-hover);
 
 }
 
-#lr-ai-download-cancel{
+#lr-ai-modal-confirm.lr-modal-btn-danger{
+
+    background:#c0392b;
+    border-color:#c0392b;
+
+}
+
+#lr-ai-modal-confirm.lr-modal-btn-danger:hover{
+
+    background:#d9483a;
+
+}
+
+#lr-ai-modal-cancel{
 
     margin-top:2px;
     background:transparent;
@@ -1205,7 +1274,7 @@ body{
 
 }
 
-#lr-ai-download-cancel:hover{
+#lr-ai-modal-cancel:hover{
 
     color:#ccc;
 
