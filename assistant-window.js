@@ -610,7 +610,13 @@ async function getWebLLMEngine(onProgress) {
                         stallInterval = setInterval(() => {
                             if (Date.now() - lastProgressAt > STALL_TIMEOUT_MS) {
                                 clearInterval(stallInterval);
-                                reject(new Error("The download made no progress for a couple of minutes. This looks like a stalled connection, not just a slow one."));
+                                const stallError = new Error("The download made no progress for a couple of minutes. This looks like a stalled connection, not just a slow one.");
+                                // Tagged so the retry logic below can tell
+                                // this apart from a real, thrown network
+                                // error — see the note there for why that
+                                // distinction matters.
+                                stallError.isStall = true;
+                                reject(stallError);
                             }
                         }, 3000);
                     });
@@ -637,7 +643,21 @@ async function getWebLLMEngine(onProgress) {
                     console.error(`Lanthano Assistant: engine load attempt ${attempt} failed`, error);
                     lastLoadError = error;
 
-                    const looksLikeNetworkHiccup = /network|fetch|cache|stalled/i.test(error?.message || "");
+                    // A stalled attempt is deliberately NOT auto-retried,
+                    // even though it's also a network-shaped problem.
+                    // Browsers give JS no way to truly cancel an
+                    // in-flight model load, so the stalled attempt is
+                    // still out there running in the background even
+                    // after we give up on waiting for it. Starting a
+                    // second CreateMLCEngine call on top of that would
+                    // mean two concurrent attempts fighting over the
+                    // same GPU, which is more likely to make things
+                    // worse on a constrained mobile device than better.
+                    // A genuine thrown network error, by contrast,
+                    // means the previous attempt has actually finished
+                    // (with a failure) before this runs, so retrying
+                    // that case is safe.
+                    const looksLikeNetworkHiccup = !error?.isStall && /network|fetch|cache/i.test(error?.message || "");
                     if (attempt < MAX_LOAD_ATTEMPTS && looksLikeNetworkHiccup) {
                         if (typeof onProgress === "function") {
                             onProgress("Download was interrupted. Trying again", 0);
@@ -852,7 +872,7 @@ class AssistantWindow {
             <div id="lr-ai-settings-panel">
                 <div id="lr-ai-settings-header">
                     <button id="lr-ai-settings-back" type="button">
-                        <span id="lr-ai-settings-back-arrow">&lt;</span> Back to Chat
+                        <span id="lr-ai-settings-back-arrow">◀</span> Back to Chat
                     </button>
                     <span id="lr-ai-settings-heading">Settings</span>
                 </div>
@@ -1280,11 +1300,11 @@ class AssistantWindow {
 
         if (locked && mode === "downloading") {
             const pct = typeof percent === "number" ? Math.round(percent * 100) : null;
-            this.input.placeholder = pct === null ? "Downloading, stay on this page" : `Downloading ${pct}%, stay on this page`;
+            this.input.placeholder = pct === null ? "Downloading AI" : `Downloading AI ${pct}%`;
             this.downloadBar.hidden = false;
             this.downloadBarFill.style.width = `${pct === null ? 0 : pct}%`;
         } else if (locked) {
-            this.input.placeholder = "Download the AI to start chatting";
+            this.input.placeholder = "Download AI";
             this.downloadBar.hidden = true;
         } else {
             this.input.placeholder = "Ask about the archive";
