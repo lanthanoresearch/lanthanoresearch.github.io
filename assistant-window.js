@@ -475,6 +475,27 @@ function hasWebGPU() {
 }
 
 /**
+ * How long to wait for a progress update before treating a download
+ * attempt as genuinely stalled rather than just slow. Scaled up on a
+ * connection that self-reports as slow, since a fixed short timeout
+ * is exactly what would keep killing and restarting a download that
+ * was actually still making progress, just gradually.
+ */
+function getStallTimeoutMs() {
+    const DEFAULT_MS = 90000;
+
+    if (typeof navigator === "undefined" || !navigator.connection) return DEFAULT_MS;
+
+    const conn = navigator.connection;
+    if (conn.saveData) return 240000;
+    if (conn.effectiveType === "slow-2g" || conn.effectiveType === "2g") return 240000;
+    if (conn.effectiveType === "3g") return 150000;
+    if (typeof conn.downlink === "number" && conn.downlink > 0 && conn.downlink < 1) return 180000;
+
+    return DEFAULT_MS;
+}
+
+/**
  * Resets all engine state so the next call starts completely fresh —
  * used both by an explicit "retry" from Settings and by the full
  * "uninstall" reset.
@@ -551,10 +572,15 @@ async function getWebLLMEngine(onProgress) {
             const MAX_LOAD_ATTEMPTS = 3;
             // If nothing has happened for this long, this attempt is
             // treated as stalled rather than left to hang indefinitely.
-            // A silent hang with zero feedback (no error, no progress,
-            // just nothing) is exactly what a stuck "downloading"
-            // state with no way out looks like from the outside.
-            const STALL_TIMEOUT_MS = 30000;
+            // This needs to be generous: on a slow connection, a single
+            // chunk can legitimately take a while between progress
+            // updates, and a strict timeout would keep killing and
+            // restarting a download that was actually still working,
+            // which looks exactly like "it never finishes" from the
+            // outside. Scaled up further on a connection that reports
+            // itself as slow, since that's the exact case this needs
+            // to be patient for rather than fighting against.
+            const STALL_TIMEOUT_MS = getStallTimeoutMs();
             let lastLoadError = null;
 
             for (let attempt = 1; attempt <= MAX_LOAD_ATTEMPTS; attempt++) {
@@ -577,7 +603,7 @@ async function getWebLLMEngine(onProgress) {
                         stallInterval = setInterval(() => {
                             if (Date.now() - lastProgressAt > STALL_TIMEOUT_MS) {
                                 clearInterval(stallInterval);
-                                reject(new Error("The download stalled and made no progress for a while. This looks like a network problem."));
+                                reject(new Error("The download made no progress for a couple of minutes. This looks like a stalled connection, not just a slow one."));
                             }
                         }, 3000);
                     });
@@ -720,6 +746,7 @@ function buildDiagnosticsReport() {
     lines.push("Model marked broken this session: " + webllmBroken + " (failures: " + webllmFailureCount + ")");
     lines.push("Model currently loaded: " + !!webllmEnginePromise);
     lines.push("Model id: " + WEBLLM_MODEL_ID);
+    lines.push("Stall timeout used: " + Math.round(getStallTimeoutMs() / 1000) + "s per attempt");
     lines.push("Last error: " + (lastEngineError || "(none recorded)"));
 
     return lines.join("\n");
