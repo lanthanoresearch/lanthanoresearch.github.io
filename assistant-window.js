@@ -450,6 +450,12 @@ const WEBLLM_CDN_URLS = [
 const WEBLLM_CONSENT_KEY = "lr-ai-webllm-consent";
 
 let webllmEnginePromise = null;
+// True only once a real, working engine actually exists, separate
+// from webllmEnginePromise itself. A Promise is truthy the instant
+// it's created, not once it resolves, so checking the promise alone
+// was treating "still downloading" as "already ready" and unlocking
+// the text box before the model was actually usable.
+let webllmReady = false;
 let webllmDownloading = false;
 // Once a download-and-run attempt fails outright, we stop retrying it
 // automatically on every single message — that "downloads, fails,
@@ -502,6 +508,7 @@ function getStallTimeoutMs() {
  */
 function resetWebLLMState() {
     webllmEnginePromise = null;
+    webllmReady = false;
     webllmDownloading = false;
     webllmBroken = false;
     webllmFailureCount = 0;
@@ -651,6 +658,7 @@ async function getWebLLMEngine(onProgress) {
     try {
         const engine = await webllmEnginePromise;
         lastEngineError = "";
+        webllmReady = true;
         return engine;
     } catch (error) {
         console.error("Lanthano Assistant: WebLLM engine failed to load", error);
@@ -744,7 +752,7 @@ function buildDiagnosticsReport() {
     }
 
     lines.push("Model marked broken this session: " + webllmBroken + " (failures: " + webllmFailureCount + ")");
-    lines.push("Model currently loaded: " + !!webllmEnginePromise);
+    lines.push("Model currently loaded: " + webllmReady);
     lines.push("Model id: " + WEBLLM_MODEL_ID);
     lines.push("Stall timeout used: " + Math.round(getStallTimeoutMs() / 1000) + "s per attempt");
     lines.push("Last error: " + (lastEngineError || "(none recorded)"));
@@ -756,7 +764,7 @@ function getEngineStatusText() {
     if (!hasWebGPU()) return "This browser doesn't support WebGPU, which this assistant needs to run an AI model. You'll still get archive search results without generated answers.";
     if (webllmDownloading) return "Downloading the AI model. This keeps going even if you close this panel or the chat window. It only has to happen once.";
     if (webllmBroken) return "The AI model didn't work last time. It won't keep retrying on its own, use the button below to try again.";
-    if (webllmEnginePromise) return "AI model downloaded and ready, cached in this browser.";
+    if (webllmReady) return "AI model downloaded and ready, cached in this browser.";
     return "Not downloaded yet. Tap Download AI model below, or it will ask the first time you send a question.";
 }
 
@@ -844,7 +852,7 @@ class AssistantWindow {
             <div id="lr-ai-settings-panel">
                 <div id="lr-ai-settings-header">
                     <button id="lr-ai-settings-back" type="button">
-                        <span id="lr-ai-settings-back-arrow">←</span> Back to chat
+                        <span id="lr-ai-settings-back-arrow">&lt;</span> Back to Chat
                     </button>
                     <span id="lr-ai-settings-heading">Settings</span>
                 </div>
@@ -901,6 +909,8 @@ class AssistantWindow {
 
             <div id="lr-ai-messages"></div>
 
+            <div id="lr-ai-download-bar" hidden><div id="lr-ai-download-bar-fill"></div></div>
+
             <div id="lr-ai-input-area">
                 <button id="lr-ai-settings-btn" type="button" title="Settings" aria-label="Settings"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1z"></path></svg></button>
                 <input
@@ -913,14 +923,15 @@ class AssistantWindow {
                 <button id="lr-ai-send" type="button" aria-label="Send">➤</button>
             </div>
 
-            <div id="lr-ai-download-modal">
-                <div id="lr-ai-download-card">
-                    <h3>Download the AI</h3>
-                    <p>Answers questions using a small AI model saved on your device. About 400MB, downloaded once. Stay on this page while it downloads.</p>
+            <div id="lr-ai-modal">
+                <div id="lr-ai-modal-card">
+                    <h3 id="lr-ai-modal-title"></h3>
+                    <p id="lr-ai-modal-message"></p>
+                    <textarea id="lr-ai-modal-textarea" readonly hidden></textarea>
                     <div class="choiceModalButtons">
-                        <button id="lr-ai-download-confirm">Download</button>
+                        <button id="lr-ai-modal-confirm"></button>
                     </div>
-                    <button id="lr-ai-download-cancel">Not now</button>
+                    <button id="lr-ai-modal-cancel"></button>
                 </div>
             </div>
         `;
@@ -942,9 +953,14 @@ class AssistantWindow {
         this.engineStatusTextEl = this.window.querySelector("#lr-ai-engine-status-text");
         this.progressTrackEl = this.window.querySelector("#lr-ai-progress-track");
         this.progressFillEl = this.window.querySelector("#lr-ai-progress-fill");
-        this.downloadModal = this.window.querySelector("#lr-ai-download-modal");
-        this.downloadConfirmButton = this.window.querySelector("#lr-ai-download-confirm");
-        this.downloadCancelButton = this.window.querySelector("#lr-ai-download-cancel");
+        this.downloadBar = this.window.querySelector("#lr-ai-download-bar");
+        this.downloadBarFill = this.window.querySelector("#lr-ai-download-bar-fill");
+        this.modal = this.window.querySelector("#lr-ai-modal");
+        this.modalTitleEl = this.window.querySelector("#lr-ai-modal-title");
+        this.modalMessageEl = this.window.querySelector("#lr-ai-modal-message");
+        this.modalTextareaEl = this.window.querySelector("#lr-ai-modal-textarea");
+        this.modalConfirmButton = this.window.querySelector("#lr-ai-modal-confirm");
+        this.modalCancelButton = this.window.querySelector("#lr-ai-modal-cancel");
 
         this.setMemoryToggle(isMemoryEnabled());
     }
@@ -961,9 +977,15 @@ class AssistantWindow {
         this.settingsButton.addEventListener("click", () => this.openSettings());
         this.settingsBackButton.addEventListener("click", () => this.closeSettings());
 
-        this.clearButton.addEventListener("click", () => {
+        this.clearButton.addEventListener("click", async () => {
             if (!this.history.length) return;
-            const confirmed = window.confirm("Erase the entire conversation history? This cannot be undone.");
+            const confirmed = await this.showModal({
+                title: "Erase History",
+                message: "This erases the entire conversation. This cannot be undone.",
+                confirmText: "Erase",
+                cancelText: "Cancel",
+                danger: true
+            });
             if (!confirmed) return;
             this.history = [];
             saveHistory(this.history);
@@ -989,19 +1011,19 @@ class AssistantWindow {
             this.cancelDownload();
         });
 
-        this.downloadConfirmButton.addEventListener("click", () => {
-            this.downloadModal.classList.remove("open");
-            if (this._consentResolve) {
-                this._consentResolve(true);
-                this._consentResolve = null;
+        this.modalConfirmButton.addEventListener("click", () => {
+            this.modal.classList.remove("open");
+            if (this._modalResolve) {
+                this._modalResolve(true);
+                this._modalResolve = null;
             }
         });
 
-        this.downloadCancelButton.addEventListener("click", () => {
-            this.downloadModal.classList.remove("open");
-            if (this._consentResolve) {
-                this._consentResolve(false);
-                this._consentResolve = null;
+        this.modalCancelButton.addEventListener("click", () => {
+            this.modal.classList.remove("open");
+            if (this._modalResolve) {
+                this._modalResolve(false);
+                this._modalResolve = null;
             }
         });
 
@@ -1016,7 +1038,12 @@ class AssistantWindow {
                 console.error("Lanthano Assistant: clipboard copy failed", error);
                 // Clipboard access can be blocked in some contexts, so
                 // fall back to just showing it to select and copy by hand.
-                window.prompt("Couldn't copy automatically. Select and copy this manually.", report);
+                await this.showModal({
+                    title: "Diagnostics",
+                    message: "Couldn't copy automatically. Select the text below and copy it by hand.",
+                    confirmText: "Done",
+                    textareaContent: report
+                });
             }
         });
 
@@ -1061,7 +1088,7 @@ class AssistantWindow {
     }
 
     refreshEngineStatus() {
-        this.setEngineStatus(getEngineStatusText(), webllmDownloading ? 0 : (webllmEnginePromise ? 1 : null));
+        this.setEngineStatus(getEngineStatusText(), webllmDownloading ? 0 : (webllmReady ? 1 : null));
         this.refreshDownloadButton();
     }
 
@@ -1094,15 +1121,17 @@ class AssistantWindow {
             return;
         }
 
-        // Already working, regardless of what triggered this call.
-        if (webllmEnginePromise && !webllmBroken) {
-            this.updateInputLock(false);
-            return;
-        }
-
         // Already running from an earlier trigger, don't restart it.
         if (webllmDownloading) {
             this.updateInputLock(true, "downloading");
+            return;
+        }
+
+        // Genuinely finished and working (not just "a promise exists" —
+        // see webllmReady's definition above for why that distinction
+        // matters).
+        if (webllmReady) {
+            this.updateInputLock(false);
             return;
         }
 
@@ -1131,7 +1160,7 @@ class AssistantWindow {
             engine = await getWebLLMEngine((label, fraction) => {
                 if (myGeneration !== this._downloadGeneration) return;
                 this.setEngineStatus(label, fraction);
-                this.updateInputLock(true, "downloading");
+                this.updateInputLock(true, "downloading", fraction);
             });
         } finally {
             if (myGeneration === this._downloadGeneration) {
@@ -1184,9 +1213,56 @@ class AssistantWindow {
      * getWebLLMEngine in place of the plain browser confirm() box.
      */
     requestDownloadConsent() {
+        return this.showModal({
+            title: "Download the AI",
+            message: "Answers questions using a small AI model saved on your device. About 400MB, downloaded once. Stay on this page while it downloads.",
+            confirmText: "Download",
+            cancelText: "Not now"
+        });
+    }
+
+    /**
+     * A custom modal used in place of the browser's own confirm() or
+     * prompt() boxes everywhere in the assistant, so every dialog
+     * matches the rest of the site instead of looking like a
+     * default browser popup. Resolves true on confirm, false on
+     * cancel (or once "Done" is pressed for an info-only message,
+     * since there's nothing to cancel in that case).
+     *
+     * options:
+     *   title, message: shown in the card
+     *   confirmText: label for the primary button
+     *   cancelText: label for the secondary button, or omit for a
+     *     single-button informational dialog
+     *   danger: styles the primary button as a destructive action
+     *   textareaContent: shows a read only, selectable text block
+     *     under the message, for content meant to be copied by hand
+     */
+    showModal(options) {
+        const { title, message, confirmText = "OK", cancelText = null, danger = false, textareaContent = null } = options;
+
+        this.modalTitleEl.textContent = title;
+        this.modalMessageEl.textContent = message;
+        this.modalConfirmButton.textContent = confirmText;
+        this.modalConfirmButton.classList.toggle("lr-modal-btn-danger", danger);
+
+        if (cancelText) {
+            this.modalCancelButton.textContent = cancelText;
+            this.modalCancelButton.hidden = false;
+        } else {
+            this.modalCancelButton.hidden = true;
+        }
+
+        if (textareaContent) {
+            this.modalTextareaEl.value = textareaContent;
+            this.modalTextareaEl.hidden = false;
+        } else {
+            this.modalTextareaEl.hidden = true;
+        }
+
         return new Promise(resolve => {
-            this._consentResolve = resolve;
-            this.downloadModal.classList.add("open");
+            this._modalResolve = resolve;
+            this.modal.classList.add("open");
         });
     }
 
@@ -1197,16 +1273,22 @@ class AssistantWindow {
      * rather than letting people type into a box that might not do
      * anything yet.
      */
-    updateInputLock(locked, mode) {
+    updateInputLock(locked, mode, percent) {
         this.aiInputLocked = locked;
         this.input.readOnly = locked;
         this.sendButton.disabled = locked;
-        if (locked) {
-            this.input.placeholder = mode === "downloading"
-                ? "Downloading, stay on this page"
-                : "Download the AI to start chatting";
+
+        if (locked && mode === "downloading") {
+            const pct = typeof percent === "number" ? Math.round(percent * 100) : null;
+            this.input.placeholder = pct === null ? "Downloading, stay on this page" : `Downloading ${pct}%, stay on this page`;
+            this.downloadBar.hidden = false;
+            this.downloadBarFill.style.width = `${pct === null ? 0 : pct}%`;
+        } else if (locked) {
+            this.input.placeholder = "Download the AI to start chatting";
+            this.downloadBar.hidden = true;
         } else {
             this.input.placeholder = "Ask about the archive";
+            this.downloadBar.hidden = true;
         }
     }
 
@@ -1262,11 +1344,13 @@ class AssistantWindow {
      * used right before Download AI model again).
      */
     async handleUninstall() {
-        const confirmed = window.confirm(
-            "This removes the downloaded AI model and its settings from this browser " +
-            "(not your conversation history). You'll be asked to download it again next " +
-            "time it's needed. Continue?"
-        );
+        const confirmed = await this.showModal({
+            title: "Uninstall AI Model",
+            message: "This removes the downloaded AI model and its settings from this browser, not your conversation history. You will be asked to download it again next time it is needed.",
+            confirmText: "Uninstall",
+            cancelText: "Cancel",
+            danger: true
+        });
         if (!confirmed) return;
 
         try {
@@ -1479,7 +1563,11 @@ class AssistantWindow {
             this.updateInputLock(false);
             return;
         }
-        if (webllmEnginePromise && !webllmBroken) {
+        if (webllmDownloading) {
+            this.updateInputLock(true, "downloading");
+            return;
+        }
+        if (webllmReady) {
             this.updateInputLock(false);
             return;
         }
