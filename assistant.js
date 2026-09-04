@@ -10,7 +10,7 @@
 
 document.addEventListener("DOMContentLoaded", () => {
 
-    const ENABLE_AI_BUTTON = true;
+    const ENABLE_AI_BUTTON = false;
 
     if (!ENABLE_AI_BUTTON) return;
 
