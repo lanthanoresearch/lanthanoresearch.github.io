@@ -6,10 +6,12 @@
   "description": "Weekly job that rasterizes page 1 of each PDF into a cover image",
   "main": "extract-covers.js",
   "scripts": {
-    "extract-covers": "node extract-covers.js"
+    "extract-covers": "node extract-covers.js",
+    "build-page-counts": "node build-page-counts.js"
   },
   "dependencies": {
     "@napi-rs/canvas": "^0.1.56",
-    "pdfjs-dist": "^4.5.136"
+    "pdfjs-dist": "^4.5.136",
+    "pdf-lib": "^1.17.1"
   }
 }
