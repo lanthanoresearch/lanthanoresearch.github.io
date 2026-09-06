@@ -258,12 +258,46 @@ h1{
     background:#353535;
 }
 
+.settingsCloseBtn{
+    width:28px;
+    height:28px;
+
+    padding:0;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    flex:0 0 auto;
+
+    background:#292929;
+    color:#eee;
+    border:1px solid #383838;
+    border-radius:6px;
+
+    font-size:13px;
+    line-height:1;
+
+    cursor:pointer;
+}
+
+.settingsCloseBtn:hover{
+    background:#353535;
+}
+
 .settings-panel{
     box-sizing:border-box;
 
     display:none;
     position:absolute;
-    top:calc(100% + 10px);
+    /*
+       Shifted up to cover the gear button itself while open, rather
+       than leaving a gap that shows the button sitting there
+       underneath - with the X in the header now, tapping the gear
+       again isn't the only way to close this, so there's no reason
+       to keep it visible/reachable behind the panel.
+    */
+    top:calc(100% - 36px);
     right:0;
 
     flex-direction:column;
@@ -869,6 +903,7 @@ summary:hover{
 
     <div class="settingsMenuHeader">
         <h3>Settings</h3>
+        <button type="button" class="settingsCloseBtn" id="settingsCloseBtn" aria-label="Close settings" title="Close">✕</button>
     </div>
 
     <div class="settingsScroll">
@@ -1197,6 +1232,11 @@ settingsButton.addEventListener("click", (e) => {
         settingsPanel.classList.add("open");
         settingsButton.setAttribute("aria-expanded", "true");
     }
+});
+
+document.getElementById("settingsCloseBtn").addEventListener("click", (e) => {
+    e.stopPropagation();
+    closeMenus();
 });
 
 sortButton.addEventListener("click", (e) => {
