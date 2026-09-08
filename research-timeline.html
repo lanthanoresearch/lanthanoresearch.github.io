@@ -133,20 +133,27 @@ h1{
   transform:rotate(180deg);
 }
 
+/* Anchored via JS (positionCategoryPanel) exactly like pdf.html's
+   #readAloudSpeedPopup / video.html's #videoSpeedPopup: fixed
+   positioning so it can float above or below the button depending
+   on available room, a natural width capped so it never runs off a
+   narrow screen, and a height ceiling that positionAnchoredPopup
+   will shrink further (down to a floor) if neither side of the
+   button has enough room - overflow-y:auto here then picks up the
+   slack with an internal scrollbar instead of clipping options. */
 .category-panel{
   box-sizing:border-box;
 
   display:none;
-  position:absolute;
-  top:calc(100% + 10px);
-  right:0;
+  position:fixed;
+  width:190px;
+  max-width:calc(100vw - 24px);
+  max-height:min(60vh, 420px);
+  overflow-y:auto;
   background:#1d1d1d;
   border:1px solid #2c2c2c;
   border-radius:10px;
   padding:10px;
-  width:180px;
-  max-height:320px;
-  overflow-y:auto;
   box-shadow:0 6px 18px rgba(0,0,0,.5);
   z-index:1600;
   text-align:left;
@@ -2673,9 +2680,94 @@ function buildControls(){
 }
 
 
+/* ------------------------------------------------------------
+   SHARED ANCHORED-POPUP POSITIONING
+
+   Same helper used by video.html's #videoSpeedPopup and pdf.html's
+   #readAloudSpeedPopup: centers the popup horizontally on its
+   anchor button, clamped so neither edge ever runs off either side
+   of the screen; picks whichever side (above or below the anchor)
+   has more room, so it works whether the button ends up near the
+   top or bottom of the screen; and if the popup's natural size
+   doesn't fit whichever side gets chosen, shrinks it to fit (down
+   to a small floor) rather than letting it run off the top or
+   bottom of the screen - its own overflow-y:auto content area then
+   picks up the slack with an internal scrollbar instead of
+   clipping anything. A final clamp on both axes guarantees the
+   popup is fully on-screen even in edge cases neither branch
+   accounted for.
+------------------------------------------------------------ */
+function positionAnchoredPopup(popupEl, anchorRect, opts){
+
+  opts = opts || {};
+
+  const gap = opts.gap || 8;
+  const edgeMargin = opts.edgeMargin || 10;
+  const minHeight = opts.minHeight || 100;
+
+  // Reset any shrink applied on a previous open (at a possibly
+  // different viewport size / anchor position) so this measures
+  // the popup's real, natural, CSS-capped size.
+  popupEl.style.maxHeight = "";
+
+  const popupRect = popupEl.getBoundingClientRect();
+
+  /* ---- Horizontal ---- */
+
+  let left = anchorRect.left + (anchorRect.width / 2) - (popupRect.width / 2);
+  const maxLeft = window.innerWidth - popupRect.width - edgeMargin;
+  left = Math.max(edgeMargin, Math.min(left, maxLeft));
+
+  /* ---- Vertical ---- */
+
+  const spaceAbove = anchorRect.top - gap - edgeMargin;
+  const spaceBelow = window.innerHeight - anchorRect.bottom - gap - edgeMargin;
+
+  const openAbove = spaceAbove >= popupRect.height || spaceAbove >= spaceBelow;
+
+  // The floor is a soft preference, not a hard demand - never ask
+  // for more height than the viewport could ever offer (minus
+  // margins), or the final clamp below would have to overlap the
+  // popup onto its own anchor button just to keep it on-screen.
+  const available = Math.min(
+    Math.max(minHeight, openAbove ? spaceAbove : spaceBelow),
+    window.innerHeight - (edgeMargin * 2)
+  );
+
+  if(popupRect.height > available){
+    popupEl.style.maxHeight = `${available}px`;
+  }
+
+  const finalHeight = Math.min(popupRect.height, available);
+
+  let top = openAbove ?
+    anchorRect.top - gap - finalHeight :
+    anchorRect.bottom + gap;
+
+  top = Math.max(edgeMargin, Math.min(top, window.innerHeight - finalHeight - edgeMargin));
+
+  popupEl.style.left = `${left}px`;
+  popupEl.style.top = `${top}px`;
+  popupEl.style.bottom = "";
+}
+
+// Anchors #categoryPanel to #categoryButton, same treatment as
+// positionVideoSpeedPopup / positionReadAloudPickerPopup.
+function positionCategoryPanel(){
+  positionAnchoredPopup(
+    categoryPanel,
+    categoryButton.getBoundingClientRect(),
+    { minHeight:100 }
+  );
+}
+
 function openCategoryDropdown(){
   categoryDropdown.classList.add("open");
+  // Unhide before measuring/positioning - a display:none element
+  // always measures as zero-size, so this order matters for
+  // positionAnchoredPopup's size-based logic.
   categoryPanel.classList.add("open");
+  positionCategoryPanel();
 }
 
 function closeCategoryDropdown(){
@@ -2710,6 +2802,16 @@ window.addEventListener(
   () => closeCategoryDropdown(),
   { passive:true }
 );
+
+// Resizing (rotating a phone, resizing a desktop window) can change
+// how much room is above/below the button - re-run the same
+// anchor+shrink logic so the panel stays correctly sized and
+// on-screen, same as pdf.html/video.html do for their own popups.
+window.addEventListener("resize", () => {
+  if(categoryPanel.classList.contains("open")){
+    positionCategoryPanel();
+  }
+});
 
 
 /*
