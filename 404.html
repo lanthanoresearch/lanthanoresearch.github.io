@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#111111">
+<title>Lanthano Research</title>
+<style>
+  *{box-sizing:border-box;}
+
+  html,body{
+    height:100%;
+    overflow:hidden;
+  }
+
+  body{
+    margin:0;
+    height:100dvh;
+    background:#111;
+    color:#eee;
+    font-family:Arial,sans-serif;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:clamp(10px,3vh,40px) clamp(16px,4vw,20px);
+  }
+
+  .error-page{
+    max-width:520px;
+    width:100%;
+    text-align:center;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    max-height:100%;
+  }
+
+  .error-icon{
+    width:clamp(56px,14vh,110px);
+    height:clamp(56px,14vh,110px);
+    margin:0 auto clamp(10px,2.5vh,28px);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:clamp(32px,8vh,64px);
+    flex-shrink:0;
+  }
+
+  .error-icon img{
+    width:100%;
+    height:100%;
+    object-fit:contain;
+  }
+
+  .error-code{
+    font-size:clamp(2.4rem,9vh,5.5rem);
+    font-weight:bold;
+    line-height:1;
+    margin:0;
+    color:#fff;
+    letter-spacing:1px;
+  }
+
+  .error-code.offline{
+    font-size:clamp(1.7rem,6vh,3.2rem);
+    color:#888;
+  }
+
+  .error-meaning{
+    font-size:clamp(1.05rem,3vh,1.5rem);
+    font-weight:bold;
+    margin:clamp(6px,1.5vh,14px) 0 0;
+    color:#eee;
+  }
+
+  .error-desc{
+    color:#888;
+    line-height:1.5;
+    font-size:clamp(.82em,2vh,.98em);
+    margin:clamp(6px,1.5vh,12px) 0 0;
+  }
+
+  .error-target{
+    margin:clamp(12px,2.5vh,26px) 0 0;
+    font-size:.8em;
+    color:#666;
+    word-break:break-all;
+    max-width:100%;
+  }
+
+  .error-target span{
+    color:#2f7cff;
+  }
+
+  .error-actions{
+    display:flex;
+    flex-direction:column;
+    gap:clamp(8px,1.5vh,12px);
+    align-items:center;
+    margin-top:clamp(16px,3vh,34px);
+    width:100%;
+  }
+
+  .error-button{
+    padding:clamp(9px,1.8vh,12px) 32px;
+    border-radius:999px;
+    font-size:clamp(.9rem,2.2vh,1rem);
+    font-weight:bold;
+    cursor:pointer;
+    transition:.2s;
+    border:1px solid #444;
+    background:#222;
+    color:#ddd;
+    width:100%;
+    max-width:260px;
+  }
+
+  .error-button:hover{
+    background:#2c2c2c;
+    border-color:#666;
+    color:#FFD700;
+  }
+
+  .error-button.primary{
+    background:#2f7cff;
+    border-color:#2f7cff;
+    color:#fff;
+  }
+  .error-button.primary:hover{
+    background:#2666d6;
+    border-color:#2666d6;
+    color:#fff;
+  }
+
+  .status-dot{
+    display:inline-block;
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    margin-right:6px;
+    background:#e05252;
+  }
+  .status-dot.online{ background:#28b44b; }
+
+  .status-line{
+    font-size:.82em;
+    color:#888;
+    margin-top:clamp(10px,2vh,20px);
+  }
+
+  @media (orientation:landscape) and (max-height:480px){
+    .error-page{ max-width:640px; }
+    .error-actions{ flex-direction:row; justify-content:center; }
+    .error-button{ width:auto; }
+  }
+</style>
+</head>
+<body>
+
+<div class="error-page" id="errorPage">
+  <!-- content injected by script -->
+</div>
+
+<script>
+function getTargetUrl(){
+  const params = new URLSearchParams(window.location.search);
+  return params.get("url") || window.location.href;
+}
+
+function parseTarget(target){
+  try{
+    return new URL(target, window.location.href);
+  }catch(e){
+    return null;
+  }
+}
+
+function iconMarkup(fallback){
+  return `<img src="file_000000000c40722f92b1fe6758cb4855.png" alt=""
+           onerror="this.outerHTML='${fallback}';">`;
+}
+
+function render404(){
+  const target = getTargetUrl();
+  const parsed = parseTarget(target);
+
+  let isPaper = false;
+  let paperTitle = "";
+
+  if(parsed){
+    const path = parsed.pathname.toLowerCase();
+    const paperParam = parsed.searchParams.get("paper");
+    const fileParam = parsed.searchParams.get("file");
+    if(path.endsWith("pdf.html") && (paperParam || fileParam)){
+      isPaper = true;
+      if(paperParam){
+        try{
+          paperTitle = decodeURIComponent(paperParam);
+        }catch(e){
+          paperTitle = paperParam;
+        }
+      }
+    }
+  }
+
+  let meaning, desc;
+
+  if(isPaper){
+    meaning = "Research Paper Not Found";
+    desc = paperTitle
+      ? `"${paperTitle}" doesn't exist in the Lanthano Research library, or may have been removed.`
+      : "That research paper doesn't exist in the Lanthano Research library, or may have been removed.";
+  } else {
+    meaning = "Page Not Found";
+    desc = "This page doesn't exist on Lanthano Research, may have been moved, or the link might be broken.";
+  }
+
+  document.getElementById("errorPage").innerHTML = `
+    <div class="error-icon">${iconMarkup("🔍")}</div>
+    <div class="error-code">404</div>
+    <div class="error-meaning">${meaning}</div>
+    <p class="error-desc">${desc}</p>
+    <div class="error-target">Trying to reach: <span>${target}</span></div>
+    <div class="error-actions">
+      <button class="error-button primary" onclick="history.back()">
+        Go Back
+      </button>
+      <button class="error-button" onclick="window.location.href='/'">
+        Go Home
+      </button>
+    </div>
+  `;
+}
+
+function renderOffline(){
+  const target = getTargetUrl();
+  document.getElementById("errorPage").innerHTML = `
+    <div class="error-icon">${iconMarkup("📡")}</div>
+    <div class="error-code offline">OFFLINE</div>
+    <div class="error-meaning">No Internet Connection</div>
+    <p class="error-desc">
+      Lanthano Research can't load right now. Check your Wi-Fi or mobile data
+      and try again.
+    </p>
+    <div class="error-target">Trying to reach: <span>${target}</span></div>
+    <div class="error-actions">
+      <button class="error-button primary" id="retryButton" onclick="retryConnection()">
+        Reload
+      </button>
+    </div>
+    <div class="status-line">
+      <span class="status-dot" id="statusDot"></span>
+      <span id="statusText">Checking connection…</span>
+    </div>
+  `;
+  updateStatus();
+}
+
+function updateStatus(){
+  const dot = document.getElementById("statusDot");
+  const text = document.getElementById("statusText");
+  if(!dot || !text) return;
+  if(navigator.onLine){
+    dot.classList.add("online");
+    text.textContent = "Connection restored";
+  } else {
+    dot.classList.remove("online");
+    text.textContent = "Still no connection";
+  }
+}
+
+function retryConnection(){
+  const btn = document.getElementById("retryButton");
+  if(btn){
+    btn.textContent = "Checking…";
+  }
+  setTimeout(() => {
+    if(navigator.onLine){
+      window.location.reload();
+    } else {
+      updateStatus();
+      if(btn) btn.textContent = "Reload";
+    }
+  }, 700);
+}
+
+// Decide which state to show.
+// ?mode=404 or ?mode=offline can force a state for testing/linking.
+// ?url=... can specify the destination the user was trying to reach
+// (e.g. pdf.html?file=...&paper=... to trigger the "paper not found" wording).
+const params = new URLSearchParams(window.location.search);
+const forced = params.get("mode");
+
+if(forced === "404"){
+  render404();
+} else if(forced === "offline"){
+  renderOffline();
+} else if(!navigator.onLine){
+  renderOffline();
+} else {
+  render404();
+}
+
+window.addEventListener("online", () => { if(!forced) updateStatus(); });
+window.addEventListener("offline", () => { if(!forced) updateStatus(); });
+</script>
+
+</body>
+</html>
