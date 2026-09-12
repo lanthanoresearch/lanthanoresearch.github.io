@@ -1,23 +1,21 @@
 const CACHE_NAME = "lanthano-research-v2";
 
-// The offline / not-found fallback page, and the assets it needs
-// to render correctly even with zero connection.
+// The offline / not-found fallback page.
 const OFFLINE_URL = "/404.html";
-const OFFLINE_ASSETS = [
-  OFFLINE_URL,
-  "/file_000000000c40722f92b1fe6758cb4855.png"
-];
 
 // Hero images already cached by this service worker.
 const CACHED_IMAGES = [
   "/file_0000000007f472099da6ef16a4a6ed95.png",
-  "/file_00000000ecb4722f9273c2a87dca3a4c.png"
+  "/file_00000000ecb4722f9273c2a87dca3a4c.png",
+  // Site icon shown on 404.html - precached so it's already available
+  // (no network round trip) the moment that page opens.
+  "/file_000000000c40722f92b1fe6758cb4855.png"
 ];
 
 self.addEventListener("install", event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache =>
-      cache.addAll([...CACHED_IMAGES, ...OFFLINE_ASSETS])
+      cache.addAll([...CACHED_IMAGES, OFFLINE_URL])
     )
   );
   self.skipWaiting();
