@@ -81,7 +81,7 @@
   }
 
   .error-target{
-    margin:clamp(12px,2.5vh,26px) 0 0;
+    margin:clamp(10px,2.2vh,22px) 0 0;
     font-size:.8em;
     color:#666;
     word-break:break-all;
@@ -92,12 +92,30 @@
     color:#2f7cff;
   }
 
+  .error-suggestion{
+    margin:clamp(6px,1.2vh,10px) 0 0;
+    font-size:.85em;
+    color:#888;
+    max-width:100%;
+    word-break:break-word;
+  }
+
+  .error-suggestion a{
+    color:#2f7cff;
+    font-weight:bold;
+    text-decoration:none;
+  }
+
+  .error-suggestion a:hover{
+    text-decoration:underline;
+  }
+
   .error-actions{
     display:flex;
     flex-direction:column;
     gap:clamp(8px,1.5vh,12px);
     align-items:center;
-    margin-top:clamp(16px,3vh,34px);
+    margin-top:clamp(14px,2.6vh,30px);
     width:100%;
   }
 
@@ -162,6 +180,21 @@
 </div>
 
 <script>
+/* ============================================================
+   ICON
+   The service worker precaches this file, so it's already sitting
+   in the cache before this page ever asks for it - no network
+   round trip needed. Falls back to an emoji if it's unavailable.
+============================================================ */
+function iconMarkup(fallbackEmoji){
+  return `<img src="file_000000000c40722f92b1fe6758cb4855.png" width="96" height="96"
+           decoding="async" fetchpriority="high" alt=""
+           onerror="this.outerHTML='${fallbackEmoji}';">`;
+}
+
+/* ============================================================
+   TARGET URL
+============================================================ */
 function getTargetUrl(){
   const params = new URLSearchParams(window.location.search);
   return params.get("url") || window.location.href;
@@ -175,44 +208,146 @@ function parseTarget(target){
   }
 }
 
-function iconMarkup(fallback){
-  return `<img src="file_000000000c40722f92b1fe6758cb4855.png" alt=""
-           onerror="this.outerHTML='${fallback}';">`;
+/* ============================================================
+   LIGHTWEIGHT FUZZY MATCH (bigram / Dice coefficient)
+   No external library needed, so it stays fast.
+============================================================ */
+function normalize(str){
+  return (str || "")
+    .toLowerCase()
+    .replace(/\.[a-z0-9]+$/,"")
+    .replace(/[-_/]+/g," ")
+    .replace(/[^a-z0-9 ]/g,"")
+    .replace(/\s+/g," ")
+    .trim();
 }
 
-function render404(){
+function bigrams(str){
+  const out = [];
+  for(let i=0;i<str.length-1;i++){
+    out.push(str.substr(i,2));
+  }
+  return out;
+}
+
+function similarity(a, b){
+  a = normalize(a);
+  b = normalize(b);
+  if(!a || !b) return 0;
+  if(a === b) return 1;
+  const bgA = bigrams(a);
+  const bgB = bigrams(b);
+  if(!bgA.length || !bgB.length) return a.includes(b) || b.includes(a) ? 0.5 : 0;
+  const pool = bgB.slice();
+  let matches = 0;
+  for(const bg of bgA){
+    const idx = pool.indexOf(bg);
+    if(idx !== -1){ matches++; pool.splice(idx,1); }
+  }
+  return (2 * matches) / (bgA.length + bgB.length);
+}
+
+/* Known static pages on the site, for suggesting a close match
+   when the broken link isn't a paper link. */
+const KNOWN_PAGES = [
+  { path:"index.html", label:"Home" },
+  { path:"discover.html", label:"Discover" },
+  { path:"research-timeline.html", label:"Research Timeline" },
+  { path:"category.html?category=all", label:"All Categories" },
+  { path:"category.html?category=favorites", label:"Favorites" },
+  { path:"about.html", label:"About" },
+  { path:"contact.html", label:"Contact" },
+  { path:"support.html", label:"Support" },
+  { path:"store.html", label:"Store" },
+  { path:"hitorahmusic.html", label:"Hitorah Music" }
+];
+
+function findStaticSuggestion(target){
+  const parsed = parseTarget(target);
+  if(!parsed) return null;
+  const name = parsed.pathname.split("/").pop() || "";
+  let best = null;
+  let bestScore = 0;
+  for(const page of KNOWN_PAGES){
+    const score = similarity(name, page.path.split("?")[0]);
+    if(score > bestScore){
+      bestScore = score;
+      best = page;
+    }
+  }
+  return bestScore >= 0.3 ? best : null;
+}
+
+async function findPaperSuggestion(paperTitle, fallbackName){
+  try{
+    const res = await fetch("descriptions.json");
+    if(!res.ok) return null;
+    const descriptions = await res.json();
+    const query = paperTitle || fallbackName || "";
+    if(!query) return null;
+
+    let best = null;
+    let bestScore = 0;
+    Object.values(descriptions).forEach(paper => {
+      const score = similarity(query, paper.title);
+      if(score > bestScore){
+        bestScore = score;
+        best = paper;
+      }
+    });
+
+    return bestScore >= 0.25 ? best : null;
+  }catch(e){
+    return null;
+  }
+}
+
+/* ============================================================
+   RENDER: 404 / NOT FOUND
+============================================================ */
+async function render404(){
   const target = getTargetUrl();
   const parsed = parseTarget(target);
 
   let isPaper = false;
   let paperTitle = "";
+  let fileParam = "";
 
   if(parsed){
     const path = parsed.pathname.toLowerCase();
     const paperParam = parsed.searchParams.get("paper");
-    const fileParam = parsed.searchParams.get("file");
+    fileParam = parsed.searchParams.get("file") || "";
     if(path.endsWith("pdf.html") && (paperParam || fileParam)){
       isPaper = true;
       if(paperParam){
-        try{
-          paperTitle = decodeURIComponent(paperParam);
-        }catch(e){
-          paperTitle = paperParam;
-        }
+        try{ paperTitle = decodeURIComponent(paperParam); }
+        catch(e){ paperTitle = paperParam; }
       }
     }
   }
 
-  let meaning, desc;
+  let meaning, desc, suggestion = null;
 
   if(isPaper){
     meaning = "Research Paper Not Found";
     desc = paperTitle
       ? `"${paperTitle}" doesn't exist in the Lanthano Research library, or may have been removed.`
       : "That research paper doesn't exist in the Lanthano Research library, or may have been removed.";
+    suggestion = await findPaperSuggestion(paperTitle, fileParam);
   } else {
     meaning = "Page Not Found";
     desc = "This page doesn't exist on Lanthano Research, may have been moved, or the link might be broken.";
+    suggestion = findStaticSuggestion(target);
+  }
+
+  let suggestionHtml = "";
+  if(suggestion){
+    if(isPaper){
+      const href = `pdf.html?file=${encodeURIComponent(suggestion.url)}&paper=${encodeURIComponent(suggestion.title)}`;
+      suggestionHtml = `<div class="error-suggestion">Did you mean: <a href="${href}">${suggestion.title}</a></div>`;
+    } else {
+      suggestionHtml = `<div class="error-suggestion">Did you mean: <a href="${suggestion.path}">${suggestion.label}</a></div>`;
+    }
   }
 
   document.getElementById("errorPage").innerHTML = `
@@ -221,6 +356,7 @@ function render404(){
     <div class="error-meaning">${meaning}</div>
     <p class="error-desc">${desc}</p>
     <div class="error-target">Trying to reach: <span>${target}</span></div>
+    ${suggestionHtml}
     <div class="error-actions">
       <button class="error-button primary" onclick="history.back()">
         Go Back
@@ -232,6 +368,9 @@ function render404(){
   `;
 }
 
+/* ============================================================
+   RENDER: OFFLINE
+============================================================ */
 function renderOffline(){
   const target = getTargetUrl();
   document.getElementById("errorPage").innerHTML = `
@@ -284,10 +423,13 @@ function retryConnection(){
   }, 700);
 }
 
-// Decide which state to show.
-// ?mode=404 or ?mode=offline can force a state for testing/linking.
-// ?url=... can specify the destination the user was trying to reach
-// (e.g. pdf.html?file=...&paper=... to trigger the "paper not found" wording).
+/* ============================================================
+   ENTRY POINT
+   ?mode=404 or ?mode=offline can force a state for testing/linking.
+   ?url=... can specify the destination the user was trying to reach
+   (e.g. pdf.html?file=...&paper=... to trigger the "paper not found"
+   wording and the "did you mean" lookup).
+============================================================ */
 const params = new URLSearchParams(window.location.search);
 const forced = params.get("mode");
 
