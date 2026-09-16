@@ -418,27 +418,10 @@
       "Verse Comparison.png"
     ]
   },
-  "real_nazis": {
-    "title": "The Real Nazis",
-    "warning": false,
-    "category": [
-      "historical",
-      "political"
-    ],
-    "pages": 32,
-    "description": "A historical look at disputed claims, overlooked evidence, and common misconceptions about Nazi Germany.",
-    "url": "The Real Nazis.pdf",
-    "updated": "2025-10-30",
-    "images": [
-      "Auschwitz Number Issues.png",
-      "Auschwitz Plaques.png",
-      "Auschwitz Red Cross report.png",
-      "Auschwitz Red Cross report 2.png",
-      "Degenerate Book Burning.png",
-      "What we have been told.png"
-    ],
-    "controversial": true
-  },
+
+
+
+  
   "vaccines": {
     "title": "The Sad Truth About Vaccines",
     "warning": false,
