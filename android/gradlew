@@ -1,0 +1,96 @@
+#!/bin/sh
+#
+# Lanthano Research - Gradle launcher (used like the normal wrapper):
+#
+#     ./gradlew assembleDebug
+#
+# If gradle/wrapper/gradle-wrapper.jar exists (for example after running
+# `gradle wrapper` once, or after Android Studio has created it), the official
+# Gradle wrapper is used. Otherwise this script downloads the Gradle version
+# named in gradle/wrapper/gradle-wrapper.properties once into ~/.gradle and
+# runs it directly, so no binary wrapper jar has to be kept in the repository.
+#
+# Building needs a network connection (Gradle, the Android Gradle Plugin and the
+# Android SDK are downloaded). The app that is built never uses the network.
+
+set -eu
+
+APP_HOME=$(cd "$(dirname "$0")" && pwd -P)
+PROPS="$APP_HOME/gradle/wrapper/gradle-wrapper.properties"
+WRAPPER_JAR="$APP_HOME/gradle/wrapper/gradle-wrapper.jar"
+
+if [ -n "${JAVA_HOME:-}" ] && [ -x "$JAVA_HOME/bin/java" ]; then
+    JAVA="$JAVA_HOME/bin/java"
+else
+    JAVA=java
+fi
+
+die() {
+    echo "gradlew: $*" >&2
+    exit 1
+}
+
+if [ -f "$WRAPPER_JAR" ]; then
+    exec "$JAVA" -Xmx64m -Xms64m -Dorg.gradle.appname=gradlew \
+        -classpath "$WRAPPER_JAR" org.gradle.wrapper.GradleWrapperMain "$@"
+fi
+
+[ -f "$PROPS" ] || die "missing $PROPS"
+prop() {
+    sed -n "s/^$1=//p" "$PROPS" | tr -d '\r' | sed 's/\\:/:/g' | tail -n 1
+}
+
+URL=$(prop distributionUrl)
+[ -n "$URL" ] || die "distributionUrl is not set in $PROPS"
+SHA256=$(prop distributionSha256Sum)
+
+ZIP_NAME=$(basename "$URL")        # gradle-8.11.1-bin.zip
+DIST_NAME=${ZIP_NAME%.zip}         # gradle-8.11.1-bin
+DIST_NAME=${DIST_NAME%-bin}
+DIST_NAME=${DIST_NAME%-all}        # gradle-8.11.1
+
+BASE="${GRADLE_USER_HOME:-$HOME/.gradle}/wrapper/dists/lanthano-launcher"
+GRADLE_HOME_DIR="$BASE/$DIST_NAME"
+GRADLE_SCRIPT="$GRADLE_HOME_DIR/bin/gradle"
+
+if [ ! -f "$GRADLE_SCRIPT" ]; then
+    mkdir -p "$BASE"
+    PART="$BASE/$ZIP_NAME.part"
+    UNPACK="$BASE/$DIST_NAME.unpack"
+    rm -rf "$PART" "$UNPACK"
+
+    echo "Downloading $URL" >&2
+    if command -v curl >/dev/null 2>&1; then
+        curl -fSL --retry 3 -o "$PART" "$URL" || die "download failed"
+    elif command -v wget >/dev/null 2>&1; then
+        wget -O "$PART" "$URL" || die "download failed"
+    else
+        die "curl or wget is needed to download Gradle (or install Gradle and run: gradle wrapper)"
+    fi
+
+    if [ -n "$SHA256" ]; then
+        if command -v sha256sum >/dev/null 2>&1; then
+            ACTUAL=$(sha256sum "$PART" | cut -d' ' -f1)
+        else
+            ACTUAL=$(shasum -a 256 "$PART" | cut -d' ' -f1)
+        fi
+        [ "$ACTUAL" = "$SHA256" ] || { rm -f "$PART"; die "checksum mismatch for $ZIP_NAME"; }
+    fi
+
+    mkdir -p "$UNPACK"
+    if command -v unzip >/dev/null 2>&1; then
+        unzip -q "$PART" -d "$UNPACK" || die "could not unpack $ZIP_NAME"
+    else
+        JAR_TOOL="jar"
+        [ -n "${JAVA_HOME:-}" ] && [ -x "$JAVA_HOME/bin/jar" ] && JAR_TOOL="$JAVA_HOME/bin/jar"
+        (cd "$UNPACK" && "$JAR_TOOL" xf "$PART") || die "could not unpack $ZIP_NAME (install unzip)"
+    fi
+    [ -f "$UNPACK/$DIST_NAME/bin/gradle" ] || die "unexpected layout in $ZIP_NAME"
+    rm -rf "$GRADLE_HOME_DIR"
+    mv "$UNPACK/$DIST_NAME" "$GRADLE_HOME_DIR"
+    rm -rf "$UNPACK" "$PART"
+fi
+
+# The distribution's launcher is a POSIX shell script; running it through sh
+# also works when the executable bit was lost while unpacking.
+exec sh "$GRADLE_SCRIPT" -p "$APP_HOME" "$@"

@@ -1,0 +1,29 @@
+# Gradle / Android build output - never commit
+.gradle/
+build/
+app/build/
+.kotlin/
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# IDE
+.idea/
+*.iml
+.DS_Store
+
+# Signing material - never commit
+*.jks
+*.keystore
+keystore.properties
+signing.properties
+
+# Offline test output
+tools/test-output/
+tools/offline-test/node_modules/
+tools/offline-test/package-lock.json
