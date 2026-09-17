@@ -1,9 +1,0 @@
-<resources>
-    <style name="Theme.LanthanoResearch" parent="android:Theme.Material.NoActionBar">
-        <item name="android:windowBackground">@color/lanthano_background</item>
-        <item name="android:colorBackground">@color/lanthano_background</item>
-        <item name="android:statusBarColor">@color/lanthano_background</item>
-        <item name="android:navigationBarColor">@color/lanthano_background</item>
-        <item name="android:windowLightStatusBar">false</item>
-    </style>
-</resources>

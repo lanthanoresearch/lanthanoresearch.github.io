@@ -1,4 +1,0 @@
-<resources>
-    <!-- theme_color / background_color from the site's manifest.json -->
-    <color name="lanthano_background">#111111</color>
-</resources>

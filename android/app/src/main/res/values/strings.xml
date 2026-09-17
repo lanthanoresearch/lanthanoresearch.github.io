@@ -1,5 +1,0 @@
-<resources>
-    <string name="app_name">Lanthano Research</string>
-    <string name="webview_outdated_title">Update Android System WebView</string>
-    <string name="webview_outdated_message">This device uses Android System WebView %1$s. Some parts of Lanthano Research, such as the PDF viewer, need version %2$d or newer and may not work. You can update \"Android System WebView\" (or Google Chrome) from your app store the next time you are online.</string>
-</resources>
