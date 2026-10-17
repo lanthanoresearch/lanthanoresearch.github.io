@@ -1,6 +1,6 @@
 {
- "count": 259,
- "totalBytes": 279206841,
+ "count": 258,
+ "totalBytes": 279163071,
  "files": [
   {
    "path": "1 Thessalonians Original Text.png",
@@ -1101,11 +1101,6 @@
    "path": "Sunrise.png",
    "size": 113166,
    "hash": "7af1ad58cd734ac7"
-  },
-  {
-   "path": "support.html",
-   "size": 43770,
-   "hash": "b1c8097eaeea25e2"
   },
   {
    "path": "sw.js",
