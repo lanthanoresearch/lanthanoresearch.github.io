@@ -1,6 +1,6 @@
 {
- "count": 256,
- "totalBytes": 278478098,
+ "count": 254,
+ "totalBytes": 278386615,
  "files": [
   {
    "path": "1 Thessalonians Original Text.png",
@@ -246,11 +246,6 @@
    "path": "Carbon Dating.pdf",
    "size": 330303,
    "hash": "b2d483b5cc8028fe"
-  },
-  {
-   "path": "category.html",
-   "size": 47328,
-   "hash": "914968f1c23f6113"
   },
   {
    "path": "CDC Misinformation (Multiple).png",
@@ -631,11 +626,6 @@
    "path": "Fuzzy Shadow.png",
    "size": 14575331,
    "hash": "6c7a7211f02d6762"
-  },
-  {
-   "path": "gallery.html",
-   "size": 44155,
-   "hash": "4898623344b715ae"
   },
   {
    "path": "Genetic Degradation.pdf",
