@@ -1,6 +1,6 @@
 {
- "count": 259,
- "totalBytes": 278722043,
+ "count": 258,
+ "totalBytes": 278568196,
  "files": [
   {
    "path": "1 Thessalonians Original Text.png",
@@ -1246,11 +1246,6 @@
    "path": "Verses Missing From Vaticanus and Sanaiticus.png",
    "size": 99637,
    "hash": "df84f69c8d25f4a7"
-  },
-  {
-   "path": "video.html",
-   "size": 153847,
-   "hash": "7ad6e84ba10ba39a"
   },
   {
    "path": "What is Everything.pdf",
