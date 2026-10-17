@@ -1,0 +1,25 @@
+{
+  "id": "/",
+  "name": "Lanthano Research",
+  "short_name": "Lanthano",
+  "description": "Independent research archive. Works offline once installed.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#111111",
+  "theme_color": "#111111",
+  "icons": [
+    {
+      "src": "file_000000000c40722f92b1fe6758cb4855.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "file_000000000c40722f92b1fe6758cb4855.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

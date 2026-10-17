@@ -1,0 +1,2527 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <link
+        rel="icon"
+        type="image/png"
+        href="file_000000000c40722f92b1fe6758cb4855.png"
+    >
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Support — Lanthano Research</title>
+
+    <!-- Lets phones and browsers install this site as an app -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#111111">
+    <link rel="apple-touch-icon" href="file_000000000c40722f92b1fe6758cb4855.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Lanthano">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+
+    <style>
+
+body{
+    margin:0;
+    background:#111;
+    color:#eee;
+    font-family:Arial,sans-serif;
+}
+
+html{
+    scroll-behavior:smooth;
+}
+
+section{
+    max-width:850px;
+    margin:auto;
+    padding:40px 20px 100px;
+}
+
+h1{
+    text-align:center;
+    margin:0 0 25px;
+    font-size:32px;
+}
+
+h2{
+    margin-top:0;
+    margin-bottom:12px;
+}
+
+.card{
+    background:#1d1d1d;
+    padding:20px;
+    margin:15px 0;
+    border-radius:10px;
+}
+
+.back{
+    color:white;
+    text-decoration:none;
+    display:inline-block;
+    margin-bottom:20px;
+}
+
+.back:hover{
+    text-decoration:underline;
+}
+
+p{
+    line-height:1.55;
+    margin:8px 0;
+}
+
+.download-section{
+    text-align:center;
+}
+
+.download-button{
+    display:inline-block;
+    margin-top:12px;
+    padding:12px 24px;
+    background:#333;
+    color:#fff;
+    border:none;
+    border-radius:7px;
+    font-size:16px;
+    cursor:pointer;
+}
+
+.download-button:hover{
+    background:#444;
+}
+
+.download-button:disabled{
+    opacity:0.5;
+    cursor:wait;
+}
+
+/*
+   The finished button intentionally stays gray.
+   It does NOT turn green.
+*/
+
+.cancel-button{
+    display:none;
+    margin:14px auto 0;
+    padding:10px 22px;
+    background:#333;
+    color:#bbb;
+    border:1px solid #444;
+    border-radius:7px;
+    font-size:14px;
+    cursor:pointer;
+}
+
+.cancel-button:hover{
+    background:#444;
+    color:#fff;
+}
+
+.progress{
+    display:none;
+    margin:18px auto 0;
+    max-width:650px;
+}
+
+.progress-percent{
+    text-align:center;
+    color:#aaa;
+    font-size:1em;
+    margin-bottom:6px;
+}
+
+.progress-percent.finished{
+    color:#39b54a;
+}
+
+.progress-bar{
+    width:100%;
+    height:8px;
+    background:#333;
+    border-radius:10px;
+    overflow:hidden;
+}
+
+.progress-fill{
+    width:0%;
+    height:100%;
+    background:#aaa;
+    transition:width .2s ease;
+}
+
+.progress-fill.finished{
+    background:#39b54a;
+}
+
+.progress-text{
+    margin-top:8px;
+    color:#aaa;
+    font-size:0.9em;
+    line-height:1.4;
+}
+
+.progress-text.finished{
+    color:#39b54a;
+}
+
+.download-warning{
+    display:none;
+    margin:15px auto 0;
+    padding:12px;
+    background:#211515;
+    border:1px solid #5a2525;
+    border-radius:8px;
+    color:#ccc;
+    font-size:0.85em;
+    line-height:1.45;
+    max-width:600px;
+}
+
+.download-warning strong{
+    color:#ff5555;
+}
+
+.download-warning.finished{
+    background:#142116;
+    border-color:#285c32;
+}
+
+.download-warning.finished strong{
+    color:#39b54a;
+}
+
+.status{
+    margin-top:10px;
+    color:#888;
+    font-size:0.85em;
+    line-height:1.4;
+}
+
+.status.finished{
+    color:#39b54a;
+}
+
+
+/* ======================================================
+   BACK TO TOP BUTTON
+   ====================================================== */
+
+.top-button{
+    position:fixed;
+    bottom:20px;
+    left:50%;
+    transform:translateX(-50%);
+    width:50px;
+    height:50px;
+    background:#2a2a2a;
+    color:white;
+    text-decoration:none;
+    border-radius:50%;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    font-size:24px;
+    z-index:1000;
+    opacity:.6;
+}
+
+.top-button:hover{
+    opacity:.6;
+    background:#2a2a2a;
+}
+
+
+/* ======================================================
+   LEAVE PAGE POPUP
+   ====================================================== */
+
+.leave-popup{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.78);
+    z-index:9999;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+}
+
+.leave-popup-box{
+    width:100%;
+    max-width:450px;
+    background:#1d1d1d;
+    border:1px solid #444;
+    border-radius:10px;
+    padding:22px;
+    box-shadow:0 10px 40px rgba(0,0,0,0.5);
+}
+
+.leave-popup-box h2{
+    margin-top:0;
+    margin-bottom:12px;
+}
+
+.leave-popup-box p{
+    color:#ccc;
+    line-height:1.5;
+}
+
+.leave-popup-warning{
+    color:#ff5555 !important;
+    font-weight:bold;
+}
+
+.leave-popup-buttons{
+    display:flex;
+    gap:10px;
+    margin-top:20px;
+}
+
+.leave-popup-button{
+    flex:1;
+    padding:11px 15px;
+    border:none;
+    border-radius:7px;
+    font-size:15px;
+    cursor:pointer;
+}
+
+.stay-button{
+    background:#fff;
+    color:#111;
+}
+
+.stay-button:hover{
+    background:#ddd;
+}
+
+.leave-button{
+    background:#333;
+    color:#fff;
+}
+
+.leave-button:hover{
+    background:#444;
+}
+
+
+@media(max-width:600px){
+
+    section{
+        padding:40px 15px 100px;
+    }
+
+    h1{
+        font-size:32px;
+        margin-bottom:20px;
+    }
+
+    .card{
+        padding:17px;
+        margin:12px 0;
+    }
+
+    .leave-popup-buttons{
+        flex-direction:column;
+    }
+
+}
+
+
+/* ======================================================
+   OFFLINE APP OPTION (switcher + panel; logic in offline-app.js)
+   ====================================================== */
+
+.switcher{
+    position:relative;
+    display:none;
+    max-width:440px;
+    margin:0 auto 22px;
+    padding:4px;
+    background:#1d1d1d;
+    border:1px solid #333;
+    border-radius:999px;
+}
+
+.switcher-thumb{
+    position:absolute;
+    top:4px;
+    bottom:4px;
+    left:4px;
+    width:calc(50% - 4px);
+    background:#333;
+    border:1px solid #555;
+    border-radius:999px;
+    transition:transform .3s cubic-bezier(.22,.8,.3,1);
+    box-sizing:border-box;
+}
+
+.switcher.right .switcher-thumb{
+    transform:translateX(100%);
+}
+
+.switcher button{
+    position:relative;
+    z-index:1;
+    flex:1;
+    padding:11px 8px;
+    background:none;
+    border:none;
+    color:#999;
+    font-size:15px;
+    font-weight:bold;
+    cursor:pointer;
+    transition:color .2s;
+}
+
+.switcher button.active{
+    color:#fff;
+}
+
+.mode-icon{
+    width:18px;
+    height:18px;
+    margin-right:7px;
+    vertical-align:-3px;
+    fill:none;
+    stroke:currentColor;
+    stroke-width:1.8;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+}
+
+.panel-enter{
+    animation:panelIn .35s cubic-bezier(.22,.8,.3,1);
+}
+
+@keyframes panelIn{
+    from{ opacity:0; transform:translateX(24px); }
+    to{ opacity:1; transform:translateX(0); }
+}
+
+.app-hint{
+    color:#888;
+    font-size:.85em;
+}
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<section>
+
+
+    <!-- =================================================
+         LEAVE PAGE POPUP
+         ================================================= -->
+
+    <div
+        id="leavePopup"
+        class="leave-popup"
+    >
+
+        <div class="leave-popup-box">
+
+            <h2>Archive Still Compiling</h2>
+
+            <p class="leave-popup-warning">
+                Leaving this page will stop the archive
+                from being created.
+            </p>
+
+            <p>
+                The archive has not finished yet. If you
+                leave now, you will need to start again.
+            </p>
+
+            <div class="leave-popup-buttons">
+
+                <button
+                    class="leave-popup-button stay-button"
+                    onclick="stayOnPage()"
+                >
+                    Stay on Page
+                </button>
+
+                <button
+                    class="leave-popup-button leave-button"
+                    onclick="leavePage()"
+                >
+                    Leave Anyway
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =================================================
+         HOME
+         ================================================= -->
+
+    <a
+        class="back"
+        href="index.html"
+        onclick="return handleNavigation(event, 'index.html')"
+    >
+        ◀ Home
+    </a>
+
+
+    <h1>Support Lanthano Research</h1>
+
+
+    <!-- =================================================
+         MODE SWITCHER (shown by offline-app.js)
+         ================================================= -->
+
+    <div id="modeSwitcher" class="switcher">
+        <div class="switcher-thumb"></div>
+        <button id="modeZip" class="active">
+            <svg class="mode-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5z"/>
+                <path d="M3.5 7.5 12 12l8.5-4.5M12 12v9"/>
+            </svg>
+            Research ZIP
+        </button>
+        <button id="modeApp">
+            <svg class="mode-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/>
+                <path d="M12 7.5v6m-2.8-2.6L12 13.7l2.8-2.8M10.5 18.2h3"/>
+            </svg>
+            Offline App
+        </button>
+    </div>
+
+
+    <!-- =================================================
+         PRESERVE THE RESEARCH
+         ================================================= -->
+
+    <div class="card">
+
+        <h2>Preserve the Research</h2>
+
+        <p>
+            Lanthano Research exists to document, investigate,
+            and preserve information that may otherwise become
+            difficult to find or access.
+        </p>
+
+        <p>
+            Websites are not permanent. Hosting can change,
+            files can disappear, and information can become
+            inaccessible.
+        </p>
+
+        <p>
+            Keeping an offline copy helps ensure that the
+            research continues to exist independently of
+            this website.
+        </p>
+
+    </div>
+
+
+    <!-- =================================================
+         DOWNLOAD ENTIRE ARCHIVE
+         ================================================= -->
+
+    <div class="card download-section">
+
+        <h2>Download Entire Archive</h2>
+
+        <p>
+            Create an offline copy of the available Lanthano
+            Research papers, supporting images, and video.
+        </p>
+
+
+        <button
+            id="downloadButton"
+            class="download-button"
+            onclick="downloadArchive()"
+        >
+            Download Archive
+        </button>
+
+
+        <!-- WARNING -->
+
+        <div
+            id="downloadWarning"
+            class="download-warning"
+        >
+
+            <strong>
+                DO NOT CLOSE OR LEAVE THIS PAGE
+            </strong>
+
+            <br><br>
+
+            The archive is being prepared on your device.
+            Leaving this page may interrupt the process.
+
+        </div>
+
+
+        <!-- PROGRESS -->
+
+        <div
+            id="progress"
+            class="progress"
+        >
+
+            <div
+                id="progressPercent"
+                class="progress-percent"
+            >
+                0%
+            </div>
+
+
+            <div class="progress-bar">
+
+                <div
+                    id="progressFill"
+                    class="progress-fill"
+                ></div>
+
+            </div>
+
+
+            <div
+                id="progressText"
+                class="progress-text"
+            >
+                Preparing: Waiting to begin...
+            </div>
+
+        </div>
+
+
+        <!-- CANCEL -->
+
+        <button
+            id="cancelButton"
+            class="cancel-button"
+            onclick="cancelArchive()"
+        >
+            Cancel
+        </button>
+
+
+        <!-- STATUS -->
+
+        <div
+            id="status"
+            class="status"
+        ></div>
+
+    </div>
+
+
+
+    <!-- =================================================
+         OFFLINE APP (shown by offline-app.js)
+         ================================================= -->
+
+    <div class="card download-section" id="appCard" style="display:none;">
+
+        <h2 id="appTitle">Download as an App</h2>
+
+        <p id="appDesc"></p>
+
+        <p class="app-hint" id="appHowTo"></p>
+
+        <button id="appButton" class="download-button">
+            Download App
+        </button>
+
+        <div id="appWarning" class="download-warning"></div>
+
+        <div id="appProgress" class="progress">
+
+            <div id="appPercent" class="progress-percent">0%</div>
+
+            <div class="progress-bar">
+                <div id="appFill" class="progress-fill"></div>
+            </div>
+
+            <div id="appText" class="progress-text">Preparing: Waiting to begin...</div>
+
+        </div>
+
+        <button id="appCancel" class="cancel-button">
+            Cancel
+        </button>
+
+        <div id="appStatus" class="status"></div>
+
+        <p class="app-hint" id="appHelp"></p>
+
+    </div>
+
+
+</section>
+
+
+<a href="#" class="top-button" id="topButton">
+    <span style="position:relative; top:-3px;">▲</span>
+</a>
+
+
+<!-- ======================================================
+     JSZIP
+     ====================================================== -->
+
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+
+
+<script>
+
+
+/*
+==========================================================
+ARCHIVE STATE
+==========================================================
+*/
+
+let archiveCompiling = false;
+
+let pendingNavigation = null;
+
+let allowNavigation = false;
+
+let cancelRequested = false;
+
+
+/*
+==========================================================
+BROWSER STORAGE
+==========================================================
+*/
+
+const ARCHIVE_STORAGE_KEY =
+    "lanthanoArchiveDownloaded";
+
+
+/*
+==========================================================
+MANUALLY SPECIFIED VIDEO
+==========================================================
+*/
+
+const VIDEO_FILES = [
+
+    "predictive programming.mp4"
+
+];
+
+
+
+/*
+==========================================================
+GET FILE NAME
+==========================================================
+*/
+
+function getFileName(path){
+
+    try{
+
+        return decodeURIComponent(
+            path.split("?")[0]
+        )
+        .split("/")
+        .pop();
+
+    }catch(error){
+
+        return path
+            .split("/")
+            .pop();
+
+    }
+
+}
+
+
+
+/*
+==========================================================
+CLEAN FOLDER NAME
+==========================================================
+*/
+
+function cleanFolderName(name){
+
+    let cleaned =
+        String(
+            name || "Untitled Paper"
+        );
+
+
+    /*
+    9_11 → 911
+    */
+
+    cleaned =
+        cleaned.replace(
+            /^9_11$/i,
+            "911"
+        );
+
+
+    cleaned =
+        cleaned.replace(
+            /[<>:"/\\|?*\x00-\x1F]/g,
+            "_"
+        );
+
+
+    cleaned =
+        cleaned.replace(
+            /\s+/g,
+            " "
+        );
+
+
+    cleaned =
+        cleaned.trim();
+
+
+    cleaned =
+        cleaned.replace(
+            /\.+$/,
+            ""
+        );
+
+
+    return cleaned;
+
+}
+
+
+
+/*
+==========================================================
+CHECK FOR CANCELLATION
+==========================================================
+*/
+
+function checkCancelled(){
+
+    if(cancelRequested){
+
+        throw new Error(
+            "__ARCHIVE_CANCELLED__"
+        );
+
+    }
+
+}
+
+
+
+/*
+==========================================================
+FETCH FILE
+==========================================================
+*/
+
+async function fetchFile(url){
+
+    checkCancelled();
+
+
+    const response =
+        await fetch(
+            url,
+            {
+                cache:"no-cache"
+            }
+        );
+
+
+    checkCancelled();
+
+
+    if(!response.ok){
+
+        throw new Error(
+            `${url} (${response.status})`
+        );
+
+    }
+
+
+    const blob =
+        await response.blob();
+
+
+    checkCancelled();
+
+
+    return blob;
+
+}
+
+
+
+/*
+==========================================================
+SET PROGRESS
+==========================================================
+*/
+
+function setProgress(
+    percent,
+    text
+){
+
+    const safePercent =
+        Math.max(
+            0,
+            Math.min(
+                100,
+                percent
+            )
+        );
+
+
+    document
+        .getElementById("progressFill")
+        .style.width =
+        safePercent + "%";
+
+
+    document
+        .getElementById("progressPercent")
+        .textContent =
+        Math.round(
+            safePercent
+        ) + "%";
+
+
+    document
+        .getElementById("progressText")
+        .textContent =
+        text;
+
+}
+
+
+
+/*
+==========================================================
+SET FINISHED STATE
+==========================================================
+*/
+
+function setFinishedState(
+    returningToPage = false
+){
+
+    const button =
+        document.getElementById(
+            "downloadButton"
+        );
+
+
+    const warning =
+        document.getElementById(
+            "downloadWarning"
+        );
+
+
+    const status =
+        document.getElementById(
+            "status"
+        );
+
+
+    const progress =
+        document.getElementById(
+            "progress"
+        );
+
+
+    const progressFill =
+        document.getElementById(
+            "progressFill"
+        );
+
+
+    const progressPercent =
+        document.getElementById(
+            "progressPercent"
+        );
+
+
+    const progressText =
+        document.getElementById(
+            "progressText"
+        );
+
+
+    /*
+    ------------------------------------------------------
+    PROGRESS
+    ------------------------------------------------------
+    */
+
+    progress.style.display =
+        "block";
+
+
+    progressFill.style.width =
+        "100%";
+
+
+    progressPercent.textContent =
+        "100%";
+
+
+    progressPercent.classList.add(
+        "finished"
+    );
+
+
+    progressFill.classList.add(
+        "finished"
+    );
+
+
+    progressText.classList.add(
+        "finished"
+    );
+
+
+    progressText.textContent =
+        "Done";
+
+
+    /*
+    ------------------------------------------------------
+    BUTTON
+    ------------------------------------------------------
+    */
+
+    button.disabled =
+        false;
+
+
+    /*
+    Keep this gray.
+    */
+
+    button.classList.remove(
+        "finished"
+    );
+
+
+    button.textContent =
+        "Download Again";
+
+
+    /*
+    ------------------------------------------------------
+    WARNING / FINISHED MESSAGE
+    ------------------------------------------------------
+    */
+
+    warning.style.display =
+        "block";
+
+
+    warning.classList.add(
+        "finished"
+    );
+
+
+    if(returningToPage){
+
+        warning.innerHTML =
+
+            "<strong>ALREADY DOWNLOADED</strong>" +
+
+            "<br><br>" +
+
+            "The Lanthano Research archive has already " +
+            "been downloaded on this device." +
+
+            "<br><br>" +
+
+            "You may download it again if needed.";
+
+
+        status.textContent =
+            "Archive already downloaded.";
+
+    }else{
+
+        warning.innerHTML =
+
+            "<strong>DONE</strong>" +
+
+            "<br><br>" +
+
+            "The archive has been created and the " +
+            "download has been sent to your browser." +
+
+            "<br><br>" +
+
+            "You may now leave this page.";
+
+
+        status.textContent =
+            "Download finished.";
+
+    }
+
+
+    status.classList.add(
+        "finished"
+    );
+
+}
+
+
+
+/*
+==========================================================
+REMEMBER DOWNLOAD
+==========================================================
+*/
+
+function rememberDownload(){
+
+    try{
+
+        localStorage.setItem(
+            ARCHIVE_STORAGE_KEY,
+            "true"
+        );
+
+    }catch(error){
+
+        console.warn(
+            "Could not save archive state:",
+            error
+        );
+
+    }
+
+}
+
+
+
+/*
+==========================================================
+CHECK REMEMBERED DOWNLOAD
+==========================================================
+*/
+
+function hasRememberedDownload(){
+
+    try{
+
+        return (
+            localStorage.getItem(
+                ARCHIVE_STORAGE_KEY
+            ) === "true"
+        );
+
+    }catch(error){
+
+        return false;
+
+    }
+
+}
+
+
+
+/*
+==========================================================
+SHOW LEAVE POPUP
+==========================================================
+*/
+
+function showLeavePopup(){
+
+    if(!archiveCompiling){
+
+        return false;
+
+    }
+
+
+    document
+        .getElementById("leavePopup")
+        .style.display =
+        "flex";
+
+
+    return true;
+
+}
+
+
+
+/*
+==========================================================
+STAY ON PAGE
+==========================================================
+*/
+
+function stayOnPage(){
+
+    pendingNavigation =
+        null;
+
+
+    document
+        .getElementById("leavePopup")
+        .style.display =
+        "none";
+
+}
+
+
+
+/*
+==========================================================
+LEAVE PAGE
+==========================================================
+*/
+
+function leavePage(){
+
+    allowNavigation =
+        true;
+
+    archiveCompiling =
+        false;
+
+    cancelRequested =
+        true;
+
+
+    document
+        .getElementById("leavePopup")
+        .style.display =
+        "none";
+
+
+    window.location.href =
+        "index.html";
+
+}
+
+
+
+/*
+==========================================================
+PROTECT NORMAL NAVIGATION
+==========================================================
+*/
+
+function handleNavigation(
+    event,
+    destination
+){
+
+    if(!archiveCompiling){
+
+        return true;
+
+    }
+
+
+    event.preventDefault();
+
+    pendingNavigation =
+        destination;
+
+    showLeavePopup();
+
+    return false;
+
+}
+
+
+
+/*
+==========================================================
+BROWSER REFRESH / CLOSE PROTECTION
+==========================================================
+*/
+
+window.addEventListener(
+    "beforeunload",
+    function(event){
+
+        if(
+            archiveCompiling &&
+            !allowNavigation
+        ){
+
+            event.preventDefault();
+
+            event.returnValue = "";
+
+        }
+
+    }
+);
+
+
+
+/*
+==========================================================
+CANCEL ARCHIVE
+==========================================================
+*/
+
+function cancelArchive(){
+
+    if(!archiveCompiling){
+
+        return;
+
+    }
+
+
+    cancelRequested =
+        true;
+
+    archiveCompiling =
+        false;
+
+    allowNavigation =
+        true;
+
+    pendingNavigation =
+        null;
+
+
+    document
+        .getElementById("leavePopup")
+        .style.display =
+        "none";
+
+
+    const button =
+        document.getElementById(
+            "downloadButton"
+        );
+
+
+    const cancelButton =
+        document.getElementById(
+            "cancelButton"
+        );
+
+
+    const warning =
+        document.getElementById(
+            "downloadWarning"
+        );
+
+
+    const status =
+        document.getElementById(
+            "status"
+        );
+
+
+    /*
+    ------------------------------------------------------
+    CANCEL BUTTON
+    ------------------------------------------------------
+    */
+
+    cancelButton.style.display =
+        "none";
+
+
+    button.disabled =
+        false;
+
+
+    /*
+    ------------------------------------------------------
+    IF PREVIOUS DOWNLOAD EXISTS
+    ------------------------------------------------------
+    */
+
+    if(
+        hasRememberedDownload()
+    ){
+
+        setFinishedState(true);
+
+        status.textContent =
+            "Archive already downloaded.";
+
+        return;
+
+    }
+
+
+    /*
+    ------------------------------------------------------
+    NO PREVIOUS DOWNLOAD
+    ------------------------------------------------------
+    */
+
+    button.textContent =
+        "Download Archive";
+
+
+    button.classList.remove(
+        "finished"
+    );
+
+
+    warning.style.display =
+        "none";
+
+
+    warning.classList.remove(
+        "finished"
+    );
+
+
+    status.classList.remove(
+        "finished"
+    );
+
+
+    status.textContent =
+        "Archive creation cancelled.";
+
+
+    document
+        .getElementById("progress")
+        .style.display =
+        "none";
+
+
+    document
+        .getElementById("progressFill")
+        .classList.remove(
+            "finished"
+        );
+
+
+    document
+        .getElementById("progressPercent")
+        .classList.remove(
+            "finished"
+        );
+
+
+    document
+        .getElementById("progressText")
+        .classList.remove(
+            "finished"
+        );
+
+
+    setProgress(
+        0,
+        "Preparing: Cancelled"
+    );
+
+}
+
+
+
+/*
+==========================================================
+CREATE ARCHIVE
+==========================================================
+*/
+
+async function downloadArchive(){
+
+
+    /*
+    ------------------------------------------------------
+    PREVENT DOUBLE START
+    ------------------------------------------------------
+    */
+
+    if(archiveCompiling){
+
+        return;
+
+    }
+
+
+    const button =
+        document.getElementById(
+            "downloadButton"
+        );
+
+
+    const progress =
+        document.getElementById(
+            "progress"
+        );
+
+
+    const status =
+        document.getElementById(
+            "status"
+        );
+
+
+    const warning =
+        document.getElementById(
+            "downloadWarning"
+        );
+
+
+    const cancelButton =
+        document.getElementById(
+            "cancelButton"
+        );
+
+
+    /*
+    ------------------------------------------------------
+    START PROCESS
+    ------------------------------------------------------
+    */
+
+    archiveCompiling =
+        true;
+
+    allowNavigation =
+        false;
+
+    pendingNavigation =
+        null;
+
+    cancelRequested =
+        false;
+
+
+    /*
+    IMPORTANT:
+    Do NOT clear localStorage here.
+
+    If this is a second attempt and the user cancels,
+    the browser should still remember the first successful
+    download.
+    */
+
+
+    button.disabled =
+        true;
+
+
+    button.classList.remove(
+        "finished"
+    );
+
+
+    button.textContent =
+        "Preparing Archive...";
+
+
+    cancelButton.style.display =
+        "inline-block";
+
+
+    progress.style.display =
+        "block";
+
+
+    warning.style.display =
+        "block";
+
+
+    warning.classList.remove(
+        "finished"
+    );
+
+
+    warning.innerHTML =
+
+        "<strong>" +
+        "DO NOT CLOSE OR LEAVE THIS PAGE" +
+        "</strong>" +
+
+        "<br><br>" +
+
+        "The archive is being prepared on your device. " +
+        "Leaving this page may interrupt the process.";
+
+
+    status.classList.remove(
+        "finished"
+    );
+
+
+    status.textContent =
+        "";
+
+
+    document
+        .getElementById("progressFill")
+        .classList.remove(
+            "finished"
+        );
+
+
+    document
+        .getElementById("progressPercent")
+        .classList.remove(
+            "finished"
+        );
+
+
+    document
+        .getElementById("progressText")
+        .classList.remove(
+            "finished"
+        );
+
+
+    setProgress(
+        0,
+        "Preparing: Loading archive information..."
+    );
+
+
+
+    try{
+
+
+        /*
+        ==================================================
+        CHECK JSZIP
+        ==================================================
+        */
+
+        if(
+            typeof JSZip === "undefined"
+        ){
+
+            throw new Error(
+                "The ZIP library could not be loaded."
+            );
+
+        }
+
+
+
+        /*
+        ==================================================
+        LOAD DESCRIPTIONS
+        ==================================================
+        */
+
+        const response =
+            await fetch(
+                "descriptions.json",
+                {
+                    cache:"no-cache"
+                }
+            );
+
+
+        checkCancelled();
+
+
+        if(!response.ok){
+
+            throw new Error(
+                "Could not load descriptions.json."
+            );
+
+        }
+
+
+        const descriptions =
+            await response.json();
+
+
+        checkCancelled();
+
+
+        setProgress(
+            2,
+            "Preparing: Counting archive files..."
+        );
+
+
+
+        /*
+        ==================================================
+        CREATE ZIP
+        ==================================================
+        */
+
+        const zip =
+            new JSZip();
+
+
+        /*
+        Main archive folder.
+        */
+
+        const root =
+            zip.folder(
+                "Lanthano Research"
+            );
+
+
+        /*
+        Videos directly inside main folder.
+        */
+
+        const videosFolder =
+            root.folder(
+                "Videos"
+            );
+
+
+
+        /*
+        ==================================================
+        README
+        ==================================================
+        */
+
+        root.file(
+            "README.txt",
+
+`LANTHANO RESEARCH
+OFFLINE ARCHIVE
+
+This is an offline preservation copy of material available
+through Lanthano Research.
+
+Website:
+https://lanthanoresearch.com
+
+The purpose of this archive is to help preserve the research
+independently of the continued availability of the website.
+
+The archive contains research papers, supporting images,
+and designated video material.
+
+Created:
+${new Date().toLocaleString()}
+`
+        );
+
+
+
+        /*
+        ==================================================
+        GET ARTICLES
+        ==================================================
+        */
+
+        const entries =
+            Object.entries(
+                descriptions
+            );
+
+
+
+        /*
+        ==================================================
+        COUNT FILES
+        ==================================================
+        */
+
+        let totalFiles =
+            0;
+
+
+        entries.forEach(
+            ([key, paper]) => {
+
+                if(
+                    paper.url
+                ){
+
+                    totalFiles++;
+
+                }
+
+
+                if(
+                    Array.isArray(
+                        paper.images
+                    )
+                ){
+
+                    totalFiles +=
+                        paper.images.filter(
+                            image =>
+                                typeof image === "string" &&
+                                !image
+                                    .trim()
+                                    .startsWith("#$")
+                        ).length;
+
+                }
+
+            }
+        );
+
+
+        totalFiles +=
+            VIDEO_FILES.length;
+
+
+        let completedFiles =
+            0;
+
+
+        const failedFiles =
+            [];
+
+
+
+        /*
+        ==================================================
+        PROCESS ARTICLES
+        ==================================================
+        */
+
+        for(
+            let i = 0;
+            i < entries.length;
+            i++
+        ){
+
+            checkCancelled();
+
+
+            const [
+                key,
+                paper
+            ] =
+                entries[i];
+
+
+            const title =
+                paper.title ||
+                key ||
+                `Paper ${i + 1}`;
+
+
+            /*
+            Article folder directly inside
+            Lanthano Research.
+            */
+
+            const folderName =
+                cleanFolderName(
+                    title
+                );
+
+
+            const paperFolder =
+                root.folder(
+                    folderName
+                );
+
+
+            /*
+            Photos folder inside article.
+            */
+
+            const photoFolder =
+                paperFolder.folder(
+                    "Photo"
+                );
+
+
+
+            /*
+            =================================================
+            PDF
+            =================================================
+            */
+
+            if(
+                paper.url
+            ){
+
+                checkCancelled();
+
+
+                const pdfName =
+                    getFileName(
+                        paper.url
+                    );
+
+
+                try{
+
+                    setProgress(
+                        (
+                            completedFiles /
+                            totalFiles
+                        ) * 90,
+
+                        `Compiling: ${title} (PDF 1 of 1)`
+                    );
+
+
+                    const pdf =
+                        await fetchFile(
+                            paper.url
+                        );
+
+
+                    checkCancelled();
+
+
+                    /*
+                    PDF directly inside article folder.
+                    */
+
+                    paperFolder.file(
+                        pdfName,
+                        pdf
+                    );
+
+
+                    completedFiles++;
+
+
+                    setProgress(
+                        (
+                            completedFiles /
+                            totalFiles
+                        ) * 90,
+
+                        `Compiling: ${title} (PDF 1 of 1)`
+                    );
+
+
+                }catch(error){
+
+                    if(
+                        error.message ===
+                        "__ARCHIVE_CANCELLED__"
+                    ){
+
+                        throw error;
+
+                    }
+
+
+                    console.error(
+                        error
+                    );
+
+
+                    failedFiles.push(
+                        paper.url
+                    );
+
+
+                    completedFiles++;
+
+                }
+
+            }
+
+
+
+            /*
+            =================================================
+            IMAGES
+            =================================================
+            */
+
+            const images =
+                Array.isArray(
+                    paper.images
+                )
+
+                    ? paper.images.filter(
+                        image =>
+                            typeof image === "string" &&
+                            !image
+                                .trim()
+                                .startsWith("#$")
+                    )
+
+                    : [];
+
+
+            if(
+                images.length
+            ){
+
+                for(
+                    let j = 0;
+                    j < images.length;
+                    j++
+                ){
+
+                    checkCancelled();
+
+
+                    const image =
+                        images[j];
+
+
+                    const imageName =
+                        getFileName(
+                            image
+                        );
+
+
+                    try{
+
+                        setProgress(
+                            (
+                                completedFiles /
+                                totalFiles
+                            ) * 90,
+
+                            `Compiling: ${title} (Image ${j + 1} of ${images.length})`
+                        );
+
+
+                        const imageBlob =
+                            await fetchFile(
+                                image
+                            );
+
+
+                        checkCancelled();
+
+
+                        photoFolder.file(
+                            imageName,
+                            imageBlob
+                        );
+
+
+                        completedFiles++;
+
+
+                        setProgress(
+                            (
+                                completedFiles /
+                                totalFiles
+                            ) * 90,
+
+                            `Compiling: ${title} (Image ${j + 1} of ${images.length})`
+                        );
+
+
+                    }catch(error){
+
+                        if(
+                            error.message ===
+                            "__ARCHIVE_CANCELLED__"
+                        ){
+
+                            throw error;
+
+                        }
+
+
+                        console.error(
+                            error
+                        );
+
+
+                        failedFiles.push(
+                            image
+                        );
+
+
+                        completedFiles++;
+
+                    }
+
+                }
+
+            }
+
+        }
+
+
+
+        /*
+        ==================================================
+        VIDEOS
+        ==================================================
+        */
+
+        for(
+            let i = 0;
+            i < VIDEO_FILES.length;
+            i++
+        ){
+
+            checkCancelled();
+
+
+            const video =
+                VIDEO_FILES[i];
+
+
+            const videoName =
+                getFileName(
+                    video
+                );
+
+
+            try{
+
+                setProgress(
+                    (
+                        completedFiles /
+                        totalFiles
+                    ) * 90,
+
+                    `Compiling: ${videoName} (Video ${i + 1} of ${VIDEO_FILES.length})`
+                );
+
+
+                const videoBlob =
+                    await fetchFile(
+                        video
+                    );
+
+
+                checkCancelled();
+
+
+                videosFolder.file(
+                    videoName,
+                    videoBlob
+                );
+
+
+                completedFiles++;
+
+
+                setProgress(
+                    (
+                        completedFiles /
+                        totalFiles
+                    ) * 90,
+
+                    `Compiling: ${videoName} (Video ${i + 1} of ${VIDEO_FILES.length})`
+                );
+
+
+            }catch(error){
+
+                if(
+                    error.message ===
+                    "__ARCHIVE_CANCELLED__"
+                ){
+
+                    throw error;
+
+                }
+
+
+                console.error(
+                    error
+                );
+
+
+                failedFiles.push(
+                    video
+                );
+
+
+                completedFiles++;
+
+            }
+
+        }
+
+
+
+        /*
+        ==================================================
+        ERROR REPORT
+        ==================================================
+        */
+
+        checkCancelled();
+
+
+        if(
+            failedFiles.length
+        ){
+
+            root.file(
+                "DOWNLOAD-ERRORS.txt",
+
+`Some files could not be downloaded.
+
+${failedFiles.join("\n")}
+`
+            );
+
+        }
+
+
+
+        /*
+        ==================================================
+        ZIP COMPILATION
+        ==================================================
+        */
+
+        checkCancelled();
+
+
+        setProgress(
+            90,
+            "Compiling: ZIP archive"
+        );
+
+
+        const blob =
+            await zip.generateAsync(
+
+                {
+                    type:"blob",
+
+                    compression:"DEFLATE",
+
+                    compressionOptions:{
+                        level:6
+                    }
+                },
+
+                metadata => {
+
+                    if(
+                        cancelRequested
+                    ){
+
+                        return;
+
+                    }
+
+
+                    const overallPercent =
+                        90 +
+                        (
+                            metadata.percent *
+                            0.10
+                        );
+
+
+                    setProgress(
+                        overallPercent,
+                        "Compiling: ZIP archive"
+                    );
+
+                }
+
+            );
+
+
+        checkCancelled();
+
+
+
+        /*
+        ==================================================
+        ZIP CREATED
+        ==================================================
+        */
+
+        setProgress(
+            100,
+            "Done"
+        );
+
+
+        button.textContent =
+            "Starting Download...";
+
+
+
+        /*
+        ==================================================
+        START BROWSER DOWNLOAD
+        ==================================================
+        */
+
+        const url =
+            URL.createObjectURL(
+                blob
+            );
+
+
+        const link =
+            document.createElement(
+                "a"
+            );
+
+
+        link.href =
+            url;
+
+
+        link.download =
+            "Lanthano-Research-Archive.zip";
+
+
+        document.body.appendChild(
+            link
+        );
+
+
+        link.click();
+
+
+        link.remove();
+
+
+        setTimeout(
+            () => {
+
+                URL.revokeObjectURL(
+                    url
+                );
+
+            },
+            10000
+        );
+
+
+
+        /*
+        ==================================================
+        REMEMBER SUCCESS
+        ==================================================
+        */
+
+        rememberDownload();
+
+
+
+        /*
+        ==================================================
+        FINISHED
+        ==================================================
+        */
+
+        archiveCompiling =
+            false;
+
+        allowNavigation =
+            true;
+
+        cancelRequested =
+            false;
+
+
+        cancelButton.style.display =
+            "none";
+
+
+        setFinishedState(false);
+
+
+    }catch(error){
+
+
+        /*
+        ==================================================
+        CANCELLATION
+        ==================================================
+        */
+
+        if(
+            error.message ===
+            "__ARCHIVE_CANCELLED__"
+        ){
+
+            return;
+
+        }
+
+
+
+        /*
+        ==================================================
+        ERROR
+        ==================================================
+        */
+
+        console.error(
+            "Archive creation failed:",
+            error
+        );
+
+
+        archiveCompiling =
+            false;
+
+        allowNavigation =
+            true;
+
+        cancelRequested =
+            false;
+
+
+        cancelButton.style.display =
+            "none";
+
+
+        /*
+        If a previous successful download exists,
+        restore the remembered state.
+        */
+
+        if(
+            hasRememberedDownload()
+        ){
+
+            setFinishedState(true);
+
+            status.textContent =
+                "Archive already downloaded.";
+
+            return;
+
+        }
+
+
+        /*
+        Otherwise show the actual failure.
+        */
+
+        setProgress(
+            0,
+            "Preparing: Archive creation failed"
+        );
+
+
+        status.textContent =
+            error.message ||
+            "The archive could not be created.";
+
+
+        warning.classList.remove(
+            "finished"
+        );
+
+
+        warning.innerHTML =
+
+            "<strong>ARCHIVE CREATION FAILED</strong>" +
+
+            "<br><br>" +
+
+            "The archive was not completed. " +
+            "You can try again.";
+
+
+        button.disabled =
+            false;
+
+
+        button.textContent =
+            "Download Archive";
+
+    }
+
+}
+
+
+
+/*
+==========================================================
+RESTORE STATE WHEN PAGE LOADS
+==========================================================
+*/
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function(){
+
+        if(
+            hasRememberedDownload()
+        ){
+
+            setFinishedState(true);
+
+        }
+
+    }
+);
+
+
+/*
+==========================================================
+BACK TO TOP BUTTON
+==========================================================
+*/
+
+const topButton = document.getElementById("topButton");
+
+function updateTopButton(){
+    if(window.scrollY > 10){
+        topButton.style.display = "flex";
+    }else{
+        topButton.style.display = "none";
+    }
+}
+
+topButton.addEventListener("click", function(e){
+    e.preventDefault();
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+});
+
+window.addEventListener("scroll", updateTopButton);
+window.addEventListener("load", updateTopButton);
+
+</script>
+
+
+<script src="offline-app.js"></script>
+
+</body>
+
+</html>
