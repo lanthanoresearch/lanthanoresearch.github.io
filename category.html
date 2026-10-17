@@ -1,0 +1,2297 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+/* A refresh should start the page fresh, from the top - not jump back to
+   wherever you were before you opened something. (Coming back from a
+   paper/image/video still restores your spot; only a reload resets it.) */
+(function(){
+  try{
+    var nav = performance.getEntriesByType && performance.getEntriesByType("navigation")[0];
+    var isReload = nav ? nav.type === "reload"
+      : (performance.navigation && performance.navigation.type === 1);
+    if(!isReload) return;
+
+    var fixed = ["indexScroll","returnToIndex","scrollPosition","restoreSearch",
+      "lastSearch","searchResultsScroll","returnFromPage","galleryScroll",
+      "galleryReturn","timelineScroll","videoScrollPosition","videoReturnToIndex"];
+    fixed.forEach(function(k){ sessionStorage.removeItem(k); });
+
+    Object.keys(sessionStorage).forEach(function(k){
+      if(k.indexOf("categoryScroll-") === 0 || k.indexOf("openDetails-") === 0){
+        sessionStorage.removeItem(k);
+      }
+    });
+
+    if("scrollRestoration" in history) history.scrollRestoration = "manual";
+
+    var top = function(){ window.scrollTo({top:0, behavior:"instant"}); };
+    top();
+    window.addEventListener("load", function(){
+      top();
+      requestAnimationFrame(function(){
+        top();
+        if("scrollRestoration" in history) history.scrollRestoration = "auto";
+      });
+    });
+  }catch(e){}
+})();
+</script>
+
+    <link rel="icon" type="image/png" href="file_000000000c40722f92b1fe6758cb4855.png">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>All Research</title>
+
+<style>
+body{
+    margin:0;
+    background:#111;
+    color:#eee;
+    font-family:Arial,sans-serif;
+}
+
+    
+html{
+    scroll-behavior:smooth;
+}
+
+.top-button{
+    position:fixed;
+    bottom:20px;
+    left:50%;
+    transform:translateX(-50%);
+    width:50px;
+    height:50px;
+    background:#2a2a2a;
+    color:white;
+    text-decoration:none;
+    border-radius:50%;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    font-size:24px;
+    z-index:1000;
+    opacity:.6;
+}
+
+.top-button:hover{
+    opacity:.6;
+    background:#2a2a2a;
+}
+    .favorite-star{
+
+    position:absolute;
+
+    top:10px;
+    right:14px;
+
+    font-size:2rem;
+    line-height:1;
+
+    color:#666;
+
+    cursor:pointer;
+
+    user-select:none;
+
+    visibility:hidden;
+    pointer-events:none;
+
+    transition:.2s;
+}
+
+.favorite-star.ready{
+
+    visibility:visible;
+    pointer-events:auto;
+
+}
+
+.favorite-star.active{
+
+    color:#FFD700;
+    text-shadow:0 0 10px rgba(255,215,0,.55);
+
+}
+
+.favorite-star:hover{
+
+    transform:scale(1.15);
+
+}
+
+
+
+
+    
+section{
+    position:relative;
+    max-width:1000px;
+    margin:auto;
+    padding:40px 20px 110px;
+}
+
+h1{
+    text-align:center;
+    margin-bottom:40px;
+}
+.info-bar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:-20px;
+    margin-bottom:35px;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+#paperCount{
+    margin:0;
+    color:#777;
+}
+
+.info-bar-right{
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.page-top-bar{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    margin-bottom:20px;
+}
+
+.top-settings{
+    position:absolute;
+    top:28px;
+    right:20px;
+    z-index:1600;
+}
+
+.sort-dropdown{
+    position:relative;
+}
+
+.sort-btn{
+    background:#222;
+    color:#eee;
+    border:none;
+    border-radius:8px;
+    padding:10px 16px;
+    font-size:.95em;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    width:150px;
+}
+
+.sort-btn:hover{
+    background:#262626;
+}
+
+.sort-btn-label{
+    overflow:hidden;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+    min-width:0;
+}
+
+.sort-caret{
+    flex-shrink:0;
+    width:0;
+    height:0;
+    border-left:6px solid transparent;
+    border-right:6px solid transparent;
+    border-top:7px solid #999;
+    transition:transform .15s ease;
+}
+
+.sort-dropdown.open .sort-caret{
+    transform:rotate(180deg);
+}
+
+.sort-panel{
+    display:none;
+    position:absolute;
+    top:calc(100% + 10px);
+    right:0;
+    background:#1d1d1d;
+    border:1px solid #2c2c2c;
+    border-radius:10px;
+    padding:10px;
+    width:180px;
+    box-shadow:0 6px 18px rgba(0,0,0,.5);
+    z-index:1600;
+    text-align:left;
+}
+
+.sort-panel.open{
+    display:block;
+}
+
+.sort-option{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    width:100%;
+    background:none;
+    border:none;
+    color:#ddd;
+    font-size:.92em;
+    font-family:inherit;
+    padding:8px 8px;
+    border-radius:6px;
+    cursor:pointer;
+    text-align:left;
+}
+
+.sort-option:hover{
+    background:#262626;
+}
+
+.sort-option.active{
+    background:#262626;
+    color:#fff;
+}
+
+.sort-option-arrow{
+    color:#999;
+    font-size:.9em;
+    min-width:14px;
+    text-align:center;
+}
+
+/* ============================================================
+   SETTINGS BUTTON + PANEL
+
+   Matches video.html's floating Settings gear/popover treatment
+   exactly - same gear icon, same panel background/border/radius/
+   shadow, same picker-row and toggle-switch styling - just
+   anchored under this page's own gear button instead of a
+   floating bottom bar.
+============================================================ */
+
+.settings-btn{
+    background:#292929;
+    color:#eee;
+    border:1px solid #383838;
+    border-radius:8px;
+    width:36px;
+    height:36px;
+    padding:0;
+    cursor:pointer;
+    line-height:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+.settings-btn:hover{
+    background:#353535;
+}
+
+.settingsCloseBtn{
+    width:28px;
+    height:28px;
+
+    padding:0;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    flex:0 0 auto;
+
+    background:#292929;
+    color:#eee;
+    border:1px solid #383838;
+    border-radius:6px;
+
+    font-size:13px;
+    line-height:1;
+
+    cursor:pointer;
+}
+
+.settingsCloseBtn:hover{
+    background:#353535;
+}
+
+.settings-panel{
+    box-sizing:border-box;
+
+    display:none;
+    position:absolute;
+    /*
+       Shifted up to cover the gear button itself while open, rather
+       than leaving a gap that shows the button sitting there
+       underneath - with the X in the header now, tapping the gear
+       again isn't the only way to close this, so there's no reason
+       to keep it visible/reachable behind the panel.
+    */
+    top:calc(100% - 36px);
+    right:0;
+
+    flex-direction:column;
+
+    width:230px;
+    max-width:calc(100vw - 24px);
+
+    padding:8px;
+
+    background:#222;
+
+    border:1px solid #333;
+
+    border-radius:10px;
+
+    box-shadow:0 8px 24px rgba(0,0,0,.5);
+
+    z-index:1600;
+
+    text-align:left;
+}
+
+.settings-panel.open{
+    display:flex;
+}
+
+.settingsMenuHeader{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+
+    margin:0 0 8px;
+    padding-bottom:8px;
+
+    border-bottom:1px solid #333;
+}
+
+.settingsMenuHeader h3{
+    margin:0;
+    font-size:14px;
+    font-weight:600;
+    color:#eee;
+}
+
+.settingsScroll{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+}
+
+/* Picker row: label on the left, current value + chevron on the
+   right - tapping it opens the option popup below. Matches
+   video.html's .videoPickerRow exactly. */
+.videoPickerRow{
+    box-sizing:border-box;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    gap:10px;
+
+    width:100%;
+
+    padding:10px 16px;
+
+    border:0;
+    border-radius:8px;
+
+    background:#2e2e2e;
+
+    color:#eee;
+
+    font-size:13.5px;
+
+    font-family:inherit;
+
+    cursor:pointer;
+}
+
+.videoPickerRow:hover{
+    background:#383838;
+}
+
+.videoPickerValue{
+    display:flex;
+
+    align-items:center;
+
+    justify-content:flex-end;
+
+    gap:8px;
+
+    flex:1 1 auto;
+    min-width:0;
+
+    color:#eee;
+
+    font-size:13.5px;
+}
+
+.videoPickerValue span{
+    overflow:hidden;
+
+    text-overflow:ellipsis;
+
+    white-space:nowrap;
+
+    min-width:0;
+}
+
+.videoPickerCaret{
+    flex-shrink:0;
+
+    width:0;
+    height:0;
+
+    border-left:6px solid transparent;
+    border-right:6px solid transparent;
+    border-top:7px solid #999;
+
+    transition:transform .15s ease;
+}
+
+.videoPickerRow.open .videoPickerCaret{
+    transform:rotate(180deg);
+}
+
+/* Bare "mere popup" - no header/back button, just the option
+   list - anchored above/below its own trigger row via inline
+   left/top set in JS at open-time. Matches video.html's
+   #videoSpeedPopup exactly. */
+.videoOptionPopup{
+    box-sizing:border-box;
+
+    position:fixed;
+
+    display:none;
+    flex-direction:column;
+
+    width:190px;
+    max-width:calc(100vw - 24px);
+    max-height:min(60vh, 420px);
+
+    padding:10px;
+
+    background:#1d1d1d;
+
+    border:1px solid #2c2c2c;
+
+    border-radius:10px;
+
+    box-shadow:0 6px 18px rgba(0,0,0,.5);
+
+    z-index:1700;
+}
+
+.videoOptionPopup.open{
+    display:flex;
+}
+
+.videoOptionList{
+    display:flex;
+    flex-direction:column;
+
+    flex:1 1 auto;
+
+    min-height:0;
+
+    overflow-y:auto;
+}
+
+.videoOption{
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    gap:8px;
+
+    width:100%;
+
+    padding:8px 8px;
+
+    border:0;
+    border-radius:6px;
+
+    background:transparent;
+
+    color:#ddd;
+
+    font-size:13px;
+
+    font-family:inherit;
+
+    text-align:left;
+
+    white-space:nowrap;
+
+    overflow:hidden;
+
+    text-overflow:ellipsis;
+
+    cursor:pointer;
+}
+
+.videoOption:hover{
+    background:#262626;
+}
+
+.videoOption.active{
+    background:#262626;
+
+    color:#fff;
+}
+
+.videoOption .videoOptionCheck{
+    flex:0 0 auto;
+
+    min-width:14px;
+
+    text-align:center;
+
+    color:#999;
+
+    visibility:hidden;
+}
+
+.videoOption.active .videoOptionCheck{
+    visibility:visible;
+}
+
+.videoOption .videoOptionLabel{
+    flex:1 1 auto;
+
+    min-width:0;
+
+    overflow:hidden;
+
+    text-overflow:ellipsis;
+}
+
+/* Toggle switch, matching video.html's .toggleSwitch exactly -
+   used for the boolean "Show supporting images by default"
+   setting instead of a checkbox. */
+.toggleSwitch{
+    position:relative;
+
+    flex:0 0 auto;
+
+    width:42px;
+    height:24px;
+
+    padding:0;
+
+    background:#3a3a3a;
+
+    border:1px solid #444;
+
+    border-radius:999px;
+
+    cursor:pointer;
+}
+
+.toggleSwitch .toggleKnob{
+    position:absolute;
+
+    top:2px;
+    left:2px;
+
+    width:18px;
+    height:18px;
+
+    border-radius:50%;
+
+    background:#ccc;
+
+    transition:left .15s ease, background .15s ease;
+}
+
+.toggleSwitch.active{
+    background:#2f7cff;
+
+    border-color:#2f7cff;
+}
+
+.toggleSwitch.active .toggleKnob{
+    left:20px;
+
+    background:#fff;
+}
+
+    
+.back{
+    color:white;
+    text-decoration:none;
+    display:inline-block;
+    margin-bottom:20px;
+}
+.card{
+    position:relative;
+
+    background:#1d1d1d;
+    padding:20px;
+    padding-top:36px;
+    margin:15px 0;
+    border-radius:10px;
+}
+
+.card-cover{
+    display:block;
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    border-radius:6px;
+    background:#141414;
+    box-shadow:0 2px 6px rgba(0,0,0,.4);
+}
+
+.card-body{
+    min-width:0;
+}
+
+.card-clear{
+    clear:both;
+}
+
+
+    
+    .paper-badge{
+    position:absolute;
+    top:14px;
+    right:52px;
+    color:#fff;
+    font-size:.72em;
+    font-weight:bold;
+    padding:5px 10px;
+    border-radius:999px;
+    letter-spacing:.5px;
+    text-transform:uppercase;
+}
+
+.paper-badge.featured{
+    background:#2f7cff;
+}
+
+.paper-badge.newest{
+    background:#00b050;
+}
+
+.paper-badge.newest.with-featured{
+    right:150px;
+}
+
+
+    
+/* Sits in the same top strip as the favorite star & badges instead
+   of adding its own line above the title. */
+.read-time-line{
+    position:absolute;
+    top:14px;
+    left:20px;
+    margin:0;
+    color:#888;
+    font-size:0.78em;
+    white-space:nowrap;
+}
+
+.card-description{
+    color:#aaa;
+    font-size:0.9em;
+    margin-top:10px;
+    line-height:1.4;
+}
+
+.card-date{
+    color:#777;
+    font-size:0.8em;
+    margin-top:10px;
+    margin-bottom:1px;
+}
+
+    .card-pages{
+    color:#777;
+    font-size:0.8em;
+    margin-top:1px;
+}
+    
+.button{
+    display:inline-block;
+    background:#333;
+    color:white;
+    text-decoration:none;
+    padding:10px 15px;
+    border-radius:6px;
+    margin-right:10px;
+    margin-top:10px;
+}
+
+.button:hover{
+    background:#444;
+}
+
+.read-btn{
+    display:block;
+    width:100%;
+    box-sizing:border-box;
+    text-align:center;
+    margin-right:0;
+    cursor:pointer;
+}
+
+.card-cover-link{
+    display:block;
+    float:right;
+    width:clamp(80px, 28vw, 130px);
+    aspect-ratio:3/4;
+    margin:4px 0 6px 14px;
+    cursor:pointer;
+}
+
+.gallery{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+    margin-top:15px;
+}
+
+.gallery img{
+    width:100%;
+    aspect-ratio:1/1;
+    object-fit:cover;
+    border-radius:8px;
+    cursor:pointer;
+}
+
+details{
+    margin-top:20px;
+}
+
+summary{
+    cursor:pointer;
+    font-size:1em;
+    font-weight:normal;
+    font-style:italic;
+    font-family:Arial,sans-serif;
+    color:#888;
+    padding:10px 12px;
+    background:#1a1a1a;
+    border-radius:6px;
+}
+
+summary:hover{
+    color:#999;
+    background:#1a1a1a;
+}
+
+/* ---- End of list message ---- */
+
+.end-of-list{
+    text-align:center;
+    color:#555;
+    font-size:.85em;
+    letter-spacing:.4px;
+    margin:34px 0 6px;
+}
+
+/* ---- Compact view ---- */
+
+.view-compact .card{
+    padding:10px 14px 12px 14px;
+    padding-top:34px;
+}
+
+.compact-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+}
+
+.compact-title{
+    margin:0;
+    font-size:1.05em;
+    font-weight:600;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    min-width:0;
+    flex:1;
+}
+
+.compact-read-btn{
+    flex-shrink:0;
+    margin:0;
+    padding:6px 10px;
+    font-size:0.8em;
+}
+
+/* ---- Comfy view ---- */
+
+.view-comfy .card{
+    padding:12px 16px 14px 16px;
+    padding-top:34px;
+}
+
+.view-comfy .card h2{
+    font-size:0.98em;
+    margin:0 0 2px 0;
+}
+
+.view-comfy .card-description{
+    font-size:0.78em;
+    margin-top:5px;
+    line-height:1.32;
+}
+
+.view-comfy .card-cover-link{
+    width:clamp(50px, 18vw, 78px);
+    margin:2px 0 4px 10px;
+}
+
+.view-comfy .button{
+    padding:6px 10px;
+    font-size:0.8em;
+}
+
+/* ---- Shared: keep the favorite star & badges clear of the
+   compact/comfy header line instead of overlapping it ---- */
+
+.view-compact .favorite-star,
+.view-comfy .favorite-star{
+    font-size:1.35rem;
+    top:7px;
+    right:10px;
+}
+
+.view-compact .paper-badge,
+.view-comfy .paper-badge{
+    font-size:0.6em;
+    padding:4px 8px;
+    top:9px;
+    right:36px;
+}
+
+.view-compact .paper-badge.newest.with-featured,
+.view-comfy .paper-badge.newest.with-featured{
+    right:104px;
+}
+
+.view-compact .read-time-line,
+.view-comfy .read-time-line{
+    left:14px;
+    top:10px;
+    font-size:0.68em;
+}
+
+.view-compact details,
+.view-comfy details{
+    margin-top:10px;
+}
+
+.view-compact summary,
+.view-comfy summary{
+    font-size:0.82em;
+    padding:7px 10px;
+}
+
+/* Comfy: one extra column, smaller images */
+.view-comfy .gallery{
+    grid-template-columns:repeat(4,1fr);
+    gap:6px;
+    margin-top:10px;
+}
+
+/* Compact: even more columns, even smaller images */
+.view-compact .gallery{
+    grid-template-columns:repeat(5,1fr);
+    gap:5px;
+    margin-top:10px;
+}
+</style>
+</head>
+
+
+<body>
+
+<section>
+
+<div class="page-top-bar">
+
+<a class="back" href="index.html"><svg class="back-arrow" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:1em;height:1em;vertical-align:-.12em;margin-right:.35em;flex-shrink:0"><path d="M18 4.5v15L5.5 12z"/></svg> Home</a>
+
+<div class="top-settings">
+
+<button class="settings-btn" id="settingsButton" type="button" aria-label="Settings" aria-haspopup="true" aria-expanded="false"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1z"></path></svg></button>
+
+<div class="settings-panel" id="settingsPanel" role="menu">
+
+    <div class="settingsMenuHeader">
+        <h3>Settings</h3>
+        <button type="button" class="settingsCloseBtn" id="settingsCloseBtn" aria-label="Close settings" title="Close">✕</button>
+    </div>
+
+    <div class="settingsScroll">
+
+        <button type="button" class="videoPickerRow" id="viewModeOpen" data-picker="viewMode" aria-haspopup="true" aria-expanded="false">
+            <span>View</span>
+            <span class="videoPickerValue"><span id="viewModeValueLabel">Detailed</span><span class="videoPickerCaret" aria-hidden="true"></span></span>
+        </button>
+
+        <div class="videoPickerRow" id="imagesDefaultOpenRow">
+            <span>Show images</span>
+            <button type="button" class="toggleSwitch" id="imagesDefaultOpenToggle" role="switch" aria-checked="false" aria-label="Show supporting images by default"><span class="toggleKnob"></span></button>
+        </div>
+
+        <button type="button" class="videoPickerRow" id="readingLevelOpen" data-picker="readingLevel" aria-haspopup="true" aria-expanded="false">
+            <span>Reading Speed</span>
+            <span class="videoPickerValue"><span id="readingLevelValueLabel">Average</span><span class="videoPickerCaret" aria-hidden="true"></span></span>
+        </button>
+
+    </div>
+
+</div>
+
+<div class="videoOptionPopup" id="optionPopup" role="menu">
+    <div class="videoOptionList" id="optionList"></div>
+</div>
+
+</div>
+
+</div>
+
+    <h1 id="pageTitle">Loading...</h1>
+
+<div class="info-bar">
+
+<p id="paperCount"></p>
+
+<div class="info-bar-right">
+
+<div class="sort-dropdown" id="sortDropdown">
+
+<button class="sort-btn" id="sortButton" type="button" aria-label="Sort">
+    <span class="sort-btn-label" id="sortButtonLabel">A-Z</span>
+    <span class="sort-caret" aria-hidden="true"></span>
+</button>
+
+<div class="sort-panel" id="sortPanel">
+
+    <button type="button" class="sort-option" data-group="title">
+        <span class="sort-option-label">Title</span>
+        <span class="sort-option-arrow" aria-hidden="true"></span>
+    </button>
+
+    <button type="button" class="sort-option" data-group="date">
+        <span class="sort-option-label">Date</span>
+        <span class="sort-option-arrow" aria-hidden="true"></span>
+    </button>
+
+    <button type="button" class="sort-option" data-group="images">
+        <span class="sort-option-label">Images</span>
+        <span class="sort-option-arrow" aria-hidden="true"></span>
+    </button>
+
+    <button type="button" class="sort-option" data-group="readtime">
+        <span class="sort-option-label">Reading Time</span>
+        <span class="sort-option-arrow" aria-hidden="true"></span>
+    </button>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+
+
+<div id="research-container"></div>
+
+</section>
+<a href="#" class="top-button" id="topButton">
+    <span style="position:relative; top:-3px;">▲</span>
+</a>
+<script>
+const params =
+    new URLSearchParams(window.location.search);
+
+const currentCategory =
+    params.get("category");
+
+    let favoritePapers = [];
+let newestKey = "";
+let showNewestBadge = false;
+
+    
+function loadFavorites(){
+
+    favoritePapers =
+        JSON.parse(
+            localStorage.getItem(
+                "favoritePapers"
+            ) || "[]"
+        );
+
+}
+
+function isFavorite(key){
+
+    return favoritePapers.includes(key);
+
+}
+
+// ---- Settings (view mode + default image state) ----
+
+let viewMode =
+    localStorage.getItem("viewMode") || "detailed";
+
+let imagesDefaultOpen =
+    localStorage.getItem("imagesDefaultOpen") === "true";
+
+// Assigned once papers finish loading; declared here (outer scope)
+// so the settings controls below can call it immediately on change.
+let renderPapers = function(){};
+
+let readingLevel =
+    localStorage.getItem("readingLevel") || "average";
+
+const sortLabels = {
+    az: "A-Z",
+    za: "Z-A",
+    newest: "Newest",
+    oldest: "Oldest",
+    mostimages: "Most Images",
+    leastimages: "Least Images",
+    mostreadtime: "Longest Read",
+    leastreadtime: "Shortest Read"
+};
+
+// Each group pairs an ascending and descending sort value. Clicking
+// a group's button in the sort panel toggles between the two instead
+// of needing two separate list entries.
+const SORT_GROUPS = {
+    title:    { label: "Title",        asc: "az",           desc: "za" },
+    date:     { label: "Date",         asc: "oldest",        desc: "newest" },
+    images:   { label: "Images",       asc: "leastimages",   desc: "mostimages" },
+    readtime: { label: "Reading Time", asc: "leastreadtime", desc: "mostreadtime" }
+};
+
+function getActiveSortGroup(){
+
+    for(const [key, group] of Object.entries(SORT_GROUPS)){
+        if(sortType === group.asc) return { key, direction: "asc" };
+        if(sortType === group.desc) return { key, direction: "desc" };
+    }
+
+    return { key: null, direction: null };
+
+}
+
+let sortType =
+    localStorage.getItem("paperSort") || "az";
+
+// Re-runs a render while keeping the current scroll position and
+// which "Supporting Images" panels were open (e.g. after starring
+// a paper), instead of jumping back to the top with everything closed.
+function withPreservedState(fn){
+
+    const openKeys = Array.from(
+        document.querySelectorAll(".image-details")
+    ).filter(details => details.open)
+     .map(details => details.dataset.paper);
+
+    const scrollY = window.scrollY;
+
+    fn();
+
+    document.querySelectorAll(".image-details").forEach(details => {
+        details.open = openKeys.includes(details.dataset.paper);
+    });
+
+    window.scrollTo(0, scrollY);
+
+}
+
+// Picker rows in the Settings panel (View, Reading Speed) - each
+// backed by a small popup of checkmarked options, exactly like
+// video.html's Speed picker. One shared popup (#optionPopup) is
+// reused for whichever row was tapped, rather than a separate
+// popup per row.
+const PICKER_GROUPS = {
+    viewMode: {
+        options: [
+            { value:"compact", label:"Compact" },
+            { value:"comfy", label:"Comfy" },
+            { value:"detailed", label:"Detailed" }
+        ],
+        get(){ return viewMode; },
+        set(value){
+            viewMode = value;
+            localStorage.setItem("viewMode", viewMode);
+        }
+    },
+    readingLevel: {
+        options: [
+            { value:"slow", label:"Slow" },
+            { value:"average", label:"Average" },
+            { value:"fast", label:"Fast" }
+        ],
+        get(){ return readingLevel; },
+        set(value){
+            readingLevel = value;
+            localStorage.setItem("readingLevel", readingLevel);
+        }
+    }
+};
+
+function pickerValueLabel(key){
+
+    const group = PICKER_GROUPS[key];
+    const current = group.options.find(opt => opt.value === group.get());
+
+    return current ? current.label : "";
+
+}
+
+function applySettingsUI(){
+
+    document.getElementById("viewModeValueLabel").textContent =
+        pickerValueLabel("viewMode");
+
+    document.getElementById("readingLevelValueLabel").textContent =
+        pickerValueLabel("readingLevel");
+
+    imagesDefaultOpenToggle.classList.toggle("active", imagesDefaultOpen);
+    imagesDefaultOpenToggle.setAttribute(
+        "aria-checked",
+        imagesDefaultOpen ? "true" : "false"
+    );
+
+    applySortUI();
+
+}
+
+function applySortUI(){
+
+    const active = getActiveSortGroup();
+
+    document.querySelectorAll(".sort-option").forEach(btn => {
+
+        const groupKey = btn.dataset.group;
+        const group = SORT_GROUPS[groupKey];
+        const isActive = groupKey === active.key;
+
+        btn.classList.toggle("active", isActive);
+
+        const direction =
+            isActive ? active.direction : "asc";
+
+        const arrow = btn.querySelector(".sort-option-arrow");
+        arrow.textContent = direction === "desc" ? "↓" : "↑";
+        arrow.style.visibility = isActive ? "visible" : "hidden";
+
+    });
+
+    document.getElementById("sortButtonLabel").textContent =
+        sortLabels[sortType] || "Sort";
+
+}
+
+const settingsButton =
+    document.getElementById("settingsButton");
+const settingsPanel =
+    document.getElementById("settingsPanel");
+
+const sortButton =
+    document.getElementById("sortButton");
+const sortPanel =
+    document.getElementById("sortPanel");
+const sortDropdown =
+    document.getElementById("sortDropdown");
+
+const imagesDefaultOpenToggle =
+    document.getElementById("imagesDefaultOpenToggle");
+
+const optionPopup =
+    document.getElementById("optionPopup");
+const optionList =
+    document.getElementById("optionList");
+
+let openPickerKey =
+    null;
+
+function closeOptionPopup(){
+
+    if(openPickerKey){
+
+        const rowEl =
+            document.getElementById(openPickerKey + "Open");
+
+        if(rowEl){
+            rowEl.classList.remove("open");
+            rowEl.setAttribute("aria-expanded", "false");
+        }
+
+    }
+
+    optionPopup.classList.remove("open");
+    openPickerKey = null;
+
+}
+
+function closeMenus(){
+    settingsPanel.classList.remove("open");
+    settingsButton.setAttribute("aria-expanded", "false");
+    sortPanel.classList.remove("open");
+    sortDropdown.classList.remove("open");
+    closeOptionPopup();
+}
+
+settingsButton.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const willOpen = !settingsPanel.classList.contains("open");
+    closeMenus();
+    if(willOpen){
+        settingsPanel.classList.add("open");
+        settingsButton.setAttribute("aria-expanded", "true");
+    }
+});
+
+document.getElementById("settingsCloseBtn").addEventListener("click", (e) => {
+    e.stopPropagation();
+    closeMenus();
+});
+
+sortButton.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const willOpen = !sortPanel.classList.contains("open");
+    closeMenus();
+    if(willOpen){
+        sortPanel.classList.add("open");
+        sortDropdown.classList.add("open");
+    }
+});
+
+// Tapping/clicking anywhere outside either menu (or the shared
+// option popup) closes whichever one is open.
+document.addEventListener("click", (e) => {
+
+    if(
+        !optionPopup.classList.contains("open") ||
+        optionPopup.contains(e.target) ||
+        e.target.closest(".videoPickerRow[data-picker]")
+    ){
+        // handled below / left alone
+    }else{
+        closeOptionPopup();
+    }
+
+    if(
+        settingsPanel.classList.contains("open") &&
+        !settingsPanel.contains(e.target) &&
+        e.target !== settingsButton &&
+        !optionPopup.contains(e.target)
+    ){
+        settingsPanel.classList.remove("open");
+        settingsButton.setAttribute("aria-expanded", "false");
+        closeOptionPopup();
+    }
+    if(
+        sortPanel.classList.contains("open") &&
+        !sortPanel.contains(e.target) &&
+        e.target !== sortButton
+    ){
+        sortPanel.classList.remove("open");
+        sortDropdown.classList.remove("open");
+    }
+});
+
+// Scrolling the page also closes either open menu, matching the
+// tap-outside-to-close behavior.
+window.addEventListener("scroll", () => {
+    closeMenus();
+}, { passive: true });
+
+document.addEventListener("keydown", (e) => {
+
+    if(e.key !== "Escape") return;
+
+    if(optionPopup.classList.contains("open")){
+        closeOptionPopup();
+        return;
+    }
+
+    if(settingsPanel.classList.contains("open")){
+        settingsPanel.classList.remove("open");
+        settingsButton.setAttribute("aria-expanded", "false");
+    }
+
+});
+
+function buildOptionList(key){
+
+    const group = PICKER_GROUPS[key];
+
+    optionList.replaceChildren();
+
+    group.options.forEach(opt => {
+
+        const isActive =
+            opt.value === group.get();
+
+        const button =
+            document.createElement("button");
+
+        button.type = "button";
+        button.className = "videoOption" + (isActive ? " active" : "");
+        button.setAttribute("role", "menuitemradio");
+        button.setAttribute("aria-checked", isActive ? "true" : "false");
+
+        const label =
+            document.createElement("span");
+
+        label.className = "videoOptionLabel";
+        label.textContent = opt.label;
+
+        const check =
+            document.createElement("span");
+
+        check.className = "videoOptionCheck";
+        check.textContent = "✓";
+
+        button.append(label, check);
+
+        button.addEventListener("click", (event) => {
+
+            event.stopPropagation();
+
+            group.set(opt.value);
+
+            applySettingsUI();
+            closeOptionPopup();
+            withPreservedState(renderPapers);
+
+        });
+
+        optionList.appendChild(button);
+
+    });
+
+}
+
+// Anchors the popup to the picker row that opened it - preferring
+// to open just below the row (since the Settings panel itself
+// drops down from the gear button), but flipping upward if there
+// genuinely isn't room below, then clamping on-screen as a final
+// safety net. Mirrors video.html's positionVideoSpeedPopup.
+function positionOptionPopup(rowEl){
+
+    const rect =
+        rowEl.getBoundingClientRect();
+
+    const popupWidth =
+        Math.min(190, window.innerWidth - 24);
+
+    const margin =
+        12;
+
+    let left =
+        rect.left + (rect.width / 2) - (popupWidth / 2);
+
+    left =
+        Math.max(margin, Math.min(left, window.innerWidth - popupWidth - margin));
+
+    optionPopup.style.left =
+        left + "px";
+
+    const spaceBelow =
+        window.innerHeight - rect.bottom - 8;
+
+    const spaceAbove =
+        rect.top - 8;
+
+    if(spaceBelow >= 160 || spaceBelow >= spaceAbove){
+
+        optionPopup.style.top = (rect.bottom + 8) + "px";
+        optionPopup.style.bottom = "auto";
+
+    }else{
+
+        optionPopup.style.bottom = (window.innerHeight - rect.top + 8) + "px";
+        optionPopup.style.top = "auto";
+
+    }
+
+}
+
+function openOptionPopup(key, rowEl){
+
+    openPickerKey = key;
+
+    buildOptionList(key);
+    optionPopup.classList.add("open");
+    positionOptionPopup(rowEl);
+
+    rowEl.classList.add("open");
+    rowEl.setAttribute("aria-expanded", "true");
+
+}
+
+optionPopup.addEventListener("click", (e) => e.stopPropagation());
+
+window.addEventListener("resize", () => {
+    if(openPickerKey){
+        positionOptionPopup(document.getElementById(openPickerKey + "Open"));
+    }
+});
+
+document
+    .querySelectorAll(".videoPickerRow[data-picker]")
+    .forEach(row => {
+        row.addEventListener("click", (e) => {
+
+            e.stopPropagation();
+
+            const key = row.dataset.picker;
+            const wasOpen = openPickerKey === key;
+
+            closeOptionPopup();
+
+            if(!wasOpen){
+                openOptionPopup(key, row);
+            }
+
+        });
+    });
+
+imagesDefaultOpenToggle.addEventListener("click", (e) => {
+
+    e.stopPropagation();
+
+    imagesDefaultOpen = !imagesDefaultOpen;
+
+    localStorage.setItem(
+        "imagesDefaultOpen",
+        imagesDefaultOpen
+    );
+
+    applySettingsUI();
+    withPreservedState(renderPapers);
+
+});
+
+document
+    .querySelectorAll(".sort-option")
+    .forEach(btn => {
+        btn.addEventListener("click", () => {
+
+            const groupKey = btn.dataset.group;
+            const group = SORT_GROUPS[groupKey];
+            const active = getActiveSortGroup();
+
+            sortType =
+                active.key === groupKey
+                    ? (active.direction === "asc" ? group.desc : group.asc)
+                    : group.asc;
+
+            localStorage.setItem("paperSort", sortType);
+            applySortUI();
+            withPreservedState(renderPapers);
+
+            // Deliberately left open here - the panel now only
+            // closes when the person scrolls or taps elsewhere
+            // (see the outside-click and scroll listeners above),
+            // not automatically the moment an option is picked.
+
+        });
+    });
+
+applySettingsUI();
+
+
+
+    const scrollKey =
+    "categoryScroll-" + currentCategory;
+    const returning =
+    sessionStorage.getItem("returnFromPage") === "yes";
+if(!returning){
+
+    sessionStorage.removeItem(scrollKey);
+
+    sessionStorage.removeItem(
+        "openDetails-" + currentCategory
+    );
+
+}
+    
+
+let pageTitle = "";
+
+if(currentCategory === "all"){
+
+    pageTitle = "All Research";
+
+}else if(currentCategory === "favorites"){
+
+    pageTitle = "Favorites";
+
+}else{
+
+    pageTitle =
+        currentCategory.charAt(0).toUpperCase() +
+        currentCategory.slice(1);
+
+}
+
+document.querySelector("h1").textContent = pageTitle;
+document.title = `Lanthano Research - ${pageTitle}`;
+
+
+    
+Promise.all([
+    fetch("descriptions.json").then(response => response.json()),
+    fetch("page-counts.json").then(response => response.json()),
+    fetch("content-pages.json").then(response => response.json()).catch(() => ({}))
+])
+.then(([data, pageCounts, contentPageCounts]) => {
+
+
+    
+    const container =
+        document.getElementById("research-container");
+
+    let papers =
+    Object.entries(data);
+
+    papers.sort((a,b)=>
+        a[1].title.localeCompare(b[1].title)
+    );
+
+    const newestEntry = [...papers].sort(
+    (a, b) =>
+        new Date(b[1].updated) - new Date(a[1].updated)
+)[0];
+
+newestKey = newestEntry[0];
+
+const newestDate = new Date(newestEntry[1].updated);
+
+const today = new Date();
+
+const oneYearAgo = new Date(today);
+oneYearAgo.setFullYear(today.getFullYear() - 1);
+
+showNewestBadge = newestDate >= oneYearAgo;
+
+    
+    function toggleFavorite(key){
+
+    if(isFavorite(key)){
+
+        favoritePapers =
+            favoritePapers.filter(
+                item => item !== key
+            );
+
+    }else{
+
+        favoritePapers.push(key);
+
+    }
+
+    localStorage.setItem(
+        "favoritePapers",
+        JSON.stringify(favoritePapers)
+    );
+
+    withPreservedState(renderPapers);
+
+}
+
+window.toggleFavorite = toggleFavorite;
+    function getVisibleImageCount(paper){
+    return (paper.images || []).filter(image =>
+        typeof image === "string" &&
+        !image.trim().startsWith("#$")
+    ).length;
+}
+
+    
+function getPaperBadge(key, paper){
+
+    const isNewest =
+        showNewestBadge &&
+        key === newestKey;
+
+    let html = "";
+
+    if (isNewest){
+
+        html += `
+        <div class="paper-badge newest${paper.featured ? " with-featured" : ""}">
+            New
+        </div>`;
+    }
+
+    if (paper.featured){
+
+        html += `
+        <div class="paper-badge featured">
+            Featured
+        </div>`;
+    }
+
+    return html;
+}
+
+// Builds the gallery markup for a paper (used across all view modes)
+function buildGalleryHtml(key, paper){
+
+    const visibleImages = (paper.images || []).filter(image =>
+        typeof image === "string" &&
+        !image.trim().startsWith("#$")
+    );
+
+    if(!visibleImages.length) return "";
+
+    const openAttr = imagesDefaultOpen ? " open" : "";
+
+    return `
+        <details class="image-details" data-paper="${key}"${openAttr}>
+            <summary>Supporting Images (${visibleImages.length})</summary>
+
+            <div class="gallery">
+
+             ${visibleImages.map(image => `
+<a
+    href="image.html?image=${encodeURIComponent(image)}&paper=${encodeURIComponent(paper.title)}&return=${encodeURIComponent(window.location.href)}"
+    class="gallery-image"
+    data-scroll-key="${scrollKey}"
+>
+    <img
+        src="${image}"
+        loading="lazy">
+</a>
+`).join("")}
+
+            </div>
+        </details>
+    `;
+}
+
+// Pages to count toward reading time: everything before the Sources
+// section. Computed ahead of time from each PDF's extracted text and
+// served as content-pages.json, keyed by the paper's PDF filename
+// (paper.url) since that's stable regardless of the descriptions.json
+// key. A per-paper `contentPages` field in descriptions.json can
+// override it manually; if neither is available, this falls back to
+// the paper's total page count from page-counts.json.
+function getContentPageCount(key, paper){
+
+    if(typeof paper.contentPages === "number"){
+        return paper.contentPages;
+    }
+
+    if(
+        paper.url &&
+        typeof contentPageCounts[paper.url] === "number"
+    ){
+        return contentPageCounts[paper.url];
+    }
+
+    return Number(pageCounts[key]) || 0;
+
+}
+
+// Reading time is estimated from an approximate word count rather
+// than a flat "minutes per page" guess, so it scales the same way
+// real reading speed does (word-by-word) instead of just being an
+// arbitrary per-page number.
+//
+// WORDS_PER_PAGE: a standard estimate for a single-spaced,
+// 12-point page of body text with normal margins - the same figure
+// commonly used by word-count-to-page conversions. Research PDFs
+// vary (dense two-column layouts run higher, pages heavy with
+// figures/tables run lower), but this is a reasonable average
+// across a typical paper's content pages.
+const WORDS_PER_PAGE = 500;
+
+// READING_WPM: silent reading speed in words per minute. "Average"
+// reflects the commonly cited adult silent-reading rate for
+// nonfiction/technical text (~200 wpm); "slow" reflects careful,
+// close reading of dense academic material; "fast" reflects a
+// fluent reader moving efficiently through familiar material while
+// still reading every word (not skimming).
+const READING_WPM = {
+    slow: 150,
+    average: 200,
+    fast: 300
+};
+
+// Formats a minute count as "18 min", "59 min", "1 hr 30 min",
+// or "2 hrs 1 min" as appropriate.
+function formatReadTime(totalMinutes){
+
+    if(totalMinutes < 60){
+        return totalMinutes + " min";
+    }
+
+    const hrs = Math.floor(totalMinutes / 60);
+    const mins = totalMinutes % 60;
+
+    const hrLabel = hrs + (hrs === 1 ? " hr" : " hrs");
+
+    return mins > 0 ? `${hrLabel} ${mins} min` : hrLabel;
+
+}
+
+function getReadMinutes(key, paper){
+
+    const pages = getContentPageCount(key, paper);
+
+    if(pages <= 0){
+        return 0;
+    }
+
+    const wordsPerMinute =
+        READING_WPM[readingLevel] ||
+        READING_WPM.average;
+
+    const estimatedWords =
+        pages * WORDS_PER_PAGE;
+
+    return Math.max(1, Math.round(estimatedWords / wordsPerMinute));
+
+}
+
+function buildReadTimeHtml(key, paper){
+
+    const minutes = getReadMinutes(key, paper);
+
+    if(!minutes) return "";
+
+    return `<p class="read-time-line">Read time: ${formatReadTime(minutes)}</p>`;
+
+}
+
+    
+renderPapers = function(){
+loadFavorites();
+container.className = "view-" + viewMode;
+container.innerHTML = "";
+
+let filteredPapers = papers.filter(([key,paper]) =>
+
+    currentCategory === "all"
+
+    ||
+
+    (
+
+        currentCategory === "favorites"
+
+        &&
+
+        favoritePapers.includes(key)
+
+    )
+
+    ||
+
+    (
+
+        paper.category &&
+        paper.category.includes(currentCategory)
+
+    )
+
+);
+
+if(sortType === "az"){
+
+    filteredPapers.sort((a,b)=>
+        a[1].title.localeCompare(b[1].title)
+    );
+
+}
+else if(sortType === "za"){
+
+    filteredPapers.sort((a,b)=>
+        b[1].title.localeCompare(a[1].title)
+    );
+
+}
+else if(sortType === "newest"){
+
+    filteredPapers.sort((a,b)=>
+        b[1].updated.localeCompare(a[1].updated)
+    );
+
+}
+else if(sortType === "oldest"){
+
+    filteredPapers.sort((a,b)=>
+        a[1].updated.localeCompare(b[1].updated)
+    );
+
+}
+else if(sortType === "mostimages"){
+
+    filteredPapers.sort((a,b)=>
+        getVisibleImageCount(b[1]) -
+        getVisibleImageCount(a[1])
+    );
+
+}
+else if(sortType === "leastimages"){
+
+    filteredPapers.sort((a,b)=>
+        getVisibleImageCount(a[1]) -
+        getVisibleImageCount(b[1])
+    );
+
+}
+else if(sortType === "mostreadtime"){
+
+    filteredPapers.sort((a,b)=>
+        getReadMinutes(b[0], b[1]) -
+        getReadMinutes(a[0], a[1])
+    );
+
+}
+else if(sortType === "leastreadtime"){
+
+    filteredPapers.sort((a,b)=>
+        getReadMinutes(a[0], a[1]) -
+        getReadMinutes(b[0], b[1])
+    );
+
+}
+
+document.getElementById("paperCount").textContent =
+    filteredPapers.length +
+    (filteredPapers.length === 1 ? " Paper" : " Papers");
+
+    if(
+    currentCategory === "favorites"
+    &&
+    filteredPapers.length === 0
+){
+
+    container.innerHTML = `
+
+    <div style="
+        text-align:center;
+        padding:70px 20px;
+    ">
+
+        <h2>No Favorite Papers</h2>
+
+        <p style="color:#888;">
+            Tap the ☆ on any paper to save it here.
+        </p>
+
+    </div>
+
+    `;
+
+    return;
+
+}
+
+filteredPapers.forEach(([key,paper]) => {
+
+        const galleryHtml = buildGalleryHtml(key, paper);
+
+        const starHtml = `
+<span
+class="favorite-star
+${isFavorite(key) ? " active" : ""}"
+onclick="
+event.stopPropagation();
+toggleFavorite('${key}');
+">
+${isFavorite(key) ? "★" : "☆"}
+</span>`;
+
+        const coverHtml = `
+                <a
+                    class="card-cover-link pdf-link"
+                    href="pdf.html?file=${encodeURIComponent(paper.url)}&paper=${encodeURIComponent(paper.title)}&return=${encodeURIComponent(window.location.href)}">
+                <img
+                    class="card-cover"
+                    src="covers/${key}.png"
+                    alt="${paper.title} cover"
+                    loading="lazy"
+                    onerror="this.closest('a').remove()">
+                </a>`;
+
+        const descHtml = `
+                <p class="card-description">
+                    ${paper.description}
+                </p>`;
+
+        const dateHtml = `
+                <p class="card-date">
+    Created: ${parseInt(paper.updated.split("-")[1])}-${
+parseInt(paper.updated.split("-")[2])}-${
+paper.updated.split("-")[0]}
+</p>`;
+
+        const pagesHtml = `
+<p class="card-pages">
+    ${Number(pageCounts[key]) || 0} ${(Number(pageCounts[key]) || 0) === 1 ? "page" : "pages"}
+</p>`;
+
+        const readBtnHtml = `
+                  <a class="button pdf-link read-btn"
+   href="pdf.html?file=${encodeURIComponent(paper.url)}&paper=${encodeURIComponent(paper.title)}&return=${encodeURIComponent(window.location.href)}">
+   Read Research
+</a>`;
+
+        const readBtnInlineHtml = `
+<a class="button pdf-link compact-read-btn"
+   href="pdf.html?file=${encodeURIComponent(paper.url)}&paper=${encodeURIComponent(paper.title)}&return=${encodeURIComponent(window.location.href)}">
+   Read Research
+</a>`;
+
+        const titleHtml = `<h2>${paper.title}</h2>`;
+        const titleCompactHtml = `<h2 class="compact-title">${paper.title}</h2>`;
+        const readTimeHtml = buildReadTimeHtml(key, paper);
+
+        // Header markup (title + whatever the view mode includes),
+        // always visible regardless of the warning gate.
+        // Compact handles its title separately (merged on the same
+        // line as the Read button), so headerHtml stays empty there.
+        let headerHtml = "";
+
+        if(viewMode === "comfy"){
+
+            headerHtml = titleHtml + coverHtml + descHtml + `<div class="card-clear"></div>`;
+
+        }else if(viewMode === "detailed"){
+
+            headerHtml = titleHtml + coverHtml + descHtml + dateHtml + pagesHtml + `<div class="card-clear"></div>`;
+
+        }
+
+        let cardHtml = "";
+const warningAccepted =
+    sessionStorage.getItem(
+        "warning-" + key
+    ) === "accepted";
+       
+
+if(
+    paper.warning &&
+    !warningAccepted
+){
+            cardHtml = `
+            <div class="card">
+            ${starHtml}
+${getPaperBadge(key, paper)}
+
+                <div class="card-body">
+
+                ${readTimeHtml}
+
+                ${viewMode === "compact" ? titleCompactHtml : headerHtml}
+
+                   <div id="warning-${key}">
+
+                   <div style="
+    text-align:center;
+    padding:15px 10px;
+">
+
+    <div style="
+        line-height:1;
+        margin-bottom:15px;
+        filter:drop-shadow(0 0 8px rgba(255,200,0,.35));
+    ">
+        <svg class="warn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:72px;height:72px;color:#e8b13a;display:block;margin:0 auto;"><path d="M12 3.6 21.8 20.4H2.2Z"/><line x1="12" y1="10" x2="12" y2="14.6"/><line x1="12" y1="17.4" x2="12" y2="17.5"/></svg>
+    </div>
+
+    <p style="
+        margin:0 0 20px 0;
+        line-height:1.5;
+        color:#ddd;
+    ">
+        This paper and/or its supporting images contain graphic material,
+        including depictions of severe injuries, death, or war casualties.
+    </p>
+
+    <a class="button"
+       href="#"
+       onclick="showWarningContent('${key}'); return false;">
+       I Understand, Show Content
+    </a>
+
+</div>
+
+                </div>
+
+                <div id="content-${key}"
+     style="display:none;">
+
+                  ${readBtnHtml}
+
+                    ${galleryHtml}
+
+                </div>
+
+                </div>
+
+            </div>
+            `;
+
+        }else if(viewMode === "compact"){
+
+            cardHtml = `
+            <div class="card">
+            ${starHtml}
+${getPaperBadge(key, paper)}
+
+                <div class="card-body">
+
+                ${readTimeHtml}
+
+                <div class="compact-row">
+                ${titleCompactHtml}
+                ${readBtnInlineHtml}
+                </div>
+
+                ${galleryHtml}
+
+                </div>
+
+            </div>
+            `;
+
+        }else{
+
+            cardHtml = `
+            <div class="card">
+            ${starHtml}
+${getPaperBadge(key, paper)}
+
+                <div class="card-body">
+
+                ${readTimeHtml}
+
+                ${headerHtml}
+
+              ${readBtnHtml}
+
+                ${galleryHtml}
+
+                </div>
+
+            </div>
+            `;
+
+        }
+
+        container.innerHTML += cardHtml;
+    
+
+});
+
+if(filteredPapers.length > 0){
+
+    container.innerHTML += `<p class="end-of-list">— No more papers —</p>`;
+
+}
+
+   if(returning){
+
+    const openDetails =
+        JSON.parse(
+            sessionStorage.getItem(
+                "openDetails-" + currentCategory
+            ) || "[]"
+        );
+
+    document
+        .querySelectorAll(".image-details")
+        .forEach(details=>{
+
+            if(openDetails.includes(details.dataset.paper)){
+
+                details.open = true;
+
+            }
+
+        });
+
+}
+    
+    
+    document.querySelectorAll(".gallery-image").forEach(link=>{
+
+  link.addEventListener("click",()=>{
+
+    saveOpenDetails();
+
+    sessionStorage.setItem(
+        scrollKey,
+        window.scrollY
+    );
+
+    sessionStorage.setItem(
+    "returnFromPage",
+    "yes"
+);
+
+});
+});
+document.querySelectorAll(".pdf-link").forEach(link=>{
+
+    link.addEventListener("click",()=>{
+
+        saveCategoryState();
+
+    });
+
+});
+    document
+.querySelectorAll(".favorite-star")
+.forEach(star=>{
+
+    star.classList.add("ready");
+
+});
+}
+
+    
+
+loadFavorites();
+
+renderPapers();
+
+
+
+if(returning){
+
+    
+
+    const savedScroll =
+        sessionStorage.getItem(scrollKey);
+
+    if(savedScroll){
+
+        requestAnimationFrame(()=>{
+
+            requestAnimationFrame(()=>{
+
+                window.scrollTo({
+                    top: parseInt(savedScroll),
+                    behavior: "instant"
+                });
+               sessionStorage.removeItem(
+    "returnFromPage"
+);
+
+            });
+
+        });
+
+    }
+
+}
+
+
+       
+function saveOpenDetails(){
+
+    const open = [];
+
+    document.querySelectorAll(".image-details").forEach(details=>{
+
+        if(details.open){
+
+            open.push(details.dataset.paper);
+
+        }
+
+    });
+
+    sessionStorage.setItem(
+        "openDetails-" + currentCategory,
+        JSON.stringify(open)
+    );
+
+}
+    function saveCategoryState(){
+
+    saveOpenDetails();
+
+    sessionStorage.setItem(
+        scrollKey,
+        window.scrollY
+    );
+
+    sessionStorage.setItem(
+        "returnFromPage",
+        "yes"
+    );
+
+}
+window.showWarningContent = function(key){
+
+    sessionStorage.setItem(
+        "warning-" + key,
+        "accepted"
+    );
+
+    document.getElementById(
+        "warning-" + key
+    ).style.display = "none";
+
+    document.getElementById(
+        "content-" + key
+    ).style.display = "block";
+
+};
+    });
+    
+const topButton = document.getElementById("topButton");
+
+function updateTopButton(){
+    if(window.scrollY > 10){
+        topButton.style.display = "flex";
+    }else{
+        topButton.style.display = "none";
+    }
+}
+
+topButton.addEventListener("click", function(e){
+    e.preventDefault();
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+});
+
+window.addEventListener("scroll", updateTopButton);
+window.addEventListener("load", updateTopButton);
+</script>
+
+    
+
+</body>
+</html>
