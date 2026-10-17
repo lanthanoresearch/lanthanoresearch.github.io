@@ -1,6 +1,6 @@
 {
- "count": 256,
- "totalBytes": 279076606,
+ "count": 252,
+ "totalBytes": 278879304,
  "files": [
   {
    "path": "1 Thessalonians Original Text.png",
@@ -266,11 +266,6 @@
    "path": "Clear Cut Background.png",
    "size": 2008682,
    "hash": "402af5f45df002f9"
-  },
-  {
-   "path": "contact.html",
-   "size": 3184,
-   "hash": "a88143cf5b116308"
   },
   {
    "path": "cover1.png",
@@ -541,11 +536,6 @@
    "path": "featured-video.css",
    "size": 8394,
    "hash": "bb428b388912a83f"
-  },
-  {
-   "path": "featured-video.html",
-   "size": 1494,
-   "hash": "619d041f95216e33"
   },
   {
    "path": "featured-video.js",
@@ -1088,11 +1078,6 @@
    "hash": "7af1ad58cd734ac7"
   },
   {
-   "path": "support.html",
-   "size": 39804,
-   "hash": "d58ac749105fda07"
-  },
-  {
    "path": "sw.js",
    "size": 4629,
    "hash": "a00141caed73f826"
@@ -1231,11 +1216,6 @@
    "path": "Verses Missing From Vaticanus and Sanaiticus.png",
    "size": 99637,
    "hash": "df84f69c8d25f4a7"
-  },
-  {
-   "path": "video.html",
-   "size": 152820,
-   "hash": "33dd4595e7b9cf84"
   },
   {
    "path": "What is Everything.pdf",
