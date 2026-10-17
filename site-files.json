@@ -1,6 +1,6 @@
 {
- "count": 258,
- "totalBytes": 278568196,
+ "count": 255,
+ "totalBytes": 278476278,
  "files": [
   {
    "path": "1 Thessalonians Original Text.png",
@@ -558,11 +558,6 @@
    "hash": "bb428b388912a83f"
   },
   {
-   "path": "featured-video.html",
-   "size": 1743,
-   "hash": "a11d76ecc802d3be"
-  },
-  {
    "path": "featured-video.js",
    "size": 1975,
    "hash": "8085a0a638ba7994"
@@ -723,19 +718,9 @@
    "hash": "1e28b3bd305a456a"
   },
   {
-   "path": "image.html",
-   "size": 38525,
-   "hash": "2fe5073b501d91df"
-  },
-  {
    "path": "Images.html",
    "size": 1511,
    "hash": "9afec8ef61140c6e"
-  },
-  {
-   "path": "index.html",
-   "size": 51650,
-   "hash": "9edee68be3c43017"
   },
   {
    "path": "Israel.pdf",
