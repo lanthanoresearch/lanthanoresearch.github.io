@@ -1,6 +1,6 @@
 {
- "count": 252,
- "totalBytes": 278879304,
+ "count": 248,
+ "totalBytes": 278232483,
  "files": [
   {
    "path": "1 Thessalonians Original Text.png",
@@ -608,11 +608,6 @@
    "hash": "6c7a7211f02d6762"
   },
   {
-   "path": "gallery.html",
-   "size": 19994,
-   "hash": "13aa9b2af720c833"
-  },
-  {
    "path": "Genetic Degradation.pdf",
    "size": 141348,
    "hash": "3ef7af779c399817"
@@ -696,11 +691,6 @@
    "path": "IDF Destroy Statue of Christ.png",
    "size": 720464,
    "hash": "1e28b3bd305a456a"
-  },
-  {
-   "path": "image.html",
-   "size": 36834,
-   "hash": "04f51fb23a56c5ad"
   },
   {
    "path": "Images.html",
@@ -843,11 +833,6 @@
    "hash": "35221c02b05b2503"
   },
   {
-   "path": "pdf.html",
-   "size": 537069,
-   "hash": "7e80c42f9df47c8e"
-  },
-  {
    "path": "pdfjs/build/pdf.mjs",
    "size": 817035,
    "hash": "00621011d913467b"
@@ -946,11 +931,6 @@
    "path": "research-assistant-engine.js",
    "size": 20615,
    "hash": "538076f68aa01526"
-  },
-  {
-   "path": "research-timeline.html",
-   "size": 52924,
-   "hash": "5175ae33057584e7"
   },
   {
    "path": "Rupes Nigra.png",
