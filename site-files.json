@@ -1,6 +1,6 @@
 {
- "count": 259,
- "totalBytes": 279174250,
+ "count": 256,
+ "totalBytes": 279076606,
  "files": [
   {
    "path": "1 Thessalonians Original Text.png",
@@ -56,11 +56,6 @@
    "path": "A Rat on Mars.png",
    "size": 7525185,
    "hash": "fbc935373dc1334c"
-  },
-  {
-   "path": "about.html",
-   "size": 4887,
-   "hash": "9b55765e98d294c4"
   },
   {
    "path": "AGC stackup.png",
@@ -246,11 +241,6 @@
    "path": "Carbon Dating.pdf",
    "size": 330303,
    "hash": "b2d483b5cc8028fe"
-  },
-  {
-   "path": "category.html",
-   "size": 46714,
-   "hash": "4637807e250b990a"
   },
   {
    "path": "CDC Misinformation (Multiple).png",
@@ -466,11 +456,6 @@
    "path": "Devon Island.png",
    "size": 274060,
    "hash": "05bffc90b8f8ac72"
-  },
-  {
-   "path": "discover.html",
-   "size": 46043,
-   "hash": "7dc2acc279d44ea7"
   },
   {
    "path": "Distance & Shadows (Illustrated 2).png",
