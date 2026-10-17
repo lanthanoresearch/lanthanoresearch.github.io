@@ -1,6 +1,6 @@
 {
  "count": 259,
- "totalBytes": 279217959,
+ "totalBytes": 278722043,
  "files": [
   {
    "path": "1 Thessalonians Original Text.png",
@@ -633,6 +633,11 @@
    "hash": "6c7a7211f02d6762"
   },
   {
+   "path": "gallery.html",
+   "size": 44155,
+   "hash": "4898623344b715ae"
+  },
+  {
    "path": "Genetic Degradation.pdf",
    "size": 141348,
    "hash": "3ef7af779c399817"
@@ -866,11 +871,6 @@
    "path": "page-counts.json",
    "size": 587,
    "hash": "35221c02b05b2503"
-  },
-  {
-   "path": "pdf.html",
-   "size": 540071,
-   "hash": "bc645960d6f80399"
   },
   {
    "path": "pdfjs/build/pdf.mjs",
