@@ -1,6 +1,6 @@
 {
- "count": 254,
- "totalBytes": 278386615,
+ "count": 260,
+ "totalBytes": 279279914,
  "files": [
   {
    "path": "1 Thessalonians Original Text.png",
@@ -246,6 +246,11 @@
    "path": "Carbon Dating.pdf",
    "size": 330303,
    "hash": "b2d483b5cc8028fe"
+  },
+  {
+   "path": "category.html",
+   "size": 48743,
+   "hash": "3bc0dc50bff818be"
   },
   {
    "path": "CDC Misinformation (Multiple).png",
@@ -628,6 +633,11 @@
    "hash": "6c7a7211f02d6762"
   },
   {
+   "path": "gallery.html",
+   "size": 45545,
+   "hash": "dbdb1d8cce944057"
+  },
+  {
    "path": "Genetic Degradation.pdf",
    "size": 141348,
    "hash": "3ef7af779c399817"
@@ -713,9 +723,19 @@
    "hash": "1e28b3bd305a456a"
   },
   {
+   "path": "image.html",
+   "size": 42503,
+   "hash": "308f7c78cdbf9be2"
+  },
+  {
    "path": "Images.html",
    "size": 1511,
    "hash": "9afec8ef61140c6e"
+  },
+  {
+   "path": "index.html",
+   "size": 53425,
+   "hash": "39235318c37153dd"
   },
   {
    "path": "Israel.pdf",
@@ -853,6 +873,11 @@
    "hash": "35221c02b05b2503"
   },
   {
+   "path": "pdf.html",
+   "size": 543607,
+   "hash": "4d5952b153e3867e"
+  },
+  {
    "path": "pdfjs/build/pdf.mjs",
    "size": 817035,
    "hash": "00621011d913467b"
@@ -954,8 +979,8 @@
   },
   {
    "path": "research-timeline.html",
-   "size": 53210,
-   "hash": "67e5d8fcac10d761"
+   "size": 55351,
+   "hash": "0e6e879858aa8bfd"
   },
   {
    "path": "Rupes Nigra.png",
@@ -1226,6 +1251,11 @@
    "path": "Verses Missing From Vaticanus and Sanaiticus.png",
    "size": 99637,
    "hash": "df84f69c8d25f4a7"
+  },
+  {
+   "path": "video.html",
+   "size": 157335,
+   "hash": "6416742a8697ee60"
   },
   {
    "path": "What is Everything.pdf",
