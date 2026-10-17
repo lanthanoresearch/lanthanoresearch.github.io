@@ -1,6 +1,6 @@
 {
- "count": 248,
- "totalBytes": 278232483,
+ "count": 260,
+ "totalBytes": 279239097,
  "files": [
   {
    "path": "1 Thessalonians Original Text.png",
@@ -56,6 +56,11 @@
    "path": "A Rat on Mars.png",
    "size": 7525185,
    "hash": "fbc935373dc1334c"
+  },
+  {
+   "path": "about.html",
+   "size": 5173,
+   "hash": "995dc555ea11a448"
   },
   {
    "path": "AGC stackup.png",
@@ -243,6 +248,11 @@
    "hash": "b2d483b5cc8028fe"
   },
   {
+   "path": "category.html",
+   "size": 47328,
+   "hash": "914968f1c23f6113"
+  },
+  {
    "path": "CDC Misinformation (Multiple).png",
    "size": 435547,
    "hash": "8e99d5fc48fce53e"
@@ -266,6 +276,11 @@
    "path": "Clear Cut Background.png",
    "size": 2008682,
    "hash": "402af5f45df002f9"
+  },
+  {
+   "path": "contact.html",
+   "size": 3470,
+   "hash": "51dbec14f38bd503"
   },
   {
    "path": "cover1.png",
@@ -453,6 +468,11 @@
    "hash": "05bffc90b8f8ac72"
   },
   {
+   "path": "discover.html",
+   "size": 50369,
+   "hash": "030c4324aa81d200"
+  },
+  {
    "path": "Distance & Shadows (Illustrated 2).png",
    "size": 1402,
    "hash": "ba0f5f7e442e9bff"
@@ -538,6 +558,11 @@
    "hash": "bb428b388912a83f"
   },
   {
+   "path": "featured-video.html",
+   "size": 1743,
+   "hash": "a11d76ecc802d3be"
+  },
+  {
    "path": "featured-video.js",
    "size": 1975,
    "hash": "8085a0a638ba7994"
@@ -606,6 +631,11 @@
    "path": "Fuzzy Shadow.png",
    "size": 14575331,
    "hash": "6c7a7211f02d6762"
+  },
+  {
+   "path": "gallery.html",
+   "size": 21138,
+   "hash": "9ba2e947a38064cb"
   },
   {
    "path": "Genetic Degradation.pdf",
@@ -693,9 +723,19 @@
    "hash": "1e28b3bd305a456a"
   },
   {
+   "path": "image.html",
+   "size": 38525,
+   "hash": "2fe5073b501d91df"
+  },
+  {
    "path": "Images.html",
    "size": 1511,
    "hash": "9afec8ef61140c6e"
+  },
+  {
+   "path": "index.html",
+   "size": 51650,
+   "hash": "9edee68be3c43017"
   },
   {
    "path": "Israel.pdf",
@@ -833,6 +873,11 @@
    "hash": "35221c02b05b2503"
   },
   {
+   "path": "pdf.html",
+   "size": 540071,
+   "hash": "bc645960d6f80399"
+  },
+  {
    "path": "pdfjs/build/pdf.mjs",
    "size": 817035,
    "hash": "00621011d913467b"
@@ -931,6 +976,11 @@
    "path": "research-assistant-engine.js",
    "size": 20615,
    "hash": "538076f68aa01526"
+  },
+  {
+   "path": "research-timeline.html",
+   "size": 53210,
+   "hash": "67e5d8fcac10d761"
   },
   {
    "path": "Rupes Nigra.png",
@@ -1056,6 +1106,11 @@
    "path": "Sunrise.png",
    "size": 113166,
    "hash": "7af1ad58cd734ac7"
+  },
+  {
+   "path": "support.html",
+   "size": 40090,
+   "hash": "b1d508ede7f47a21"
   },
   {
    "path": "sw.js",
@@ -1196,6 +1251,11 @@
    "path": "Verses Missing From Vaticanus and Sanaiticus.png",
    "size": 99637,
    "hash": "df84f69c8d25f4a7"
+  },
+  {
+   "path": "video.html",
+   "size": 153847,
+   "hash": "7ad6e84ba10ba39a"
   },
   {
    "path": "What is Everything.pdf",
