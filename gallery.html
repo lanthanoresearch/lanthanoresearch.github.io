@@ -774,6 +774,16 @@ h1{
     display:none;
 }
 
+/* Paper-name headings span the full width instead of taking a tile's place. */
+.gallery.videos .paper-break{
+    grid-column:1 / -1;
+    flex:none;
+}
+
+.gallery.videos .gallery-fill{
+    display:none;
+}
+
 @media (max-width:339px){
     .gallery.videos{
         grid-template-columns:minmax(0, 1fr);
@@ -807,7 +817,8 @@ h1{
 }
 
 .video-play svg{
-    margin-left:2px;
+    margin:0;
+    transform:translateX(-1.2px);
 }
 
 .video-duration{

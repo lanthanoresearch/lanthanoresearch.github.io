@@ -867,7 +867,8 @@ h1{
 }
 
 .video-play svg{
-    margin-left:2px;
+    margin:0;
+    transform:translateX(-1.4px);
 }
 
 
@@ -875,12 +876,26 @@ h1{
     position:absolute;
     right:6px;
     bottom:6px;
-    padding:2px 6px;
+    padding:1px 5px;
     border-radius:4px;
     background:rgba(0,0,0,0.75);
-    font-size:0.7em;
+    font-size:0.58em;
     line-height:1.3;
     color:#fff;
+}
+
+.view-comfy .video-duration{
+    font-size:0.52em;
+    padding:1px 4px;
+    right:5px;
+    bottom:5px;
+}
+
+.view-compact .video-duration{
+    font-size:0.46em;
+    padding:1px 3px;
+    right:4px;
+    bottom:4px;
 }
 
 .view-comfy .video-play{
@@ -926,7 +941,7 @@ a.gallery-image{
 
 /* leave room for the length badge on video tiles */
 .show-file-names .video-thumb .tile-name{
-    padding-right:50px;
+    padding-right:42px;
 }
 
 .view-comfy .tile-name,

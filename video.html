@@ -3602,6 +3602,9 @@ function r2Stop(message){
     loadingOverlay.style.display = "flex";
 }
 
+let r2Ticket = "";
+let r2Cors = true;
+
 async function r2Load(resumeAt){
 
     if(r2Busy) return;
@@ -3681,6 +3684,16 @@ async function r2Load(resumeAt){
 
         r2ResumeAt = resumeAt || 0;
 
+        r2Ticket = data.t;
+
+        // Lets the page read the picture for "Frame". If the video server
+        // doesn't allow that (older setup), the next try plays without it.
+        if(r2Cors){
+            video.crossOrigin = "anonymous";
+        }else{
+            video.removeAttribute("crossorigin");
+        }
+
         video.src =
             VIDEO_API + "/play?t=" + encodeURIComponent(data.t);
 
@@ -3700,6 +3713,7 @@ function r2MediaError(){
 
     if(!r2Retried){
         r2Retried = true;
+        r2Cors = false;
         r2Load(video.currentTime || 0);
         return;
     }
@@ -4609,6 +4623,15 @@ downloadFrameButton.addEventListener(
             0, 0,
             canvas.width, canvas.height
         );
+
+        try{
+            canvas.getContext("2d").getImageData(0, 0, 1, 1);
+        }catch(err){
+            showToast(
+                "Couldn't capture this frame."
+            );
+            return;
+        }
 
         canvas.toBlob(
             function(blob){
@@ -6078,18 +6101,28 @@ document.addEventListener(
 
 /* ---------- Download ---------- */
 
-/* Videos from the private bucket can't be downloaded or opened directly
-   (they only play through the gate), so those two menu items are hidden. */
-if(isR2){
+/* Videos from the private bucket go through the gate: the page asks for a
+   short-lived link and uses that. */
+async function r2FreshLink(){
 
-    downloadButton.style.display = "none";
-    newTabButton.style.display = "none";
+    const res = await fetch(
+        VIDEO_API + "/ticket?f=" + encodeURIComponent(src),
+        { cache: "no-store" }
+    );
+
+    if(!res.ok){
+        let msg = "";
+        try{ msg = (await res.json()).error; }catch(e){}
+        throw new Error(msg || "This video isn't available right now.");
+    }
+
+    return VIDEO_API + "/play?t=" + encodeURIComponent((await res.json()).t);
 
 }
 
 downloadButton.addEventListener(
     "click",
-    function(){
+    async function(){
 
         menu.style.display =
             "none";
@@ -6102,30 +6135,70 @@ downloadButton.addEventListener(
             "Downloading..."
         );
 
+        let href = src;
+        let revoke = null;
+
+        if(isR2){
+
+            try{
+
+                // Reuse the link already playing when there is one (the
+                // video is then usually served from Cloudflare's cache).
+                let link = r2Ticket
+                    ? VIDEO_API + "/play?t=" + encodeURIComponent(r2Ticket)
+                    : await r2FreshLink();
+
+                let res = await fetch(link);
+
+                if(!res.ok && r2Ticket){
+                    res = await fetch(await r2FreshLink());
+                }
+
+                if(!res.ok){
+                    throw new Error("download");
+                }
+
+                const blob = await res.blob();
+
+                href = URL.createObjectURL(blob);
+                revoke = href;
+
+            }catch(err){
+
+                showToast(
+                    (err && err.message && err.message !== "download" && err.message !== "Failed to fetch")
+                        ? err.message
+                        : "Couldn't download this video right now."
+                );
+
+                return;
+
+            }
+
+        }
 
         const link =
             document.createElement("a");
 
-
         link.href =
-            src;
-
+            href;
 
         link.download =
             decodeURIComponent(
                 src.split("/").pop()
             );
 
-
         document.body.appendChild(
             link
         );
 
-
         link.click();
 
-
         link.remove();
+
+        if(revoke){
+            setTimeout(() => URL.revokeObjectURL(revoke), 60000);
+        }
 
     }
 );
@@ -6135,7 +6208,7 @@ downloadButton.addEventListener(
 
 newTabButton.addEventListener(
     "click",
-    function(){
+    async function(){
 
         menu.style.display =
             "none";
@@ -6144,11 +6217,44 @@ newTabButton.addEventListener(
             return;
         }
 
+        if(!isR2){
 
-        window.open(
-            src,
-            "_blank"
-        );
+            window.open(
+                src,
+                "_blank"
+            );
+
+            return;
+
+        }
+
+        // Opened straight from the tap (so pop-up blockers allow it), then
+        // pointed at a short-lived link.
+        const win = window.open("", "_blank");
+
+        try{
+
+            const link = r2Ticket
+                ? VIDEO_API + "/play?t=" + encodeURIComponent(r2Ticket)
+                : await r2FreshLink();
+
+            if(win){
+                win.location.href = link;
+            }else{
+                window.location.href = link;
+            }
+
+        }catch(err){
+
+            if(win) win.close();
+
+            showToast(
+                (err && err.message && err.message !== "Failed to fetch")
+                    ? err.message
+                    : "Couldn't open this video right now."
+            );
+
+        }
 
     }
 );
