@@ -717,6 +717,9 @@ h1{
     width:calc(50% - 3px);
     background:#3a3a3a;
     border-radius:999px;
+}
+
+.mode-switch.animate .mode-pill{
     transition:transform .25s ease;
 }
 
@@ -1007,6 +1010,22 @@ h1{
     <button type="button" role="tab" data-mode="videos" aria-selected="false">Videos</button>
 </div>
 
+<script>
+/* Shows the remembered side (Images or Videos) right away, before anything
+   else loads, so the page never starts on the wrong one. */
+(function(){
+    var m = "images";
+    try{ if(localStorage.getItem("galleryMode") === "videos") m = "videos"; }catch(e){}
+    try{ if(sessionStorage.getItem("galleryMode") === "videos") m = "videos"; }catch(e){}
+    var sw = document.getElementById("modeSwitch");
+    sw.setAttribute("data-mode", m);
+    var b = sw.querySelectorAll("button");
+    for(var i = 0; i < b.length; i++){
+        b[i].setAttribute("aria-selected", b[i].getAttribute("data-mode") === m ? "true" : "false");
+    }
+})();
+</script>
+
 <div class="info-bar">
 
     <p id="imageCount"></p>
@@ -1023,24 +1042,12 @@ h1{
 <div class="sort-panel" id="sortPanel">
 
     <button type="button" class="sort-option" data-group="title">
-        <span class="sort-option-label">Title</span>
+        <span class="sort-option-label">A-Z</span>
         <span class="sort-option-arrow" aria-hidden="true"></span>
     </button>
 
-    <button type="button" class="sort-option" data-group="date">
-        <span class="sort-option-label">Date</span>
-        <span class="sort-option-arrow" aria-hidden="true"></span>
-    </button>
 
-    <button type="button" class="sort-option" data-group="images">
-        <span class="sort-option-label">Images</span>
-        <span class="sort-option-arrow" aria-hidden="true"></span>
-    </button>
 
-    <button type="button" class="sort-option" data-group="readtime">
-        <span class="sort-option-label">Reading Time</span>
-        <span class="sort-option-arrow" aria-hidden="true"></span>
-    </button>
 
     <div class="panel-divider"></div>
 
@@ -1064,6 +1071,13 @@ h1{
 <div id="galleryContainer">
     <div class="status">Loading...</div>
 </div>
+<script>
+(function(){
+    var m = document.getElementById("modeSwitch").getAttribute("data-mode");
+    var st = document.querySelector("#galleryContainer .status");
+    if(st) st.textContent = "Loading " + m + "...";
+})();
+</script>
 
 </section>
 
@@ -1160,7 +1174,7 @@ function loadModeSettings(m){
 
     try{
         const s = localStorage.getItem(k.sort);
-        if(s && sortLabels[s]) o.sortType = s;
+        if(s === "az" || s === "za") o.sortType = s;
         o.paperBreaks = localStorage.getItem(KEYS.images.breaks) === "true";
         o.showNames = localStorage.getItem(KEYS.images.names) === "true";
     }catch(e){}
@@ -1262,9 +1276,6 @@ function applySortUI(){
         arrow.textContent = direction === "desc" ? "↓" : "↑";
         arrow.style.visibility = isActive ? "visible" : "hidden";
     });
-
-    document.querySelector('.sort-option[data-group="images"] .sort-option-label')
-        .textContent = WORDS[mode][1];
 
     document.getElementById("sortButtonLabel").textContent =
         sortLabel(sortType);
@@ -1894,6 +1905,7 @@ function setMode(next){
     closeMenus();
     buildOptions();
     updateButtonLabel();
+    modeSwitch.classList.add("animate");
     applyModeUI();
     applySettingsUI();
 

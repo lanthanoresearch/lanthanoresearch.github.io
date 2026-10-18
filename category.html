@@ -1126,8 +1126,13 @@ summary:hover{
         </button>
 
         <div class="videoPickerRow" id="imagesDefaultOpenRow">
-            <span>Show images</span>
-            <button type="button" class="toggleSwitch" id="imagesDefaultOpenToggle" role="switch" aria-checked="false" aria-label="Show supporting images by default"><span class="toggleKnob"></span></button>
+            <span>Expand images</span>
+            <button type="button" class="toggleSwitch" id="imagesDefaultOpenToggle" role="switch" aria-checked="false" aria-label="Expand supporting images by default"><span class="toggleKnob"></span></button>
+        </div>
+
+        <div class="videoPickerRow" id="videosDefaultOpenRow">
+            <span>Expand videos</span>
+            <button type="button" class="toggleSwitch" id="videosDefaultOpenToggle" role="switch" aria-checked="false" aria-label="Expand videos by default"><span class="toggleKnob"></span></button>
         </div>
 
         <div class="videoPickerRow" id="showFileNamesRow">
@@ -1241,6 +1246,9 @@ let viewMode =
 
 let imagesDefaultOpen =
     localStorage.getItem("imagesDefaultOpen") === "true";
+
+let videosDefaultOpen =
+    localStorage.getItem("videosDefaultOpen") === "true";
 
 // "Show file names": names on every image and video tile, cut off with
 // "..." when too long. A saved setting (kept across refreshes).
@@ -1371,6 +1379,12 @@ function applySettingsUI(){
         imagesDefaultOpen ? "true" : "false"
     );
 
+    videosDefaultOpenToggle.classList.toggle("active", videosDefaultOpen);
+    videosDefaultOpenToggle.setAttribute(
+        "aria-checked",
+        videosDefaultOpen ? "true" : "false"
+    );
+
     showFileNamesToggle.classList.toggle("active", showFileNames);
     showFileNamesToggle.setAttribute(
         "aria-checked",
@@ -1421,6 +1435,9 @@ const sortDropdown =
 
 const imagesDefaultOpenToggle =
     document.getElementById("imagesDefaultOpenToggle");
+
+const videosDefaultOpenToggle =
+    document.getElementById("videosDefaultOpenToggle");
 
 const showFileNamesToggle =
     document.getElementById("showFileNamesToggle");
@@ -1705,7 +1722,31 @@ imagesDefaultOpenToggle.addEventListener("click", (e) => {
     );
 
     applySettingsUI();
-    withPreservedState(renderPapers);
+
+    // Opens or closes every image panel right away, keeping your place.
+    const y = window.scrollY;
+    renderPapers();
+    window.scrollTo(0, y);
+
+});
+
+videosDefaultOpenToggle.addEventListener("click", (e) => {
+
+    e.stopPropagation();
+
+    videosDefaultOpen = !videosDefaultOpen;
+
+    localStorage.setItem(
+        "videosDefaultOpen",
+        videosDefaultOpen
+    );
+
+    applySettingsUI();
+
+    // Opens or closes every video panel right away, keeping your place.
+    const y = window.scrollY;
+    renderPapers();
+    window.scrollTo(0, y);
 
 });
 
@@ -1974,7 +2015,7 @@ function buildVideoGalleryHtml(key, paper){
     if(!videos.length) return "";
 
     return `
-        <details class="image-details video-details" data-paper="videos:${escapeHtml(key)}">
+        <details class="image-details video-details" data-paper="videos:${escapeHtml(key)}"${videosDefaultOpen ? " open" : ""}>
             <summary>Videos (${videos.length})</summary>
 
             <div class="gallery">
