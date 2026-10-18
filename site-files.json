@@ -1,6 +1,6 @@
 {
  "count": 260,
- "totalBytes": 279279914,
+ "totalBytes": 279297454,
  "files": [
   {
    "path": "1 Thessalonians Original Text.png",
@@ -59,8 +59,8 @@
   },
   {
    "path": "about.html",
-   "size": 5173,
-   "hash": "995dc555ea11a448"
+   "size": 8090,
+   "hash": "2d9fd60add433feb"
   },
   {
    "path": "AGC stackup.png",
@@ -249,8 +249,8 @@
   },
   {
    "path": "category.html",
-   "size": 48743,
-   "hash": "3bc0dc50bff818be"
+   "size": 52218,
+   "hash": "083d45ed141f037b"
   },
   {
    "path": "CDC Misinformation (Multiple).png",
@@ -279,8 +279,8 @@
   },
   {
    "path": "contact.html",
-   "size": 3470,
-   "hash": "51dbec14f38bd503"
+   "size": 6387,
+   "hash": "272bb8ea6afc763c"
   },
   {
    "path": "cover1.png",
@@ -469,8 +469,8 @@
   },
   {
    "path": "discover.html",
-   "size": 50369,
-   "hash": "030c4324aa81d200"
+   "size": 53479,
+   "hash": "1377bd8d6200ee9f"
   },
   {
    "path": "Distance & Shadows (Illustrated 2).png",
@@ -559,8 +559,8 @@
   },
   {
    "path": "featured-video.html",
-   "size": 1820,
-   "hash": "43f6f62b0d6831ac"
+   "size": 1596,
+   "hash": "9db61b8fcf31d9c0"
   },
   {
    "path": "featured-video.js",
@@ -634,8 +634,8 @@
   },
   {
    "path": "gallery.html",
-   "size": 45545,
-   "hash": "dbdb1d8cce944057"
+   "size": 39884,
+   "hash": "94dfe48828aaccf9"
   },
   {
    "path": "Genetic Degradation.pdf",
@@ -724,8 +724,8 @@
   },
   {
    "path": "image.html",
-   "size": 42503,
-   "hash": "308f7c78cdbf9be2"
+   "size": 43526,
+   "hash": "5c75d5f9d664925a"
   },
   {
    "path": "Images.html",
@@ -734,8 +734,8 @@
   },
   {
    "path": "index.html",
-   "size": 53425,
-   "hash": "39235318c37153dd"
+   "size": 55435,
+   "hash": "92678a03e2b9e854"
   },
   {
    "path": "Israel.pdf",
@@ -874,8 +874,8 @@
   },
   {
    "path": "pdf.html",
-   "size": 543607,
-   "hash": "4d5952b153e3867e"
+   "size": 544715,
+   "hash": "a051c50524f086c6"
   },
   {
    "path": "pdfjs/build/pdf.mjs",
@@ -979,8 +979,8 @@
   },
   {
    "path": "research-timeline.html",
-   "size": 55351,
-   "hash": "0e6e879858aa8bfd"
+   "size": 58126,
+   "hash": "9309bb423287dc75"
   },
   {
    "path": "Rupes Nigra.png",
@@ -1109,8 +1109,8 @@
   },
   {
    "path": "support.html",
-   "size": 40090,
-   "hash": "b1d508ede7f47a21"
+   "size": 43072,
+   "hash": "cca7184d570b6a3f"
   },
   {
    "path": "sw.js",
@@ -1254,8 +1254,8 @@
   },
   {
    "path": "video.html",
-   "size": 157335,
-   "hash": "6416742a8697ee60"
+   "size": 158443,
+   "hash": "51c51c00aba46cf0"
   },
   {
    "path": "What is Everything.pdf",
