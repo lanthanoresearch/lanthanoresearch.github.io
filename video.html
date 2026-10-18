@@ -2419,6 +2419,36 @@ body.video-fullscreen.fs-rotate #videoStage{
   var link = document.getElementById("homeButton");
   if(!link) return;
 
+  /* Go back to where we came from. When that page is the one just before
+     this one in the browser's history, step back through the history
+     instead of opening it again - that restores the page exactly as it was
+     and keeps the phone's own back button working normally. Otherwise
+     (opened in a new tab, direct link...) open the page. */
+  function norm(p){ return p.replace(/index\.html$/, ""); }
+
+  function goBackTo(dest, before){
+    try{ if(before) before(); }catch(e){}
+
+    var canStep = false;
+    try{
+      if(history.length > 1 && document.referrer){
+        var r = new URL(document.referrer), t = new URL(dest, location.href);
+        canStep = r.origin === t.origin &&
+          norm(r.pathname) === norm(t.pathname) &&
+          r.search === t.search;
+      }
+    }catch(e){}
+
+    if(!canStep){
+      location.assign(dest);
+      return;
+    }
+
+    var fallback = setTimeout(function(){ location.assign(dest); }, 1200);
+    window.addEventListener("pagehide", function(){ clearTimeout(fallback); }, {once:true});
+    history.back();
+  }
+
   function sameSite(v){
     try{
       var u = new URL(v, location.href);
@@ -2474,12 +2504,15 @@ body.video-fullscreen.fs-rotate #videoStage{
   window.__returnTarget = target;
   link.href = target;
 
+  window.__goBack = function(){
+    goBackTo(target, function(){
+      /* nothing extra to remember */
+    });
+  };
+
   link.addEventListener("click", function(e){
     e.preventDefault();
-    try{
-      /* nothing extra to remember */
-    }catch(x){}
-    location.assign(target);
+    window.__goBack();
   });
 })();
 </script>
@@ -3461,17 +3494,8 @@ homeButton.href =
     returnPage;
 
 
-homeButton.addEventListener(
-    "click",
-    function(event){
-
-        event.preventDefault();
-
-        location.href =
-            returnPage;
-
-    }
-);
+/* (The Back button's click is wired up early - see the small script in
+   the header - so it also works before this file has finished loading.) */
 
 
 /* ---------- Video Source ---------- */

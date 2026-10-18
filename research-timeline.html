@@ -2,26 +2,37 @@
 <html lang="en">
 <head>
 <script>
-/* A refresh should start the page fresh, from the top - not jump back to
-   wherever you were before you opened something. (Coming back from a
-   paper/image/video still restores your spot; only a reload resets it.) */
+/* A refresh starts this page fresh, from the top, like a normal new visit.
+   Only this page's remembered "where I was" is forgotten - saved settings,
+   favorites and other saved data are never touched. (Coming back from a
+   paper/image/video/other page still restores your spot; only a reload
+   resets it.) */
 (function(){
   try{
+    var keys = ["timelineScroll", "timelineOpenKey"];
+    var prefixes = [];
+
+    function forget(){
+      keys.forEach(function(k){ sessionStorage.removeItem(k); });
+      Object.keys(sessionStorage).forEach(function(k){
+        for(var i = 0; i < prefixes.length; i++){
+          if(k.indexOf(prefixes[i]) === 0){ sessionStorage.removeItem(k); break; }
+        }
+      });
+    }
+
+    // Page restored whole from the browser's back/forward cache: it is
+    // already exactly as it was, so drop any leftover "restore me" notes.
+    window.addEventListener("pageshow", function(e){
+      if(e.persisted){ try{ forget(); }catch(err){} }
+    });
+
     var nav = performance.getEntriesByType && performance.getEntriesByType("navigation")[0];
     var isReload = nav ? nav.type === "reload"
       : (performance.navigation && performance.navigation.type === 1);
     if(!isReload) return;
 
-    var fixed = ["indexScroll","returnToIndex","scrollPosition","restoreSearch",
-      "lastSearch","searchResultsScroll","returnFromPage","galleryScroll",
-      "galleryReturn","timelineScroll","videoScrollPosition","videoReturnToIndex"];
-    fixed.forEach(function(k){ sessionStorage.removeItem(k); });
-
-    Object.keys(sessionStorage).forEach(function(k){
-      if(k.indexOf("categoryScroll-") === 0 || k.indexOf("openDetails-") === 0){
-        sessionStorage.removeItem(k);
-      }
-    });
+    forget();
 
     if("scrollRestoration" in history) history.scrollRestoration = "manual";
 
@@ -35,6 +46,40 @@
       });
     });
   }catch(e){}
+})();
+</script>
+<script>
+/* Home / Back links: when the page you came from is the one just before
+   this one in the browser's history, step back through the history (the
+   page comes back exactly as you left it and the phone's own back button
+   stays consistent). Otherwise just open the page. */
+(function(){
+  function norm(p){ return p.replace(/index\.html$/, ""); }
+
+  window.__goHome = function(){
+    var dest = "index.html";
+    var canStep = false;
+    try{
+      if(history.length > 1 && document.referrer){
+        var r = new URL(document.referrer), t = new URL(dest, location.href);
+        canStep = r.origin === t.origin && norm(r.pathname) === norm(t.pathname);
+      }
+    }catch(e){}
+
+    if(!canStep){ location.assign(dest); return; }
+
+    var fallback = setTimeout(function(){ location.assign(dest); }, 1200);
+    window.addEventListener("pagehide", function(){ clearTimeout(fallback); }, {once:true});
+    history.back();
+  };
+
+  document.addEventListener("click", function(e){
+    if(e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    var a = e.target && e.target.closest ? e.target.closest('a[href="index.html"]') : null;
+    if(!a || (a.target && a.target !== "_self")) return;
+    e.preventDefault();
+    window.__goHome();
+  });
 })();
 </script>
 
@@ -2161,7 +2206,9 @@ document.addEventListener(
   e => {
 
     const paper =
-      e.target.closest(".paper");
+      e.target.closest
+        ? e.target.closest(".paper")
+        : null;
 
     if(paper){
       positionLandscapePopup(
@@ -2570,6 +2617,20 @@ document.addEventListener(
         "timelineScroll",
         String(window.scrollY)
       );
+
+      // Remember which paper you opened so it's still open (expanded /
+      // popped up) when you come back.
+      const openedStar =
+        link.closest(".paper")?.querySelector("[data-favorite-key]");
+
+      if(openedStar){
+        sessionStorage.setItem(
+          "timelineOpenKey",
+          openedStar.dataset.favoriteKey
+        );
+      }else{
+        sessionStorage.removeItem("timelineOpenKey");
+      }
     }catch(err){}
 
     const returnUrl =
@@ -3016,18 +3077,44 @@ async function load(){
     try{
       const savedScroll =
         sessionStorage.getItem("timelineScroll");
+      const savedOpenKey =
+        sessionStorage.getItem("timelineOpenKey");
       sessionStorage.removeItem("timelineScroll");
+      sessionStorage.removeItem("timelineOpenKey");
 
       if(
         savedScroll !== null &&
-        /pdf\.html/.test(document.referrer || "pdf.html")
+        (
+          (function(){
+            const e = performance.getEntriesByType("navigation")[0];
+            return !!(e && e.type === "back_forward");
+          })()
+          ||
+          /pdf\.html/.test(document.referrer || "")
+        )
       ){
         const y = parseInt(savedScroll, 10) || 0;
         const jump = () => window.scrollTo({
           top: y,
           behavior: "instant"
         });
+
+        // Re-open the paper you had tapped (same as tapping it again).
+        if(savedOpenKey){
+          const star = Array.from(
+            document.querySelectorAll("[data-favorite-key]")
+          ).find(s => s.dataset.favoriteKey === savedOpenKey);
+
+          const card = star?.closest(".paper-card");
+
+          if(card){
+            jump();
+            card.click();
+          }
+        }
+
         requestAnimationFrame(() => requestAnimationFrame(jump));
+        setTimeout(jump, 350);
         window.addEventListener("load", jump, { once: true });
       }
     }catch(err){}

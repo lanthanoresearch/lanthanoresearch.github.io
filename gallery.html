@@ -2,26 +2,37 @@
 <html>
 <head>
 <script>
-/* A refresh should start the page fresh, from the top - not jump back to
-   wherever you were before you opened something. (Coming back from a
-   paper/image/video still restores your spot; only a reload resets it.) */
+/* A refresh starts this page fresh, from the top, like a normal new visit.
+   Only this page's remembered "where I was" is forgotten - saved settings,
+   favorites and other saved data are never touched. (Coming back from a
+   paper/image/video/other page still restores your spot; only a reload
+   resets it.) */
 (function(){
   try{
+    var keys = ["galleryScroll", "galleryReturn"];
+    var prefixes = [];
+
+    function forget(){
+      keys.forEach(function(k){ sessionStorage.removeItem(k); });
+      Object.keys(sessionStorage).forEach(function(k){
+        for(var i = 0; i < prefixes.length; i++){
+          if(k.indexOf(prefixes[i]) === 0){ sessionStorage.removeItem(k); break; }
+        }
+      });
+    }
+
+    // Page restored whole from the browser's back/forward cache: it is
+    // already exactly as it was, so drop any leftover "restore me" notes.
+    window.addEventListener("pageshow", function(e){
+      if(e.persisted){ try{ forget(); }catch(err){} }
+    });
+
     var nav = performance.getEntriesByType && performance.getEntriesByType("navigation")[0];
     var isReload = nav ? nav.type === "reload"
       : (performance.navigation && performance.navigation.type === 1);
     if(!isReload) return;
 
-    var fixed = ["indexScroll","returnToIndex","scrollPosition","restoreSearch",
-      "lastSearch","searchResultsScroll","returnFromPage","galleryScroll",
-      "galleryReturn","timelineScroll","videoScrollPosition","videoReturnToIndex"];
-    fixed.forEach(function(k){ sessionStorage.removeItem(k); });
-
-    Object.keys(sessionStorage).forEach(function(k){
-      if(k.indexOf("categoryScroll-") === 0 || k.indexOf("openDetails-") === 0){
-        sessionStorage.removeItem(k);
-      }
-    });
+    forget();
 
     if("scrollRestoration" in history) history.scrollRestoration = "manual";
 
@@ -35,6 +46,40 @@
       });
     });
   }catch(e){}
+})();
+</script>
+<script>
+/* Home / Back links: when the page you came from is the one just before
+   this one in the browser's history, step back through the history (the
+   page comes back exactly as you left it and the phone's own back button
+   stays consistent). Otherwise just open the page. */
+(function(){
+  function norm(p){ return p.replace(/index\.html$/, ""); }
+
+  window.__goHome = function(){
+    var dest = "index.html";
+    var canStep = false;
+    try{
+      if(history.length > 1 && document.referrer){
+        var r = new URL(document.referrer), t = new URL(dest, location.href);
+        canStep = r.origin === t.origin && norm(r.pathname) === norm(t.pathname);
+      }
+    }catch(e){}
+
+    if(!canStep){ location.assign(dest); return; }
+
+    var fallback = setTimeout(function(){ location.assign(dest); }, 1200);
+    window.addEventListener("pagehide", function(){ clearTimeout(fallback); }, {once:true});
+    history.back();
+  };
+
+  document.addEventListener("click", function(e){
+    if(e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    var a = e.target && e.target.closest ? e.target.closest('a[href="index.html"]') : null;
+    if(!a || (a.target && a.target !== "_self")) return;
+    e.preventDefault();
+    window.__goHome();
+  });
 })();
 </script>
 
@@ -89,75 +134,7 @@ h1{
     color:#777;
 }
 
-/* ---------- Paper dropdown (same look as the Sort dropdown) ---------- */
-
-.paper-dropdown{
-    position:relative;
-}
-
-.paper-btn{
-    background:#222;
-    color:#eee;
-    border:none;
-    border-radius:8px;
-    padding:10px 16px;
-    font-size:.95em;
-    font-family:inherit;
-    cursor:pointer;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:10px;
-    width:170px;
-}
-
-.paper-btn:hover{
-    background:#262626;
-}
-
-.paper-btn-label{
-    overflow:hidden;
-    white-space:nowrap;
-    text-overflow:ellipsis;
-    min-width:0;
-}
-
-.paper-caret{
-    flex-shrink:0;
-    width:0;
-    height:0;
-    border-left:6px solid transparent;
-    border-right:6px solid transparent;
-    border-top:7px solid #999;
-    transition:transform .15s ease;
-}
-
-.paper-dropdown.open .paper-caret{
-    transform:rotate(180deg);
-}
-
-.paper-panel{
-    box-sizing:border-box;
-    display:none;
-    flex-direction:column;
-    position:absolute;
-    top:calc(100% + 10px);
-    right:0;
-    width:280px;
-    max-width:calc(100vw - 24px);
-    max-height:min(65vh, 460px);
-    background:#1d1d1d;
-    border:1px solid #2c2c2c;
-    border-radius:10px;
-    padding:10px;
-    box-shadow:0 6px 18px rgba(0,0,0,.5);
-    z-index:1600;
-    text-align:left;
-}
-
-.paper-panel.open{
-    display:flex;
-}
+/* ---------- Paper list (inside the Sort panel) ---------- */
 
 .paper-panel-actions{
     display:flex;
@@ -508,165 +485,6 @@ h1{
     background:#383838;
 }
 
-.videoPickerValue{
-    display:flex;
-
-    align-items:center;
-
-    justify-content:flex-end;
-
-    gap:8px;
-
-    flex:1 1 auto;
-    min-width:0;
-
-    color:#eee;
-
-    font-size:13.5px;
-}
-
-.videoPickerValue span{
-    overflow:hidden;
-
-    text-overflow:ellipsis;
-
-    white-space:nowrap;
-
-    min-width:0;
-}
-
-.videoPickerCaret{
-    flex-shrink:0;
-
-    width:0;
-    height:0;
-
-    border-left:6px solid transparent;
-    border-right:6px solid transparent;
-    border-top:7px solid #999;
-
-    transition:transform .15s ease;
-}
-
-.videoPickerRow.open .videoPickerCaret{
-    transform:rotate(180deg);
-}
-
-/* Bare "mere popup" - no header/back button, just the option
-   list - anchored above/below its own trigger row via inline
-   left/top set in JS at open-time. Matches video.html's
-   #videoSpeedPopup exactly. */
-.videoOptionPopup{
-    box-sizing:border-box;
-
-    position:fixed;
-
-    display:none;
-    flex-direction:column;
-
-    width:190px;
-    max-width:calc(100vw - 24px);
-    max-height:min(60vh, 420px);
-
-    padding:10px;
-
-    background:#1d1d1d;
-
-    border:1px solid #2c2c2c;
-
-    border-radius:10px;
-
-    box-shadow:0 6px 18px rgba(0,0,0,.5);
-
-    z-index:1700;
-}
-
-.videoOptionPopup.open{
-    display:flex;
-}
-
-.videoOptionList{
-    display:flex;
-    flex-direction:column;
-
-    flex:1 1 auto;
-
-    min-height:0;
-
-    overflow-y:auto;
-}
-
-.videoOption{
-    display:flex;
-
-    align-items:center;
-
-    justify-content:space-between;
-
-    gap:8px;
-
-    width:100%;
-
-    padding:8px 8px;
-
-    border:0;
-    border-radius:6px;
-
-    background:transparent;
-
-    color:#ddd;
-
-    font-size:13px;
-
-    font-family:inherit;
-
-    text-align:left;
-
-    white-space:nowrap;
-
-    overflow:hidden;
-
-    text-overflow:ellipsis;
-
-    cursor:pointer;
-}
-
-.videoOption:hover{
-    background:#262626;
-}
-
-.videoOption.active{
-    background:#262626;
-
-    color:#fff;
-}
-
-.videoOption .videoOptionCheck{
-    flex:0 0 auto;
-
-    min-width:14px;
-
-    text-align:center;
-
-    color:#999;
-
-    visibility:hidden;
-}
-
-.videoOption.active .videoOptionCheck{
-    visibility:visible;
-}
-
-.videoOption .videoOptionLabel{
-    flex:1 1 auto;
-
-    min-width:0;
-
-    overflow:hidden;
-
-    text-overflow:ellipsis;
-}
-
 /* Toggle switch, matching video.html's .toggleSwitch exactly -
    used for the boolean "Show supporting images by default"
    setting instead of a checkbox. */
@@ -998,9 +816,6 @@ h1{
 
 </div>
 
-<div class="videoOptionPopup" id="optionPopup" role="menu">
-    <div class="videoOptionList" id="optionList"></div>
-</div>
 
 </div>
 
@@ -1203,31 +1018,7 @@ const sortButton = document.getElementById("sortButton");
 const sortPanel = document.getElementById("sortPanel");
 const sortDropdown = document.getElementById("sortDropdown");
 const paperBreaksToggle = document.getElementById("paperBreaksToggle");
-const optionPopup = document.getElementById("optionPopup");
-const optionList = document.getElementById("optionList");
 
-const PICKER_GROUPS = {
-    readingLevel: {
-        options: [
-            { value:"slow", label:"Slow" },
-            { value:"average", label:"Average" },
-            { value:"fast", label:"Fast" }
-        ],
-        get(){ return readingLevel; },
-        set(value){
-            readingLevel = value;
-            try{ localStorage.setItem("readingLevel", value); }catch(e){}
-        }
-    }
-};
-
-let openPickerKey = null;
-
-function pickerValueLabel(key){
-    const group = PICKER_GROUPS[key];
-    const current = group.options.find(opt => opt.value === group.get());
-    return current ? current.label : "";
-}
 
 function applySortUI(){
     const active = getActiveSortGroup();
@@ -1255,24 +1046,11 @@ function applySettingsUI(){
     applySortUI();
 }
 
-function closeOptionPopup(){
-    if(openPickerKey){
-        const rowEl = document.getElementById(openPickerKey + "Open");
-        if(rowEl){
-            rowEl.classList.remove("open");
-            rowEl.setAttribute("aria-expanded", "false");
-        }
-    }
-    optionPopup.classList.remove("open");
-    openPickerKey = null;
-}
-
 function closeMenus(){
     settingsPanel.classList.remove("open");
     settingsButton.setAttribute("aria-expanded", "false");
     sortPanel.classList.remove("open");
     sortDropdown.classList.remove("open");
-    closeOptionPopup();
 }
 
 settingsButton.addEventListener("click", (e) => {
@@ -1302,7 +1080,6 @@ sortButton.addEventListener("click", (e) => {
 
 sortPanel.addEventListener("click", (e) => e.stopPropagation());
 settingsPanel.addEventListener("click", (e) => e.stopPropagation());
-optionPopup.addEventListener("click", (e) => e.stopPropagation());
 
 // Scrolling closes the sort/settings menus (like category.html). Ignored
 // right after a re-render, because changing the content height can nudge
@@ -1314,89 +1091,8 @@ window.addEventListener("scroll", () => {
     settingsButton.setAttribute("aria-expanded", "false");
     sortPanel.classList.remove("open");
     sortDropdown.classList.remove("open");
-    closeOptionPopup();
 }, { passive: true });
 
-function buildOptionList(key){
-    const group = PICKER_GROUPS[key];
-    optionList.replaceChildren();
-
-    group.options.forEach(opt => {
-        const isActive = opt.value === group.get();
-
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "videoOption" + (isActive ? " active" : "");
-        button.setAttribute("role", "menuitemradio");
-        button.setAttribute("aria-checked", isActive ? "true" : "false");
-
-        const label = document.createElement("span");
-        label.className = "videoOptionLabel";
-        label.textContent = opt.label;
-
-        const check = document.createElement("span");
-        check.className = "videoOptionCheck";
-        check.textContent = "✓";
-
-        button.append(label, check);
-
-        button.addEventListener("click", (event) => {
-            event.stopPropagation();
-            group.set(opt.value);
-            applySettingsUI();
-            closeOptionPopup();
-            render();
-        });
-
-        optionList.appendChild(button);
-    });
-}
-
-function positionOptionPopup(rowEl){
-    const rect = rowEl.getBoundingClientRect();
-    const popupWidth = Math.min(190, window.innerWidth - 24);
-    const margin = 12;
-
-    let left = rect.left + (rect.width / 2) - (popupWidth / 2);
-    left = Math.max(margin, Math.min(left, window.innerWidth - popupWidth - margin));
-    optionPopup.style.left = left + "px";
-
-    const spaceBelow = window.innerHeight - rect.bottom - 8;
-    const spaceAbove = rect.top - 8;
-
-    if(spaceBelow >= 160 || spaceBelow >= spaceAbove){
-        optionPopup.style.top = (rect.bottom + 8) + "px";
-        optionPopup.style.bottom = "auto";
-    }else{
-        optionPopup.style.bottom = (window.innerHeight - rect.top + 8) + "px";
-        optionPopup.style.top = "auto";
-    }
-}
-
-function openOptionPopup(key, rowEl){
-    openPickerKey = key;
-    buildOptionList(key);
-    optionPopup.classList.add("open");
-    positionOptionPopup(rowEl);
-    rowEl.classList.add("open");
-    rowEl.setAttribute("aria-expanded", "true");
-}
-
-window.addEventListener("resize", () => {
-    if(openPickerKey){
-        positionOptionPopup(document.getElementById(openPickerKey + "Open"));
-    }
-});
-
-document.querySelectorAll(".videoPickerRow[data-picker]").forEach(row => {
-    row.addEventListener("click", (e) => {
-        e.stopPropagation();
-        const key = row.dataset.picker;
-        const wasOpen = openPickerKey === key;
-        closeOptionPopup();
-        if(!wasOpen) openOptionPopup(key, row);
-    });
-});
 
 paperBreaksToggle.addEventListener("click", (e) => {
     e.stopPropagation();
@@ -1582,10 +1278,6 @@ document.addEventListener("click", closeMenus);
 
 document.addEventListener("keydown", (e) => {
     if(e.key === "Escape"){
-        if(optionPopup.classList.contains("open")){
-            closeOptionPopup();
-            return;
-        }
         closeMenus();
         closeWarning();
     }
@@ -1769,7 +1461,11 @@ function returningFromViewer(){
     if(saved === null) return null;
 
     const ref = document.referrer || "";
-    const cameFromViewer = ref ? /image\.html/.test(ref) : flag === "yes";
+    const navEntry = performance.getEntriesByType("navigation")[0];
+    const cameFromViewer =
+        (navEntry && navEntry.type === "back_forward")
+            ? true
+            : (ref ? /image\.html/.test(ref) : flag === "yes");
 
     if(!cameFromViewer){
         try{ sessionStorage.removeItem(SCROLL_KEY); }catch(e){}

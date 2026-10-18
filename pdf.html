@@ -4384,6 +4384,36 @@ body.reading-mode #readingModeFloat{
   var link = document.getElementById("backBtn");
   if(!link) return;
 
+  /* Go back to where we came from. When that page is the one just before
+     this one in the browser's history, step back through the history
+     instead of opening it again - that restores the page exactly as it was
+     and keeps the phone's own back button working normally. Otherwise
+     (opened in a new tab, direct link...) open the page. */
+  function norm(p){ return p.replace(/index\.html$/, ""); }
+
+  function goBackTo(dest, before){
+    try{ if(before) before(); }catch(e){}
+
+    var canStep = false;
+    try{
+      if(history.length > 1 && document.referrer){
+        var r = new URL(document.referrer), t = new URL(dest, location.href);
+        canStep = r.origin === t.origin &&
+          norm(r.pathname) === norm(t.pathname) &&
+          r.search === t.search;
+      }
+    }catch(e){}
+
+    if(!canStep){
+      location.assign(dest);
+      return;
+    }
+
+    var fallback = setTimeout(function(){ location.assign(dest); }, 1200);
+    window.addEventListener("pagehide", function(){ clearTimeout(fallback); }, {once:true});
+    history.back();
+  }
+
   function sameSite(v){
     try{
       var u = new URL(v, location.href);
@@ -4439,13 +4469,16 @@ body.reading-mode #readingModeFloat{
   window.__returnTarget = target;
   link.href = target;
 
-  link.addEventListener("click", function(e){
-    e.preventDefault();
-    try{
+  window.__goBack = function(){
+    goBackTo(target, function(){
       sessionStorage.setItem("restoreSearch", "yes");
       sessionStorage.setItem("returnFromPage", "yes");
-    }catch(x){}
-    location.assign(target);
+    });
+  };
+
+  link.addEventListener("click", function(e){
+    e.preventDefault();
+    window.__goBack();
   });
 })();
 </script>
@@ -5262,18 +5295,11 @@ function closeSearch(){
    BACK
 ============================================================ */
 
+/* The Back button itself is wired up very early (see the small script in the
+   header) so it works even before this file has finished loading. */
 const backButton = document.getElementById("backBtn");
 
 backButton.href = returnPage || "index.html";
-
-backButton.addEventListener("click", event => {
-  event.preventDefault();
-
-  sessionStorage.setItem("restoreSearch", "yes");
-  sessionStorage.setItem("returnFromPage", "yes");
-
-  window.location.assign(returnPage || "index.html");
-});
 
 /* ============================================================
    SAFE OUTPUT SCALE
@@ -17662,9 +17688,13 @@ function gateOnControversialWarning(){
     };
 
     controversialWarningBack.onclick = () => {
-      sessionStorage.setItem("restoreSearch", "yes");
-      sessionStorage.setItem("returnFromPage", "yes");
-      window.location.assign(returnPage || "index.html");
+      if(window.__goBack){
+        window.__goBack();
+      }else{
+        sessionStorage.setItem("restoreSearch", "yes");
+        sessionStorage.setItem("returnFromPage", "yes");
+        window.location.assign(returnPage || "index.html");
+      }
       // Deliberately never resolves - the page is navigating away.
     };
 

@@ -2,26 +2,37 @@
 <html>
 <head>
 <script>
-/* A refresh should start the page fresh, from the top - not jump back to
-   wherever you were before you opened something. (Coming back from a
-   paper/image/video still restores your spot; only a reload resets it.) */
+/* A refresh starts this page fresh, from the top, like a normal new visit.
+   Only this page's remembered "where I was" is forgotten - saved settings,
+   favorites and other saved data are never touched. (Coming back from a
+   paper/image/video/other page still restores your spot; only a reload
+   resets it.) */
 (function(){
   try{
+    var keys = ["returnFromPage"];
+    var prefixes = ["categoryScroll-", "openDetails-"];
+
+    function forget(){
+      keys.forEach(function(k){ sessionStorage.removeItem(k); });
+      Object.keys(sessionStorage).forEach(function(k){
+        for(var i = 0; i < prefixes.length; i++){
+          if(k.indexOf(prefixes[i]) === 0){ sessionStorage.removeItem(k); break; }
+        }
+      });
+    }
+
+    // Page restored whole from the browser's back/forward cache: it is
+    // already exactly as it was, so drop any leftover "restore me" notes.
+    window.addEventListener("pageshow", function(e){
+      if(e.persisted){ try{ forget(); }catch(err){} }
+    });
+
     var nav = performance.getEntriesByType && performance.getEntriesByType("navigation")[0];
     var isReload = nav ? nav.type === "reload"
       : (performance.navigation && performance.navigation.type === 1);
     if(!isReload) return;
 
-    var fixed = ["indexScroll","returnToIndex","scrollPosition","restoreSearch",
-      "lastSearch","searchResultsScroll","returnFromPage","galleryScroll",
-      "galleryReturn","timelineScroll","videoScrollPosition","videoReturnToIndex"];
-    fixed.forEach(function(k){ sessionStorage.removeItem(k); });
-
-    Object.keys(sessionStorage).forEach(function(k){
-      if(k.indexOf("categoryScroll-") === 0 || k.indexOf("openDetails-") === 0){
-        sessionStorage.removeItem(k);
-      }
-    });
+    forget();
 
     if("scrollRestoration" in history) history.scrollRestoration = "manual";
 
@@ -35,6 +46,40 @@
       });
     });
   }catch(e){}
+})();
+</script>
+<script>
+/* Home / Back links: when the page you came from is the one just before
+   this one in the browser's history, step back through the history (the
+   page comes back exactly as you left it and the phone's own back button
+   stays consistent). Otherwise just open the page. */
+(function(){
+  function norm(p){ return p.replace(/index\.html$/, ""); }
+
+  window.__goHome = function(){
+    var dest = "index.html";
+    var canStep = false;
+    try{
+      if(history.length > 1 && document.referrer){
+        var r = new URL(document.referrer), t = new URL(dest, location.href);
+        canStep = r.origin === t.origin && norm(r.pathname) === norm(t.pathname);
+      }
+    }catch(e){}
+
+    if(!canStep){ location.assign(dest); return; }
+
+    var fallback = setTimeout(function(){ location.assign(dest); }, 1200);
+    window.addEventListener("pagehide", function(){ clearTimeout(fallback); }, {once:true});
+    history.back();
+  };
+
+  document.addEventListener("click", function(e){
+    if(e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    var a = e.target && e.target.closest ? e.target.closest('a[href="index.html"]') : null;
+    if(!a || (a.target && a.target !== "_self")) return;
+    e.preventDefault();
+    window.__goHome();
+  });
 })();
 </script>
 
@@ -1526,8 +1571,19 @@ applySettingsUI();
 
     const scrollKey =
     "categoryScroll-" + currentCategory;
+    // "Coming back" only counts when it really is: the browser's own
+    // back/forward, or arriving from a viewer. A fresh visit starts at the
+    // top even if an old saved spot is lying around.
     const returning =
-    sessionStorage.getItem("returnFromPage") === "yes";
+    sessionStorage.getItem("returnFromPage") === "yes" &&
+    (
+        (function(){
+            const e = performance.getEntriesByType("navigation")[0];
+            return !!(e && e.type === "back_forward");
+        })()
+        ||
+        /(pdf|image|video)\.html/.test(document.referrer || "")
+    );
 if(!returning){
 
     sessionStorage.removeItem(scrollKey);
@@ -2198,10 +2254,51 @@ if(returning){
 
             requestAnimationFrame(()=>{
 
-                window.scrollTo({
-                    top: parseInt(savedScroll),
-                    behavior: "instant"
-                });
+                // Images inside the open panels fill in after the page
+                // appears, so keep nudging to the saved spot until it
+                // holds (stops the moment you touch or scroll yourself).
+                (function restoreSpot(target){
+
+                    const events = ["wheel","touchstart","mousedown","keydown"];
+                    let done = false;
+                    let stableSince = 0;
+                    const startedAt = performance.now();
+
+                    function finish(){
+                        if(done) return;
+                        done = true;
+                        events.forEach(ev => window.removeEventListener(ev, finish));
+                    }
+
+                    events.forEach(ev =>
+                        window.addEventListener(ev, finish, {passive:true})
+                    );
+
+                    function step(){
+
+                        if(done) return;
+
+                        window.scrollTo({ top: target, behavior: "instant" });
+
+                        const now = performance.now();
+
+                        if(Math.abs(window.scrollY - target) <= 2){
+                            if(!stableSince) stableSince = now;
+                            if(now - stableSince > 700) return finish();
+                        }else{
+                            stableSince = 0;
+                        }
+
+                        if(now - startedAt > 4000) return finish();
+
+                        requestAnimationFrame(step);
+
+                    }
+
+                    step();
+
+                })(parseInt(savedScroll));
+
                sessionStorage.removeItem(
     "returnFromPage"
 );

@@ -1,26 +1,37 @@
 <!DOCTYPE html><html>
 <head>
 <script>
-/* A refresh should start the page fresh, from the top - not jump back to
-   wherever you were before you opened something. (Coming back from a
-   paper/image/video still restores your spot; only a reload resets it.) */
+/* A refresh starts this page fresh, from the top, like a normal new visit.
+   Only this page's remembered "where I was" is forgotten - saved settings,
+   favorites and other saved data are never touched. (Coming back from a
+   paper/image/video/other page still restores your spot; only a reload
+   resets it.) */
 (function(){
   try{
+    var keys = ["indexScroll", "returnToIndex", "scrollPosition", "restoreSearch", "lastSearch", "searchResultsScroll", "videoScrollPosition", "videoReturnToIndex"];
+    var prefixes = [];
+
+    function forget(){
+      keys.forEach(function(k){ sessionStorage.removeItem(k); });
+      Object.keys(sessionStorage).forEach(function(k){
+        for(var i = 0; i < prefixes.length; i++){
+          if(k.indexOf(prefixes[i]) === 0){ sessionStorage.removeItem(k); break; }
+        }
+      });
+    }
+
+    // Page restored whole from the browser's back/forward cache: it is
+    // already exactly as it was, so drop any leftover "restore me" notes.
+    window.addEventListener("pageshow", function(e){
+      if(e.persisted){ try{ forget(); }catch(err){} }
+    });
+
     var nav = performance.getEntriesByType && performance.getEntriesByType("navigation")[0];
     var isReload = nav ? nav.type === "reload"
       : (performance.navigation && performance.navigation.type === 1);
     if(!isReload) return;
 
-    var fixed = ["indexScroll","returnToIndex","scrollPosition","restoreSearch",
-      "lastSearch","searchResultsScroll","returnFromPage","galleryScroll",
-      "galleryReturn","timelineScroll","videoScrollPosition","videoReturnToIndex"];
-    fixed.forEach(function(k){ sessionStorage.removeItem(k); });
-
-    Object.keys(sessionStorage).forEach(function(k){
-      if(k.indexOf("categoryScroll-") === 0 || k.indexOf("openDetails-") === 0){
-        sessionStorage.removeItem(k);
-      }
-    });
+    forget();
 
     if("scrollRestoration" in history) history.scrollRestoration = "manual";
 
@@ -2042,6 +2053,66 @@ document.getElementById(
 
 }
 
+
+function restoreIndexScroll(target){
+
+const html = document.documentElement;
+const cancelEvents = ["wheel","touchstart","mousedown","keydown"];
+
+let done = false;
+let stableSince = 0;
+const startedAt = performance.now();
+
+function finish(){
+
+if(done) return;
+done = true;
+
+cancelEvents.forEach(ev => window.removeEventListener(ev, finish));
+
+html.style.scrollBehavior = "";
+html.style.scrollSnapType = "";
+
+}
+
+cancelEvents.forEach(ev =>
+window.addEventListener(ev, finish, {passive:true})
+);
+
+html.style.scrollBehavior = "auto";
+html.style.scrollSnapType = "none";
+
+function step(){
+
+if(done) return;
+
+window.scrollTo(0, target);
+
+const now = performance.now();
+
+if(Math.abs(window.scrollY - target) <= 2){
+
+if(!stableSince) stableSince = now;
+
+// Held steady for a while - content has settled.
+if(now - stableSince > 800) return finish();
+
+}else{
+
+stableSince = 0;
+
+}
+
+if(now - startedAt > 5000) return finish();
+
+requestAnimationFrame(step);
+
+}
+
+step();
+
+}
+
 function goToLanthano(){
 
 sessionStorage.setItem(
@@ -2310,7 +2381,30 @@ sessionStorage.getItem(
 "indexScroll"
 );
 
+// Only treat this as "coming back" when it really is: the browser's own
+// back/forward, or arriving from another page of this site. A fresh visit
+// (typed address, bookmark, new tab) always starts at the top, even if an
+// old saved spot is still lying around.
+const navEntry =
+performance.getEntriesByType("navigation")[0];
+
+const cameBack =
+(navEntry && navEntry.type === "back_forward") ||
+(function(){
+try{
+if(!document.referrer) return false;
+const ref = new URL(document.referrer);
+return (
+ref.origin === location.origin &&
+!/(^|\/)(index\.html)?$/.test(ref.pathname)
+);
+}catch(e){
+return false;
+}
+})();
+
 const returningToIndex =
+cameBack &&
 sessionStorage.getItem(
 "returnToIndex"
 ) === "yes";
@@ -2323,7 +2417,14 @@ sessionStorage.removeItem(
 
 }
 const restoreSearch =
-sessionStorage.getItem("restoreSearch");
+cameBack ? sessionStorage.getItem("restoreSearch") : null;
+
+if(!cameBack){
+sessionStorage.removeItem("restoreSearch");
+sessionStorage.removeItem("lastSearch");
+sessionStorage.removeItem("scrollPosition");
+sessionStorage.removeItem("searchResultsScroll");
+}
 
 const savedSearch =
 sessionStorage.getItem("lastSearch");
@@ -2409,31 +2510,15 @@ else if(
 returningToIndex &&
 savedIndexScroll
 ){
-requestAnimationFrame(()=>{
-
-requestAnimationFrame(()=>{
-
-// Jump straight to where you were (no smooth-scroll animation),
-// pausing the page's smooth scrolling / snapping for just this jump.
-document.documentElement.style.scrollBehavior = "auto";
-document.documentElement.style.scrollSnapType = "none";
-
-window.scrollTo(
-0,
-parseInt(savedIndexScroll)
-);
-
-requestAnimationFrame(()=>{
-document.documentElement.style.scrollBehavior = "";
-document.documentElement.style.scrollSnapType = "";
-});
+// Go back to exactly where you were. The page keeps growing for a moment
+// as featured papers / images fill in, so keep nudging to the saved spot
+// until it holds (stopping the instant you touch or scroll yourself).
+// Smooth scrolling and snapping are paused only while this happens.
+restoreIndexScroll(parseInt(savedIndexScroll));
 
 sessionStorage.removeItem(
 "returnToIndex"
 );
-});
-
-});
 
 }
 
