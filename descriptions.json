@@ -264,6 +264,9 @@
       "Google Playstore.png",
       "Star of David.png",
       "Trinity.png"
+    ],
+    "videos": [
+      { "file": "predictive programming.mp4", "title": "Predictive Programming", "source": "site", "thumbnail": "prediction.jpg", "group": "Other", "groupLabel": "Featured" }
     ]
   },
   "corrupt_versions": {

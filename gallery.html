@@ -1406,7 +1406,10 @@ function visibleVideos(paper){
             file: v.file.trim(),
             title: v.title,
             duration: v.duration,
-            thumbnail: v.thumbnail
+            thumbnail: v.thumbnail,
+            source: v.source,
+            group: v.group,
+            groupLabel: v.groupLabel
         }));
 }
 
@@ -1427,7 +1430,7 @@ function viewerUrl(image, paperTitle){
 function videoUrl(v, paperTitle){
     const base = v.file.split("/").pop().replace(/\.[^/.]+$/, "");
     return "video.html?video=" + encodeURIComponent(v.file) +
-        "&source=r2" +
+        (v.source === "site" ? "" : "&source=r2") +
         "&title=" + encodeURIComponent(v.title || base) +
         "&paper=" + encodeURIComponent(paperTitle) +
         "&return=" + encodeURIComponent(window.location.href);
@@ -1785,7 +1788,7 @@ function render(){
 
             const name = document.createElement("span");
             name.className = "paper-break-title";
-            name.textContent = paper.title;
+            name.textContent = paper.label || paper.title;
 
             const count = document.createElement("span");
             count.className = "paper-break-count";
@@ -1798,7 +1801,7 @@ function render(){
 
         items.forEach(item =>
             mode === "videos"
-                ? addVideo(item, paper.title)
+                ? addVideo(item, paper.label || paper.title)
                 : addImage(item, paper.title)
         );
     });
@@ -1928,10 +1931,36 @@ Promise.all([
             .filter(p => p.items.length)
             .sort((a, b) => a.paper.title.localeCompare(b.paper.title));
 
-        lists.videos = entries
-            .map(([key, paper]) => ({key, paper, items: visibleVideos(paper)}))
-            .filter(p => p.items.length)
-            .sort((a, b) => a.paper.title.localeCompare(b.paper.title));
+        // A video with a "group" (for example "Other") isn't listed under its
+        // paper; it goes into that group in the Papers list instead, shown
+        // under "groupLabel" (for example "Featured") where its name appears.
+        const videoGroups = {};
+
+        lists.videos = [];
+
+        entries.forEach(([key, paper]) => {
+
+            const normal = [];
+
+            visibleVideos(paper).forEach(v => {
+                if(v.group){
+                    const g = videoGroups[v.group] || (videoGroups[v.group] = {
+                        key: "group:" + v.group,
+                        paper: { title: v.group, label: v.groupLabel || v.group, warning: false },
+                        items: []
+                    });
+                    g.items.push(v);
+                }else{
+                    normal.push(v);
+                }
+            });
+
+            if(normal.length) lists.videos.push({key, paper, items: normal});
+        });
+
+        lists.videos.sort((a, b) => a.paper.title.localeCompare(b.paper.title));
+
+        Object.values(videoGroups).forEach(g => lists.videos.push(g));
 
         // Everything is on by default, except graphic papers, which stay
         // off until you opt in to them from the menu. (Images and Videos

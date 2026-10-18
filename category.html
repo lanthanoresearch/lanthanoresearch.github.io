@@ -1935,6 +1935,7 @@ function getVisibleVideos(paper){
         v &&
         typeof v.file === "string" &&
         v.file.trim() &&
+        !v.group &&
         !v.file.trim().startsWith("#$")
     );
 }
@@ -2002,7 +2003,7 @@ function buildVideoGalleryHtml(key, paper){
 
                 return `
 <a
-    href="video.html?video=${encodeURIComponent(file)}&source=r2&title=${encodeURIComponent(name)}&paper=${encodeURIComponent(paper.title)}&return=${encodeURIComponent(window.location.href)}"
+    href="video.html?video=${encodeURIComponent(file)}${v.source === "site" ? "" : "&source=r2"}&title=${encodeURIComponent(name)}&paper=${encodeURIComponent(paper.title)}&return=${encodeURIComponent(window.location.href)}"
     class="gallery-image video-thumb"
     data-scroll-key="${scrollKey}"
     aria-label="Play ${escapeHtml(name)}${v.duration ? " (" + escapeHtml(v.duration) + ")" : ""}"

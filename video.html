@@ -6228,13 +6228,73 @@ newTabButton.addEventListener(
 
         }
 
-        // Bucket videos only play through the gate, so the new tab opens
-        // this same video page (which asks for its own fresh pass and plays
-        // it), instead of a bare file link that can't play on its own.
-        window.open(
-            window.location.href,
-            "_blank"
-        );
+        // Bucket videos only play through the gate. The tab is opened right
+        // away (from the tap, so pop-up blockers allow it), the video is
+        // fetched with a fresh short-lived pass, and the tab then shows it in
+        // the browser's own video player.
+        const win = window.open("", "_blank");
+
+        if(win){
+            try{
+                win.document.title = "Loading video...";
+                win.document.body.style.cssText =
+                    "margin:0;background:#111;color:#bbb;font:16px sans-serif;" +
+                    "display:flex;align-items:center;justify-content:center;height:100vh";
+                win.document.body.textContent = "Loading video...";
+            }catch(e){}
+        }
+
+        try{
+
+            let link = r2Ticket
+                ? VIDEO_API + "/play?t=" + encodeURIComponent(r2Ticket)
+                : await r2FreshLink();
+
+            let target = link;
+
+            try{
+
+                let res = await fetch(link);
+
+                if(!res.ok && r2Ticket){
+                    link = await r2FreshLink();
+                    target = link;
+                    res = await fetch(link);
+                }
+
+                if(!res.ok){
+                    throw new Error("open");
+                }
+
+                target = URL.createObjectURL(await res.blob());
+
+            }catch(err){
+
+                // Couldn't fetch it here; fall back to the direct link
+                // (the browser's player still opens it).
+                if(!target){
+                    throw err;
+                }
+
+            }
+
+            if(win){
+                win.location.href = target;
+            }else{
+                window.location.href = target;
+            }
+
+        }catch(err){
+
+            if(win) win.close();
+
+            showToast(
+                (err && err.message && err.message !== "Failed to fetch" && err.message !== "open")
+                    ? err.message
+                    : "Couldn't open this video right now."
+            );
+
+        }
 
     }
 );

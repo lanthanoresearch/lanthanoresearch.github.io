@@ -1803,6 +1803,41 @@ ${new Date().toLocaleString()}
 
 
         /*
+        Videos a paper lists as hosted on this site ("source": "site") are
+        filed with their paper, so drop them from the loose Videos folder
+        list to avoid saving the same file twice.
+        */
+
+        Object.values(descriptions).forEach(
+            paper => {
+
+                visibleVideos(paper).forEach(
+                    v => {
+
+                        if(v.source === "site"){
+
+                            const at =
+                                VIDEO_FILES.indexOf(
+                                    v.file.trim()
+                                );
+
+                            if(at !== -1){
+
+                                VIDEO_FILES.splice(at, 1);
+
+                            }
+
+                        }
+
+                    }
+                );
+
+            }
+        );
+
+
+
+        /*
         ==================================================
         GET ARTICLES
         ==================================================
@@ -2242,9 +2277,13 @@ ${new Date().toLocaleString()}
                     );
 
                     const videoBlob =
-                        await fetchGatedVideo(
-                            file
-                        );
+                        paperVideos[j].source === "site"
+                            ? await fetchFile(
+                                file
+                            )
+                            : await fetchGatedVideo(
+                                file
+                            );
 
                     checkCancelled();
 
