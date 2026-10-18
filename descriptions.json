@@ -372,6 +372,22 @@
       "Strange Shadows.png",
       "Take-off Path.png",
       "TETR Satellite.png"
+    ],
+    "videos": [
+      { "file": "Moon/Don Pettit of NASA.mp4", "title": "Don Pettit of NASA", "duration": "0:14" },
+      { "file": "Moon/Hammer Drop slomo timed.mp4", "title": "Hammer Drop slomo timed", "duration": "0:22" },
+      { "file": "Moon/Astronaut Picked up by Wire.mp4", "title": "Astronaut Picked up by Wire", "duration": "0:31" },
+      { "file": "Moon/Threats.mp4", "title": "Threats", "duration": "0:36" },
+      { "file": "Moon/Duke gets the Van Allen Belts Wrong.mp4", "title": "Duke gets the Van Allen Belts Wrong", "duration": "0:47" },
+      { "file": "Moon/Buzz Aldrin Admit.mp4", "title": "Buzz Aldrin Admit", "duration": "0:57" },
+      { "file": "Moon/Neil Armstrong's Cryptic Comment.mp4", "title": "Neil Armstrong's Cryptic Comment", "duration": "1:17" },
+      { "file": "Moon/Hammer Drop.mp4", "title": "Hammer Drop", "duration": "1:23" },
+      { "file": "Moon/How did the Astronaut Not Fall Over.mp4", "title": "How did the Astronaut Not Fall Over", "duration": "2:23" },
+      { "file": "Moon/Apollo 15 flag waving.mp4", "title": "Apollo 15 flag waving", "duration": "3:12" },
+      { "file": "Moon/Testing Shields Against the Van Allen Belts.mp4", "title": "Testing Shields Against the Van Allen Belts", "duration": "7:02" },
+      { "file": "Moon/Radiation Belt Info.mp4", "title": "Radiation Belt Info", "duration": "13:04" },
+      { "file": "Moon/Deathbed Confession.mp4", "title": "Deathbed Confession", "duration": "14:14" },
+      { "file": "Moon/Apollo 11 Press Conference.mp4", "title": "Apollo 11 Press Conference", "duration": "1:23:30" }
     ]
   },
   "titanic": {
