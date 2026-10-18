@@ -819,6 +819,133 @@ async function fetchFile(url){
 
 /*
 ==========================================================
+PAPER VIDEOS (private video storage)
+Listed under "videos" in descriptions.json; entries starting with
+#$ are hidden, same as images. Each one needs a short-lived link
+from the video server, then the file is fetched with it.
+==========================================================
+*/
+
+const VIDEO_API =
+    "https://videos.lanthanoresearch.com";
+
+
+function visibleVideos(paper){
+
+    if(
+        !paper ||
+        !Array.isArray(paper.videos)
+    ){
+
+        return [];
+
+    }
+
+    return paper.videos.filter(
+        v =>
+            v &&
+            typeof v.file === "string" &&
+            v.file.trim() &&
+            !v.file.trim().startsWith("#$")
+    );
+
+}
+
+
+/*
+Set when the video server says "limit reached / unavailable",
+so the rest of the videos are skipped instead of retried.
+*/
+
+let videoServerStopped =
+    false;
+
+
+async function fetchGatedVideo(file){
+
+    checkCancelled();
+
+    if(videoServerStopped){
+
+        throw new Error(
+            `${file} (video server unavailable)`
+        );
+
+    }
+
+    const ticketResponse =
+        await fetch(
+            VIDEO_API +
+            "/ticket?f=" +
+            encodeURIComponent(file),
+            {
+                cache:"no-store"
+            }
+        );
+
+    checkCancelled();
+
+    if(!ticketResponse.ok){
+
+        if(
+            ticketResponse.status === 429 ||
+            ticketResponse.status === 503
+        ){
+
+            videoServerStopped =
+                true;
+
+        }
+
+        throw new Error(
+            `${file} (video ticket ${ticketResponse.status})`
+        );
+
+    }
+
+    const ticket =
+        (await ticketResponse.json()).t;
+
+    const response =
+        await fetch(
+            VIDEO_API +
+            "/play?t=" +
+            encodeURIComponent(ticket)
+        );
+
+    checkCancelled();
+
+    if(!response.ok){
+
+        if(
+            response.status === 429 ||
+            response.status === 503
+        ){
+
+            videoServerStopped =
+                true;
+
+        }
+
+        throw new Error(
+            `${file} (${response.status})`
+        );
+
+    }
+
+    const blob =
+        await response.blob();
+
+    checkCancelled();
+
+    return blob;
+
+}
+
+
+
+/*
+==========================================================
 SET PROGRESS
 ==========================================================
 */
@@ -1731,6 +1858,16 @@ ${new Date().toLocaleString()}
         );
 
 
+        entries.forEach(
+            ([key, paper]) => {
+
+                totalFiles +=
+                    visibleVideos(paper).length;
+
+            }
+        );
+
+
         totalFiles +=
             VIDEO_FILES.length;
 
@@ -2005,6 +2142,148 @@ ${new Date().toLocaleString()}
                     }
 
                 }
+
+            }
+
+        }
+
+
+
+        /*
+        ==================================================
+        PAPER VIDEOS
+        Each paper's videos go in a "Videos" folder inside
+        that paper's folder, next to its PDF and Photo folder.
+        ==================================================
+        */
+
+        for(
+            let i = 0;
+            i < entries.length;
+            i++
+        ){
+
+            const [
+                key,
+                paper
+            ] =
+                entries[i];
+
+            const paperVideos =
+                visibleVideos(paper);
+
+            if(
+                !paperVideos.length
+            ){
+
+                continue;
+
+            }
+
+            const title =
+                paper.title ||
+                key ||
+                `Paper ${i + 1}`;
+
+            const paperVideoFolder =
+                root
+                    .folder(
+                        cleanFolderName(
+                            title
+                        )
+                    )
+                    .folder(
+                        "Videos"
+                    );
+
+            const usedNames =
+                new Set();
+
+            for(
+                let j = 0;
+                j < paperVideos.length;
+                j++
+            ){
+
+                checkCancelled();
+
+                const file =
+                    paperVideos[j].file.trim();
+
+                let videoName =
+                    getFileName(
+                        file
+                    );
+
+                if(
+                    usedNames.has(
+                        videoName
+                    )
+                ){
+
+                    videoName =
+                        `${j + 1} - ${videoName}`;
+
+                }
+
+                usedNames.add(
+                    videoName
+                );
+
+                try{
+
+                    setProgress(
+                        (
+                            completedFiles /
+                            totalFiles
+                        ) * 90,
+
+                        `Compiling: ${title} (Video ${j + 1} of ${paperVideos.length})`
+                    );
+
+                    const videoBlob =
+                        await fetchGatedVideo(
+                            file
+                        );
+
+                    checkCancelled();
+
+                    paperVideoFolder.file(
+                        videoName,
+                        videoBlob
+                    );
+
+                }catch(error){
+
+                    if(
+                        error.message ===
+                        "__ARCHIVE_CANCELLED__"
+                    ){
+
+                        throw error;
+
+                    }
+
+                    console.error(
+                        error
+                    );
+
+                    failedFiles.push(
+                        file
+                    );
+
+                }
+
+                completedFiles++;
+
+                setProgress(
+                    (
+                        completedFiles /
+                        totalFiles
+                    ) * 90,
+
+                    `Compiling: ${title} (Video ${j + 1} of ${paperVideos.length})`
+                );
 
             }
 

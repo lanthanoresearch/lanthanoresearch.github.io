@@ -978,8 +978,6 @@ h1{
 
     <div class="settingsScroll">
 
-        <div class="settings-mode-note" id="settingsModeNote">These settings are for Images.</div>
-
         <div class="videoPickerRow" id="paperBreaksRow">
             <span>Paper breaks</span>
             <button type="button" class="toggleSwitch" id="paperBreaksToggle" role="switch" aria-checked="false" aria-label="Show paper name breaks"><span class="toggleKnob"></span></button>
@@ -1103,7 +1101,7 @@ const MODE_KEY = "galleryMode";
 
 const KEYS = {
     images: { sort: "gallerySort",      breaks: "galleryPaperBreaks",      enabled: "galleryEnabled",      names: "galleryShowNames" },
-    videos: { sort: "galleryVideoSort", breaks: "galleryVideoPaperBreaks", enabled: "galleryVideoEnabled", names: "galleryVideoShowNames" }
+    videos: { sort: "galleryVideoSort", breaks: "galleryPaperBreaks",      enabled: "galleryVideoEnabled", names: "galleryShowNames" }
 };
 
 const WORDS = { images: ["Image", "Images"], videos: ["Video", "Videos"] };
@@ -1163,8 +1161,8 @@ function loadModeSettings(m){
     try{
         const s = localStorage.getItem(k.sort);
         if(s && sortLabels[s]) o.sortType = s;
-        o.paperBreaks = localStorage.getItem(k.breaks) === "true";
-        o.showNames = localStorage.getItem(k.names) === "true";
+        o.paperBreaks = localStorage.getItem(KEYS.images.breaks) === "true";
+        o.showNames = localStorage.getItem(KEYS.images.names) === "true";
     }catch(e){}
 
     return o;
@@ -1281,8 +1279,6 @@ function applySettingsUI(){
 
     container.classList.toggle("show-names", showNames);
 
-    document.getElementById("settingsModeNote").textContent =
-        "These settings are for " + WORDS[mode][1] + ".";
 
     applySortUI();
 }
@@ -1338,7 +1334,7 @@ window.addEventListener("scroll", () => {
 paperBreaksToggle.addEventListener("click", (e) => {
     e.stopPropagation();
     paperBreaks = !paperBreaks;
-    try{ localStorage.setItem(KEYS[mode].breaks, paperBreaks); }catch(err){}
+    try{ localStorage.setItem(KEYS.images.breaks, paperBreaks); }catch(err){}
     applySettingsUI();
     render();
 });
@@ -1346,7 +1342,7 @@ paperBreaksToggle.addEventListener("click", (e) => {
 showNamesToggle.addEventListener("click", (e) => {
     e.stopPropagation();
     showNames = !showNames;
-    try{ localStorage.setItem(KEYS[mode].names, showNames); }catch(err){}
+    try{ localStorage.setItem(KEYS.images.names, showNames); }catch(err){}
     applySettingsUI();
 });
 
@@ -1877,7 +1873,8 @@ function setMode(next){
 
     if(!ready || next === mode) return;
 
-    // Remember this view's settings, then bring in the other view's own.
+    // Only the sorting is separate for Images and Videos; the other settings
+    // (paper breaks, file names) are shared and stay as they are.
     settingsBy[mode] = { sortType, paperBreaks, showNames };
 
     mode = next;
@@ -1887,8 +1884,6 @@ function setMode(next){
 
     const st = settingsBy[mode];
     sortType = st.sortType;
-    paperBreaks = st.paperBreaks;
-    showNames = st.showNames;
 
     papers = lists[mode];
     enabled = enabledBy[mode];
