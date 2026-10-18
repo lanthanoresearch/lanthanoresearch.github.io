@@ -266,7 +266,7 @@
       "Trinity.png"
     ],
     "videos": [
-      { "file": "predictive programming.mp4", "title": "Predictive Programming", "source": "site", "thumbnail": "prediction.jpg", "group": "Other", "groupLabel": "Featured" }
+      { "file": "predictive programming.mp4", "title": "Predictive Programming", "source": "site", "thumbnail": "prediction.jpg", "group": "Predictive Programming", "groupLabel": "Predictive Programming" }
     ]
   },
   "corrupt_versions": {
