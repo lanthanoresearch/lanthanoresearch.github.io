@@ -16,6 +16,14 @@
       "Pentagon Internal Damage.png",
       "Pentagon Security Key Frame.png",
       "Pentagon.png"
+    ],
+    "videos": [
+      { "file": "911/WTC Tower 1 collapse angle 2 (Top Down Collapse).mp4",       "title": "WTC Tower 1 Collapse, Angle 2 (Top Down Collapse)",       "duration": "0:32" },
+      { "file": "911/Tower 7 falling.mp4",                                        "title": "Tower 7 Falling",                                         "duration": "0:33" },
+      { "file": "911/WTC Tower 1 collapse angle 1 (Top Down Collapse).mp4",       "title": "WTC Tower 1 Collapse, Angle 1 (Top Down Collapse)",       "duration": "1:03" },
+      { "file": "911/WTC 2 Tower 2 collapse angle 1 (Top Down Collapse).mp4",     "title": "WTC 2 Tower 2 Collapse, Angle 1 (Top Down Collapse)",     "duration": "1:26" },
+      { "file": "911/Pentagon Security Footage.mp4",                              "title": "Pentagon Security Footage",                               "duration": "1:48" },
+      { "file": "911/WTC Tower 1 collapse angle 3 (No Ground Damage).mp4",        "title": "WTC Tower 1 Collapse, Angle 3 (No Ground Damage)",        "duration": "8:39" }
     ]
   },
     "real_nazis": {

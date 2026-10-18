@@ -6228,33 +6228,13 @@ newTabButton.addEventListener(
 
         }
 
-        // Opened straight from the tap (so pop-up blockers allow it), then
-        // pointed at a short-lived link.
-        const win = window.open("", "_blank");
-
-        try{
-
-            const link = r2Ticket
-                ? VIDEO_API + "/play?t=" + encodeURIComponent(r2Ticket)
-                : await r2FreshLink();
-
-            if(win){
-                win.location.href = link;
-            }else{
-                window.location.href = link;
-            }
-
-        }catch(err){
-
-            if(win) win.close();
-
-            showToast(
-                (err && err.message && err.message !== "Failed to fetch")
-                    ? err.message
-                    : "Couldn't open this video right now."
-            );
-
-        }
+        // Bucket videos only play through the gate, so the new tab opens
+        // this same video page (which asks for its own fresh pass and plays
+        // it), instead of a bare file link that can't play on its own.
+        window.open(
+            window.location.href,
+            "_blank"
+        );
 
     }
 );
