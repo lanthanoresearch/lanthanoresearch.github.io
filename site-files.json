@@ -1,6 +1,6 @@
 {
- "count": 275,
- "totalBytes": 279693513,
+ "count": 289,
+ "totalBytes": 279975391,
  "files": [
   {
    "path": "1 Thessalonians Original Text.png",
@@ -1203,6 +1203,21 @@
    "hash": "0dcfc1e45d4e2964"
   },
   {
+   "path": "thumbnails/Apollo 11 Press Conference.jpg",
+   "size": 13443,
+   "hash": "64ece3f1bf11f040"
+  },
+  {
+   "path": "thumbnails/Apollo 15 flag waving.jpg",
+   "size": 13061,
+   "hash": "39f78cdd4cd84306"
+  },
+  {
+   "path": "thumbnails/Astronaut Picked up by Wire.jpg",
+   "size": 17222,
+   "hash": "ba9d0d370a4a7fa0"
+  },
+  {
    "path": "thumbnails/Atomic Bomb Test.jpg",
    "size": 24199,
    "hash": "72305449c249b372"
@@ -1218,9 +1233,44 @@
    "hash": "c7233a66628df73b"
   },
   {
+   "path": "thumbnails/Buzz Aldrin Admit.jpg",
+   "size": 21715,
+   "hash": "122d7dfadc3563a1"
+  },
+  {
+   "path": "thumbnails/Deathbed Confession.jpg",
+   "size": 16395,
+   "hash": "44be6755dbf6a973"
+  },
+  {
    "path": "thumbnails/Dominic Fireball.jpg",
    "size": 11444,
    "hash": "1f8f11d0f220191c"
+  },
+  {
+   "path": "thumbnails/Don Pettit of NASA.jpg",
+   "size": 30257,
+   "hash": "edce0a24339b3427"
+  },
+  {
+   "path": "thumbnails/Duke gets the Van Allen Belts Wrong.jpg",
+   "size": 21470,
+   "hash": "0f9f3ed9a7cadff6"
+  },
+  {
+   "path": "thumbnails/Hammer Drop slomo timed.jpg",
+   "size": 30622,
+   "hash": "cba8329bb886fb4e"
+  },
+  {
+   "path": "thumbnails/Hammer Drop.jpg",
+   "size": 26354,
+   "hash": "83bbfc3999c20d1a"
+  },
+  {
+   "path": "thumbnails/How did the Astronaut Not Fall Over.jpg",
+   "size": 10657,
+   "hash": "8151ec9641dc63ce"
   },
   {
    "path": "thumbnails/Ivy Mike.jpg",
@@ -1228,14 +1278,34 @@
    "hash": "6abd9a83e0923ab4"
   },
   {
+   "path": "thumbnails/Neil Armstrong's Cryptic Comment.jpg",
+   "size": 26408,
+   "hash": "7d6b1b285bc999fb"
+  },
+  {
    "path": "thumbnails/Pentagon Security Footage.jpg",
    "size": 14910,
    "hash": "2877e3bbb166225b"
   },
   {
+   "path": "thumbnails/Radiation Belt Info.jpg",
+   "size": 12819,
+   "hash": "3b4a546db0d1a668"
+  },
+  {
    "path": "thumbnails/Sailor Hat Test.jpg",
    "size": 21960,
    "hash": "d49e5f7202ea2a7b"
+  },
+  {
+   "path": "thumbnails/Testing Shields Against the Van Allen Belts.jpg",
+   "size": 16888,
+   "hash": "5e4ffc358e668bda"
+  },
+  {
+   "path": "thumbnails/Threats.jpg",
+   "size": 24567,
+   "hash": "0497724617403d9b"
   },
   {
    "path": "thumbnails/Tower 7 falling.jpg",
