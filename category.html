@@ -868,7 +868,7 @@ h1{
 
 .video-play svg{
     margin:0;
-    transform:translateX(-1.4px);
+    transform:translateX(-0.3px);
 }
 
 
@@ -1189,6 +1189,11 @@ summary:hover{
         <span class="sort-option-arrow" aria-hidden="true"></span>
     </button>
 
+    <button type="button" class="sort-option" data-group="videos">
+        <span class="sort-option-label">Videos</span>
+        <span class="sort-option-arrow" aria-hidden="true"></span>
+    </button>
+
     <button type="button" class="sort-option" data-group="readtime">
         <span class="sort-option-label">Reading Time</span>
         <span class="sort-option-arrow" aria-hidden="true"></span>
@@ -1274,6 +1279,8 @@ const sortLabels = {
     oldest: "Oldest",
     mostimages: "Most Images",
     leastimages: "Least Images",
+    mostvideos: "Most Videos",
+    leastvideos: "Least Videos",
     mostreadtime: "Longest Read",
     leastreadtime: "Shortest Read"
 };
@@ -1285,6 +1292,7 @@ const SORT_GROUPS = {
     title:    { label: "Title",        asc: "az",           desc: "za" },
     date:     { label: "Date",         asc: "oldest",        desc: "newest" },
     images:   { label: "Images",       asc: "leastimages",   desc: "mostimages" },
+    videos:   { label: "Videos",       asc: "leastvideos",   desc: "mostvideos" },
     readtime: { label: "Reading Time", asc: "leastreadtime", desc: "mostreadtime" }
 };
 
@@ -1830,7 +1838,7 @@ document.title = `Lanthano Research - ${pageTitle}`;
 
     
 Promise.all([
-    fetch("descriptions.json").then(response => response.json()),
+    fetch("descriptions.json", { cache: "no-cache" }).then(response => response.json()),
     fetch("page-counts.json").then(response => response.json()),
     fetch("content-pages.json").then(response => response.json()).catch(() => ({}))
 ])
@@ -2016,7 +2024,7 @@ function buildVideoGalleryHtml(key, paper){
 
     return `
         <details class="image-details video-details" data-paper="videos:${escapeHtml(key)}"${videosDefaultOpen ? " open" : ""}>
-            <summary>Videos (${videos.length})</summary>
+            <summary>Supporting Videos (${videos.length})</summary>
 
             <div class="gallery">
 
@@ -2239,6 +2247,22 @@ else if(sortType === "leastimages"){
     filteredPapers.sort((a,b)=>
         getVisibleImageCount(a[1]) -
         getVisibleImageCount(b[1])
+    );
+
+}
+else if(sortType === "mostvideos"){
+
+    filteredPapers.sort((a,b)=>
+        getVisibleVideos(b[1]).length -
+        getVisibleVideos(a[1]).length
+    );
+
+}
+else if(sortType === "leastvideos"){
+
+    filteredPapers.sort((a,b)=>
+        getVisibleVideos(a[1]).length -
+        getVisibleVideos(b[1]).length
     );
 
 }

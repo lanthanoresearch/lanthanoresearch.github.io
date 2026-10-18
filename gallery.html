@@ -821,7 +821,7 @@ h1{
 
 .video-play svg{
     margin:0;
-    transform:translateX(-1.2px);
+    transform:translateX(-0.2px);
 }
 
 .video-duration{
@@ -982,8 +982,8 @@ h1{
     <div class="settingsScroll">
 
         <div class="videoPickerRow" id="paperBreaksRow">
-            <span>Paper breaks</span>
-            <button type="button" class="toggleSwitch" id="paperBreaksToggle" role="switch" aria-checked="false" aria-label="Show paper name breaks"><span class="toggleKnob"></span></button>
+            <span>Group headings</span>
+            <button type="button" class="toggleSwitch" id="paperBreaksToggle" role="switch" aria-checked="false" aria-label="Show group headings"><span class="toggleKnob"></span></button>
         </div>
 
         <div class="videoPickerRow" id="showNamesRow">
@@ -1924,7 +1924,7 @@ modeSwitch.querySelectorAll("button").forEach(btn => {
 /* ---------- Load ---------- */
 
 Promise.all([
-    fetch("descriptions.json").then(response => {
+    fetch("descriptions.json", { cache: "no-cache" }).then(response => {
         if(!response.ok) throw new Error("HTTP " + response.status);
         return response.json();
     }),
