@@ -405,6 +405,16 @@
       "Underwater Nuke or TNT.png",
       "Which one IS a real Nuke.png",
       "Which one isn't a real Nuke.png"
+    ],
+    "videos": [
+      { "file": "Nukes/Dominic Fireball.mp4",   "title": "Dominic Fireball",   "duration": "0:10" },
+      { "file": "Nukes/Truck Disapears.mp4",    "title": "Truck Disappears",   "duration": "0:13" },
+      { "file": "Nukes/Atomic Bomb Test.mp4",   "title": "Atomic Bomb Test",   "duration": "0:22" },
+      { "file": "Nukes/Ivy Mike.mp4",           "title": "Ivy Mike",           "duration": "0:25" },
+      { "file": "Nukes/Biggest Ever Blast.mp4", "title": "Biggest Ever Blast", "duration": "1:04" },
+      { "file": "Nukes/Sailor Hat Test.mp4",    "title": "Sailor Hat Test",    "duration": "1:47" },
+      { "file": "Nukes/Baker Event.mp4",        "title": "Baker Event",        "duration": "1:50" },
+      { "file": "Nukes/Trinity Atomic Test.mp4","title": "Trinity Atomic Test","duration": "2:18" }
     ]
   },
   "number_of_the_beast": {

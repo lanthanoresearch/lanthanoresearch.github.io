@@ -3500,6 +3500,209 @@ homeButton.href =
 
 /* ---------- Video Source ---------- */
 
+/* ---------- Videos kept in the private storage bucket ----------
+
+   Links from the Videos panel carry source=r2 and the video's path inside
+   the bucket (e.g. "Nukes/Ivy Mike.mp4"). Nothing is requested until this
+   page opens (i.e. someone tapped the video). Then the page asks the video
+   gate for a short-lived ticket and plays the video through it.
+
+   Guard rails, so nobody can make this loop endlessly:
+   - at most a few starts per hour / per day on this device, with a short
+     pause between starts (refreshing this page counts as a start);
+   - one automatic retry after a failure, then a pause of several minutes;
+   - the gate itself has its own, stricter limits and monthly cap, so these
+     are only the first layer. */
+
+const VIDEO_API = "https://videos.lanthanoresearch.com";
+
+const isR2 =
+    !!src &&
+    params.get("source") === "r2";
+
+const R2_GUARD_KEY = "r2VideoGuard";
+
+const R2_LIMITS = {
+    cooldownMs: 2500,
+    perHour: 12,
+    perDay: 40,
+    lockMs: 10 * 60 * 1000
+};
+
+let r2MemoryGuard = {};
+let r2Busy = false;
+let r2Retried = false;
+let r2ResumeAt = 0;
+
+function r2GuardRead(){
+    try{
+        return JSON.parse(
+            localStorage.getItem(R2_GUARD_KEY) || "{}"
+        ) || {};
+    }catch(e){
+        return r2MemoryGuard;
+    }
+}
+
+function r2GuardWrite(g){
+    r2MemoryGuard = g;
+    try{
+        localStorage.setItem(R2_GUARD_KEY, JSON.stringify(g));
+    }catch(e){}
+}
+
+function r2Check(){
+
+    const now = Date.now();
+    const g = r2GuardRead();
+    const starts = (g.starts || []).filter(t => now - t < 86400000);
+
+    if(g.lockUntil && now < g.lockUntil){
+        return { ok:false, msg:"Videos are paused for a few minutes. Please try again shortly." };
+    }
+
+    if(starts.filter(t => now - t < 3600000).length >= R2_LIMITS.perHour){
+        return { ok:false, msg:"You've watched a lot of videos. Please try again in a little while." };
+    }
+
+    if(starts.length >= R2_LIMITS.perDay){
+        return { ok:false, msg:"Daily video limit reached. Please try again tomorrow." };
+    }
+
+    const last = starts.length ? starts[starts.length - 1] : 0;
+    const wait = Math.max(0, R2_LIMITS.cooldownMs - (now - last));
+
+    return { ok:true, wait:wait };
+
+}
+
+function r2Record(){
+    const now = Date.now();
+    const g = r2GuardRead();
+    g.starts = (g.starts || []).filter(t => now - t < 86400000);
+    g.starts.push(now);
+    r2GuardWrite(g);
+}
+
+function r2Lock(){
+    const g = r2GuardRead();
+    g.lockUntil = Date.now() + R2_LIMITS.lockMs;
+    r2GuardWrite(g);
+}
+
+function r2Stop(message){
+    try{
+        video.pause();
+        video.removeAttribute("src");
+        video.load();
+    }catch(e){}
+    statusText.textContent = message;
+    loadingOverlay.style.display = "flex";
+}
+
+async function r2Load(resumeAt){
+
+    if(r2Busy) return;
+    r2Busy = true;
+
+    try{
+
+        const gate = r2Check();
+
+        if(!gate.ok){
+            r2Stop(gate.msg);
+            return;
+        }
+
+        statusText.textContent = "Loading video...";
+        loadingOverlay.style.display = "flex";
+
+        if(gate.wait > 0){
+            await new Promise(resolve => setTimeout(resolve, gate.wait));
+        }
+
+        r2Record();
+
+        let data;
+
+        try{
+
+            const res = await fetch(
+                VIDEO_API + "/ticket?f=" + encodeURIComponent(src),
+                { cache: "no-store" }
+            );
+
+            if(!res.ok){
+                const err = new Error("ticket");
+                err.status = res.status;
+                try{ err.serverMessage = (await res.json()).error; }catch(e){}
+                throw err;
+            }
+
+            data = await res.json();
+
+        }catch(err){
+
+            if(err && err.status){
+
+                // The gate answered "no" (limit reached, unavailable, unknown
+                // video). Retrying can't help, so don't.
+                if(err.status === 429 || err.status === 503){
+                    r2Lock();
+                }
+
+                r2Stop(
+                    err.serverMessage ||
+                    "This video isn't available right now."
+                );
+
+                return;
+
+            }
+
+            // Couldn't reach the gate at all: one retry, then pause.
+            if(!r2Retried){
+                r2Retried = true;
+                r2Busy = false;
+                return r2Load(resumeAt);
+            }
+
+            r2Lock();
+            r2Stop("Unable to load video. Please try again in a few minutes.");
+            return;
+
+        }
+
+        r2ResumeAt = resumeAt || 0;
+
+        video.src =
+            VIDEO_API + "/play?t=" + encodeURIComponent(data.t);
+
+        video.load();
+
+    }finally{
+
+        r2Busy = false;
+
+    }
+
+}
+
+// Called by the video's error event for these videos: one more try
+// (with a fresh ticket, resuming where it stopped), then a pause.
+function r2MediaError(){
+
+    if(!r2Retried){
+        r2Retried = true;
+        r2Load(video.currentTime || 0);
+        return;
+    }
+
+    r2Lock();
+    r2Stop("Unable to load video. Please try again in a few minutes.");
+
+}
+
 if(!src){
 
     statusText.textContent =
@@ -3507,6 +3710,10 @@ if(!src){
 
     loadingOverlay.style.display =
         "flex";
+
+}else if(isR2){
+
+    r2Load(0);
 
 }else{
 
@@ -3539,6 +3746,7 @@ if(src){
 
 
     const displayName =
+        (isR2 && params.get("title")) ||
         decodeURIComponent(filename)
             .replace(/\.[^/.]+$/, "")
             .replace(/[-_]+/g, " ")
@@ -3582,6 +3790,16 @@ video.addEventListener(
         loadingOverlay.style.display =
             "none";
 
+        if(isR2 && r2ResumeAt > 0){
+
+            try{
+                video.currentTime = r2ResumeAt;
+            }catch(e){}
+
+            r2ResumeAt = 0;
+
+        }
+
     }
 );
 
@@ -3600,6 +3818,14 @@ video.addEventListener(
 video.addEventListener(
     "error",
     function(){
+
+        if(isR2){
+
+            r2MediaError();
+
+            return;
+
+        }
 
         statusText.textContent =
             "Unable to load video.";
@@ -5843,6 +6069,15 @@ document.addEventListener(
 
 
 /* ---------- Download ---------- */
+
+/* Videos from the private bucket can't be downloaded or opened directly
+   (they only play through the gate), so those two menu items are hidden. */
+if(isR2){
+
+    downloadButton.style.display = "none";
+    newTabButton.style.display = "none";
+
+}
 
 downloadButton.addEventListener(
     "click",

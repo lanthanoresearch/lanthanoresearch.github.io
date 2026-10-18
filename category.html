@@ -820,6 +820,116 @@ h1{
     cursor:pointer;
 }
 
+/* Video tiles: drawn from text only (no video or thumbnail is requested) */
+.video-thumb{
+    position:relative;
+    display:block;
+    aspect-ratio:1/1;
+    border-radius:8px;
+    overflow:hidden;
+    background:linear-gradient(145deg,#232323,#161616);
+    border:1px solid #2c2c2c;
+    box-sizing:border-box;
+    color:#fff;
+    text-decoration:none;
+    cursor:pointer;
+}
+
+.video-thumb:hover{
+    border-color:#444;
+}
+
+/* .gallery img sets the size for image tiles; here the picture simply
+   fills the tile behind the play button, title and length. */
+.video-thumb .video-thumb-img{
+    position:absolute;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    border-radius:0;
+    object-fit:cover;
+}
+
+.video-thumb.has-thumb .video-title{
+    padding:2px 6px;
+    border-radius:4px;
+    background:rgba(0,0,0,0.6);
+    left:6px;
+    right:auto;
+    max-width:calc(100% - 12px);
+    color:#fff;
+}
+
+.video-play{
+    position:absolute;
+    top:50%;
+    left:50%;
+    width:42px;
+    height:42px;
+    margin:-21px 0 0 -21px;
+    border-radius:50%;
+    background:rgba(0,0,0,0.6);
+    border:1px solid rgba(255,255,255,0.35);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+.video-play svg{
+    margin-left:2px;
+}
+
+.video-title{
+    position:absolute;
+    left:8px;
+    right:8px;
+    top:8px;
+    font-size:0.72em;
+    line-height:1.25;
+    color:#ddd;
+    display:-webkit-box;
+    -webkit-line-clamp:2;
+    -webkit-box-orient:vertical;
+    overflow:hidden;
+}
+
+.video-duration{
+    position:absolute;
+    right:6px;
+    bottom:6px;
+    padding:2px 6px;
+    border-radius:4px;
+    background:rgba(0,0,0,0.75);
+    font-size:0.7em;
+    line-height:1.3;
+    color:#fff;
+}
+
+.view-comfy .video-play{
+    width:34px;
+    height:34px;
+    margin:-17px 0 0 -17px;
+}
+
+.view-compact .video-play{
+    width:28px;
+    height:28px;
+    margin:-14px 0 0 -14px;
+}
+
+.view-comfy .video-title,
+.view-compact .video-title{
+    font-size:0.6em;
+    left:5px;
+    right:5px;
+    top:5px;
+}
+
+.view-compact .video-title{
+    display:none;
+}
+
 details{
     margin-top:20px;
 }
@@ -1722,7 +1832,9 @@ function buildGalleryHtml(key, paper){
         !image.trim().startsWith("#$")
     );
 
-    if(!visibleImages.length) return "";
+    const videosHtml = buildVideoGalleryHtml(key, paper);
+
+    if(!visibleImages.length) return videosHtml;
 
     const openAttr = imagesDefaultOpen ? " open" : "";
 
@@ -1743,6 +1855,112 @@ function buildGalleryHtml(key, paper){
         loading="lazy">
 </a>
 `).join("")}
+
+            </div>
+        </details>
+    ` + videosHtml;
+}
+
+// Videos listed under a paper in descriptions.json ("videos": [...]).
+// Each entry is { file, title, duration }; "file" includes its bucket folder
+// (e.g. "Nukes/Ivy Mike.mp4"). A file starting with "#$" is hidden, exactly
+// like images. Nothing here touches the video storage: the tiles are drawn
+// from the text in descriptions.json only, and the video isn't requested
+// until a tile is tapped and the viewer page opens.
+function getVisibleVideos(paper){
+    return (paper.videos || []).map(v =>
+        typeof v === "string" ? { file: v } : v
+    ).filter(v =>
+        v &&
+        typeof v.file === "string" &&
+        v.file.trim() &&
+        !v.file.trim().startsWith("#$")
+    );
+}
+
+// If a thumbnail isn't there as .jpg, try the same name as .png, .webp or
+// .jpeg once each, then give up and keep the plain dark tile.
+function videoThumbFallback(img){
+
+    const exts = ["png", "webp", "jpeg"];
+    const tried = Number(img.dataset.tried || 0);
+
+    if(tried >= exts.length || !/\.[a-z]+$/i.test(img.src)){
+        img.remove();
+        return;
+    }
+
+    img.dataset.tried = tried + 1;
+    img.src = img.src.replace(/\.[a-z]+$/i, "." + exts[tried]);
+
+}
+
+window.videoThumbFallback = videoThumbFallback;
+
+function escapeHtml(text){
+    return String(text == null ? "" : text)
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;");
+}
+
+function buildVideoGalleryHtml(key, paper){
+
+    const videos = getVisibleVideos(paper);
+
+    if(!videos.length) return "";
+
+    return `
+        <details class="image-details video-details" data-paper="videos:${escapeHtml(key)}">
+            <summary>Videos (${videos.length})</summary>
+
+            <div class="gallery">
+
+            ${videos.map(v => {
+
+                const file = v.file.trim();
+
+                const base = file.split("/").pop().replace(/\.[^/.]+$/, "");
+
+                const name = v.title || base;
+
+                // Thumbnails live on this site (never in the video storage),
+                // in a thumbnails/ folder that mirrors the video's folder and
+                // name: "Nukes/Ivy Mike.mp4" -> thumbnails/Nukes/Ivy Mike.jpg
+                // (.png, .webp and .jpeg also work). A video entry can point
+                // somewhere else with "thumbnail".
+                const thumbPath = (v.thumbnail && String(v.thumbnail).trim())
+                    ? String(v.thumbnail).trim()
+                    : "thumbnails/" + file.replace(/\.[^/.]+$/, "") + ".jpg";
+
+                const thumbSrc = thumbPath
+                    .split("/")
+                    .map(part => encodeURIComponent(part))
+                    .join("/");
+
+                return `
+<a
+    href="video.html?video=${encodeURIComponent(file)}&source=r2&title=${encodeURIComponent(name)}&paper=${encodeURIComponent(paper.title)}&return=${encodeURIComponent(window.location.href)}"
+    class="gallery-image video-thumb"
+    data-scroll-key="${scrollKey}"
+    aria-label="Play ${escapeHtml(name)}${v.duration ? " (" + escapeHtml(v.duration) + ")" : ""}"
+>
+    <img
+        class="video-thumb-img"
+        src="${thumbSrc}"
+        alt=""
+        loading="lazy"
+        onload="this.parentNode.classList.add('has-thumb')"
+        onerror="videoThumbFallback(this)">
+    <span class="video-play">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+    </span>
+    <span class="video-title">${escapeHtml(name)}</span>
+    ${v.duration ? `<span class="video-duration">${escapeHtml(v.duration)}</span>` : ""}
+</a>`;
+
+            }).join("")}
 
             </div>
         </details>
