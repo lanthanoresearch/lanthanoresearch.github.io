@@ -753,6 +753,31 @@ h1{
 
 .gallery.videos{
     --row-h:150px;
+    --gap:8px;
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+}
+
+.gallery.videos::after{
+    display:none;
+}
+
+/* Every video tile is the same 16:9 shape, two across (one across on
+   very narrow screens), whatever shape its thumbnail picture is. */
+.gallery.videos .gallery-image{
+    flex-basis:auto;
+    width:auto;
+    aspect-ratio:16 / 9;
+}
+
+.gallery.videos .gallery-image i{
+    display:none;
+}
+
+@media (max-width:339px){
+    .gallery.videos{
+        grid-template-columns:minmax(0, 1fr);
+    }
 }
 
 .video-tile{
@@ -914,7 +939,7 @@ h1{
         --gap:4px;
     }
     .gallery.videos{
-        --row-h:100px;
+        --gap:6px;
     }
     .top-settings{ right:10px; }
 }
