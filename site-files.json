@@ -1,6 +1,6 @@
 {
  "count": 269,
- "totalBytes": 279531907,
+ "totalBytes": 279532530,
  "files": [
   {
    "path": "1 Thessalonians Original Text.png",
@@ -449,8 +449,8 @@
   },
   {
    "path": "descriptions.json",
-   "size": 15554,
-   "hash": "6df4ffc2e5457d93"
+   "size": 16608,
+   "hash": "35943856ae456299"
   },
   {
    "path": "Desert.png",
@@ -1299,8 +1299,8 @@
   },
   {
    "path": "video.html",
-   "size": 167497,
-   "hash": "94ca262f9fad6b75"
+   "size": 167066,
+   "hash": "d3d3a44e68951b93"
   },
   {
    "path": "What is Everything.pdf",
