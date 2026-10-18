@@ -1926,13 +1926,13 @@ function buildVideoGalleryHtml(key, paper){
                 const name = v.title || base;
 
                 // Thumbnails live on this site (never in the video storage),
-                // in a thumbnails/ folder that mirrors the video's folder and
-                // name: "Nukes/Ivy Mike.mp4" -> thumbnails/Nukes/Ivy Mike.jpg
-                // (.png, .webp and .jpeg also work). A video entry can point
-                // somewhere else with "thumbnail".
+                // all together in one thumbnails/ folder, named exactly like
+                // the video (without its folder): "Nukes/Ivy Mike.mp4" ->
+                // thumbnails/Ivy Mike.jpg (.png, .webp and .jpeg also work).
+                // A video entry can point somewhere else with "thumbnail".
                 const thumbPath = (v.thumbnail && String(v.thumbnail).trim())
                     ? String(v.thumbnail).trim()
-                    : "thumbnails/" + file.replace(/\.[^/.]+$/, "") + ".jpg";
+                    : "thumbnails/" + base + ".jpg";
 
                 const thumbSrc = thumbPath
                     .split("/")
