@@ -3510,7 +3510,7 @@ homeButton.href =
    Guard rails, so nobody can make this loop endlessly:
    - at most a few starts per hour / per day on this device, with a short
      pause between starts (refreshing this page counts as a start);
-   - one automatic retry after a failure, then a pause of several minutes;
+   - one automatic retry after a failure, then a pause of a few minutes;
    - the gate itself has its own, stricter limits and monthly cap, so these
      are only the first layer. */
 
@@ -3522,11 +3522,13 @@ const isR2 =
 
 const R2_GUARD_KEY = "r2VideoGuard";
 
+/* Generous on purpose: an ordinary visitor should never reach these. They
+   only stop someone who is starting hundreds of videos in a row. */
 const R2_LIMITS = {
-    cooldownMs: 2500,
-    perHour: 12,
-    perDay: 40,
-    lockMs: 10 * 60 * 1000
+    cooldownMs: 800,
+    perHour: 300,
+    perDay: 1500,
+    lockMs: 3 * 60 * 1000
 };
 
 let r2MemoryGuard = {};
@@ -3562,11 +3564,11 @@ function r2Check(){
     }
 
     if(starts.filter(t => now - t < 3600000).length >= R2_LIMITS.perHour){
-        return { ok:false, msg:"You've watched a lot of videos. Please try again in a little while." };
+        return { ok:false, msg:"A lot of videos have been started from this device in the last hour. Please try again in a little while." };
     }
 
     if(starts.length >= R2_LIMITS.perDay){
-        return { ok:false, msg:"Daily video limit reached. Please try again tomorrow." };
+        return { ok:false, msg:"A very large number of videos have been started from this device today. Please try again tomorrow." };
     }
 
     const last = starts.length ? starts[starts.length - 1] : 0;
@@ -3660,7 +3662,11 @@ async function r2Load(resumeAt){
 
             }
 
-            // Couldn't reach the gate at all: one retry, then pause.
+            // Couldn't reach the gate at all (no connection, the video
+            // address isn't answering, or this site isn't allowed to ask):
+            // one retry, then pause.
+            try{ console.warn("Video server could not be reached:", err); }catch(e){}
+
             if(!r2Retried){
                 r2Retried = true;
                 r2Busy = false;
@@ -3668,7 +3674,7 @@ async function r2Load(resumeAt){
             }
 
             r2Lock();
-            r2Stop("Unable to load video. Please try again in a few minutes.");
+            r2Stop("Couldn't reach the video server. Please try again in a few minutes.");
             return;
 
         }
@@ -3699,7 +3705,9 @@ function r2MediaError(){
     }
 
     r2Lock();
-    r2Stop("Unable to load video. Please try again in a few minutes.");
+
+    // The server gave a ticket but the video itself wouldn't load or play.
+    r2Stop("The video couldn't be loaded. Please try again in a few minutes.");
 
 }
 
