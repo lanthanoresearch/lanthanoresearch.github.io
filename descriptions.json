@@ -45,6 +45,10 @@
       "Degenerate Book Burning.png",
       "What we have been told.png"
     ],
+    "videos": [
+      { "file": "Wwii/Even The Rainbow Bullies Know.3gp.mp4",      "title": "Even The Rainbow Bullies Know",      "duration": "0:26" },
+      { "file": "Wwii/Hitler's Speech (January 30, 1939).mp4",     "title": "Hitler's Speech (January 30, 1939)",     "duration": "6:23" }
+    ],
     "controversial": true
   },
   "artemis": {
