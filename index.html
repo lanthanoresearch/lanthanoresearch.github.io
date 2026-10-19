@@ -1138,6 +1138,20 @@ line-height:1;
 cursor:pointer;
 }
 .sx-close:hover{background:#353535}
+.sx-headtext{padding-left:4px}
+.sx-panel:focus{outline:none}
+.sx-sub{margin:3px 0 0;font-size:12px;color:#8a8a8a;line-height:1.3}
+.sx-title{
+margin:12px 4px 2px;
+font-size:11px;
+font-weight:600;
+letter-spacing:.08em;
+text-transform:uppercase;
+color:#8a8a8a;
+}
+.sx-title:first-child{margin-top:2px}
+.sx-note{margin:0 4px 4px;font-size:12px;color:#8a8a8a;line-height:1.35}
+.sx-resetRow{margin-top:8px}
 .sx-scroll{
 display:flex;
 flex-direction:column;
@@ -1784,11 +1798,14 @@ border-color:#777;
 .featured-skeleton .featured-image-wrapper{background:#262626}
 .featured-skeleton .featured-content{gap:12px;justify-content:center}
 .fs-bar{height:12px;border-radius:6px;background:#2a2a2a;width:100%;animation:fsPulse 1.4s ease-in-out infinite}
+.cat-skel{pointer-events:none}
+.cat-skel .card{animation:fsPulse 1.4s ease-in-out infinite}
+.fv-skel .featured-video-card{min-height:180px;animation:fsPulse 1.4s ease-in-out infinite}
 .fs-short{width:35%}
 .fs-title{width:60%;height:18px}
 .fs-mid{width:70%}
 @keyframes fsPulse{0%,100%{opacity:.55}50%{opacity:1}}
-@media (prefers-reduced-motion:reduce){.fs-bar{animation:none}}
+@media (prefers-reduced-motion:reduce){.fs-bar,.cat-skel .card,.fv-skel .featured-video-card{animation:none}}
 .featured-card{touch-action:pan-y;}
 </style></head><body>
 <script>
@@ -1968,42 +1985,44 @@ aria-expanded="false"
 
 <div class="sx-blocker sx-hidden" id="sxBlocker"></div>
 
-<div class="sx-panel" id="sxPanel" role="dialog" aria-modal="true" aria-label="Search settings">
+<div class="sx-panel" id="sxPanel" role="dialog" aria-modal="true" aria-labelledby="sxHeading" tabindex="-1">
 <div class="sx-head">
-<h3>Search settings</h3>
+<div class="sx-headtext">
+<h3 id="sxHeading">Search settings</h3>
+<p class="sx-sub">Choose how search results are shown.</p>
+</div>
 <button type="button" class="sx-close" id="sxClose" aria-label="Close settings" title="Close">✕</button>
 </div>
 <div class="sx-scroll">
 
+<div class="sx-title">Layout</div>
 <button type="button" class="sx-row" id="sx-layoutOpen" data-picker="layout" aria-haspopup="true" aria-expanded="false">
-<span>Results</span>
+<span>Show results as</span>
 <span class="sx-value"><span id="sx-layoutValue"></span><span class="sx-caret" aria-hidden="true"></span></span>
 </button>
+<p class="sx-note" id="sx-layoutNote"></p>
 
-<button type="button" class="sx-row" id="sx-orderOpen" data-picker="order" aria-haspopup="true" aria-expanded="false">
-<span>Order</span>
-<span class="sx-value"><span id="sx-orderValue"></span><span class="sx-caret" aria-hidden="true"></span></span>
-</button>
-
+<div class="sx-title">Number of results</div>
+<p class="sx-note">The most of each kind to show.</p>
 <button type="button" class="sx-row" id="sx-pdfsOpen" data-picker="pdfs" aria-haspopup="true" aria-expanded="false">
 <span>Documents</span>
 <span class="sx-value"><span id="sx-pdfsValue"></span><span class="sx-caret" aria-hidden="true"></span></span>
 </button>
-
 <button type="button" class="sx-row" id="sx-videosOpen" data-picker="videos" aria-haspopup="true" aria-expanded="false">
 <span>Videos</span>
 <span class="sx-value"><span id="sx-videosValue"></span><span class="sx-caret" aria-hidden="true"></span></span>
 </button>
-
 <button type="button" class="sx-row" id="sx-imagesOpen" data-picker="images" aria-haspopup="true" aria-expanded="false">
 <span>Images</span>
 <span class="sx-value"><span id="sx-imagesValue"></span><span class="sx-caret" aria-hidden="true"></span></span>
 </button>
 
+<div class="sx-title">Matching</div>
 <div class="sx-row" id="sx-fillRow">
-<span>Always fill slots</span>
-<button type="button" class="sx-toggle" id="sx-fill" role="switch" aria-checked="false" aria-label="Always fill every slot with weaker matches"><span class="sx-knob"></span></button>
+<span id="sx-fillLabel">Always fill slots</span>
+<button type="button" class="sx-toggle" id="sx-fill" role="switch" aria-checked="false" aria-labelledby="sx-fillLabel"><span class="sx-knob"></span></button>
 </div>
+<p class="sx-note">Off: only good matches are shown. On: weaker partial matches fill each section up to its number.</p>
 
 <button type="button" class="sx-row sx-resetRow" id="sx-reset">Reset to defaults</button>
 
@@ -2067,9 +2086,9 @@ Browse Research by Category
 </p>
 
 
-<div id="categoryButtons"></div>
+<div id="categoryButtons"><a class="cat-skel" aria-hidden="true"><div class="card"><h2>&nbsp;</h2></div></a><a class="cat-skel" aria-hidden="true"><div class="card"><h2>&nbsp;</h2></div></a><a class="cat-skel" aria-hidden="true"><div class="card"><h2>&nbsp;</h2></div></a><a class="cat-skel" aria-hidden="true"><div class="card"><h2>&nbsp;</h2></div></a><a class="cat-skel" aria-hidden="true"><div class="card"><h2>&nbsp;</h2></div></a><a class="cat-skel" aria-hidden="true"><div class="card"><h2>&nbsp;</h2></div></a><a class="cat-skel" aria-hidden="true"><div class="card"><h2>&nbsp;</h2></div></a><a class="cat-skel" aria-hidden="true"><div class="card"><h2>&nbsp;</h2></div></a></div>
 
-<div id="featuredVideo"></div>
+<div id="featuredVideo"><div class="featured-video-section fv-skel" aria-hidden="true"><div class="featured-video-label">Featured Video</div><div class="featured-video-card"></div></div></div>
 
 <div class="video-credit" id="videoCredit">
 <a class="video-credit-button" href="https://m.youtube.com/@KRYPTOS119" target="_blank" rel="noopener">More from KRYPTOS119</a>
@@ -2314,6 +2333,8 @@ categories.add(category);
 const container =
 document.getElementById("categoryButtons");
 
+container.textContent = "";
+
 [...categories]
 .sort()
 .forEach(category => {
@@ -2331,6 +2352,9 @@ container.innerHTML += `
 
 });
 
+}).catch(err => {
+console.error("Could not load the research list:", err);
+document.querySelectorAll(".cat-skel, .featured-skeleton").forEach(el => el.remove());
 });
 if ("serviceWorker" in navigator) {
 
@@ -2536,14 +2560,6 @@ order: "pdfs,videos,images",
 limits: { pdfs: 4, videos: 6, images: 8 }
 };
 const SEARCH_COUNT_CHOICES = [1,2,4,6,8,10,15,20];
-const SEARCH_ORDERS = {
-"pdfs,videos,images": "Documents, Videos, Images",
-"pdfs,images,videos": "Documents, Images, Videos",
-"videos,pdfs,images": "Videos, Documents, Images",
-"videos,images,pdfs": "Videos, Images, Documents",
-"images,pdfs,videos": "Images, Documents, Videos",
-"images,videos,pdfs": "Images, Videos, Documents"
-};
 const SEARCH_WEIGHTS = { pdfs: 12, videos: 6, images: 0 };
 
 function loadSearchSettings(){
@@ -2553,7 +2569,6 @@ const raw = JSON.parse(localStorage.getItem("searchSettings") || "{}");
 if(raw && typeof raw === "object"){
 if(typeof raw.fill === "boolean") st.fill = raw.fill;
 if(raw.layout === "grouped" || raw.layout === "mixed") st.layout = raw.layout;
-if(SEARCH_ORDERS[raw.order]) st.order = raw.order;
 ["pdfs","videos","images"].forEach(k => {
 const n = raw.limits && Number(raw.limits[k]);
 if(SEARCH_COUNT_CHOICES.includes(n)) st.limits[k] = n;
@@ -3173,11 +3188,6 @@ layout: {
 options: [["grouped", "Sections"], ["mixed", "Mixed"]],
 get: () => searchSettings.layout,
 set: v => { searchSettings.layout = v; }
-},
-order: {
-options: Object.keys(SEARCH_ORDERS).map(k => [k, SEARCH_ORDERS[k]]),
-get: () => searchSettings.order,
-set: v => { searchSettings.order = v; }
 }
 };
 ["pdfs", "videos", "images"].forEach(key => {
@@ -3197,8 +3207,12 @@ const cur = g.options.find(o => o[0] === g.get());
 const el = document.getElementById("sx-" + key + "Value");
 if(el) el.textContent = cur ? cur[1] : "";
 });
-document.getElementById("sx-orderOpen").style.display =
-searchSettings.layout === "grouped" ? "" : "none";
+const note = document.getElementById("sx-layoutNote");
+if(note){
+note.textContent = searchSettings.layout === "grouped"
+? "Sections: documents first, then videos, then images."
+: "Mixed: one list ranked by relevance. Documents rank highest, then videos, then images.";
+}
 const fill = document.getElementById("sx-fill");
 fill.classList.toggle("sx-on", searchSettings.fill);
 fill.setAttribute("aria-checked", searchSettings.fill ? "true" : "false");
@@ -3284,6 +3298,39 @@ const active = sxList.querySelector(".sx-active");
 if(active) sxList.scrollTop = Math.max(0, active.offsetTop - sxList.clientHeight / 2);
 }
 
+// Freeze the page exactly where it is. Nothing is resized or moved (no
+// overflow tricks, which make the hero's scroll-snap jump back to the top):
+// scroll input behind the popup is simply ignored.
+function sxScrollable(el){
+while(el && el !== document.body){
+if(el.classList && (el.classList.contains("sx-scroll") || el.classList.contains("sx-list"))){
+return el.scrollHeight > el.clientHeight + 1;
+}
+el = el.parentNode;
+}
+return false;
+}
+function sxStopScroll(e){
+if(!sxScrollable(e.target)) e.preventDefault();
+}
+function sxStopKeys(e){
+if([" ","ArrowUp","ArrowDown","PageUp","PageDown","Home","End"].indexOf(e.key) === -1) return;
+const t = e.target;
+if(t && t.tagName === "BUTTON" && (e.key === " ")) return;
+e.preventDefault();
+}
+const SX_OPTS = { passive: false, capture: true };
+function sxLockScroll(){
+window.addEventListener("wheel", sxStopScroll, SX_OPTS);
+window.addEventListener("touchmove", sxStopScroll, SX_OPTS);
+window.addEventListener("keydown", sxStopKeys, true);
+}
+function sxUnlockScroll(){
+window.removeEventListener("wheel", sxStopScroll, SX_OPTS);
+window.removeEventListener("touchmove", sxStopScroll, SX_OPTS);
+window.removeEventListener("keydown", sxStopKeys, true);
+}
+
 function setSxOpen(open){
 if(open === sxIsOpen()) return;
 closeSxPopup();
@@ -3293,15 +3340,13 @@ applySx();
 sxPanel.classList.add("sx-open");
 sxBlocker.classList.remove("sx-hidden");
 sxBtn.setAttribute("aria-expanded", "true");
-document.documentElement.style.overflow = "hidden";
-document.body.style.overflow = "hidden";
-document.getElementById("sxClose").focus({ preventScroll: true });
+sxLockScroll();
+sxPanel.focus({ preventScroll: true });
 }else{
 sxPanel.classList.remove("sx-open");
 sxBlocker.classList.add("sx-hidden");
 sxBtn.setAttribute("aria-expanded", "false");
-document.documentElement.style.overflow = "";
-document.body.style.overflow = "";
+sxUnlockScroll();
 if(searchReady && searchBox.value.trim().length >= 2 && searchResults.innerHTML.trim()){
 searchResults.style.display = "block";
 }
