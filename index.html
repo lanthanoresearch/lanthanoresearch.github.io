@@ -1677,6 +1677,13 @@ html.show-warning body{
 overflow:hidden !important;
 overscroll-behavior:none;
 }
+/* Instant, CSS-only freeze (before any script finishes): nothing but the
+   popup can be touched, selected or dragged until "I Agree, Continue". */
+html.show-warning body > *:not(#warningBox):not(script):not(style):not(link){
+pointer-events:none !important;
+-webkit-user-select:none !important;
+user-select:none !important;
+}
 
 
 
@@ -1895,6 +1902,14 @@ var opts = { passive:false, capture:true };
 window.addEventListener("wheel", stop, opts);
 window.addEventListener("touchmove", stop, opts);
 window.addEventListener("keydown", keys, true);
+function stopAlways(e){ e.preventDefault(); }
+function gesture(e){ if(!inBox(e.target)) e.preventDefault(); }
+window.addEventListener("gesturestart", gesture, opts);
+window.addEventListener("gesturechange", gesture, opts);
+window.addEventListener("dragstart", stopAlways, true);
+window.addEventListener("selectstart", gesture, true);
+function pin(){ if(window.scrollY || window.scrollX) window.scrollTo(0, 0); }
+window.addEventListener("scroll", pin, { passive:true });
 
 var mo = null;
 function start(){
@@ -1913,6 +1928,11 @@ if(mo){ mo.disconnect(); mo = null; }
 window.removeEventListener("wheel", stop, opts);
 window.removeEventListener("touchmove", stop, opts);
 window.removeEventListener("keydown", keys, true);
+window.removeEventListener("gesturestart", gesture, opts);
+window.removeEventListener("gesturechange", gesture, opts);
+window.removeEventListener("dragstart", stopAlways, true);
+window.removeEventListener("selectstart", gesture, true);
+window.removeEventListener("scroll", pin, { passive:true });
 document.removeEventListener("DOMContentLoaded", start);
 Array.prototype.forEach.call(document.querySelectorAll("[data-warning-frozen]"), function(el){
 el.removeAttribute("inert");
@@ -3406,15 +3426,15 @@ return hits;
 });
 let bestCount = 0;
 found.forEach(list => list.forEach(start => {
-const count = found.filter(l => l.some(i => i >= start && i <= start + 130)).length;
+const count = found.filter(l => l.some(i => i >= start && i <= start + 60)).length;
 if(count > bestCount){ bestCount = count; pos = start; }
 }));
 }
 
 if(pos < 0) return "";
 
-let start = Math.max(0, pos - 45);
-let end = Math.min(src.length, start + 150);
+let start = Math.max(0, pos - 22);
+let end = Math.min(src.length, start + 80);
 
 if(start > 0){
 const sp = src.lastIndexOf(" ", start);
@@ -3611,6 +3631,11 @@ sxPanel.classList.remove("sx-open");
 sxBlocker.classList.add("sx-hidden");
 sxBtn.setAttribute("aria-expanded", "false");
 sxUnlockScroll();
+saveSearchSettings();
+if(searchReady && searchBox.value.trim().length >= 2){
+// Make sure what's on screen reflects the current settings.
+searchBox.dispatchEvent(new Event("input"));
+}
 if(searchReady && searchBox.value.trim().length >= 2 && searchResults.innerHTML.trim()){
 searchResults.style.display = "block";
 }
