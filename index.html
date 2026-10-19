@@ -1054,217 +1054,235 @@ border-radius:10px;
 font-size:18px;
 }
 
+/* Search settings: same gear, panel, picker rows, option popup and
+   toggle switch as the Settings menu on category.html / video.html. */
 .search-gear{
 position:absolute;
 top:50%;
 right:8px;
 transform:translateY(-50%);
-width:38px;
-height:38px;
+width:36px;
+height:36px;
 display:flex;
 align-items:center;
 justify-content:center;
-background:transparent;
-border:0;
+background:#292929;
+color:#eee;
+border:1px solid #383838;
 border-radius:8px;
-color:#999;
-cursor:pointer;
 padding:0;
+cursor:pointer;
+line-height:1;
 }
-.search-gear:hover,
-.search-gear[aria-expanded="true"]{
-color:#fff;
-background:#2a2a2a;
-}
-.search-gear:focus-visible{
-outline:2px solid #666;
-}
+.search-gear:hover{background:#353535}
+.search-gear:focus-visible{outline:2px solid #666}
 
-.ss-overlay{
+.ss-blocker{
 position:fixed;
 inset:0;
-z-index:1000000;
+z-index:99998;
+background:rgba(0,0,0,.45);
+}
+.ss-blocker[hidden]{display:none}
+
+.settings-panel{
+box-sizing:border-box;
+display:none;
+position:absolute;
+top:calc(50% - 18px);
+right:8px;
+flex-direction:column;
+width:300px;
+max-width:calc(100vw - 24px);
+max-height:calc(100vh - 24px);
+max-height:calc(100dvh - 24px);
+padding:8px;
+background:#222;
+border:1px solid #333;
+border-radius:10px;
+box-shadow:0 8px 24px rgba(0,0,0,.5);
+z-index:100000;
+text-align:left;
+}
+.settings-panel.open{display:flex}
+
+.settingsMenuHeader{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:10px;
+margin:0 0 8px;
+padding-bottom:8px;
+border-bottom:1px solid #333;
+}
+.settingsMenuHeader h3{
+margin:0;
+font-size:14px;
+font-weight:600;
+color:#eee;
+}
+.settingsCloseBtn{
+width:28px;
+height:28px;
+padding:0;
 display:flex;
 align-items:center;
 justify-content:center;
-padding:16px;
-box-sizing:border-box;
-background:rgba(0,0,0,.72);
--webkit-backdrop-filter:blur(3px);
-backdrop-filter:blur(3px);
-animation:ssFade .16s ease-out;
+flex:0 0 auto;
+background:#292929;
+color:#eee;
+border:1px solid #383838;
+border-radius:6px;
+font-size:13px;
+line-height:1;
+cursor:pointer;
 }
-.ss-overlay[hidden]{display:none}
-@keyframes ssFade{from{opacity:0}to{opacity:1}}
-@keyframes ssRise{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
-.search-settings{
+.settingsCloseBtn:hover{background:#353535}
+
+.settingsScroll{
 display:flex;
 flex-direction:column;
-width:100%;
-max-width:460px;
-max-height:calc(100vh - 32px);
-max-height:calc(100dvh - 32px);
-background:#181818;
-border:1px solid #333;
-border-radius:16px;
-box-shadow:0 24px 80px rgba(0,0,0,.7);
-color:#eee;
-text-align:left;
-overflow:hidden;
-animation:ssRise .18s ease-out;
-outline:none;
+gap:4px;
+overflow-y:auto;
+overscroll-behavior:contain;
+min-height:0;
 }
-.ss-head{
+
+.videoPickerRow{
+box-sizing:border-box;
 display:flex;
 align-items:center;
 justify-content:space-between;
-padding:16px 16px 14px 20px;
-border-bottom:1px solid #2a2a2a;
-}
-.ss-head h2{
-margin:0;
-font-size:18px;
-font-weight:600;
-color:#fff;
-}
-.ss-close{
-width:34px;
-height:34px;
-display:flex;
-align-items:center;
-justify-content:center;
-background:transparent;
+gap:10px;
+width:100%;
+padding:10px 16px;
 border:0;
 border-radius:8px;
-color:#aaa;
+background:#2e2e2e;
+color:#eee;
+font-size:13.5px;
+font-family:inherit;
+text-align:left;
 cursor:pointer;
-padding:0;
 }
-.ss-close:hover{color:#fff;background:#2a2a2a}
-.ss-body{
-flex:1 1 auto;
-overflow-y:auto;
-padding:4px 20px 8px;
--webkit-overflow-scrolling:touch;
-overscroll-behavior:contain;
-}
-.ss-title{
-font-size:12px;
-letter-spacing:.1em;
-text-transform:uppercase;
-color:#7d7d7d;
-margin:18px 0 6px;
-}
-.ss-group{
-background:#1f1f1f;
-border:1px solid #2c2c2c;
-border-radius:12px;
-padding:0 14px;
-}
-.ss-row{
+.videoPickerRow:hover{background:#383838}
+div.videoPickerRow{cursor:default}
+div.videoPickerRow:hover{background:#2e2e2e}
+.videoPickerValue{
 display:flex;
 align-items:center;
-justify-content:space-between;
-gap:14px;
-padding:12px 0;
-border-bottom:1px solid #2a2a2a;
-font-size:15px;
-}
-.ss-row:last-child{border-bottom:0}
-.ss-stack{flex-direction:column;align-items:stretch;gap:8px}
-.ss-row.ss-stack select{max-width:100%;width:100%}
-.ss-row .ss-label{
+justify-content:flex-end;
+gap:8px;
+flex:1 1 auto;
 min-width:0;
 color:#eee;
+font-size:13.5px;
 }
-.ss-row small{
-display:block;
-color:#8a8a8a;
-font-size:12.5px;
-line-height:1.35;
-margin-top:3px;
+.videoPickerValue span{
+overflow:hidden;
+text-overflow:ellipsis;
+white-space:nowrap;
+min-width:0;
 }
-.ss-row select{
-flex:0 0 auto;
--webkit-appearance:none;
-appearance:none;
-background:#2a2a2a url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='%23aaa' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 12px center;
-color:#fff;
-border:1px solid #3a3a3a;
-border-radius:9px;
-padding:9px 34px 9px 12px;
-font-size:15px;
-font-family:inherit;
-cursor:pointer;
-max-width:58%;
+.videoPickerCaret{
+flex-shrink:0;
+width:0;
+height:0;
+border-left:6px solid transparent;
+border-right:6px solid transparent;
+border-top:7px solid #999;
+transition:transform .15s ease;
 }
-.ss-row select:focus-visible{outline:2px solid #777;outline-offset:1px}
-.ss-switch{
-position:relative;
-flex:0 0 auto;
-width:46px;
-height:28px;
-background:#3a3a3a;
-border:0;
-border-radius:14px;
-cursor:pointer;
-padding:0;
-transition:background .15s;
+.videoPickerRow.open .videoPickerCaret{transform:rotate(180deg)}
+.ss-resetRow{
+justify-content:center;
+color:#bbb;
 }
-.ss-switch::after{
-content:"";
-position:absolute;
-top:3px;
-left:3px;
-width:22px;
-height:22px;
-border-radius:50%;
-background:#fff;
-transition:transform .15s;
+
+.videoOptionPopup{
+box-sizing:border-box;
+position:fixed;
+display:none;
+flex-direction:column;
+width:190px;
+max-width:calc(100vw - 24px);
+max-height:min(60vh, 420px);
+padding:10px;
+background:#1d1d1d;
+border:1px solid #2c2c2c;
+border-radius:10px;
+box-shadow:0 6px 18px rgba(0,0,0,.5);
+z-index:100001;
 }
-.ss-switch[aria-checked="true"]{background:#2e7d4f}
-.ss-switch[aria-checked="true"]::after{transform:translateX(18px)}
-.ss-switch:focus-visible{outline:2px solid #777;outline-offset:2px}
-.ss-foot{
+.videoOptionPopup.open{display:flex}
+.videoOptionList{
+display:flex;
+flex-direction:column;
+flex:1 1 auto;
+min-height:0;
+overflow-y:auto;
+}
+.videoOption{
 display:flex;
 align-items:center;
 justify-content:space-between;
-gap:12px;
-padding:14px 20px;
-border-top:1px solid #2a2a2a;
-background:#181818;
-}
-.ss-reset{
-background:transparent;
-color:#aaa;
-border:1px solid #3a3a3a;
-border-radius:10px;
-padding:10px 14px;
-font-size:14px;
-font-family:inherit;
-cursor:pointer;
-}
-.ss-reset:hover{color:#fff;background:#2a2a2a}
-.ss-done{
-background:#fff;
-color:#111;
+gap:8px;
+width:100%;
+padding:8px 8px;
 border:0;
-border-radius:10px;
-padding:10px 26px;
-font-size:15px;
-font-weight:600;
+border-radius:6px;
+background:transparent;
+color:#ddd;
+font-size:13px;
 font-family:inherit;
+text-align:left;
+white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis;
 cursor:pointer;
 }
-.ss-done:hover{background:#ddd}
-.ss-reset:focus-visible,.ss-done:focus-visible,.ss-close:focus-visible{outline:2px solid #888;outline-offset:2px}
-@media (max-width:420px){
-.ss-row select{max-width:52%}
+.videoOption:hover{background:#262626}
+.videoOption.active{background:#262626;color:#fff}
+.videoOption .videoOptionCheck{
+flex:0 0 auto;
+min-width:14px;
+text-align:center;
+color:#999;
+visibility:hidden;
 }
-@media (prefers-reduced-motion:reduce){
-.ss-overlay,.search-settings{animation:none}
-.ss-switch,.ss-switch::after{transition:none}
+.videoOption.active .videoOptionCheck{visibility:visible}
+.videoOption .videoOptionLabel{
+flex:1 1 auto;
+min-width:0;
+overflow:hidden;
+text-overflow:ellipsis;
 }
+
+.toggleSwitch{
+position:relative;
+flex:0 0 auto;
+width:42px;
+height:24px;
+padding:0;
+background:#3a3a3a;
+border:1px solid #444;
+border-radius:999px;
+cursor:pointer;
+}
+.toggleSwitch .toggleKnob{
+position:absolute;
+top:2px;
+left:2px;
+width:18px;
+height:18px;
+border-radius:50%;
+background:#ccc;
+transition:left .15s ease, background .15s ease;
+}
+.toggleSwitch.active{background:#2f7cff;border-color:#2f7cff}
+.toggleSwitch.active .toggleKnob{left:20px;background:#fff}
+.settings-btn:focus-visible,.settingsCloseBtn:focus-visible,.videoPickerRow:focus-visible,.videoOption:focus-visible,.toggleSwitch:focus-visible{outline:2px solid #777;outline-offset:1px}
+
 
 #searchBox:focus{
 outline:none;
@@ -1878,8 +1896,55 @@ aria-controls="searchSettingsPanel"
 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
 </button>
 
-<div id="searchSettingsOverlay" class="ss-overlay" hidden>
-<div id="searchSettingsPanel" class="search-settings" role="dialog" aria-modal="true" aria-labelledby="ssHeading" tabindex="-1"></div>
+<div class="ss-blocker" id="searchSettingsBlocker" hidden></div>
+
+<div class="settings-panel" id="searchSettingsPanel" role="dialog" aria-modal="true" aria-label="Search settings">
+
+<div class="settingsMenuHeader">
+<h3>Search settings</h3>
+<button type="button" class="settingsCloseBtn" id="ss-close" aria-label="Close settings" title="Close">✕</button>
+</div>
+
+<div class="settingsScroll">
+
+<button type="button" class="videoPickerRow" id="ss-layoutOpen" data-picker="layout" aria-haspopup="true" aria-expanded="false">
+<span>Results</span>
+<span class="videoPickerValue"><span id="ss-layoutValue"></span><span class="videoPickerCaret" aria-hidden="true"></span></span>
+</button>
+
+<button type="button" class="videoPickerRow" id="ss-orderOpen" data-picker="order" aria-haspopup="true" aria-expanded="false">
+<span>Order</span>
+<span class="videoPickerValue"><span id="ss-orderValue"></span><span class="videoPickerCaret" aria-hidden="true"></span></span>
+</button>
+
+<button type="button" class="videoPickerRow" id="ss-pdfsOpen" data-picker="pdfs" aria-haspopup="true" aria-expanded="false">
+<span>Documents</span>
+<span class="videoPickerValue"><span id="ss-pdfsValue"></span><span class="videoPickerCaret" aria-hidden="true"></span></span>
+</button>
+
+<button type="button" class="videoPickerRow" id="ss-videosOpen" data-picker="videos" aria-haspopup="true" aria-expanded="false">
+<span>Videos</span>
+<span class="videoPickerValue"><span id="ss-videosValue"></span><span class="videoPickerCaret" aria-hidden="true"></span></span>
+</button>
+
+<button type="button" class="videoPickerRow" id="ss-imagesOpen" data-picker="images" aria-haspopup="true" aria-expanded="false">
+<span>Images</span>
+<span class="videoPickerValue"><span id="ss-imagesValue"></span><span class="videoPickerCaret" aria-hidden="true"></span></span>
+</button>
+
+<div class="videoPickerRow" id="ss-fillRow">
+<span>Always fill slots</span>
+<button type="button" class="toggleSwitch" id="ss-fill" role="switch" aria-checked="false" aria-label="Always fill every slot with weaker matches"><span class="toggleKnob"></span></button>
+</div>
+
+<button type="button" class="videoPickerRow ss-resetRow" id="ss-reset">Reset to defaults</button>
+
+</div>
+
+</div>
+
+<div class="videoOptionPopup" id="ss-optionPopup" role="menu">
+<div class="videoOptionList" id="ss-optionList"></div>
 </div>
 
 <div id="searchResults"></div>
@@ -3011,117 +3076,185 @@ new RegExp(`(${escaped})`, "ig"),
 }
 
 
-/* ---------- Search settings panel ---------- */
+/* ---------- Search settings (same panel + option popup as category.html) ---------- */
 const ssBtn = document.getElementById("searchSettingsBtn");
-const ssOverlay = document.getElementById("searchSettingsOverlay");
 const ssPanel = document.getElementById("searchSettingsPanel");
+const ssBlocker = document.getElementById("searchSettingsBlocker");
+const ssPopup = document.getElementById("ss-optionPopup");
+const ssList = document.getElementById("ss-optionList");
+let ssOpenPicker = null;
 
-function ssOptions(values, current, label){
-return values.map(v =>
-`<option value="${v}"${String(v) === String(current) ? " selected" : ""}>${label ? label(v) : v}</option>`
-).join("");
+const SS_PICKERS = {
+layout: {
+options: [["grouped", "Sections"], ["mixed", "Mixed"]],
+get: () => searchSettings.layout,
+set: v => { searchSettings.layout = v; }
+},
+order: {
+options: Object.keys(SEARCH_ORDERS).map(k => [k, SEARCH_ORDERS[k]]),
+get: () => searchSettings.order,
+set: v => { searchSettings.order = v; }
+}
+};
+["pdfs", "videos", "images"].forEach(key => {
+SS_PICKERS[key] = {
+options: SEARCH_COUNT_CHOICES.map(n => [String(n), String(n)]),
+get: () => String(searchSettings.limits[key]),
+set: v => { searchSettings.limits[key] = Number(v); }
+};
+});
+
+function ssIsOpen(){
+return ssPanel.classList.contains("open");
 }
 
-function renderSearchSettings(){
-const st = searchSettings;
-const grouped = st.layout === "grouped";
-const countRow = (key, name) => `
-<div class="ss-row">
-<label class="ss-label" for="ss-${key}">${name}</label>
-<select id="ss-${key}" data-limit="${key}">${ssOptions(SEARCH_COUNT_CHOICES, st.limits[key])}</select>
-</div>`;
-const focusId = document.activeElement && ssPanel.contains(document.activeElement) ? document.activeElement.id : "";
-ssPanel.innerHTML = `
-<div class="ss-head">
-<h2 id="ssHeading">Search settings</h2>
-<button type="button" class="ss-close" id="ss-close" aria-label="Close settings">
-<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
-</button>
-</div>
-<div class="ss-body">
-<div class="ss-title">Layout</div>
-<div class="ss-group">
-<div class="ss-row">
-<label class="ss-label" for="ss-layout">Results<small>${grouped ? "Documents, videos and images in their own sections." : "One list ranked by relevance, with documents first, then videos, then images."}</small></label>
-<select id="ss-layout">
-<option value="grouped"${grouped ? " selected" : ""}>Sections</option>
-<option value="mixed"${grouped ? "" : " selected"}>Mixed</option>
-</select>
-</div>
-${grouped ? `
-<div class="ss-row ss-stack">
-<label class="ss-label" for="ss-order">Section order</label>
-<select id="ss-order">${ssOptions(Object.keys(SEARCH_ORDERS), st.order, k => SEARCH_ORDERS[k])}</select>
-</div>` : ""}
-</div>
-<div class="ss-title">Number of results</div>
-<div class="ss-group">
-${countRow("pdfs", "Documents")}
-${countRow("videos", "Videos")}
-${countRow("images", "Images")}
-</div>
-<div class="ss-title">Matching</div>
-<div class="ss-group">
-<div class="ss-row">
-<span class="ss-label" id="ss-fill-label">Always fill every slot<small>Off: only good matches are shown. On: weaker partial matches pad each section up to its number.</small></span>
-<button type="button" class="ss-switch" id="ss-fill" role="switch" aria-checked="${st.fill}" aria-labelledby="ss-fill-label"></button>
-</div>
-</div>
-</div>
-<div class="ss-foot">
-<button type="button" class="ss-reset" id="ss-reset">Reset to defaults</button>
-<button type="button" class="ss-done" id="ss-done">Done</button>
-</div>`;
-if(focusId){
-const el = document.getElementById(focusId);
-if(el) el.focus();
-}
+function applySearchSettingsUI(){
+Object.keys(SS_PICKERS).forEach(key => {
+const g = SS_PICKERS[key];
+const cur = g.options.find(o => o[0] === g.get());
+document.getElementById("ss-" + key + "Value").textContent = cur ? cur[1] : "";
+});
+// Section order only applies to separate sections.
+document.getElementById("ss-orderOpen").style.display =
+searchSettings.layout === "grouped" ? "" : "none";
+const fill = document.getElementById("ss-fill");
+fill.classList.toggle("active", searchSettings.fill);
+fill.setAttribute("aria-checked", searchSettings.fill ? "true" : "false");
 }
 
 function searchSettingsChanged(){
 saveSearchSettings();
-renderSearchSettings();
+applySearchSettingsUI();
 if(searchReady && searchBox.value.trim().length >= 2){
 searchBox.dispatchEvent(new Event("input"));
-if(!ssOverlay.hidden) searchResults.style.display = "none";
+if(ssIsOpen()) searchResults.style.display = "none";
 }
 }
 
-document.body.appendChild(ssOverlay);
+function closeSsPopup(){
+if(ssOpenPicker){
+const row = document.getElementById("ss-" + ssOpenPicker + "Open");
+if(row){
+row.classList.remove("open");
+row.setAttribute("aria-expanded", "false");
+}
+}
+ssPopup.classList.remove("open");
+ssOpenPicker = null;
+}
+
+function buildSsOptions(key){
+const g = SS_PICKERS[key];
+ssList.replaceChildren();
+g.options.forEach(([value, label]) => {
+const active = value === g.get();
+const b = document.createElement("button");
+b.type = "button";
+b.className = "videoOption" + (active ? " active" : "");
+b.setAttribute("role", "menuitemradio");
+b.setAttribute("aria-checked", active ? "true" : "false");
+const l = document.createElement("span");
+l.className = "videoOptionLabel";
+l.textContent = label;
+const c = document.createElement("span");
+c.className = "videoOptionCheck";
+c.textContent = "✓";
+b.append(l, c);
+b.addEventListener("click", e => {
+e.stopPropagation();
+g.set(value);
+closeSsPopup();
+searchSettingsChanged();
+});
+ssList.appendChild(b);
+});
+}
+
+function positionSsPopup(rowEl){
+const rect = rowEl.getBoundingClientRect();
+const w = Math.min(190, window.innerWidth - 24);
+const margin = 12;
+let left = rect.left + rect.width / 2 - w / 2;
+left = Math.max(margin, Math.min(left, window.innerWidth - w - margin));
+ssPopup.style.left = left + "px";
+const below = window.innerHeight - rect.bottom - 8;
+const above = rect.top - 8;
+if(below >= 160 || below >= above){
+ssPopup.style.top = (rect.bottom + 8) + "px";
+ssPopup.style.bottom = "auto";
+ssPopup.style.maxHeight = Math.max(120, Math.min(420, below - 8)) + "px";
+}else{
+ssPopup.style.bottom = (window.innerHeight - rect.top + 8) + "px";
+ssPopup.style.top = "auto";
+ssPopup.style.maxHeight = Math.max(120, Math.min(420, above - 8)) + "px";
+}
+}
+
+function openSsPopup(key, rowEl){
+ssOpenPicker = key;
+buildSsOptions(key);
+ssPopup.classList.add("open");
+positionSsPopup(rowEl);
+rowEl.classList.add("open");
+rowEl.setAttribute("aria-expanded", "true");
+const active = ssList.querySelector(".active");
+if(active) active.scrollIntoView({ block: "nearest" });
+}
 
 function setSearchSettingsOpen(open){
-if(open === !ssOverlay.hidden) return;
-ssOverlay.hidden = !open;
-ssBtn.setAttribute("aria-expanded", open ? "true" : "false");
-document.documentElement.style.overflow = open ? "hidden" : "";
-document.body.style.overflow = open ? "hidden" : "";
+if(open === ssIsOpen()) return;
+closeSsPopup();
 if(open){
 searchResults.style.display = "none";
-renderSearchSettings();
-const body = ssPanel.querySelector(".ss-body");
-if(body) body.scrollTop = 0;
-const done = document.getElementById("ss-done");
-if(done) done.focus();
+applySearchSettingsUI();
+ssPanel.classList.add("open");
+ssBlocker.hidden = false;
+ssBtn.setAttribute("aria-expanded", "true");
+try{ ssPanel.scrollIntoView({ block: "center" }); }catch(e){}
+document.documentElement.style.overflow = "hidden";
+document.body.style.overflow = "hidden";
+document.getElementById("ss-close").focus({ preventScroll: true });
 }else{
+ssPanel.classList.remove("open");
+ssBlocker.hidden = true;
+ssBtn.setAttribute("aria-expanded", "false");
+document.documentElement.style.overflow = "";
+document.body.style.overflow = "";
 if(searchReady && searchBox.value.trim().length >= 2 && searchResults.innerHTML.trim()){
 searchResults.style.display = "block";
 }
-ssBtn.focus();
+ssBtn.focus({ preventScroll: true });
 }
 }
 
 ssBtn.addEventListener("click", e => {
 e.preventDefault();
 e.stopPropagation();
-setSearchSettingsOpen(true);
+setSearchSettingsOpen(!ssIsOpen());
 });
 
-// The popup must be closed (X, Done or Escape) before anything else can be used.
-ssOverlay.addEventListener("click", e => {
+// Must be closed (X, gear or Escape) before anything else can be used:
+// the blocker swallows taps outside the panel.
+ssBlocker.addEventListener("click", e => {
+e.preventDefault();
 e.stopPropagation();
+closeSsPopup();
+});
+
+ssPanel.addEventListener("click", e => {
+e.stopPropagation();
+const picker = e.target.closest(".videoPickerRow[data-picker]");
+if(picker){
+const key = picker.dataset.picker;
+const was = ssOpenPicker === key;
+closeSsPopup();
+if(!was) openSsPopup(key, picker);
+return;
+}
+closeSsPopup();
 const t = e.target.closest("button");
 if(!t) return;
-if(t.id === "ss-close" || t.id === "ss-done"){
+if(t.id === "ss-close"){
 setSearchSettingsOpen(false);
 }else if(t.id === "ss-fill"){
 searchSettings.fill = !searchSettings.fill;
@@ -3132,31 +3265,30 @@ searchSettingsChanged();
 }
 });
 
-ssOverlay.addEventListener("change", e => {
-const t = e.target;
-if(t.id === "ss-layout"){
-searchSettings.layout = t.value;
-}else if(t.id === "ss-order" && SEARCH_ORDERS[t.value]){
-searchSettings.order = t.value;
-}else if(t.dataset.limit){
-const n = Number(t.value);
-if(SEARCH_COUNT_CHOICES.includes(n)) searchSettings.limits[t.dataset.limit] = n;
-}else{
-return;
+ssPopup.addEventListener("click", e => e.stopPropagation());
+
+window.addEventListener("resize", () => {
+if(ssIsOpen()){
+try{ ssPanel.scrollIntoView({ block: "center" }); }catch(e){}
 }
-searchSettingsChanged();
+if(ssOpenPicker) positionSsPopup(document.getElementById("ss-" + ssOpenPicker + "Open"));
 });
 
 document.addEventListener("keydown", e => {
-if(ssOverlay.hidden) return;
+if(!ssIsOpen()) return;
 if(e.key === "Escape"){
 e.preventDefault();
+if(ssOpenPicker){
+closeSsPopup();
+}else{
 setSearchSettingsOpen(false);
+}
 }else if(e.key === "Tab"){
-const f = [...ssPanel.querySelectorAll("button, select")].filter(el => !el.disabled);
+const f = [...ssPanel.querySelectorAll("button"), ...ssPopup.querySelectorAll("button")]
+.filter(el => el.offsetParent !== null);
 if(!f.length) return;
 const first = f[0], last = f[f.length - 1];
-if(!ssPanel.contains(document.activeElement)){
+if(!f.includes(document.activeElement)){
 e.preventDefault();
 first.focus();
 }else if(e.shiftKey && document.activeElement === first){
@@ -3168,6 +3300,8 @@ first.focus();
 }
 }
 });
+
+applySearchSettingsUI();
 
 searchBox.addEventListener("input", () => {
 
