@@ -1340,6 +1340,7 @@ color:white;
 text-decoration:none;
 }
 
+.search-exact-link{color:#8ab4ff;text-decoration:underline;cursor:pointer}
 .search-result:hover{
 background:#262626;
 }
@@ -2596,10 +2597,24 @@ const kept = raw.filter(t => !SEARCH_STOPWORDS.has(t));
 return kept.length ? kept : raw;
 }
 
-function searchWordRe(t){
-const esc = t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+// Light stemming so "bombs", "bombing" and "bombed" all find "bomb".
+function stemToken(t){
+let w = t.replace(/'s$/, "").replace(/'/g, "");
+if(/\d/.test(w) || w.length <= 4) return w.length >= 2 ? w : t;
+if(/ing$/.test(w) && w.length > 5) w = w.slice(0, -3);
+else if(/ed$/.test(w) && w.length > 5) w = w.slice(0, -2);
+else if(/(s|x|z|ch|sh)es$/.test(w)) w = w.slice(0, -2);
+else if(/s$/.test(w) && !/ss$/.test(w)) w = w.slice(0, -1);
+return w.length >= 3 ? w : t;
+}
+
+function searchEscape(t){
+return t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 // 3+ letters match as a word start (partial typing works); 2 letters must be a whole word.
-return new RegExp("\\b" + esc + (t.length < 3 ? "\\b" : ""));
+function searchWordRe(t){
+return new RegExp("\\b" + searchEscape(t) + (t.length < 3 ? "\\b" : ""));
 }
 
 function countSearchMatches(text, re, cap){
@@ -2609,31 +2624,158 @@ while(n < cap && g.exec(text)) n++;
 return n;
 }
 
-function rankSearch(query){
+/* ---- Spelling: a vocabulary built once from the site's own titles and text ---- */
 
-const phrase = query.toLowerCase().replace(/\s+/g, " ").trim();
-const tokens = searchTokens(query);
+let searchVocab = null;
+
+function getSearchVocab(){
+if(searchVocab) return searchVocab;
+const m = new Map();
+const add = (text, w) => {
+(text || "").split(/[^a-z]+/).forEach(x => {
+if(x.length >= 4 && x.length <= 20) m.set(x, (m.get(x) || 0) + w);
+});
+};
+pdfList.forEach(r => { add(r._title, 25); add(r._body, 1); });
+videoList.forEach(r => add(r._title, 10));
+imageList.forEach(r => add(r._title, 5));
+searchVocab = m;
+return m;
+}
+
+// Edit distance (with swapped neighbours counted as one edit), giving up past max.
+function searchEditDistance(a, b, max){
+const la = a.length, lb = b.length;
+if(Math.abs(la - lb) > max) return max + 1;
+let prev2 = null;
+let prev = [];
+for(let j = 0; j <= lb; j++) prev.push(j);
+for(let i = 1; i <= la; i++){
+const cur = [i];
+let rowMin = i;
+for(let j = 1; j <= lb; j++){
+const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+let v = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + cost);
+if(prev2 && i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]){
+v = Math.min(v, prev2[j - 2] + 1);
+}
+cur.push(v);
+if(v < rowMin) rowMin = v;
+}
+if(rowMin > max) return max + 1;
+prev2 = prev;
+prev = cur;
+}
+return prev[lb];
+}
+
+function spellFix(tok){
+const vocab = getSearchVocab();
+if(vocab.has(tok)) return null;
+const max = tok.length >= 8 ? 2 : 1;
+let best = null, bestD = 99, bestC = 0;
+vocab.forEach((c, w) => {
+if(c < 2 || Math.abs(w.length - tok.length) > max) return;
+const d = searchEditDistance(tok, w, max);
+if(d <= max && (d < bestD || (d === bestD && c > bestC))){
+best = w; bestD = d; bestC = c;
+}
+});
+return best;
+}
+
+function tokenHasHits(tok){
+const re = searchWordRe(stemToken(tok));
+return pdfList.some(r => re.test(r._title) || re.test(r._body)) ||
+videoList.some(r => re.test(r._title)) ||
+imageList.some(r => re.test(r._title));
+}
+
+let searchHighlight = [];
+let searchExactQuery = null;
+
+function rankSearch(query, opts){
+
+opts = opts || {};
+
+let phrase = query.toLowerCase().replace(/\s+/g, " ").trim();
+let quoted = false;
+const qm = phrase.match(/^"(.+)"$/);
+if(qm){
+quoted = true;
+phrase = qm[1].trim();
+}
+
+let tokens = searchTokens(phrase);
 
 if(!tokens.length){
-return { pdfs: [], videos: [], images: [], corrected: false };
+return { pdfs: [], videos: [], images: [], corrected: false, spell: null };
+}
+
+// Auto-correct words that appear nowhere on the site.
+let spell = null;
+if(!opts.exact && !quoted){
+const fixed = tokens.map(t => {
+if(t.length < 4 || /\d/.test(t) || tokenHasHits(t)) return t;
+return spellFix(t) || t;
+});
+if(fixed.some((t, i) => t !== tokens[i])){
+let fixedPhrase = phrase;
+tokens.forEach((t, i) => {
+if(fixed[i] !== t){
+fixedPhrase = fixedPhrase.replace(new RegExp("\\b" + searchEscape(t) + "\\b"), fixed[i]);
+}
+});
+spell = { from: phrase, to: fixedPhrase };
+tokens = fixed;
+phrase = fixedPhrase;
+}
 }
 
 const fill = searchSettings.fill;
 const minScore = fill ? 18 : SEARCH_MIN_SCORE;
 const phraseRe = searchWordRe(phrase);
-const tokRes = tokens.map(searchWordRe);
+const tokRes = tokens.map(t => searchWordRe(stemToken(t)));
+
+searchHighlight = [phrase, ...tokens.map(stemToken)]
+.filter(t => t.length >= 3)
+.sort((x, y) => y.length - x.length);
+
+// Words found in few documents count for more than words found in many.
+const N = Math.max(1, pdfList.length);
+const weights = tokRes.map(re => {
+let df = 0;
+for(const r of pdfList){
+if(re.test(r._title) || re.test(r._body)) df++;
+}
+return Math.log(1 + N / (1 + df)) + 0.2;
+});
+const weightSum = weights.reduce((a, b) => a + b, 0);
+
+const pairRes = [];
+for(let i = 0; i + 1 < tokRes.length && i < 4; i++){
+pairRes.push(new RegExp(tokRes[i].source + ".{0,50}?" + tokRes[i + 1].source));
+}
 
 function field(text){
 if(!text){
-return { phrase:false, all:false, frac:0, count:0 };
+return { phrase:false, all:false, frac:0, count:0, near:false };
 }
-const hits = tokRes.filter(r => r.test(text)).length;
 const ph = phraseRe.test(text);
+if(quoted && !ph){
+return { phrase:false, all:false, frac:0, count:0, near:false };
+}
+let hitW = 0, hits = 0;
+tokRes.forEach((r, i) => {
+if(r.test(text)){ hitW += weights[i]; hits++; }
+});
+const all = hits === tokRes.length;
 return {
 phrase: ph,
-all: hits === tokRes.length,
-frac: hits / tokRes.length,
-count: ph ? countSearchMatches(text, phraseRe, 10) : 0
+all,
+frac: hitW / weightSum,
+count: ph ? countSearchMatches(text, phraseRe, 10) : 0,
+near: all && pairRes.length > 0 && pairRes.every(r => r.test(text))
 };
 }
 
@@ -2647,7 +2789,7 @@ return 0;
 
 function bodyScore(f){
 if(f.phrase) return 52 + Math.min(20, f.count * 2);
-if(f.all) return 46;
+if(f.all) return 46 + (f.near ? 8 : 0);
 if(fill && f.frac > 0) return 22 + f.frac * 10;
 return 0;
 }
@@ -2655,8 +2797,8 @@ return 0;
 // Small typo allowance on titles only (never on paper text).
 function fuzzyMap(fuse){
 const m = new Map();
-if(!fuse) return m;
-fuse.search(query).forEach(r => {
+if(!fuse || quoted) return m;
+fuse.search(phrase).forEach(r => {
 m.set(r.item, 80 * (1 - (r.score ?? 0.35) / 0.35));
 });
 return m;
@@ -2715,10 +2857,10 @@ titleScore(field(item._title)),
 relatedScore(item.paperTitle)
 ), imageFuse, searchSettings.limits.images, item => relatedScore(item.paperTitle), 30);
 
-const corrected = [...pdfs, ...videos, ...images].length > 0 &&
-[...pdfs, ...videos, ...images].every(r => r.fuzzy);
+const all = [...pdfs, ...videos, ...images];
+const corrected = all.length > 0 && all.every(r => r.fuzzy);
 
-return { pdfs, videos, images, corrected };
+return { pdfs, videos, images, corrected, spell };
 
 }
 
@@ -3153,13 +3295,13 @@ searchBox.placeholder =
 });
 function highlightMatch(text, query){
 
-if(!query) return text;
+const terms = searchHighlight.length ? searchHighlight : (query ? [query] : []);
+if(!terms.length) return text;
 
-const escaped =
-query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const alts = terms.map(searchEscape).join("|");
 
 return text.replace(
-new RegExp(`(${escaped})`, "ig"),
+new RegExp("(\\b(?:" + alts + "))", "ig"),
 "<mark>$1</mark>"
 );
 
@@ -3433,6 +3575,80 @@ applySx();
 console.error("Search settings failed to start:", err);
 }
 
+/* ---------- Phone: bring the search bar to the top when you tap into it ---------- */
+try{
+(function(){
+const wrap = document.querySelector(".search-wrapper");
+if(!wrap || !searchBox || !searchResults) return;
+
+const vv = window.visualViewport || null;
+const GAP = 12;
+let alignUntil = 0;
+
+function isPhone(){
+return (window.matchMedia && window.matchMedia("(pointer: coarse)").matches) ||
+window.innerWidth <= 800;
+}
+
+// What you can actually see: shrinks when the on-screen keyboard opens.
+function seen(){
+return vv ? vv.height : window.innerHeight;
+}
+
+function fitResults(){
+if(!isPhone()){
+searchResults.style.maxHeight = "";
+return;
+}
+const room = seen() - GAP - searchBox.offsetHeight - 20;
+searchResults.style.maxHeight = Math.max(150, Math.min(600, room)) + "px";
+}
+
+function align(smooth){
+if(!isPhone()) return;
+const top = wrap.getBoundingClientRect().top - (vv ? vv.offsetTop : 0);
+const delta = top - GAP;
+if(Math.abs(delta) < 2) return;
+window.scrollTo({ top: Math.max(0, window.scrollY + delta), behavior: smooth ? "smooth" : "instant" });
+}
+
+function start(){
+if(!isPhone()) return;
+alignUntil = Date.now() + 1600;
+fitResults();
+align(true);
+// The keyboard takes a moment to slide up and phones differ in how they
+// react, so settle the position as it finishes.
+[150, 400, 800, 1300].forEach(ms => setTimeout(() => {
+if(document.activeElement === searchBox){
+fitResults();
+align(false);
+}
+}, ms));
+}
+
+searchBox.addEventListener("focus", start);
+
+function onViewport(){
+if(document.activeElement !== searchBox) return;
+fitResults();
+if(Date.now() < alignUntil) align(false);
+}
+if(vv){
+vv.addEventListener("resize", onViewport);
+}
+window.addEventListener("resize", onViewport);
+window.addEventListener("orientationchange", () => setTimeout(() => {
+if(document.activeElement === searchBox){
+alignUntil = Date.now() + 1200;
+onViewport();
+}
+}, 250));
+})();
+}catch(err){
+console.error("Search scroll helper failed to start:", err);
+}
+
 searchBox.addEventListener("input", () => {
 
 loadFavorites();
@@ -3464,7 +3680,7 @@ return;
 let html = "";
 const pdfItems = [], videoItems = [], imageItems = [];
 
-const ranked = rankSearch(query);
+const ranked = rankSearch(query, { exact: searchExactQuery === query });
 
 const pdfResults = ranked.pdfs;
 const imageResults = ranked.images;
@@ -3472,7 +3688,9 @@ const videoResults = ranked.videos;
 
 if(pdfResults.length || videoResults.length || imageResults.length){
 
-if(ranked.corrected){
+if(ranked.spell){
+html += `<div class="search-count">Showing results for <b>${ranked.spell.to.replace(/</g, "&lt;")}</b>. <a href="#" class="search-exact-link">Search for &ldquo;${ranked.spell.from.replace(/</g, "&lt;")}&rdquo; instead</a></div>`;
+}else if(ranked.corrected){
 html += `<div class="search-count">No exact match. Showing the closest results.</div>`;
 }
 
@@ -3734,6 +3952,15 @@ searchResults.innerHTML = `
 }else{
 
 searchResults.innerHTML = html;
+const exactLink = searchResults.querySelector(".search-exact-link");
+if(exactLink){
+exactLink.addEventListener("click", e => {
+e.preventDefault();
+e.stopPropagation();
+searchExactQuery = query;
+searchBox.dispatchEvent(new Event("input"));
+});
+}
 document.querySelectorAll(".image-link").forEach(link=>{
 
 
