@@ -700,7 +700,7 @@ h1{
 .mode-switch{
     position:relative;
     display:flex;
-    width:min(260px, 100%);
+    width:min(340px, 100%);
     margin:0 auto 42px;
     padding:3px;
     box-sizing:border-box;
@@ -714,7 +714,7 @@ h1{
     top:3px;
     bottom:3px;
     left:3px;
-    width:calc(50% - 3px);
+    width:calc(33.3333% - 2px);
     background:#3a3a3a;
     border-radius:999px;
 }
@@ -723,8 +723,21 @@ h1{
     transition:transform .25s ease;
 }
 
-.mode-switch[data-mode="videos"] .mode-pill{
+.mode-switch[data-mode="mixed"] .mode-pill{
     transform:translateX(100%);
+}
+
+.mode-switch[data-mode="videos"] .mode-pill{
+    transform:translateX(200%);
+}
+
+/* Mixed: images and videos together in the same justified rows. Videos keep
+   a 16:9 shape; images keep their own. */
+.gallery.mixed{
+    --row-h:190px;
+}
+.gallery.mixed .video-tile{
+    flex-basis:calc(var(--ar) * var(--row-h));
 }
 
 .mode-switch button{
@@ -955,6 +968,9 @@ h1{
     .gallery.videos{
         --gap:6px;
     }
+    .gallery.mixed{
+        --row-h:150px;
+    }
     .top-settings{ right:10px; }
 }
 </style>
@@ -1007,6 +1023,7 @@ h1{
 <div class="mode-switch" id="modeSwitch" data-mode="images" role="tablist" aria-label="Gallery type">
     <span class="mode-pill" aria-hidden="true"></span>
     <button type="button" role="tab" data-mode="images" aria-selected="true">Images</button>
+    <button type="button" role="tab" data-mode="mixed" aria-selected="false">Mixed</button>
     <button type="button" role="tab" data-mode="videos" aria-selected="false">Videos</button>
 </div>
 
@@ -1015,8 +1032,8 @@ h1{
    else loads, so the page never starts on the wrong one. */
 (function(){
     var m = "images";
-    try{ if(localStorage.getItem("galleryMode") === "videos") m = "videos"; }catch(e){}
-    try{ if(sessionStorage.getItem("galleryMode") === "videos") m = "videos"; }catch(e){}
+    try{ var a = localStorage.getItem("galleryMode"); if(a === "videos" || a === "mixed") m = a; }catch(e){}
+    try{ var c = sessionStorage.getItem("galleryMode"); if(c === "videos" || c === "mixed") m = c; }catch(e){}
     var sw = document.getElementById("modeSwitch");
     sw.setAttribute("data-mode", m);
     var b = sw.querySelectorAll("button");
@@ -1115,23 +1132,24 @@ const MODE_KEY = "galleryMode";
 
 const KEYS = {
     images: { sort: "gallerySort",      breaks: "galleryPaperBreaks",      enabled: "galleryEnabled",      names: "galleryShowNames" },
-    videos: { sort: "galleryVideoSort", breaks: "galleryPaperBreaks",      enabled: "galleryVideoEnabled", names: "galleryShowNames" }
+    videos: { sort: "galleryVideoSort", breaks: "galleryPaperBreaks",      enabled: "galleryVideoEnabled", names: "galleryShowNames" },
+    mixed:  { sort: "galleryMixedSort", breaks: "galleryPaperBreaks",      enabled: "galleryMixedEnabled", names: "galleryShowNames" }
 };
 
-const WORDS = { images: ["Image", "Images"], videos: ["Video", "Videos"] };
+const WORDS = { images: ["Image", "Images"], videos: ["Video", "Videos"], mixed: ["Item", "Items"] };
 
 let mode = "images";
 
 try{
-    if(localStorage.getItem(MODE_KEY) === "videos") mode = "videos";
+    { const a = localStorage.getItem(MODE_KEY); if(a === "videos" || a === "mixed") mode = a; }
 }catch(e){}
 try{
     // Backup copy for browsers that block long-term storage.
-    if(sessionStorage.getItem(MODE_KEY) === "videos") mode = "videos";
+    { const a = sessionStorage.getItem(MODE_KEY); if(a === "videos" || a === "mixed") mode = a; }
 }catch(e){}
 
-const lists = { images: [], videos: [] };      // [{key, paper, items}]
-const enabledBy = { images: {}, videos: {} };  // paper key -> true/false
+const lists = { images: [], videos: [], mixed: [] };      // [{key, paper, items}]
+const enabledBy = { images: {}, videos: {}, mixed: {} };  // paper key -> true/false
 
 // Gallery images keep a sane shape inside the rows; anything more extreme
 // than this gets cropped slightly instead of becoming a thin sliver.
@@ -1184,7 +1202,8 @@ function loadModeSettings(m){
 
 const settingsBy = {
     images: loadModeSettings("images"),
-    videos: loadModeSettings("videos")
+    videos: loadModeSettings("videos"),
+    mixed: loadModeSettings("mixed")
 };
 
 let sortType = settingsBy[mode].sortType;
@@ -1199,7 +1218,8 @@ try{
 
 function sortLabel(type){
     const base = sortLabels[type] || "Sort";
-    return mode === "videos" ? base.replace("Images", "Videos") : base;
+    return mode === "videos" ? base.replace("Images", "Videos")
+        : mode === "mixed" ? base.replace("Images", "Items") : base;
 }
 
 function getActiveSortGroup(){
@@ -1665,7 +1685,7 @@ function render(){
     }
 
     const gallery = document.createElement("div");
-    gallery.className = "gallery" + (mode === "videos" ? " videos" : "");
+    gallery.className = "gallery" + (mode === "videos" ? " videos" : mode === "mixed" ? " mixed" : "");
 
     const fragment = document.createDocumentFragment();
 
@@ -1724,7 +1744,10 @@ function render(){
             "Play " + name + (v.duration ? " (" + v.duration + ")" : "")
         );
 
-        applyRatio(link, ratios[rkey] || VIDEO_RATIO);
+        // In Mixed, videos keep a clean 16:9 so rows line up nicely.
+        const fixedShape = mode === "mixed";
+
+        applyRatio(link, fixedShape ? VIDEO_RATIO : (ratios[rkey] || VIDEO_RATIO));
 
         const spacer = document.createElement("i");
 
@@ -1746,6 +1769,14 @@ function render(){
 
             const real = img.naturalWidth / img.naturalHeight;
             const known = ratios[rkey];
+
+            if(fixedShape){
+                if(!known || Math.abs(known - real) > 0.001){
+                    ratios[rkey] = real;
+                    scheduleRatioSave();
+                }
+                return;
+            }
 
             if(!known || Math.abs(known - real) > 0.001){
                 ratios[rkey] = real;
@@ -1785,6 +1816,27 @@ function render(){
         fragment.appendChild(link);
     }
 
+    // Spreads images and videos evenly (never clumped), keeping each kind in
+    // its paper order.
+    function mixItems(list){
+        const imgs = list.filter(i => i.kind === "image");
+        const vids = list.filter(i => i.kind === "video");
+        const out = [];
+        let a = 0, b = 0;
+        while(a < imgs.length || b < vids.length){
+            const pa = imgs.length ? (a + 0.5) / imgs.length : Infinity;
+            const pb = vids.length ? (b + 0.5) / vids.length : Infinity;
+            if(a < imgs.length && (b >= vids.length || pa <= pb)) out.push(imgs[a++]);
+            else out.push(vids[b++]);
+        }
+        return out;
+    }
+
+    function drawMixed(item){
+        if(item.kind === "video") addVideo(item.v, item.paperLabel);
+        else addImage(item.src, item.paperTitle);
+    }
+
     groups.forEach(({paper, items}, index) => {
 
         if(paperBreaks){
@@ -1810,12 +1862,22 @@ function render(){
             fragment.appendChild(brk);
         }
 
+        if(mode === "mixed"){
+            if(paperBreaks) mixItems(items).forEach(drawMixed);
+            return;
+        }
+
         items.forEach(item =>
             mode === "videos"
                 ? addVideo(item, paper.label || paper.title)
                 : addImage(item, paper.title)
         );
     });
+
+    // Without paper headings, everything is mixed together across papers.
+    if(mode === "mixed" && !paperBreaks){
+        mixItems(groups.flatMap(g => g.items)).forEach(drawMixed);
+    }
 
     gallery.appendChild(fragment);
     container.appendChild(gallery);
@@ -1977,7 +2039,22 @@ Promise.all([
         // Everything is on by default, except graphic papers, which stay
         // off until you opt in to them from the menu. (Images and Videos
         // remember their own choices.)
-        ["images", "videos"].forEach(m => {
+        // Mixed: every paper's images and videos together.
+        {
+            const byKey = {};
+            const add = (e, kind) => {
+                const g = byKey[e.key] || (byKey[e.key] = { key: e.key, paper: e.paper, items: [] });
+                e.items.forEach(it => g.items.push(kind === "video"
+                    ? { kind, v: it, paperLabel: e.paper.label || e.paper.title }
+                    : { kind, src: it, paperTitle: e.paper.title }));
+            };
+            lists.images.forEach(e => add(e, "image"));
+            lists.videos.forEach(e => add(e, "video"));
+            lists.mixed = Object.values(byKey)
+                .sort((a, b) => a.paper.title.localeCompare(b.paper.title));
+        }
+
+        ["images", "videos", "mixed"].forEach(m => {
 
             const stored = loadJson(localStorage, KEYS[m].enabled, {});
 
