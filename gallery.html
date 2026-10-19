@@ -731,13 +731,19 @@ h1{
     transform:translateX(200%);
 }
 
-/* Mixed: images and videos together in the same justified rows. Videos keep
-   a 16:9 shape; images keep their own. */
-.gallery.mixed{
-    --row-h:190px;
+/* Mixed: justified picture blocks (rows lock together edge to edge) with
+   video blocks between them, two videos across, or one across. */
+.mixed-wrap > .gallery:not(:first-child){
+    margin-top:8px;
 }
-.gallery.mixed .video-tile{
-    flex-basis:calc(var(--ar) * var(--row-h));
+.gallery.mixblock::after{
+    display:none;
+}
+.gallery.mixblock.ragged::after{
+    display:block;
+}
+.gallery.videos.single{
+    grid-template-columns:minmax(0, 1fr);
 }
 
 .mode-switch button{
@@ -968,8 +974,8 @@ h1{
     .gallery.videos{
         --gap:6px;
     }
-    .gallery.mixed{
-        --row-h:150px;
+    .mixed-wrap > .gallery:not(:first-child){
+        margin-top:6px;
     }
     .top-settings{ right:10px; }
 }
@@ -1656,6 +1662,37 @@ function fileLabel(path){
     return String(path).split("/").pop().replace(/\.[^/.]+$/, "");
 }
 
+// Picture blocks in Mixed stretch their last row to the full width, unless
+// that row is mostly empty, in which case it stays natural width instead of
+// blowing a lone picture up.
+let settleRaf = 0;
+function settleSoon(){
+    if(settleRaf) return;
+    settleRaf = requestAnimationFrame(() => { settleRaf = 0; settleBlocks(); });
+}
+
+function settleBlocks(){
+    document.querySelectorAll(".gallery.mixblock").forEach(blk => {
+        const tiles = [...blk.children].filter(c => c.classList.contains("gallery-image"));
+        if(!tiles.length) return;
+
+        const cs = getComputedStyle(blk);
+        const rowH = parseFloat(cs.getPropertyValue("--row-h")) || 220;
+        const gap = parseFloat(cs.columnGap) || 6;
+        const W = blk.clientWidth;
+        if(!W) return;
+
+        const lastTop = tiles[tiles.length - 1].offsetTop;
+        const last = tiles.filter(t => Math.abs(t.offsetTop - lastTop) < 4);
+        const sum = last.reduce((n, t) =>
+            n + (parseFloat(t.style.getPropertyValue("--ar")) || 1.33) * rowH, 0) + gap * (last.length - 1);
+
+        blk.classList.toggle("ragged", sum / W < 0.6);
+    });
+}
+
+window.addEventListener("resize", settleSoon);
+
 function render(){
 
     container.innerHTML = "";
@@ -1685,9 +1722,10 @@ function render(){
     }
 
     const gallery = document.createElement("div");
-    gallery.className = "gallery" + (mode === "videos" ? " videos" : mode === "mixed" ? " mixed" : "");
+    gallery.className = mode === "mixed" ? "mixed-wrap" : "gallery" + (mode === "videos" ? " videos" : "");
 
     const fragment = document.createDocumentFragment();
+    let target = fragment;   // where the next tile goes (a block in Mixed)
 
     function addName(link, text){
         const name = document.createElement("span");
@@ -1722,13 +1760,14 @@ function render(){
                 applyRatio(link, real);
                 scheduleRatioSave();
             }
+            settleSoon();
         });
 
-        img.addEventListener("error", () => link.remove());
+        img.addEventListener("error", () => { link.remove(); settleSoon(); });
 
         link.append(spacer, img);
         addName(link, fileLabel(image));
-        fragment.appendChild(link);
+        target.appendChild(link);
     }
 
     function addVideo(v, title){
@@ -1813,34 +1852,58 @@ function render(){
         }
 
         addName(link, name);
-        fragment.appendChild(link);
+        target.appendChild(link);
     }
 
-    // Spreads images and videos evenly (never clumped), keeping each kind in
-    // its paper order.
-    function mixItems(list){
+    // Mixed: a run of pictures (justified rows), then two videos side by side,
+    // then pictures again, and so on, so everything pieces together. A lone
+    // leftover video gets a full row.
+    function addMixedBlocks(list){
         const imgs = list.filter(i => i.kind === "image");
         const vids = list.filter(i => i.kind === "video");
-        const out = [];
+        const pairs = Math.ceil(vids.length / 2);
+        const per = pairs ? Math.max(3, Math.round(imgs.length / pairs)) : imgs.length;
         let a = 0, b = 0;
-        while(a < imgs.length || b < vids.length){
-            const pa = imgs.length ? (a + 0.5) / imgs.length : Infinity;
-            const pb = vids.length ? (b + 0.5) / vids.length : Infinity;
-            if(a < imgs.length && (b >= vids.length || pa <= pb)) out.push(imgs[a++]);
-            else out.push(vids[b++]);
-        }
-        return out;
-    }
 
-    function drawMixed(item){
-        if(item.kind === "video") addVideo(item.v, item.paperLabel);
-        else addImage(item.src, item.paperTitle);
+        function imageBlock(n){
+            if(a >= imgs.length || n <= 0) return;
+            const blk = document.createElement("div");
+            blk.className = "gallery mixblock";
+            fragment.appendChild(blk);
+            target = blk;
+            for(let i = 0; i < n && a < imgs.length; i++){
+                addImage(imgs[a].src, imgs[a].paperTitle);
+                a++;
+            }
+        }
+
+        function videoBlock(){
+            if(b >= vids.length) return;
+            const n = Math.min(2, vids.length - b);
+            const blk = document.createElement("div");
+            blk.className = "gallery videos" + (n === 1 ? " single" : "");
+            fragment.appendChild(blk);
+            target = blk;
+            for(let i = 0; i < n; i++){
+                addVideo(vids[b].v, vids[b].paperLabel);
+                b++;
+            }
+        }
+
+        // Start with pictures when there are any; vary the run a little so it
+        // doesn't feel mechanical.
+        let toggle = 0;
+        while(a < imgs.length || b < vids.length){
+            imageBlock(vids.length ? (toggle++ % 2 ? Math.max(2, per - 1) : per) : imgs.length);
+            videoBlock();
+        }
+        target = fragment;
     }
 
     groups.forEach(({paper, items}, index) => {
 
         if(paperBreaks){
-            if(index > 0){
+            if(index > 0 && mode !== "mixed"){
                 const fill = document.createElement("div");
                 fill.className = "gallery-fill";
                 fragment.appendChild(fill);
@@ -1863,7 +1926,7 @@ function render(){
         }
 
         if(mode === "mixed"){
-            if(paperBreaks) mixItems(items).forEach(drawMixed);
+            if(paperBreaks) addMixedBlocks(items);
             return;
         }
 
@@ -1876,11 +1939,13 @@ function render(){
 
     // Without paper headings, everything is mixed together across papers.
     if(mode === "mixed" && !paperBreaks){
-        mixItems(groups.flatMap(g => g.items)).forEach(drawMixed);
+        addMixedBlocks(groups.flatMap(g => g.items));
     }
 
     gallery.appendChild(fragment);
     container.appendChild(gallery);
+
+    if(mode === "mixed") settleSoon();
 
     const end = document.createElement("p");
     end.className = "end-of-list";
