@@ -1054,9 +1054,10 @@ border-radius:10px;
 font-size:18px;
 }
 
-/* Search settings: same gear, panel, picker rows, option popup and
-   toggle switch as the Settings menu on category.html / video.html. */
-.search-gear{
+/* Search settings: same look as the Settings menu on category.html /
+   video.html (panel, picker rows, option popup, toggle), with its own
+   class names so nothing else on the page can clash with it. */
+.sx-gear{
 position:absolute;
 top:50%;
 right:8px;
@@ -1074,39 +1075,38 @@ padding:0;
 cursor:pointer;
 line-height:1;
 }
-.search-gear:hover{background:#353535}
-.search-gear:focus-visible{outline:2px solid #666}
+.sx-gear:hover{background:#353535}
 
-.ss-blocker{
+.sx-blocker{
 position:fixed;
-inset:0;
-z-index:99998;
+top:0;left:0;right:0;bottom:0;
+z-index:1000000;
 background:rgba(0,0,0,.45);
 }
-.ss-blocker[hidden]{display:none}
+.sx-blocker.sx-hidden{display:none}
 
-.settings-panel{
+.sx-panel{
 box-sizing:border-box;
 display:none;
-position:absolute;
-top:calc(50% - 18px);
-right:8px;
+position:fixed;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
 flex-direction:column;
 width:300px;
-max-width:calc(100vw - 24px);
-max-height:calc(100vh - 24px);
-max-height:calc(100dvh - 24px);
+max-width:calc(100vw - 32px);
+max-height:calc(100vh - 32px);
+max-height:calc(100dvh - 32px);
 padding:8px;
 background:#222;
 border:1px solid #333;
 border-radius:10px;
 box-shadow:0 8px 24px rgba(0,0,0,.5);
-z-index:100000;
+z-index:1000001;
 text-align:left;
 }
-.settings-panel.open{display:flex}
-
-.settingsMenuHeader{
+.sx-panel.sx-open{display:flex}
+.sx-head{
 display:flex;
 align-items:center;
 justify-content:space-between;
@@ -1115,13 +1115,13 @@ margin:0 0 8px;
 padding-bottom:8px;
 border-bottom:1px solid #333;
 }
-.settingsMenuHeader h3{
+.sx-head h3{
 margin:0;
 font-size:14px;
 font-weight:600;
 color:#eee;
 }
-.settingsCloseBtn{
+.sx-close{
 width:28px;
 height:28px;
 padding:0;
@@ -1137,9 +1137,8 @@ font-size:13px;
 line-height:1;
 cursor:pointer;
 }
-.settingsCloseBtn:hover{background:#353535}
-
-.settingsScroll{
+.sx-close:hover{background:#353535}
+.sx-scroll{
 display:flex;
 flex-direction:column;
 gap:4px;
@@ -1147,8 +1146,7 @@ overflow-y:auto;
 overscroll-behavior:contain;
 min-height:0;
 }
-
-.videoPickerRow{
+.sx-row{
 box-sizing:border-box;
 display:flex;
 align-items:center;
@@ -1165,10 +1163,10 @@ font-family:inherit;
 text-align:left;
 cursor:pointer;
 }
-.videoPickerRow:hover{background:#383838}
-div.videoPickerRow{cursor:default}
-div.videoPickerRow:hover{background:#2e2e2e}
-.videoPickerValue{
+.sx-row:hover{background:#383838}
+div.sx-row{cursor:default}
+div.sx-row:hover{background:#2e2e2e}
+.sx-value{
 display:flex;
 align-items:center;
 justify-content:flex-end;
@@ -1178,13 +1176,14 @@ min-width:0;
 color:#eee;
 font-size:13.5px;
 }
-.videoPickerValue span{
+.sx-value span{
 overflow:hidden;
 text-overflow:ellipsis;
 white-space:nowrap;
 min-width:0;
 }
-.videoPickerCaret{
+.sx-value .sx-caret{overflow:visible}
+.sx-caret{
 flex-shrink:0;
 width:0;
 height:0;
@@ -1193,13 +1192,10 @@ border-right:6px solid transparent;
 border-top:7px solid #999;
 transition:transform .15s ease;
 }
-.videoPickerRow.open .videoPickerCaret{transform:rotate(180deg)}
-.ss-resetRow{
-justify-content:center;
-color:#bbb;
-}
+.sx-row.sx-rowopen .sx-caret{transform:rotate(180deg)}
+.sx-resetRow{justify-content:center;color:#bbb}
 
-.videoOptionPopup{
+.sx-popup{
 box-sizing:border-box;
 position:fixed;
 display:none;
@@ -1212,17 +1208,17 @@ background:#1d1d1d;
 border:1px solid #2c2c2c;
 border-radius:10px;
 box-shadow:0 6px 18px rgba(0,0,0,.5);
-z-index:100001;
+z-index:1000002;
 }
-.videoOptionPopup.open{display:flex}
-.videoOptionList{
+.sx-popup.sx-open{display:flex}
+.sx-list{
 display:flex;
 flex-direction:column;
 flex:1 1 auto;
 min-height:0;
 overflow-y:auto;
 }
-.videoOption{
+.sx-opt{
 display:flex;
 align-items:center;
 justify-content:space-between;
@@ -1241,24 +1237,23 @@ overflow:hidden;
 text-overflow:ellipsis;
 cursor:pointer;
 }
-.videoOption:hover{background:#262626}
-.videoOption.active{background:#262626;color:#fff}
-.videoOption .videoOptionCheck{
+.sx-opt:hover{background:#262626}
+.sx-opt.sx-active{background:#262626;color:#fff}
+.sx-opt .sx-check{
 flex:0 0 auto;
 min-width:14px;
 text-align:center;
 color:#999;
 visibility:hidden;
 }
-.videoOption.active .videoOptionCheck{visibility:visible}
-.videoOption .videoOptionLabel{
+.sx-opt.sx-active .sx-check{visibility:visible}
+.sx-opt .sx-label{
 flex:1 1 auto;
 min-width:0;
 overflow:hidden;
 text-overflow:ellipsis;
 }
-
-.toggleSwitch{
+.sx-toggle{
 position:relative;
 flex:0 0 auto;
 width:42px;
@@ -1269,7 +1264,7 @@ border:1px solid #444;
 border-radius:999px;
 cursor:pointer;
 }
-.toggleSwitch .toggleKnob{
+.sx-toggle .sx-knob{
 position:absolute;
 top:2px;
 left:2px;
@@ -1279,10 +1274,9 @@ border-radius:50%;
 background:#ccc;
 transition:left .15s ease, background .15s ease;
 }
-.toggleSwitch.active{background:#2f7cff;border-color:#2f7cff}
-.toggleSwitch.active .toggleKnob{left:20px;background:#fff}
-.settings-btn:focus-visible,.settingsCloseBtn:focus-visible,.videoPickerRow:focus-visible,.videoOption:focus-visible,.toggleSwitch:focus-visible{outline:2px solid #777;outline-offset:1px}
-
+.sx-toggle.sx-on{background:#2f7cff;border-color:#2f7cff}
+.sx-toggle.sx-on .sx-knob{left:20px;background:#fff}
+.sx-gear:focus-visible,.sx-close:focus-visible,.sx-row:focus-visible,.sx-opt:focus-visible,.sx-toggle:focus-visible{outline:2px solid #777;outline-offset:1px}
 
 #searchBox:focus{
 outline:none;
@@ -1611,6 +1605,13 @@ margin-top:30px;
 
 .show-warning #warningBox{
 display:flex;
+overflow-y:auto;
+overscroll-behavior:contain;
+}
+html.show-warning,
+html.show-warning body{
+overflow:hidden !important;
+overscroll-behavior:none;
 }
 
 
@@ -1776,12 +1777,82 @@ background:#252525;
 border-color:#777;
 }
 .featured-section{overflow:hidden;}
+/* Placeholder card shown until the real featured paper loads, same size as
+   the real card so nothing below it moves when the data arrives. */
+.featured-skeleton{cursor:default}
+.featured-skeleton:hover{background:#1d1d1d}
+.featured-skeleton .featured-image-wrapper{background:#262626}
+.featured-skeleton .featured-content{gap:12px;justify-content:center}
+.fs-bar{height:12px;border-radius:6px;background:#2a2a2a;width:100%;animation:fsPulse 1.4s ease-in-out infinite}
+.fs-short{width:35%}
+.fs-title{width:60%;height:18px}
+.fs-mid{width:70%}
+@keyframes fsPulse{0%,100%{opacity:.55}50%{opacity:1}}
+@media (prefers-reduced-motion:reduce){.fs-bar{animation:none}}
 .featured-card{touch-action:pan-y;}
 </style></head><body>
 <script>
-if(localStorage.getItem("warningAccepted") !== "yes"){
-document.documentElement.classList.add("show-warning");
+/* Until "I Agree, Continue" is pressed the whole page is frozen: no
+   scrolling, tapping, typing or tabbing to anything behind the popup. */
+(function(){
+var accepted = false;
+try{ accepted = localStorage.getItem("warningAccepted") === "yes"; }catch(e){}
+if(accepted) return;
+
+var root = document.documentElement;
+root.classList.add("show-warning");
+
+var SKIP = /^(SCRIPT|LINK|STYLE|META|TEMPLATE)$/;
+function box(){ return document.getElementById("warningBox"); }
+function freezeSiblings(){
+var wb = box();
+if(!document.body || !wb) return;
+Array.prototype.forEach.call(document.body.children, function(el){
+if(el === wb || SKIP.test(el.tagName) || el.hasAttribute("inert")) return;
+el.setAttribute("inert", "");
+el.setAttribute("data-warning-frozen", "");
+});
 }
+function inBox(t){ var wb = box(); return !!(wb && t && wb.contains(t)); }
+function stop(e){ if(!inBox(e.target)) e.preventDefault(); }
+function keys(e){
+var k = e.key;
+var scrollKeys = [" ","ArrowUp","ArrowDown","PageUp","PageDown","Home","End"];
+if(scrollKeys.indexOf(k) === -1) return;
+var t = e.target;
+if(k === " " && t && t.tagName === "BUTTON" && inBox(t)) return;
+e.preventDefault();
+}
+
+var opts = { passive:false, capture:true };
+window.addEventListener("wheel", stop, opts);
+window.addEventListener("touchmove", stop, opts);
+window.addEventListener("keydown", keys, true);
+
+var mo = null;
+function start(){
+freezeSiblings();
+if(window.MutationObserver && !mo){
+mo = new MutationObserver(freezeSiblings);
+mo.observe(document.body, { childList:true });
+}
+}
+if(document.body && box()){ start(); }
+document.addEventListener("DOMContentLoaded", start);
+
+window.__unlockWarning = function(){
+root.classList.remove("show-warning");
+if(mo){ mo.disconnect(); mo = null; }
+window.removeEventListener("wheel", stop, opts);
+window.removeEventListener("touchmove", stop, opts);
+window.removeEventListener("keydown", keys, true);
+document.removeEventListener("DOMContentLoaded", start);
+Array.prototype.forEach.call(document.querySelectorAll("[data-warning-frozen]"), function(el){
+el.removeAttribute("inert");
+el.removeAttribute("data-warning-frozen");
+});
+};
+})();
 </script>
 <div id="warningBox"><div class="warningContent"><h2>CONTENT WARNING</h2><p>
 This website contains graphic material that may include depictions of injury, death, violence, accidents, crime scenes, medical imagery, historical atrocities, and other disturbing content.
@@ -1864,10 +1935,10 @@ Every idea should be judged by its evidence, not by its popularity.
 Featured Research
 </div>
 
-<div id="featuredContainer"></div>
+<div id="featuredContainer"><div class="featured-card featured-skeleton" aria-hidden="true"><div class="featured-image-wrapper"></div><div class="featured-content"><div class="fs-bar fs-short"></div><div class="fs-bar fs-title"></div><div class="fs-bar"></div><div class="fs-bar"></div><div class="fs-bar fs-mid"></div></div></div></div>
 
 <div id="featuredDots"
-class="featured-dots"></div>
+class="featured-dots"><span class="featured-dot active"></span><span class="featured-dot"></span><span class="featured-dot"></span></div>
 
 </div>
 
@@ -1887,64 +1958,60 @@ disabled
 
 <button
 type="button"
-id="searchSettingsBtn"
-class="search-gear"
+id="sxBtn"
+class="sx-gear"
 aria-label="Search settings"
 aria-expanded="false"
-aria-controls="searchSettingsPanel"
 >
-<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1z"></path></svg>
 </button>
 
-<div class="ss-blocker" id="searchSettingsBlocker" hidden></div>
+<div class="sx-blocker sx-hidden" id="sxBlocker"></div>
 
-<div class="settings-panel" id="searchSettingsPanel" role="dialog" aria-modal="true" aria-label="Search settings">
-
-<div class="settingsMenuHeader">
+<div class="sx-panel" id="sxPanel" role="dialog" aria-modal="true" aria-label="Search settings">
+<div class="sx-head">
 <h3>Search settings</h3>
-<button type="button" class="settingsCloseBtn" id="ss-close" aria-label="Close settings" title="Close">✕</button>
+<button type="button" class="sx-close" id="sxClose" aria-label="Close settings" title="Close">✕</button>
 </div>
+<div class="sx-scroll">
 
-<div class="settingsScroll">
-
-<button type="button" class="videoPickerRow" id="ss-layoutOpen" data-picker="layout" aria-haspopup="true" aria-expanded="false">
+<button type="button" class="sx-row" id="sx-layoutOpen" data-picker="layout" aria-haspopup="true" aria-expanded="false">
 <span>Results</span>
-<span class="videoPickerValue"><span id="ss-layoutValue"></span><span class="videoPickerCaret" aria-hidden="true"></span></span>
+<span class="sx-value"><span id="sx-layoutValue"></span><span class="sx-caret" aria-hidden="true"></span></span>
 </button>
 
-<button type="button" class="videoPickerRow" id="ss-orderOpen" data-picker="order" aria-haspopup="true" aria-expanded="false">
+<button type="button" class="sx-row" id="sx-orderOpen" data-picker="order" aria-haspopup="true" aria-expanded="false">
 <span>Order</span>
-<span class="videoPickerValue"><span id="ss-orderValue"></span><span class="videoPickerCaret" aria-hidden="true"></span></span>
+<span class="sx-value"><span id="sx-orderValue"></span><span class="sx-caret" aria-hidden="true"></span></span>
 </button>
 
-<button type="button" class="videoPickerRow" id="ss-pdfsOpen" data-picker="pdfs" aria-haspopup="true" aria-expanded="false">
+<button type="button" class="sx-row" id="sx-pdfsOpen" data-picker="pdfs" aria-haspopup="true" aria-expanded="false">
 <span>Documents</span>
-<span class="videoPickerValue"><span id="ss-pdfsValue"></span><span class="videoPickerCaret" aria-hidden="true"></span></span>
+<span class="sx-value"><span id="sx-pdfsValue"></span><span class="sx-caret" aria-hidden="true"></span></span>
 </button>
 
-<button type="button" class="videoPickerRow" id="ss-videosOpen" data-picker="videos" aria-haspopup="true" aria-expanded="false">
+<button type="button" class="sx-row" id="sx-videosOpen" data-picker="videos" aria-haspopup="true" aria-expanded="false">
 <span>Videos</span>
-<span class="videoPickerValue"><span id="ss-videosValue"></span><span class="videoPickerCaret" aria-hidden="true"></span></span>
+<span class="sx-value"><span id="sx-videosValue"></span><span class="sx-caret" aria-hidden="true"></span></span>
 </button>
 
-<button type="button" class="videoPickerRow" id="ss-imagesOpen" data-picker="images" aria-haspopup="true" aria-expanded="false">
+<button type="button" class="sx-row" id="sx-imagesOpen" data-picker="images" aria-haspopup="true" aria-expanded="false">
 <span>Images</span>
-<span class="videoPickerValue"><span id="ss-imagesValue"></span><span class="videoPickerCaret" aria-hidden="true"></span></span>
+<span class="sx-value"><span id="sx-imagesValue"></span><span class="sx-caret" aria-hidden="true"></span></span>
 </button>
 
-<div class="videoPickerRow" id="ss-fillRow">
+<div class="sx-row" id="sx-fillRow">
 <span>Always fill slots</span>
-<button type="button" class="toggleSwitch" id="ss-fill" role="switch" aria-checked="false" aria-label="Always fill every slot with weaker matches"><span class="toggleKnob"></span></button>
+<button type="button" class="sx-toggle" id="sx-fill" role="switch" aria-checked="false" aria-label="Always fill every slot with weaker matches"><span class="sx-knob"></span></button>
 </div>
 
-<button type="button" class="videoPickerRow ss-resetRow" id="ss-reset">Reset to defaults</button>
+<button type="button" class="sx-row sx-resetRow" id="sx-reset">Reset to defaults</button>
 
 </div>
-
 </div>
 
-<div class="videoOptionPopup" id="ss-optionPopup" role="menu">
-<div class="videoOptionList" id="ss-optionList"></div>
+<div class="sx-popup" id="sxPopup" role="menu">
+<div class="sx-list" id="sxList"></div>
 </div>
 
 <div id="searchResults"></div>
@@ -2112,8 +2179,9 @@ img.replaceWith(box);
 };
 
 function acceptWarning(){
-localStorage.setItem("warningAccepted","yes");
+try{ localStorage.setItem("warningAccepted","yes"); }catch(e){}
 document.getElementById("warningBox").style.display = "none";
+if(window.__unlockWarning) window.__unlockWarning();
 }
 window.acceptWarning = acceptWarning;
 
@@ -2479,20 +2547,20 @@ const SEARCH_ORDERS = {
 const SEARCH_WEIGHTS = { pdfs: 12, videos: 6, images: 0 };
 
 function loadSearchSettings(){
-const s = JSON.parse(JSON.stringify(SEARCH_DEFAULTS));
+const st = JSON.parse(JSON.stringify(SEARCH_DEFAULTS));
 try{
 const raw = JSON.parse(localStorage.getItem("searchSettings") || "{}");
 if(raw && typeof raw === "object"){
-if(typeof raw.fill === "boolean") s.fill = raw.fill;
-if(raw.layout === "grouped" || raw.layout === "mixed") s.layout = raw.layout;
-if(SEARCH_ORDERS[raw.order]) s.order = raw.order;
+if(typeof raw.fill === "boolean") st.fill = raw.fill;
+if(raw.layout === "grouped" || raw.layout === "mixed") st.layout = raw.layout;
+if(SEARCH_ORDERS[raw.order]) st.order = raw.order;
 ["pdfs","videos","images"].forEach(k => {
 const n = raw.limits && Number(raw.limits[k]);
-if(SEARCH_COUNT_CHOICES.includes(n)) s.limits[k] = n;
+if(SEARCH_COUNT_CHOICES.includes(n)) st.limits[k] = n;
 });
 }
 }catch(e){}
-return s;
+return st;
 }
 
 function saveSearchSettings(){
@@ -2754,6 +2822,13 @@ img.src = visibleImages[index];
 
 
 renderFeatured();
+
+if(!featuredPapers.length){
+const sk = document.querySelector(".featured-skeleton");
+if(sk) sk.remove();
+const fd = document.getElementById("featuredDots");
+if(fd) fd.textContent = "";
+}
 
 if(featuredPapers.length > 1){
 
@@ -3076,15 +3151,24 @@ new RegExp(`(${escaped})`, "ig"),
 }
 
 
-/* ---------- Search settings (same panel + option popup as category.html) ---------- */
-const ssBtn = document.getElementById("searchSettingsBtn");
-const ssPanel = document.getElementById("searchSettingsPanel");
-const ssBlocker = document.getElementById("searchSettingsBlocker");
-const ssPopup = document.getElementById("ss-optionPopup");
-const ssList = document.getElementById("ss-optionList");
-let ssOpenPicker = null;
+/* ---------- Search settings ---------- */
+/* Wrapped so that nothing here can ever stop the rest of the page. */
+try{
 
-const SS_PICKERS = {
+const sxBtn = document.getElementById("sxBtn");
+const sxPanel = document.getElementById("sxPanel");
+const sxBlocker = document.getElementById("sxBlocker");
+const sxPopup = document.getElementById("sxPopup");
+const sxList = document.getElementById("sxList");
+
+if(sxBtn && sxPanel && sxBlocker && sxPopup && sxList){
+
+let sxOpenPicker = null;
+
+// Live at the page root so nothing in the layout can clip or offset them.
+document.body.append(sxBlocker, sxPanel, sxPopup);
+
+const SX_PICKERS = {
 layout: {
 options: [["grouped", "Sections"], ["mixed", "Mixed"]],
 get: () => searchSettings.layout,
@@ -3097,194 +3181,189 @@ set: v => { searchSettings.order = v; }
 }
 };
 ["pdfs", "videos", "images"].forEach(key => {
-SS_PICKERS[key] = {
+SX_PICKERS[key] = {
 options: SEARCH_COUNT_CHOICES.map(n => [String(n), String(n)]),
 get: () => String(searchSettings.limits[key]),
 set: v => { searchSettings.limits[key] = Number(v); }
 };
 });
 
-function ssIsOpen(){
-return ssPanel.classList.contains("open");
-}
+const sxIsOpen = () => sxPanel.classList.contains("sx-open");
 
-function applySearchSettingsUI(){
-Object.keys(SS_PICKERS).forEach(key => {
-const g = SS_PICKERS[key];
+function applySx(){
+Object.keys(SX_PICKERS).forEach(key => {
+const g = SX_PICKERS[key];
 const cur = g.options.find(o => o[0] === g.get());
-document.getElementById("ss-" + key + "Value").textContent = cur ? cur[1] : "";
+const el = document.getElementById("sx-" + key + "Value");
+if(el) el.textContent = cur ? cur[1] : "";
 });
-// Section order only applies to separate sections.
-document.getElementById("ss-orderOpen").style.display =
+document.getElementById("sx-orderOpen").style.display =
 searchSettings.layout === "grouped" ? "" : "none";
-const fill = document.getElementById("ss-fill");
-fill.classList.toggle("active", searchSettings.fill);
+const fill = document.getElementById("sx-fill");
+fill.classList.toggle("sx-on", searchSettings.fill);
 fill.setAttribute("aria-checked", searchSettings.fill ? "true" : "false");
 }
 
-function searchSettingsChanged(){
+function sxChanged(){
 saveSearchSettings();
-applySearchSettingsUI();
+applySx();
 if(searchReady && searchBox.value.trim().length >= 2){
 searchBox.dispatchEvent(new Event("input"));
-if(ssIsOpen()) searchResults.style.display = "none";
+if(sxIsOpen()) searchResults.style.display = "none";
 }
 }
 
-function closeSsPopup(){
-if(ssOpenPicker){
-const row = document.getElementById("ss-" + ssOpenPicker + "Open");
+function closeSxPopup(){
+if(sxOpenPicker){
+const row = document.getElementById("sx-" + sxOpenPicker + "Open");
 if(row){
-row.classList.remove("open");
+row.classList.remove("sx-rowopen");
 row.setAttribute("aria-expanded", "false");
 }
 }
-ssPopup.classList.remove("open");
-ssOpenPicker = null;
+sxPopup.classList.remove("sx-open");
+sxOpenPicker = null;
 }
 
-function buildSsOptions(key){
-const g = SS_PICKERS[key];
-ssList.replaceChildren();
+function buildSxOptions(key){
+const g = SX_PICKERS[key];
+sxList.textContent = "";
 g.options.forEach(([value, label]) => {
 const active = value === g.get();
 const b = document.createElement("button");
 b.type = "button";
-b.className = "videoOption" + (active ? " active" : "");
+b.className = "sx-opt" + (active ? " sx-active" : "");
 b.setAttribute("role", "menuitemradio");
 b.setAttribute("aria-checked", active ? "true" : "false");
 const l = document.createElement("span");
-l.className = "videoOptionLabel";
+l.className = "sx-label";
 l.textContent = label;
 const c = document.createElement("span");
-c.className = "videoOptionCheck";
+c.className = "sx-check";
 c.textContent = "✓";
-b.append(l, c);
+b.appendChild(l);
+b.appendChild(c);
 b.addEventListener("click", e => {
 e.stopPropagation();
 g.set(value);
-closeSsPopup();
-searchSettingsChanged();
+closeSxPopup();
+sxChanged();
 });
-ssList.appendChild(b);
+sxList.appendChild(b);
 });
 }
 
-function positionSsPopup(rowEl){
+function positionSxPopup(rowEl){
 const rect = rowEl.getBoundingClientRect();
 const w = Math.min(190, window.innerWidth - 24);
 const margin = 12;
 let left = rect.left + rect.width / 2 - w / 2;
 left = Math.max(margin, Math.min(left, window.innerWidth - w - margin));
-ssPopup.style.left = left + "px";
+sxPopup.style.left = left + "px";
 const below = window.innerHeight - rect.bottom - 8;
 const above = rect.top - 8;
 if(below >= 160 || below >= above){
-ssPopup.style.top = (rect.bottom + 8) + "px";
-ssPopup.style.bottom = "auto";
-ssPopup.style.maxHeight = Math.max(120, Math.min(420, below - 8)) + "px";
+sxPopup.style.top = (rect.bottom + 8) + "px";
+sxPopup.style.bottom = "auto";
+sxPopup.style.maxHeight = Math.max(120, Math.min(420, below - 8)) + "px";
 }else{
-ssPopup.style.bottom = (window.innerHeight - rect.top + 8) + "px";
-ssPopup.style.top = "auto";
-ssPopup.style.maxHeight = Math.max(120, Math.min(420, above - 8)) + "px";
+sxPopup.style.bottom = (window.innerHeight - rect.top + 8) + "px";
+sxPopup.style.top = "auto";
+sxPopup.style.maxHeight = Math.max(120, Math.min(420, above - 8)) + "px";
 }
 }
 
-function openSsPopup(key, rowEl){
-ssOpenPicker = key;
-buildSsOptions(key);
-ssPopup.classList.add("open");
-positionSsPopup(rowEl);
-rowEl.classList.add("open");
+function openSxPopup(key, rowEl){
+sxOpenPicker = key;
+buildSxOptions(key);
+sxPopup.classList.add("sx-open");
+positionSxPopup(rowEl);
+rowEl.classList.add("sx-rowopen");
 rowEl.setAttribute("aria-expanded", "true");
-const active = ssList.querySelector(".active");
-if(active) active.scrollIntoView({ block: "nearest" });
+const active = sxList.querySelector(".sx-active");
+if(active) sxList.scrollTop = Math.max(0, active.offsetTop - sxList.clientHeight / 2);
 }
 
-function setSearchSettingsOpen(open){
-if(open === ssIsOpen()) return;
-closeSsPopup();
+function setSxOpen(open){
+if(open === sxIsOpen()) return;
+closeSxPopup();
 if(open){
 searchResults.style.display = "none";
-applySearchSettingsUI();
-ssPanel.classList.add("open");
-ssBlocker.hidden = false;
-ssBtn.setAttribute("aria-expanded", "true");
-try{ ssPanel.scrollIntoView({ block: "center" }); }catch(e){}
+applySx();
+sxPanel.classList.add("sx-open");
+sxBlocker.classList.remove("sx-hidden");
+sxBtn.setAttribute("aria-expanded", "true");
 document.documentElement.style.overflow = "hidden";
 document.body.style.overflow = "hidden";
-document.getElementById("ss-close").focus({ preventScroll: true });
+document.getElementById("sxClose").focus({ preventScroll: true });
 }else{
-ssPanel.classList.remove("open");
-ssBlocker.hidden = true;
-ssBtn.setAttribute("aria-expanded", "false");
+sxPanel.classList.remove("sx-open");
+sxBlocker.classList.add("sx-hidden");
+sxBtn.setAttribute("aria-expanded", "false");
 document.documentElement.style.overflow = "";
 document.body.style.overflow = "";
 if(searchReady && searchBox.value.trim().length >= 2 && searchResults.innerHTML.trim()){
 searchResults.style.display = "block";
 }
-ssBtn.focus({ preventScroll: true });
+sxBtn.focus({ preventScroll: true });
 }
 }
 
-ssBtn.addEventListener("click", e => {
+sxBtn.addEventListener("click", e => {
 e.preventDefault();
 e.stopPropagation();
-setSearchSettingsOpen(!ssIsOpen());
+setSxOpen(!sxIsOpen());
 });
 
-// Must be closed (X, gear or Escape) before anything else can be used:
+// Must be closed (X or Escape) before anything else can be used:
 // the blocker swallows taps outside the panel.
-ssBlocker.addEventListener("click", e => {
+sxBlocker.addEventListener("click", e => {
 e.preventDefault();
 e.stopPropagation();
-closeSsPopup();
+closeSxPopup();
 });
 
-ssPanel.addEventListener("click", e => {
+sxPanel.addEventListener("click", e => {
 e.stopPropagation();
-const picker = e.target.closest(".videoPickerRow[data-picker]");
+const picker = e.target.closest(".sx-row[data-picker]");
 if(picker){
 const key = picker.dataset.picker;
-const was = ssOpenPicker === key;
-closeSsPopup();
-if(!was) openSsPopup(key, picker);
+const was = sxOpenPicker === key;
+closeSxPopup();
+if(!was) openSxPopup(key, picker);
 return;
 }
-closeSsPopup();
+closeSxPopup();
 const t = e.target.closest("button");
 if(!t) return;
-if(t.id === "ss-close"){
-setSearchSettingsOpen(false);
-}else if(t.id === "ss-fill"){
+if(t.id === "sxClose"){
+setSxOpen(false);
+}else if(t.id === "sx-fill"){
 searchSettings.fill = !searchSettings.fill;
-searchSettingsChanged();
-}else if(t.id === "ss-reset"){
+sxChanged();
+}else if(t.id === "sx-reset"){
 searchSettings = JSON.parse(JSON.stringify(SEARCH_DEFAULTS));
-searchSettingsChanged();
+sxChanged();
 }
 });
 
-ssPopup.addEventListener("click", e => e.stopPropagation());
+sxPopup.addEventListener("click", e => e.stopPropagation());
 
 window.addEventListener("resize", () => {
-if(ssIsOpen()){
-try{ ssPanel.scrollIntoView({ block: "center" }); }catch(e){}
-}
-if(ssOpenPicker) positionSsPopup(document.getElementById("ss-" + ssOpenPicker + "Open"));
+if(sxOpenPicker) positionSxPopup(document.getElementById("sx-" + sxOpenPicker + "Open"));
 });
 
 document.addEventListener("keydown", e => {
-if(!ssIsOpen()) return;
+if(!sxIsOpen()) return;
 if(e.key === "Escape"){
 e.preventDefault();
-if(ssOpenPicker){
-closeSsPopup();
+if(sxOpenPicker){
+closeSxPopup();
 }else{
-setSearchSettingsOpen(false);
+setSxOpen(false);
 }
 }else if(e.key === "Tab"){
-const f = [...ssPanel.querySelectorAll("button"), ...ssPopup.querySelectorAll("button")]
+const f = [...sxPanel.querySelectorAll("button"), ...sxPopup.querySelectorAll("button")]
 .filter(el => el.offsetParent !== null);
 if(!f.length) return;
 const first = f[0], last = f[f.length - 1];
@@ -3301,7 +3380,13 @@ first.focus();
 }
 });
 
-applySearchSettingsUI();
+applySx();
+
+}
+
+}catch(err){
+console.error("Search settings failed to start:", err);
+}
 
 searchBox.addEventListener("input", () => {
 
