@@ -1080,64 +1080,133 @@ background:#2a2a2a;
 outline:2px solid #666;
 }
 
-.search-settings{
-position:absolute;
-top:100%;
-left:0;
-right:0;
-margin-top:8px;
-background:#1d1d1d;
-border:1px solid #333;
-border-radius:10px;
-max-height:600px;
-overflow-y:auto;
-z-index:100000;
-box-shadow:0 10px 40px rgba(0,0,0,.6);
-padding:6px 16px 14px;
-text-align:left;
+.ss-overlay{
+position:fixed;
+inset:0;
+z-index:1000000;
+display:flex;
+align-items:center;
+justify-content:center;
+padding:16px;
+box-sizing:border-box;
+background:rgba(0,0,0,.72);
+-webkit-backdrop-filter:blur(3px);
+backdrop-filter:blur(3px);
+animation:ssFade .16s ease-out;
 }
-.search-settings[hidden]{display:none}
+.ss-overlay[hidden]{display:none}
+@keyframes ssFade{from{opacity:0}to{opacity:1}}
+@keyframes ssRise{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
+.search-settings{
+display:flex;
+flex-direction:column;
+width:100%;
+max-width:460px;
+max-height:calc(100vh - 32px);
+max-height:calc(100dvh - 32px);
+background:#181818;
+border:1px solid #333;
+border-radius:16px;
+box-shadow:0 24px 80px rgba(0,0,0,.7);
+color:#eee;
+text-align:left;
+overflow:hidden;
+animation:ssRise .18s ease-out;
+outline:none;
+}
+.ss-head{
+display:flex;
+align-items:center;
+justify-content:space-between;
+padding:16px 16px 14px 20px;
+border-bottom:1px solid #2a2a2a;
+}
+.ss-head h2{
+margin:0;
+font-size:18px;
+font-weight:600;
+color:#fff;
+}
+.ss-close{
+width:34px;
+height:34px;
+display:flex;
+align-items:center;
+justify-content:center;
+background:transparent;
+border:0;
+border-radius:8px;
+color:#aaa;
+cursor:pointer;
+padding:0;
+}
+.ss-close:hover{color:#fff;background:#2a2a2a}
+.ss-body{
+flex:1 1 auto;
+overflow-y:auto;
+padding:4px 20px 8px;
+-webkit-overflow-scrolling:touch;
+overscroll-behavior:contain;
+}
 .ss-title{
-font-size:13px;
-letter-spacing:.08em;
+font-size:12px;
+letter-spacing:.1em;
 text-transform:uppercase;
-color:#888;
-margin:14px 0 4px;
+color:#7d7d7d;
+margin:18px 0 6px;
+}
+.ss-group{
+background:#1f1f1f;
+border:1px solid #2c2c2c;
+border-radius:12px;
+padding:0 14px;
 }
 .ss-row{
 display:flex;
 align-items:center;
 justify-content:space-between;
 gap:14px;
-padding:10px 0;
+padding:12px 0;
 border-bottom:1px solid #2a2a2a;
-color:#eee;
 font-size:15px;
 }
-.ss-row:last-of-type{border-bottom:0}
+.ss-row:last-child{border-bottom:0}
+.ss-stack{flex-direction:column;align-items:stretch;gap:8px}
+.ss-row.ss-stack select{max-width:100%;width:100%}
+.ss-row .ss-label{
+min-width:0;
+color:#eee;
+}
 .ss-row small{
 display:block;
-color:#888;
+color:#8a8a8a;
 font-size:12.5px;
-margin-top:2px;
+line-height:1.35;
+margin-top:3px;
 }
 .ss-row select{
-background:#262626;
+flex:0 0 auto;
+-webkit-appearance:none;
+appearance:none;
+background:#2a2a2a url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='%23aaa' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 12px center;
 color:#fff;
 border:1px solid #3a3a3a;
-border-radius:8px;
-padding:8px 10px;
+border-radius:9px;
+padding:9px 34px 9px 12px;
 font-size:15px;
-max-width:55%;
+font-family:inherit;
+cursor:pointer;
+max-width:58%;
 }
+.ss-row select:focus-visible{outline:2px solid #777;outline-offset:1px}
 .ss-switch{
 position:relative;
 flex:0 0 auto;
-width:44px;
-height:26px;
+width:46px;
+height:28px;
 background:#3a3a3a;
 border:0;
-border-radius:13px;
+border-radius:14px;
 cursor:pointer;
 padding:0;
 transition:background .15s;
@@ -1147,25 +1216,55 @@ content:"";
 position:absolute;
 top:3px;
 left:3px;
-width:20px;
-height:20px;
+width:22px;
+height:22px;
 border-radius:50%;
 background:#fff;
 transition:transform .15s;
 }
 .ss-switch[aria-checked="true"]{background:#2e7d4f}
 .ss-switch[aria-checked="true"]::after{transform:translateX(18px)}
+.ss-switch:focus-visible{outline:2px solid #777;outline-offset:2px}
+.ss-foot{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:12px;
+padding:14px 20px;
+border-top:1px solid #2a2a2a;
+background:#181818;
+}
 .ss-reset{
-margin-top:12px;
 background:transparent;
 color:#aaa;
 border:1px solid #3a3a3a;
-border-radius:8px;
-padding:8px 14px;
+border-radius:10px;
+padding:10px 14px;
 font-size:14px;
+font-family:inherit;
 cursor:pointer;
 }
 .ss-reset:hover{color:#fff;background:#2a2a2a}
+.ss-done{
+background:#fff;
+color:#111;
+border:0;
+border-radius:10px;
+padding:10px 26px;
+font-size:15px;
+font-weight:600;
+font-family:inherit;
+cursor:pointer;
+}
+.ss-done:hover{background:#ddd}
+.ss-reset:focus-visible,.ss-done:focus-visible,.ss-close:focus-visible{outline:2px solid #888;outline-offset:2px}
+@media (max-width:420px){
+.ss-row select{max-width:52%}
+}
+@media (prefers-reduced-motion:reduce){
+.ss-overlay,.search-settings{animation:none}
+.ss-switch,.ss-switch::after{transition:none}
+}
 
 #searchBox:focus{
 outline:none;
@@ -1779,7 +1878,9 @@ aria-controls="searchSettingsPanel"
 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
 </button>
 
-<div id="searchSettingsPanel" class="search-settings" role="dialog" aria-label="Search settings" hidden></div>
+<div id="searchSettingsOverlay" class="ss-overlay" hidden>
+<div id="searchSettingsPanel" class="search-settings" role="dialog" aria-modal="true" aria-labelledby="ssHeading" tabindex="-1"></div>
+</div>
 
 <div id="searchResults"></div>
 
@@ -2912,6 +3013,7 @@ new RegExp(`(${escaped})`, "ig"),
 
 /* ---------- Search settings panel ---------- */
 const ssBtn = document.getElementById("searchSettingsBtn");
+const ssOverlay = document.getElementById("searchSettingsOverlay");
 const ssPanel = document.getElementById("searchSettingsPanel");
 
 function ssOptions(values, current, label){
@@ -2925,32 +3027,55 @@ const st = searchSettings;
 const grouped = st.layout === "grouped";
 const countRow = (key, name) => `
 <div class="ss-row">
-<label for="ss-${key}">${name}</label>
+<label class="ss-label" for="ss-${key}">${name}</label>
 <select id="ss-${key}" data-limit="${key}">${ssOptions(SEARCH_COUNT_CHOICES, st.limits[key])}</select>
 </div>`;
+const focusId = document.activeElement && ssPanel.contains(document.activeElement) ? document.activeElement.id : "";
 ssPanel.innerHTML = `
+<div class="ss-head">
+<h2 id="ssHeading">Search settings</h2>
+<button type="button" class="ss-close" id="ss-close" aria-label="Close settings">
+<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+</button>
+</div>
+<div class="ss-body">
 <div class="ss-title">Layout</div>
+<div class="ss-group">
 <div class="ss-row">
-<label for="ss-layout">Results<small>Separate sections, or one list ranked by relevance (documents first, then videos, then images)</small></label>
+<label class="ss-label" for="ss-layout">Results<small>${grouped ? "Documents, videos and images in their own sections." : "One list ranked by relevance, with documents first, then videos, then images."}</small></label>
 <select id="ss-layout">
-<option value="grouped"${grouped ? " selected" : ""}>Separate sections</option>
-<option value="mixed"${grouped ? "" : " selected"}>Mixed by relevance</option>
+<option value="grouped"${grouped ? " selected" : ""}>Sections</option>
+<option value="mixed"${grouped ? "" : " selected"}>Mixed</option>
 </select>
 </div>
 ${grouped ? `
-<div class="ss-row">
-<label for="ss-order">Section order</label>
+<div class="ss-row ss-stack">
+<label class="ss-label" for="ss-order">Section order</label>
 <select id="ss-order">${ssOptions(Object.keys(SEARCH_ORDERS), st.order, k => SEARCH_ORDERS[k])}</select>
 </div>` : ""}
+</div>
 <div class="ss-title">Number of results</div>
+<div class="ss-group">
 ${countRow("pdfs", "Documents")}
 ${countRow("videos", "Videos")}
 ${countRow("images", "Images")}
+</div>
+<div class="ss-title">Matching</div>
+<div class="ss-group">
 <div class="ss-row">
-<span id="ss-fill-label">Always fill every slot<small>Off: only good matches are shown. On: weaker partial matches pad each section up to its number.</small></span>
+<span class="ss-label" id="ss-fill-label">Always fill every slot<small>Off: only good matches are shown. On: weaker partial matches pad each section up to its number.</small></span>
 <button type="button" class="ss-switch" id="ss-fill" role="switch" aria-checked="${st.fill}" aria-labelledby="ss-fill-label"></button>
 </div>
-<button type="button" class="ss-reset" id="ss-reset">Reset to defaults</button>`;
+</div>
+</div>
+<div class="ss-foot">
+<button type="button" class="ss-reset" id="ss-reset">Reset to defaults</button>
+<button type="button" class="ss-done" id="ss-done">Done</button>
+</div>`;
+if(focusId){
+const el = document.getElementById(focusId);
+if(el) el.focus();
+}
 }
 
 function searchSettingsChanged(){
@@ -2958,33 +3083,47 @@ saveSearchSettings();
 renderSearchSettings();
 if(searchReady && searchBox.value.trim().length >= 2){
 searchBox.dispatchEvent(new Event("input"));
-if(!ssPanel.hidden) searchResults.style.display = "none";
+if(!ssOverlay.hidden) searchResults.style.display = "none";
 }
 }
 
+document.body.appendChild(ssOverlay);
+
 function setSearchSettingsOpen(open){
-ssPanel.hidden = !open;
+if(open === !ssOverlay.hidden) return;
+ssOverlay.hidden = !open;
 ssBtn.setAttribute("aria-expanded", open ? "true" : "false");
+document.documentElement.style.overflow = open ? "hidden" : "";
+document.body.style.overflow = open ? "hidden" : "";
 if(open){
-renderSearchSettings();
 searchResults.style.display = "none";
-try{ ssPanel.scrollIntoView({ block: "nearest", behavior: "smooth" }); }catch(e){}
-}else if(searchReady && searchBox.value.trim().length >= 2 && searchResults.innerHTML.trim()){
+renderSearchSettings();
+const body = ssPanel.querySelector(".ss-body");
+if(body) body.scrollTop = 0;
+const done = document.getElementById("ss-done");
+if(done) done.focus();
+}else{
+if(searchReady && searchBox.value.trim().length >= 2 && searchResults.innerHTML.trim()){
 searchResults.style.display = "block";
+}
+ssBtn.focus();
 }
 }
 
 ssBtn.addEventListener("click", e => {
 e.preventDefault();
 e.stopPropagation();
-setSearchSettingsOpen(ssPanel.hidden);
+setSearchSettingsOpen(true);
 });
 
-ssPanel.addEventListener("click", e => {
+// The popup must be closed (X, Done or Escape) before anything else can be used.
+ssOverlay.addEventListener("click", e => {
 e.stopPropagation();
 const t = e.target.closest("button");
 if(!t) return;
-if(t.id === "ss-fill"){
+if(t.id === "ss-close" || t.id === "ss-done"){
+setSearchSettingsOpen(false);
+}else if(t.id === "ss-fill"){
 searchSettings.fill = !searchSettings.fill;
 searchSettingsChanged();
 }else if(t.id === "ss-reset"){
@@ -2993,7 +3132,7 @@ searchSettingsChanged();
 }
 });
 
-ssPanel.addEventListener("change", e => {
+ssOverlay.addEventListener("change", e => {
 const t = e.target;
 if(t.id === "ss-layout"){
 searchSettings.layout = t.value;
@@ -3008,21 +3147,26 @@ return;
 searchSettingsChanged();
 });
 
-document.addEventListener("click", e => {
-if(!ssPanel.hidden && !ssPanel.contains(e.target) && e.target !== ssBtn){
-setSearchSettingsOpen(false);
-}
-});
-
 document.addEventListener("keydown", e => {
-if(e.key === "Escape" && !ssPanel.hidden){
+if(ssOverlay.hidden) return;
+if(e.key === "Escape"){
+e.preventDefault();
 setSearchSettingsOpen(false);
-ssBtn.focus();
+}else if(e.key === "Tab"){
+const f = [...ssPanel.querySelectorAll("button, select")].filter(el => !el.disabled);
+if(!f.length) return;
+const first = f[0], last = f[f.length - 1];
+if(!ssPanel.contains(document.activeElement)){
+e.preventDefault();
+first.focus();
+}else if(e.shiftKey && document.activeElement === first){
+e.preventDefault();
+last.focus();
+}else if(!e.shiftKey && document.activeElement === last){
+e.preventDefault();
+first.focus();
 }
-});
-
-searchBox.addEventListener("focus", () => {
-if(!ssPanel.hidden) setSearchSettingsOpen(false);
+}
 });
 
 searchBox.addEventListener("input", () => {
