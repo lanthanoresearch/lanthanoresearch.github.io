@@ -976,9 +976,37 @@ color:#fff;
 }
 
 .search-empty{
-padding:20px;
+padding:18px 16px;
 color:#888;
-text-align:center;
+text-align:left;
+}
+.search-empty-title{color:#ddd;font-size:.95em;font-weight:600;word-break:break-word}
+.search-empty-sub{margin-top:4px;font-size:.85em;color:#888}
+
+.search-status{
+position:sticky;
+top:0;
+z-index:2;
+padding:10px 16px;
+background:#1d1d1d;
+border-bottom:1px solid #333;
+text-align:left;
+font-size:.85em;
+color:#999;
+line-height:1.4;
+}
+.search-tally span{color:#777}
+.search-correct{margin-bottom:8px}
+.search-correct-main{color:#ddd;font-size:1.05em;word-break:break-word}
+.search-correct-main b{color:#fff}
+.search-correct-sub{margin-top:6px;color:#999;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.search-snippet{
+margin:0 0 6px;
+padding-right:42px;
+color:#aaa;
+font-size:.85em;
+line-height:1.45;
+word-break:break-word;
 }
 
 
@@ -1025,7 +1053,9 @@ opacity:0.6;
 .search-result.selected{
 background:#333;
 }
+#searchResults{text-align:left}
 .search-section-title{
+text-align:left;
 padding:10px 15px;
 background:#181818;
 color:#aaa;
@@ -1340,7 +1370,26 @@ color:white;
 text-decoration:none;
 }
 
-.search-exact-link{color:#8ab4ff;text-decoration:underline;cursor:pointer}
+.search-exact-link{
+display:inline-block;
+max-width:100%;
+padding:5px 12px;
+background:#262626;
+color:#8ab4ff;
+border:1px solid #3a4a66;
+border-radius:999px;
+font-family:inherit;
+font-size:1em;
+text-decoration:underline;
+cursor:pointer;
+word-break:break-word;
+}
+.search-exact-link:hover{background:#2c3442;border-color:#5a78b0}
+.search-result mark{background:rgba(255,205,86,.25);color:#fff;padding:0 1px;border-radius:2px}
+.search-result{align-items:flex-start}
+.search-result > div:not(.search-thumb){flex:1 1 auto;min-width:0}
+.search-result .search-thumb,
+.search-result .search-thumb-pdf{flex:0 0 70px;width:70px;height:70px}
 .search-result:hover{
 background:#262626;
 }
@@ -2709,7 +2758,7 @@ phrase = qm[1].trim();
 let tokens = searchTokens(phrase);
 
 if(!tokens.length){
-return { pdfs: [], videos: [], images: [], corrected: false, spell: null };
+return { pdfs: [], videos: [], images: [], corrected: false, spell: null, matchers: null };
 }
 
 // Auto-correct words that appear nowhere on the site.
@@ -2860,7 +2909,7 @@ relatedScore(item.paperTitle)
 const all = [...pdfs, ...videos, ...images];
 const corrected = all.length > 0 && all.every(r => r.fuzzy);
 
-return { pdfs, videos, images, corrected, spell };
+return { pdfs, videos, images, corrected, spell, matchers: { phraseRe, tokRes } };
 
 }
 
@@ -3293,17 +3342,90 @@ searchBox.placeholder =
 "Search unavailable";
 
 });
+function escHtml(t){
+return String(t == null ? "" : t)
+.replace(/&/g, "&amp;")
+.replace(/</g, "&lt;")
+.replace(/>/g, "&gt;")
+.replace(/"/g, "&quot;");
+}
+
+// Escapes the text and wraps whatever matched the search in <mark>.
 function highlightMatch(text, query){
 
+text = String(text == null ? "" : text);
+
 const terms = searchHighlight.length ? searchHighlight : (query ? [query] : []);
-if(!terms.length) return text;
+if(!terms.length) return escHtml(text);
 
-const alts = terms.map(searchEscape).join("|");
+const re = new RegExp("\\b(?:" + terms.map(searchEscape).join("|") + ")\\w*", "ig");
 
-return text.replace(
-new RegExp("(\\b(?:" + alts + "))", "ig"),
-"<mark>$1</mark>"
-);
+let out = "";
+let last = 0;
+let m;
+
+while((m = re.exec(text))){
+if(!m[0]){ re.lastIndex++; continue; }
+out += escHtml(text.slice(last, m.index)) + "<mark>" + escHtml(m[0]) + "</mark>";
+last = m.index + m[0].length;
+}
+
+return out + escHtml(text.slice(last));
+
+}
+
+// A short passage from inside a paper, centred on where the search matched.
+// Returns "" when the match was only in the title.
+function searchSnippet(item, matchers){
+
+if(!matchers) return "";
+
+const paper = papersByUrl[item.url];
+const raw = ((paper && paper.description) || "") + " " + (item.searchText || "");
+const text = raw.replace(/\s+/g, " ").trim();
+if(!text) return "";
+
+const low = text.toLowerCase();
+const src = low.length === text.length ? text : low;
+
+let pos = -1;
+const pm = matchers.phraseRe.exec(low);
+if(pm){
+pos = pm.index;
+}else{
+// Find the stretch of text that contains the most of the searched words.
+const found = matchers.tokRes.map(re => {
+const g = new RegExp(re.source, "g");
+const hits = [];
+let m;
+while(hits.length < 8 && (m = g.exec(low))){
+hits.push(m.index);
+if(m[0] === "") g.lastIndex++;
+}
+return hits;
+});
+let bestCount = 0;
+found.forEach(list => list.forEach(start => {
+const count = found.filter(l => l.some(i => i >= start && i <= start + 130)).length;
+if(count > bestCount){ bestCount = count; pos = start; }
+}));
+}
+
+if(pos < 0) return "";
+
+let start = Math.max(0, pos - 45);
+let end = Math.min(src.length, start + 150);
+
+if(start > 0){
+const sp = src.lastIndexOf(" ", start);
+start = sp >= 0 ? sp + 1 : start;
+}
+if(end < src.length){
+const sp = src.lastIndexOf(" ", end);
+if(sp > pos) end = sp;
+}
+
+return (start > 0 ? "… " : "") + src.slice(start, end).trim() + (end < src.length ? " …" : "");
 
 }
 
@@ -3669,7 +3791,8 @@ if(query.length < 2){
 
 searchResults.innerHTML = `
        <div class="search-empty">
-           Type at least 2 characters...
+           <div class="search-empty-title">Keep typing to search</div>
+           <div class="search-empty-sub">Enter at least 2 characters.</div>
        </div>
    `;
 
@@ -3688,19 +3811,29 @@ const videoResults = ranked.videos;
 
 if(pdfResults.length || videoResults.length || imageResults.length){
 
+const plural = (n, word) => n + " " + word + (n === 1 ? "" : "s");
+const total = pdfResults.length + videoResults.length + imageResults.length;
+const tally = [
+pdfResults.length ? plural(pdfResults.length, "document") : "",
+videoResults.length ? plural(videoResults.length, "video") : "",
+imageResults.length ? plural(imageResults.length, "image") : ""
+].filter(Boolean).join(" · ");
+
+html += `<div class="search-status">`;
+
 if(ranked.spell){
-html += `<div class="search-count">Showing results for <b>${ranked.spell.to.replace(/</g, "&lt;")}</b>. <a href="#" class="search-exact-link">Search for &ldquo;${ranked.spell.from.replace(/</g, "&lt;")}&rdquo; instead</a></div>`;
+html += `
+<div class="search-correct">
+<div class="search-correct-main">Showing results for <b>${escHtml(ranked.spell.to)}</b></div>
+<div class="search-correct-sub">Search instead for
+<button type="button" class="search-exact-link">${escHtml(ranked.spell.from)}</button></div>
+</div>`;
 }else if(ranked.corrected){
-html += `<div class="search-count">No exact match. Showing the closest results.</div>`;
+html += `<div class="search-correct"><div class="search-correct-main">No exact match. Showing the closest results.</div></div>`;
 }
 
-html += `
-<div class="search-count">
-   ${pdfResults.length} Documents •
-   ${videoResults.length} Videos •
-   ${imageResults.length} Images
-</div>
-`;
+html += `<div class="search-tally">${plural(total, "result")} <span>· ${tally}</span></div>`;
+html += `</div>`;
 
 }
 
@@ -3760,6 +3893,11 @@ ${isFavorite(paperKeysByUrl[result.item.url]) ? "★" : "☆"}
        <div class="search-title">
            ${highlightMatch(result.item.displayTitle, query)}
        </div>
+
+       ${(() => {
+           const snip = searchSnippet(result.item, ranked.matchers);
+           return snip ? `<div class="search-snippet">${highlightMatch(snip, query)}</div>` : "";
+       })()}
 
       <div class="search-info">
 
@@ -3844,7 +3982,7 @@ videoItems.push(`
        </div>
 
        <div class="search-source">
-           Video${vr.videoDuration ? " • " + vr.videoDuration : ""} • From: ${vr.paperTitle}
+           Video${vr.videoDuration ? " • " + vr.videoDuration : ""} • From: ${highlightMatch(vr.paperTitle, query)}
        </div>
 
    </div>
@@ -3900,7 +4038,7 @@ imageItems.push(`
        </div>
 
        <div class="search-source">
-           ${result.item.imageType} Image • From: ${result.item.paperTitle}
+           ${result.item.imageType} Image • From: ${highlightMatch(result.item.paperTitle, query)}
        </div>
 
    </div>
@@ -3945,7 +4083,8 @@ if(!html){
 
 searchResults.innerHTML = `
        <div class="search-empty">
-           No results found.
+           <div class="search-empty-title">No results for &ldquo;${escHtml(query)}&rdquo;</div>
+           <div class="search-empty-sub">Check the spelling, or try fewer or more general words.</div>
        </div>
    `;
 
@@ -4123,8 +4262,7 @@ encodeURIComponent(window.location.href);
 });
 }
 
-searchResults.style.display =
-html ? "block" : "none";
+searchResults.style.display = "block";
 
 });
 
