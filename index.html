@@ -1046,13 +1046,126 @@ margin:30px auto 0 auto;
 #searchBox{
 width:100%;
 box-sizing:border-box;
-padding:16px;
+padding:16px 54px 16px 16px;
 background:#1d1d1d;
 color:#fff;
 border:1px solid #333;
 border-radius:10px;
 font-size:18px;
 }
+
+.search-gear{
+position:absolute;
+top:50%;
+right:8px;
+transform:translateY(-50%);
+width:38px;
+height:38px;
+display:flex;
+align-items:center;
+justify-content:center;
+background:transparent;
+border:0;
+border-radius:8px;
+color:#999;
+cursor:pointer;
+padding:0;
+}
+.search-gear:hover,
+.search-gear[aria-expanded="true"]{
+color:#fff;
+background:#2a2a2a;
+}
+.search-gear:focus-visible{
+outline:2px solid #666;
+}
+
+.search-settings{
+position:absolute;
+top:100%;
+left:0;
+right:0;
+margin-top:8px;
+background:#1d1d1d;
+border:1px solid #333;
+border-radius:10px;
+max-height:600px;
+overflow-y:auto;
+z-index:100000;
+box-shadow:0 10px 40px rgba(0,0,0,.6);
+padding:6px 16px 14px;
+text-align:left;
+}
+.search-settings[hidden]{display:none}
+.ss-title{
+font-size:13px;
+letter-spacing:.08em;
+text-transform:uppercase;
+color:#888;
+margin:14px 0 4px;
+}
+.ss-row{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:14px;
+padding:10px 0;
+border-bottom:1px solid #2a2a2a;
+color:#eee;
+font-size:15px;
+}
+.ss-row:last-of-type{border-bottom:0}
+.ss-row small{
+display:block;
+color:#888;
+font-size:12.5px;
+margin-top:2px;
+}
+.ss-row select{
+background:#262626;
+color:#fff;
+border:1px solid #3a3a3a;
+border-radius:8px;
+padding:8px 10px;
+font-size:15px;
+max-width:55%;
+}
+.ss-switch{
+position:relative;
+flex:0 0 auto;
+width:44px;
+height:26px;
+background:#3a3a3a;
+border:0;
+border-radius:13px;
+cursor:pointer;
+padding:0;
+transition:background .15s;
+}
+.ss-switch::after{
+content:"";
+position:absolute;
+top:3px;
+left:3px;
+width:20px;
+height:20px;
+border-radius:50%;
+background:#fff;
+transition:transform .15s;
+}
+.ss-switch[aria-checked="true"]{background:#2e7d4f}
+.ss-switch[aria-checked="true"]::after{transform:translateX(18px)}
+.ss-reset{
+margin-top:12px;
+background:transparent;
+color:#aaa;
+border:1px solid #3a3a3a;
+border-radius:8px;
+padding:8px 14px;
+font-size:14px;
+cursor:pointer;
+}
+.ss-reset:hover{color:#fff;background:#2a2a2a}
 
 #searchBox:focus{
 outline:none;
@@ -1655,6 +1768,19 @@ placeholder="Loading search index..."
 disabled
 >
 
+<button
+type="button"
+id="searchSettingsBtn"
+class="search-gear"
+aria-label="Search settings"
+aria-expanded="false"
+aria-controls="searchSettingsPanel"
+>
+<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+</button>
+
+<div id="searchSettingsPanel" class="search-settings" role="dialog" aria-label="Search settings" hidden></div>
+
 <div id="searchResults"></div>
 
 </div>
@@ -2152,8 +2278,200 @@ window.goToHitorah = goToHitorah;
 
 let pdfFuse;
 let imageFuse;
+let videoFuse;
+let pendingVideo = "";
 let searchReady = false;
 
+
+
+/* ---------------- Search ranking ----------------
+   Documents first, then videos, then images - each list only shows
+   reasonable matches, best first, and is capped.
+   Documents: the title is the strongest signal, matching words inside the
+   paper's text count a little less. Videos and images: their own title
+   counts most; belonging to a paper whose title matches counts less. */
+
+const SEARCH_STOPWORDS = new Set(
+["the","of","and","an","in","on","to","is","are","was","for","with","at","by","it","its","as","or","be"]
+);
+
+const SEARCH_DEFAULTS = {
+fill: false,
+layout: "grouped",
+order: "pdfs,videos,images",
+limits: { pdfs: 4, videos: 6, images: 8 }
+};
+const SEARCH_COUNT_CHOICES = [1,2,4,6,8,10,15,20];
+const SEARCH_ORDERS = {
+"pdfs,videos,images": "Documents, Videos, Images",
+"pdfs,images,videos": "Documents, Images, Videos",
+"videos,pdfs,images": "Videos, Documents, Images",
+"videos,images,pdfs": "Videos, Images, Documents",
+"images,pdfs,videos": "Images, Documents, Videos",
+"images,videos,pdfs": "Images, Videos, Documents"
+};
+const SEARCH_WEIGHTS = { pdfs: 12, videos: 6, images: 0 };
+
+function loadSearchSettings(){
+const s = JSON.parse(JSON.stringify(SEARCH_DEFAULTS));
+try{
+const raw = JSON.parse(localStorage.getItem("searchSettings") || "{}");
+if(raw && typeof raw === "object"){
+if(typeof raw.fill === "boolean") s.fill = raw.fill;
+if(raw.layout === "grouped" || raw.layout === "mixed") s.layout = raw.layout;
+if(SEARCH_ORDERS[raw.order]) s.order = raw.order;
+["pdfs","videos","images"].forEach(k => {
+const n = raw.limits && Number(raw.limits[k]);
+if(SEARCH_COUNT_CHOICES.includes(n)) s.limits[k] = n;
+});
+}
+}catch(e){}
+return s;
+}
+
+function saveSearchSettings(){
+try{ localStorage.setItem("searchSettings", JSON.stringify(searchSettings)); }catch(e){}
+}
+
+let searchSettings = loadSearchSettings();
+const SEARCH_RELATED_CAP = 3;
+const SEARCH_MIN_SCORE = 45;
+
+let pdfList = [];
+let videoList = [];
+let imageList = [];
+
+function searchTokens(q){
+const raw = q.toLowerCase().split(/[^a-z0-9']+/).filter(t => t.length >= 2 || /\d/.test(t));
+const kept = raw.filter(t => !SEARCH_STOPWORDS.has(t));
+return kept.length ? kept : raw;
+}
+
+function searchWordRe(t){
+const esc = t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+// 3+ letters match as a word start (partial typing works); 2 letters must be a whole word.
+return new RegExp("\\b" + esc + (t.length < 3 ? "\\b" : ""));
+}
+
+function countSearchMatches(text, re, cap){
+const g = new RegExp(re.source, "g");
+let n = 0;
+while(n < cap && g.exec(text)) n++;
+return n;
+}
+
+function rankSearch(query){
+
+const phrase = query.toLowerCase().replace(/\s+/g, " ").trim();
+const tokens = searchTokens(query);
+
+if(!tokens.length){
+return { pdfs: [], videos: [], images: [], corrected: false };
+}
+
+const fill = searchSettings.fill;
+const minScore = fill ? 18 : SEARCH_MIN_SCORE;
+const phraseRe = searchWordRe(phrase);
+const tokRes = tokens.map(searchWordRe);
+
+function field(text){
+if(!text){
+return { phrase:false, all:false, frac:0, count:0 };
+}
+const hits = tokRes.filter(r => r.test(text)).length;
+const ph = phraseRe.test(text);
+return {
+phrase: ph,
+all: hits === tokRes.length,
+frac: hits / tokRes.length,
+count: ph ? countSearchMatches(text, phraseRe, 10) : 0
+};
+}
+
+function titleScore(f){
+if(f.phrase) return 100;
+if(f.all) return 85;
+if(f.frac >= 0.6) return 35 + f.frac * 30;
+if(fill && f.frac > 0) return 20 + f.frac * 15;
+return 0;
+}
+
+function bodyScore(f){
+if(f.phrase) return 52 + Math.min(20, f.count * 2);
+if(f.all) return 46;
+if(fill && f.frac > 0) return 22 + f.frac * 10;
+return 0;
+}
+
+// Small typo allowance on titles only (never on paper text).
+function fuzzyMap(fuse){
+const m = new Map();
+if(!fuse) return m;
+fuse.search(query).forEach(r => {
+m.set(r.item, 80 * (1 - (r.score ?? 0.35) / 0.35));
+});
+return m;
+}
+
+function pick(list, scorer, fuse, limit, relatedFn, window){
+const minS = fill ? 18 : SEARCH_MIN_SCORE;
+const fuzzy = fuzzyMap(fuse);
+let out = [];
+list.forEach((item, index) => {
+let score = scorer(item);
+let fuzzyHit = false;
+if(score < minS && fuzzy.has(item)){
+const fs = fuzzy.get(item);
+if(fs > score){ score = fs; fuzzyHit = true; }
+}
+if(score >= minS){
+const related = !fuzzyHit && relatedFn ? relatedFn(item) >= score : false;
+out.push({ item, score, index, fuzzy: fuzzyHit, related });
+}
+});
+out.sort((a, b) => b.score - a.score || a.index - b.index);
+if(out.length){
+// Only keep results close to the best one, so weak partial matches
+// never pad the list just because there is room.
+const cutoff = fill ? minS : Math.max(minS, out[0].score - window);
+out = out.filter(r => r.score >= cutoff);
+}
+// Items that matched only through their paper's title: a few at most.
+let rel = 0;
+out = out.filter(r => fill || !r.related || ++rel <= SEARCH_RELATED_CAP);
+return out.slice(0, limit);
+}
+
+const pdfs = pick(pdfList, item => {
+const t = titleScore(field(item._title));
+const b = bodyScore(field(item._body));
+return Math.max(t, b) + (t && b ? 5 : 0);
+}, pdfFuse, searchSettings.limits.pdfs, null, 40);
+
+// A video or image belongs to a paper; when the paper's own title matches
+// well it is a related result, ranked below items whose own title matches.
+function relatedScore(paperTitle){
+return Math.min(50, titleScore(field((paperTitle || "").toLowerCase())));
+}
+
+const videos = pick(videoList, item =>
+Math.max(
+titleScore(field(item._title)),
+relatedScore(item.paperTitle)
+), videoFuse, searchSettings.limits.videos, item => relatedScore(item.paperTitle), 30);
+
+const images = pick(imageList, item =>
+Math.max(
+titleScore(field(item._title)),
+relatedScore(item.paperTitle)
+), imageFuse, searchSettings.limits.images, item => relatedScore(item.paperTitle), 30);
+
+const corrected = [...pdfs, ...videos, ...images].length > 0 &&
+[...pdfs, ...videos, ...images].every(r => r.fuzzy);
+
+return { pdfs, videos, images, corrected };
+
+}
 
 let papersByUrl = {};
 let paperKeysByUrl = {};
@@ -2291,24 +2609,19 @@ record.title
 }));
 
 pdfFuse = new Fuse(pdfRecords,{
-
-
-
 includeScore:true,
-includeMatches:true,
-threshold:0.4,
+threshold:0.35,
 ignoreLocation:true,
 minMatchCharLength:2,
-keys:[
-{
-name:"title",
-weight:10
-},
-{
-name:"searchText",
-weight:1
-}
-]
+keys:["displayTitle"]
+});
+
+pdfList = pdfRecords;
+pdfRecords.forEach(r => {
+r._title = ((r.displayTitle || "") + " " + (r.title || "")).toLowerCase();
+r._body = (
+(papersByUrl[r.url]?.description || "") + " " + (r.searchText || "")
+).toLowerCase();
 });
 
 const imageRecords = [];
@@ -2349,23 +2662,69 @@ p => p.title === paper.title
 });
 
 imageFuse = new Fuse(imageRecords,{
-includeMatches:true,
+includeScore:true,
 threshold:0.35,
-keys:[
-{
-name:"imageTitle",
-weight:5
-},
-{
-name:"paperTitle",
-weight:10
-},
-{
-name:"searchText",
-weight:3
-}
-]
+ignoreLocation:true,
+minMatchCharLength:2,
+keys:["imageTitle"]
 });
+
+imageList = imageRecords;
+imageRecords.forEach(r => { r._title = (r.imageTitle || "").toLowerCase(); });
+
+const videoRecords = [];
+
+Object.values(descriptions).forEach(paper => {
+
+(paper.videos || []).forEach(v => {
+
+if(
+!v ||
+typeof v.file !== "string" ||
+!v.file.trim() ||
+v.file.trim().startsWith("#$")
+) return;
+
+const file = v.file.trim();
+const base = file.split("/").pop().replace(/\.[^/.]+$/,"");
+const label = v.groupLabel || v.group || paper.title;
+
+videoRecords.push({
+videoFile:file,
+videoTitle:v.title || base,
+videoDuration:v.duration || "",
+videoSite:v.source === "site",
+videoThumb:(v.thumbnail && String(v.thumbnail).trim())
+? String(v.thumbnail).trim()
+: "thumbnails/" + base + ".jpg",
+paperTitle:label,
+warning: paper.warning,
+searchText:
+(
+paper.title + " " +
+(paper.description || "") + " " +
+(
+searchIndex.find(
+p => p.title === paper.title
+)?.searchText || ""
+)
+)
+});
+
+});
+
+});
+
+videoFuse = new Fuse(videoRecords,{
+includeScore:true,
+threshold:0.35,
+ignoreLocation:true,
+minMatchCharLength:2,
+keys:["videoTitle"]
+});
+
+videoList = videoRecords;
+videoRecords.forEach(r => { r._title = (r.videoTitle || "").toLowerCase(); });
 
 searchReady = true;
 
@@ -2551,6 +2910,121 @@ new RegExp(`(${escaped})`, "ig"),
 }
 
 
+/* ---------- Search settings panel ---------- */
+const ssBtn = document.getElementById("searchSettingsBtn");
+const ssPanel = document.getElementById("searchSettingsPanel");
+
+function ssOptions(values, current, label){
+return values.map(v =>
+`<option value="${v}"${String(v) === String(current) ? " selected" : ""}>${label ? label(v) : v}</option>`
+).join("");
+}
+
+function renderSearchSettings(){
+const st = searchSettings;
+const grouped = st.layout === "grouped";
+const countRow = (key, name) => `
+<div class="ss-row">
+<label for="ss-${key}">${name}</label>
+<select id="ss-${key}" data-limit="${key}">${ssOptions(SEARCH_COUNT_CHOICES, st.limits[key])}</select>
+</div>`;
+ssPanel.innerHTML = `
+<div class="ss-title">Layout</div>
+<div class="ss-row">
+<label for="ss-layout">Results<small>Separate sections, or one list ranked by relevance (documents first, then videos, then images)</small></label>
+<select id="ss-layout">
+<option value="grouped"${grouped ? " selected" : ""}>Separate sections</option>
+<option value="mixed"${grouped ? "" : " selected"}>Mixed by relevance</option>
+</select>
+</div>
+${grouped ? `
+<div class="ss-row">
+<label for="ss-order">Section order</label>
+<select id="ss-order">${ssOptions(Object.keys(SEARCH_ORDERS), st.order, k => SEARCH_ORDERS[k])}</select>
+</div>` : ""}
+<div class="ss-title">Number of results</div>
+${countRow("pdfs", "Documents")}
+${countRow("videos", "Videos")}
+${countRow("images", "Images")}
+<div class="ss-row">
+<span id="ss-fill-label">Always fill every slot<small>Off: only good matches are shown. On: weaker partial matches pad each section up to its number.</small></span>
+<button type="button" class="ss-switch" id="ss-fill" role="switch" aria-checked="${st.fill}" aria-labelledby="ss-fill-label"></button>
+</div>
+<button type="button" class="ss-reset" id="ss-reset">Reset to defaults</button>`;
+}
+
+function searchSettingsChanged(){
+saveSearchSettings();
+renderSearchSettings();
+if(searchReady && searchBox.value.trim().length >= 2){
+searchBox.dispatchEvent(new Event("input"));
+if(!ssPanel.hidden) searchResults.style.display = "none";
+}
+}
+
+function setSearchSettingsOpen(open){
+ssPanel.hidden = !open;
+ssBtn.setAttribute("aria-expanded", open ? "true" : "false");
+if(open){
+renderSearchSettings();
+searchResults.style.display = "none";
+try{ ssPanel.scrollIntoView({ block: "nearest", behavior: "smooth" }); }catch(e){}
+}else if(searchReady && searchBox.value.trim().length >= 2 && searchResults.innerHTML.trim()){
+searchResults.style.display = "block";
+}
+}
+
+ssBtn.addEventListener("click", e => {
+e.preventDefault();
+e.stopPropagation();
+setSearchSettingsOpen(ssPanel.hidden);
+});
+
+ssPanel.addEventListener("click", e => {
+e.stopPropagation();
+const t = e.target.closest("button");
+if(!t) return;
+if(t.id === "ss-fill"){
+searchSettings.fill = !searchSettings.fill;
+searchSettingsChanged();
+}else if(t.id === "ss-reset"){
+searchSettings = JSON.parse(JSON.stringify(SEARCH_DEFAULTS));
+searchSettingsChanged();
+}
+});
+
+ssPanel.addEventListener("change", e => {
+const t = e.target;
+if(t.id === "ss-layout"){
+searchSettings.layout = t.value;
+}else if(t.id === "ss-order" && SEARCH_ORDERS[t.value]){
+searchSettings.order = t.value;
+}else if(t.dataset.limit){
+const n = Number(t.value);
+if(SEARCH_COUNT_CHOICES.includes(n)) searchSettings.limits[t.dataset.limit] = n;
+}else{
+return;
+}
+searchSettingsChanged();
+});
+
+document.addEventListener("click", e => {
+if(!ssPanel.hidden && !ssPanel.contains(e.target) && e.target !== ssBtn){
+setSearchSettingsOpen(false);
+}
+});
+
+document.addEventListener("keydown", e => {
+if(e.key === "Escape" && !ssPanel.hidden){
+setSearchSettingsOpen(false);
+ssBtn.focus();
+}
+});
+
+searchBox.addEventListener("focus", () => {
+if(!ssPanel.hidden) setSearchSettingsOpen(false);
+});
+
 searchBox.addEventListener("input", () => {
 
 loadFavorites();
@@ -2580,36 +3054,37 @@ return;
 }
 
 let html = "";
+const pdfItems = [], videoItems = [], imageItems = [];
 
-const pdfResults =
-pdfFuse
-? pdfFuse.search(query).slice(0,5)
-: [];
+const ranked = rankSearch(query);
 
-const imageResults =
-imageFuse
-? imageFuse.search(query).slice(0,10)
-: [];
+const pdfResults = ranked.pdfs;
+const imageResults = ranked.images;
+const videoResults = ranked.videos;
+
+if(pdfResults.length || videoResults.length || imageResults.length){
+
+if(ranked.corrected){
+html += `<div class="search-count">No exact match. Showing the closest results.</div>`;
+}
 
 html += `
 <div class="search-count">
    ${pdfResults.length} Documents •
+   ${videoResults.length} Videos •
    ${imageResults.length} Images
 </div>
 `;
 
+}
+
 if(pdfResults.length){
 
-html += `
-   <div class="search-section-title">
-       Documents
-   </div>
-   `;
 
 pdfResults.forEach(result => {
 
 
-html += `
+pdfItems.push(`
 <a
    href="#"
    class="search-result pdf-link"
@@ -2684,23 +3159,83 @@ ${
    </div>
 
 </a>
-`;
+`);
 });
 
 
 }
 
+if(videoResults.length){
+
+
+videoResults.forEach(result => {
+
+const vr = result.item;
+
+const videoHref =
+"video.html?video=" + encodeURIComponent(vr.videoFile) +
+(vr.videoSite ? "" : "&source=r2") +
+"&title=" + encodeURIComponent(vr.videoTitle) +
+"&paper=" + encodeURIComponent(vr.paperTitle);
+
+videoItems.push(`
+<a
+   href="#"
+   class="search-result video-link"
+   data-video="${encodeURIComponent(videoHref)}"
+   data-warning="${vr.warning}"
+>
+
+   ${
+       vr.warning
+       ? `
+       <div
+           class="search-thumb"
+           style="
+               display:flex;
+               align-items:center;
+               justify-content:center;
+               background:#333;
+           "
+       >
+           <svg class="thumb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.6 21.8 20.4H2.2Z"/><line x1="12" y1="10" x2="12" y2="14.6"/><line x1="12" y1="17.4" x2="12" y2="17.5"/></svg>
+       </div>
+       `
+       : `
+       <img
+           src="${vr.videoThumb.split("/").map(encodeURIComponent).join("/")}"
+           class="search-thumb"
+           loading="lazy"
+           onerror="this.style.background='#222';this.removeAttribute('src')"
+       >
+       `
+   }
+
+   <div>
+
+       <div class="search-title">
+           ${highlightMatch(vr.videoTitle, query)}
+       </div>
+
+       <div class="search-source">
+           Video${vr.videoDuration ? " • " + vr.videoDuration : ""} • From: ${vr.paperTitle}
+       </div>
+
+   </div>
+
+</a>
+`);
+
+});
+
+}
+
 if(imageResults.length){
 
-html += `
-   <div class="search-section-title">
-       Images
-   </div>
-   `;
 
 imageResults.forEach(result => {
 
-html += `
+imageItems.push(`
 <a
    href="#"
    class="search-result image-link"
@@ -2745,8 +3280,37 @@ html += `
    </div>
 
 </a>
-`;
+`);
 
+});
+
+}
+
+const groups = {
+pdfs: { title: "Documents", items: pdfItems },
+videos: { title: "Videos", items: videoItems },
+images: { title: "Images", items: imageItems }
+};
+
+if(searchSettings.layout === "mixed"){
+
+const merged = [];
+[["pdfs", pdfResults, pdfItems], ["videos", videoResults, videoItems], ["images", imageResults, imageItems]]
+.forEach(([key, results, items]) => {
+results.forEach((r, i) => {
+merged.push({ html: items[i], rank: r.score + SEARCH_WEIGHTS[key] });
+});
+});
+merged.sort((a, b) => b.rank - a.rank);
+html += merged.map(m => m.html).join("");
+
+}else{
+
+searchSettings.order.split(",").forEach(key => {
+const g = groups[key];
+if(g.items.length){
+html += `<div class="search-section-title">${g.title}</div>` + g.items.join("");
+}
 });
 
 }
@@ -2806,6 +3370,67 @@ encodeURIComponent(paper) +
 encodeURIComponent(window.location.href);
 
 }
+
+});
+
+});
+
+document.querySelectorAll(".video-link").forEach(link=>{
+
+link.addEventListener("click",function(e){
+
+e.preventDefault();
+
+const target =
+decodeURIComponent(this.dataset.video) +
+"&return=" +
+encodeURIComponent(window.location.href);
+
+if(
+this.dataset.warning === "true" &&
+sessionStorage.getItem("graphicVideoAccepted") !== "yes"
+){
+
+pendingVideo = target;
+pendingType = "video";
+
+document.querySelector(
+"#imageWarningBox h2"
+).textContent = "Graphic Video";
+
+document.querySelector(
+"#imageWarningBox p"
+).textContent =
+"This video may contain graphic or disturbing content.";
+
+document.getElementById(
+"continueImageButton"
+).textContent = "View Video";
+
+document.getElementById(
+"imageWarningOverlay"
+).style.display = "flex";
+
+return;
+
+}
+
+sessionStorage.setItem(
+"scrollPosition",
+window.scrollY
+);
+
+sessionStorage.setItem(
+"restoreSearch",
+"yes"
+);
+
+sessionStorage.setItem(
+"searchResultsScroll",
+searchResults.scrollTop
+);
+
+window.location.href = target;
 
 });
 
@@ -3595,6 +4220,38 @@ clearInterval(featuredTimer);
 
 
 function continueImageWarning(){
+if(pendingType === "video"){
+
+sessionStorage.setItem(
+"graphicVideoAccepted",
+"yes"
+);
+
+sessionStorage.setItem(
+"scrollPosition",
+window.scrollY
+);
+
+sessionStorage.setItem(
+"restoreSearch",
+"yes"
+);
+
+sessionStorage.setItem(
+"searchResultsScroll",
+searchResults.scrollTop
+);
+
+const go = pendingVideo;
+
+closeImageWarning();
+
+window.location.href = go;
+
+return;
+
+}
+
 if(pendingType === "image"){
 
 sessionStorage.setItem(
