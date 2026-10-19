@@ -247,6 +247,28 @@
       "Signs of the Times.png",
       "Timeline.png"
     ],
+    "videos": [
+      {
+        "file": "Sls/Can't touch on Christ's Words.mp4",
+        "title": "Can't touch on Christ's Words",
+        "duration": "0:13"
+      },
+      {
+        "file": "Sls/New Theory.mp4",
+        "title": "New Theory",
+        "duration": "0:50"
+      },
+      {
+        "file": "Sls/No Hope.mp4",
+        "title": "No Hope",
+        "duration": "0:40"
+      },
+      {
+        "file": "Sls/Tribulation Denial, A.I. Shorts.mp4",
+        "title": "Tribulation Denial, A.I. Shorts",
+        "duration": "0:55"
+      }
+    ],
     "featured": true,
     "featuredOrder": 1,
     "featuredImage": 4
