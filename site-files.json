@@ -1,6 +1,6 @@
 {
  "count": 291,
- "totalBytes": 280035239,
+ "totalBytes": 280039445,
  "files": [
   {
    "path": "1 Thessalonians Original Text.png",
@@ -734,8 +734,8 @@
   },
   {
    "path": "index.html",
-   "size": 73146,
-   "hash": "bd287c179c28ed16"
+   "size": 77352,
+   "hash": "f8d74fef591e300f"
   },
   {
    "path": "index.js",
