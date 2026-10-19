@@ -731,19 +731,30 @@ h1{
     transform:translateX(200%);
 }
 
-/* Mixed: justified picture blocks (rows lock together edge to edge) with
-   video blocks between them, two videos across, or one across. */
-.mixed-wrap > .gallery:not(:first-child){
-    margin-top:8px;
+/* Mixed: one justified puzzle. Pictures and videos share rows; a video
+   can take a row alone or sit beside another video or pictures, and every
+   row locks to the full width. */
+.mixed-wrap{
+    --gap:6px;
 }
-.gallery.mixblock::after{
-    display:none;
+.mixrow{
+    display:flex;
+    gap:var(--gap);
 }
-.gallery.mixblock.ragged::after{
-    display:block;
+.mixrow + .mixrow{
+    margin-top:var(--gap);
 }
-.gallery.videos.single{
-    grid-template-columns:minmax(0, 1fr);
+.mixrow .gallery-image{
+    flex-basis:0;
+    min-width:0;
+}
+.mixrow.natural{
+    justify-content:flex-start;
+}
+.mixrow.natural .gallery-image{
+    flex:0 0 auto !important;
+    width:calc(var(--ar) * var(--nat-h));
+    max-width:100%;
 }
 
 .mode-switch button{
@@ -974,8 +985,8 @@ h1{
     .gallery.videos{
         --gap:6px;
     }
-    .mixed-wrap > .gallery:not(:first-child){
-        margin-top:6px;
+    .mixed-wrap{
+        --gap:4px;
     }
     .top-settings{ right:10px; }
 }
@@ -1662,32 +1673,109 @@ function fileLabel(path){
     return String(path).split("/").pop().replace(/\.[^/.]+$/, "");
 }
 
-// Picture blocks in Mixed stretch their last row to the full width, unless
-// that row is mostly empty, in which case it stays natural width instead of
-// blowing a lone picture up.
+// Mixed layout: tiles (pictures and videos) are packed into rows that all
+// lock to the full width. A row closes when its height gets close to the
+// target; the last row stays natural size if it would be mostly empty.
+let mixSections = [];
 let settleRaf = 0;
+
 function settleSoon(){
     if(settleRaf) return;
-    settleRaf = requestAnimationFrame(() => { settleRaf = 0; settleBlocks(); });
+    settleRaf = requestAnimationFrame(() => { settleRaf = 0; layoutMixed(); });
 }
 
-function settleBlocks(){
-    document.querySelectorAll(".gallery.mixblock").forEach(blk => {
-        const tiles = [...blk.children].filter(c => c.classList.contains("gallery-image"));
-        if(!tiles.length) return;
+// Splits a run of pictures / half-size videos into rows that all lock to the
+// full width, choosing the breaks that keep every row closest to the target
+// height. (The very last row of the page may stay natural size.)
+function packRun(tiles, W, gap, T, allowNatural, ar){
+    const n = tiles.length;
+    if(!n) return [];
 
-        const cs = getComputedStyle(blk);
-        const rowH = parseFloat(cs.getPropertyValue("--row-h")) || 220;
-        const gap = parseFloat(cs.columnGap) || 6;
-        const W = blk.clientWidth;
+    const best = new Array(n + 1).fill(Infinity);
+    const from = new Array(n + 1).fill(0);
+    const nat = new Array(n + 1).fill(false);
+    best[0] = 0;
+
+    for(let j = 1; j <= n; j++){
+        let sum = 0;
+        for(let i = j - 1; i >= 0 && j - i <= 6; i--){
+            sum += ar(tiles[i]);
+            const cnt = j - i;
+            const h = (W - gap * (cnt - 1)) / sum;
+            let cost = Math.pow(Math.log(h / T), 2);
+            let isNat = false;
+
+            if(j === n && allowNatural && h > T * 1.25){
+                cost = 0.04;
+                isNat = true;
+            }
+
+            if(best[i] + cost < best[j]){
+                best[j] = best[i] + cost;
+                from[j] = i;
+                nat[j] = isNat;
+            }
+        }
+    }
+
+    const rows = [];
+    let j = n;
+    while(j > 0){
+        const i = from[j];
+        rows.unshift({ tiles: tiles.slice(i, j), natural: j === n && nat[n] });
+        j = i;
+    }
+    return rows;
+}
+
+function layoutMixed(){
+    mixSections.forEach(sec => {
+        const el = sec.el;
+        if(!el.isConnected) return;
+
+        const W = el.clientWidth;
         if(!W) return;
 
-        const lastTop = tiles[tiles.length - 1].offsetTop;
-        const last = tiles.filter(t => Math.abs(t.offsetTop - lastTop) < 4);
-        const sum = last.reduce((n, t) =>
-            n + (parseFloat(t.style.getPropertyValue("--ar")) || 1.33) * rowH, 0) + gap * (last.length - 1);
+        const gap = parseFloat(getComputedStyle(el).getPropertyValue("--gap")) || 6;
+        const T = Math.max(170, Math.min(280, W * 0.26));
+        const ar = t => parseFloat(t.style.getPropertyValue("--ar")) || 1.33;
+        const alive = t => !t.dataset.dead;
 
-        blk.classList.toggle("ragged", sum / W < 0.6);
+        const rows = [];
+        let run = [];
+
+        const flush = (last) => {
+            packRun(run.filter(alive), W, gap, T, last, ar).forEach(r => rows.push(r));
+            run = [];
+        };
+
+        sec.order.forEach((it, idx) => {
+            if(it.flow){
+                run.push(it.flow);
+            }else{
+                flush(false);
+                rows.push({ tiles: it.tiles, natural: false });
+            }
+        });
+        flush(true);
+
+        // The page's final row can only be natural if it is a picture row.
+        const sig = rows.map(r => r.tiles.map(t => sec.all.indexOf(t)).join(",") + (r.natural ? "n" : "")).join("|");
+
+        if(sig !== sec.sig){
+            sec.sig = sig;
+            el.textContent = "";
+            rows.forEach(row => {
+                const d = document.createElement("div");
+                d.className = "mixrow" + (row.natural ? " natural" : "");
+                row.tiles.forEach(t => d.appendChild(t));
+                el.appendChild(d);
+            });
+        }
+
+        for(let i = 0; i < el.children.length; i++){
+            el.children[i].style.setProperty("--nat-h", T + "px");
+        }
     });
 }
 
@@ -1725,7 +1813,8 @@ function render(){
     gallery.className = mode === "mixed" ? "mixed-wrap" : "gallery" + (mode === "videos" ? " videos" : "");
 
     const fragment = document.createDocumentFragment();
-    let target = fragment;   // where the next tile goes (a block in Mixed)
+    let target = fragment;   // where the next tile goes (a holder in Mixed)
+    mixSections = [];
 
     function addName(link, text){
         const name = document.createElement("span");
@@ -1763,7 +1852,7 @@ function render(){
             settleSoon();
         });
 
-        img.addEventListener("error", () => { link.remove(); settleSoon(); });
+        img.addEventListener("error", () => { link.dataset.dead = "1"; link.remove(); settleSoon(); });
 
         link.append(spacer, img);
         addName(link, fileLabel(image));
@@ -1855,49 +1944,61 @@ function render(){
         target.appendChild(link);
     }
 
-    // Mixed: a run of pictures (justified rows), then two videos side by side,
-    // then pictures again, and so on, so everything pieces together. A lone
-    // leftover video gets a full row.
+    // Mixed: videos come in three sizes. "big" takes a whole row alone,
+    // "pair" is two side by side, and "half" is sized for two-per-row but sits
+    // beside pictures. Everything is spread evenly and packed into rows.
     function addMixedBlocks(list){
         const imgs = list.filter(i => i.kind === "image");
         const vids = list.filter(i => i.kind === "video");
-        const pairs = Math.ceil(vids.length / 2);
-        const per = pairs ? Math.max(3, Math.round(imgs.length / pairs)) : imgs.length;
+
+        const holder = document.createElement("div");
+        const all = [];
+
+        function make(it){
+            target = holder;
+            if(it.kind === "video") addVideo(it.v, it.paperLabel);
+            else addImage(it.src, it.paperTitle);
+            target = fragment;
+            const t = holder.lastElementChild;
+            all.push(t);
+            return t;
+        }
+
+        const cycle = ["pair", "half", "pair", "big", "half", "pair", "half"];
+        const units = [];
+        let vi = 0, ci = 0;
+
+        while(vi < vids.length){
+            const rem = vids.length - vi;
+            let type = cycle[ci++ % cycle.length];
+            if(type === "pair" && rem < 2) type = "big";
+            if(rem === 1) type = "big";
+            const count = type === "pair" ? 2 : 1;
+            units.push({ type, vids: vids.slice(vi, vi + count) });
+            vi += count;
+        }
+
+        const order = [];
         let a = 0, b = 0;
 
-        function imageBlock(n){
-            if(a >= imgs.length || n <= 0) return;
-            const blk = document.createElement("div");
-            blk.className = "gallery mixblock";
-            fragment.appendChild(blk);
-            target = blk;
-            for(let i = 0; i < n && a < imgs.length; i++){
-                addImage(imgs[a].src, imgs[a].paperTitle);
-                a++;
+        while(a < imgs.length || b < units.length){
+            const pa = imgs.length ? (a + 0.5) / imgs.length : Infinity;
+            const pb = units.length ? (b + 0.5) / units.length : Infinity;
+
+            if(a < imgs.length && (b >= units.length || pa <= pb)){
+                order.push({ flow: make(imgs[a++]) });
+            }else{
+                const u = units[b++];
+                const tiles = u.vids.map(make);
+                if(u.type === "half") order.push({ flow: tiles[0] });
+                else order.push({ tiles });
             }
         }
 
-        function videoBlock(){
-            if(b >= vids.length) return;
-            const n = Math.min(2, vids.length - b);
-            const blk = document.createElement("div");
-            blk.className = "gallery videos" + (n === 1 ? " single" : "");
-            fragment.appendChild(blk);
-            target = blk;
-            for(let i = 0; i < n; i++){
-                addVideo(vids[b].v, vids[b].paperLabel);
-                b++;
-            }
-        }
-
-        // Start with pictures when there are any; vary the run a little so it
-        // doesn't feel mechanical.
-        let toggle = 0;
-        while(a < imgs.length || b < vids.length){
-            imageBlock(vids.length ? (toggle++ % 2 ? Math.max(2, per - 1) : per) : imgs.length);
-            videoBlock();
-        }
-        target = fragment;
+        const el = document.createElement("div");
+        el.className = "mixsec";
+        fragment.appendChild(el);
+        mixSections.push({ el, all, order, sig: null });
     }
 
     groups.forEach(({paper, items}, index) => {
@@ -2047,6 +2148,62 @@ modeSwitch.querySelectorAll("button").forEach(btn => {
         setMode(btn.dataset.mode);
     });
 });
+
+/* ---------- Swipe left / right to change tabs ----------
+   Deliberately hard to trigger by accident: a long, fast, mostly-horizontal
+   swipe, started away from the screen edges (which phones use for Back),
+   and never while a menu or popup is open. */
+
+(function(){
+    const ORDER = ["images", "mixed", "videos"];
+    const MIN_DX = 110;        // px of horizontal travel
+    const MAX_MS = 700;        // must be quick
+    const EDGE = 28;           // ignore swipes that start at the screen edge
+    let st = null;
+
+    function blocked(target){
+        if(target.closest && target.closest("input, textarea, select, .top-settings, #settingsPanel, #sortPanel, #warningOverlay")) return true;
+        if(document.getElementById("warningOverlay").style.display === "flex") return true;
+        if(settingsPanel.classList.contains("open") || sortPanel.classList.contains("open")) return true;
+        return false;
+    }
+
+    document.addEventListener("touchstart", (e) => {
+        st = null;
+        if(e.touches.length !== 1 || !ready) return;
+        const t = e.touches[0];
+        if(t.clientX < EDGE || t.clientX > window.innerWidth - EDGE) return;
+        if(blocked(e.target)) return;
+        st = { x: t.clientX, y: t.clientY, time: Date.now(), bad: false };
+    }, { passive: true });
+
+    document.addEventListener("touchmove", (e) => {
+        if(!st) return;
+        if(e.touches.length !== 1){ st = null; return; }
+        const t = e.touches[0];
+        // A mostly-vertical drag is a scroll, never a swipe.
+        if(Math.abs(t.clientY - st.y) > 60 && Math.abs(t.clientY - st.y) > Math.abs(t.clientX - st.x) * 0.5) st.bad = true;
+    }, { passive: true });
+
+    document.addEventListener("touchend", (e) => {
+        const s0 = st;
+        st = null;
+        if(!s0 || s0.bad) return;
+
+        const t = e.changedTouches[0];
+        const dx = t.clientX - s0.x;
+        const dy = t.clientY - s0.y;
+
+        if(Date.now() - s0.time > MAX_MS) return;
+        if(Math.abs(dx) < MIN_DX) return;
+        if(Math.abs(dy) > Math.abs(dx) * 0.4) return;
+
+        const i = ORDER.indexOf(mode) + (dx < 0 ? 1 : -1);
+        if(i < 0 || i >= ORDER.length) return;
+
+        setMode(ORDER[i]);
+    }, { passive: true });
+})();
 
 /* ---------- Load ---------- */
 
