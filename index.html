@@ -3796,6 +3796,44 @@ onViewport();
 console.error("Search scroll helper failed to start:", err);
 }
 
+/* ---------- Scrolling the page away closes the results; tapping the box brings them back ---------- */
+try{
+(function(){
+const wrap = document.querySelector(".search-wrapper");
+if(!wrap) return;
+
+function closeOnScroll(e){
+if(searchResults.style.display !== "block") return;
+if(e.ctrlKey) return;                       // pinch / ctrl+wheel zoom is not scrolling
+if(wrap.contains(e.target)) return;         // scrolling inside the search box or its results
+searchResults.style.display = "none";
+}
+
+// Real scrolling only (wheel, finger drag, keys), so the page moving itself
+// (e.g. lining the search bar up at the top on a phone) never closes it.
+window.addEventListener("wheel", closeOnScroll, { passive: true, capture: true });
+window.addEventListener("touchmove", closeOnScroll, { passive: true, capture: true });
+window.addEventListener("keydown", e => {
+if(searchResults.style.display !== "block") return;
+if(document.activeElement === searchBox) return;
+if(["PageDown", "PageUp", "Home", "End", "ArrowDown", "ArrowUp", " "].indexOf(e.key) === -1) return;
+searchResults.style.display = "none";
+}, true);
+
+function reopen(){
+if(!searchReady) return;
+if(searchBox.value.trim().length < 2) return;
+if(searchResults.style.display !== "block"){
+searchBox.dispatchEvent(new Event("input"));
+}
+}
+searchBox.addEventListener("focus", reopen);
+searchBox.addEventListener("click", reopen);
+})();
+}catch(err){
+console.error("Search scroll-close helper failed to start:", err);
+}
+
 searchBox.addEventListener("input", () => {
 
 loadFavorites();
