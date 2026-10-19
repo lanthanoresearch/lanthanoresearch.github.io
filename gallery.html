@@ -823,6 +823,11 @@ h1{
     }
 }
 
+/* A "big" video takes the whole row (Videos tab); the rest sit two across. */
+.gallery.videos .gallery-image.video-big{
+    grid-column:1 / -1;
+}
+
 .video-tile{
     background:linear-gradient(145deg,#232323,#161616);
 }
@@ -1859,13 +1864,13 @@ function render(){
         target.appendChild(link);
     }
 
-    function addVideo(v, title){
+    function addVideo(v, title, big){
 
         const name = v.title || fileLabel(v.file);
         const rkey = "v:" + v.file;
 
         const link = document.createElement("a");
-        link.className = "gallery-image video-tile";
+        link.className = "gallery-image video-tile" + (big ? " video-big" : "");
         link.href = videoUrl(v, title);
         link.setAttribute(
             "aria-label",
@@ -2001,6 +2006,26 @@ function render(){
         mixSections.push({ el, all, order, sig: null });
     }
 
+    // Videos tab: a fixed pattern of two pairs then one full-row video, over and
+    // over (never random). A lone leftover video is always a full row.
+    function bigFlags(count){
+        const set = new Set();
+        const pattern = [2, 2, 1];
+        let i = 0, k = 0;
+        while(i < count){
+            const rem = count - i;
+            let unit = pattern[k++ % pattern.length];
+            if(rem === 1) unit = 1;
+            else if(unit === 1 && rem === 2) unit = 2;   // no two full rows in a row
+            if(unit === 1) set.add(i);
+            i += unit;
+        }
+        return set;
+    }
+
+    let vidIdx = 0;
+    const flatBig = (mode === "videos" && !paperBreaks) ? bigFlags(total) : new Set();
+
     groups.forEach(({paper, items}, index) => {
 
         if(paperBreaks){
@@ -2031,11 +2056,16 @@ function render(){
             return;
         }
 
-        items.forEach(item =>
-            mode === "videos"
-                ? addVideo(item, paper.label || paper.title)
-                : addImage(item, paper.title)
-        );
+        const localBig = (mode === "videos" && paperBreaks) ? bigFlags(items.length) : null;
+
+        items.forEach((item, i) => {
+            if(mode === "videos"){
+                const big = localBig ? localBig.has(i) : flatBig.has(vidIdx++);
+                addVideo(item, paper.label || paper.title, big);
+            }else{
+                addImage(item, paper.title);
+            }
+        });
     });
 
     // Without paper headings, everything is mixed together across papers.
