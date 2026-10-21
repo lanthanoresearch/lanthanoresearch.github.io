@@ -910,6 +910,18 @@ h1{
     margin:-14px 0 0 -14px;
 }
 
+
+/* Play button scales with the tile (container units) so it never reaches the heart or the length badge */
+.video-thumb{container-type:inline-size}
+.video-play,.view-comfy .video-play,.view-compact .video-play{
+    width:clamp(16px,24cqw,40px);
+    height:clamp(16px,24cqw,40px);
+    margin:0;
+    transform:translate(-50%,-50%);
+}
+.video-play svg{width:55%;height:55%;transform:translateX(6%)}
+.view-compact .video-play{width:clamp(12px,17cqw,26px);height:clamp(12px,19cqw,26px)}
+
 /* File names: hidden unless "Show file names" is on; one line, cut off
    with "..." when too long. */
 a.gallery-image{

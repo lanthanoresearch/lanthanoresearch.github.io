@@ -2095,6 +2095,18 @@ border-color:#777;
 .search-result .fav-heart.active{color:#ff3b4f}
 .video-link .search-source,
 .image-link .search-source{padding-right:42px}
+.featured-image-wrapper .favorite-star{
+  top:12px;
+  right:12px;
+  width:34px;
+  height:34px;
+  z-index:60;
+  color:#fff;
+}
+.featured-image-wrapper .new-image-badge{
+  right:auto;
+  left:12px;
+}
 .featured-video-thumbnail .fav-heart{
   top:10px;
   right:10px;
@@ -5277,10 +5289,6 @@ class="featured-arrow featured-right"
 onclick="nextFeaturedManual(event)">
 </button>
 
-</div>
-
-<div class="featured-content">
-
 <span
 class="favorite-star${isFavorite(paperKeysByUrl[paper.url]) ? " active" : ""}"
 onclick="
@@ -5291,6 +5299,12 @@ return false;
 ">
 ${isFavorite(paperKeysByUrl[paper.url]) ? "★" : "☆"}
 </span>
+
+
+
+</div>
+
+<div class="featured-content">
 
 <div class="featured-category">
 
