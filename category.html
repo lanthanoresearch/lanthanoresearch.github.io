@@ -1104,6 +1104,11 @@ a.gallery-image .fav-heart,
 .view-compact .fav-heart{top:3px;right:3px;width:20px;height:20px}
 .view-compact .fav-heart svg{width:12px;height:12px}
 .view-compact .fav-heart::before{inset:-4px}
+
+/* Star chips: same size family as the hearts */
+.favorite-star{width:32px;height:32px;top:9px;right:13px}
+.view-comfy .favorite-star{width:26px;height:26px;top:6px;right:9px}
+.view-compact .favorite-star{width:24px;height:24px;top:5px;right:9px}
 </style>
 <style id="favMediaCss">
 /* ---------- Favorite media (heart) ----------
@@ -1147,7 +1152,56 @@ pointer-events:none;
 .fav-heart.active svg{fill:#ff3b4f;filter:drop-shadow(0 0 4px rgba(255,59,79,.6))}
 .fav-heart.pop svg{animation:favHeartPop .3s ease}
 @keyframes favHeartPop{0%{transform:scale(.7)}55%{transform:scale(1.3)}100%{transform:scale(1)}}
-@media (prefers-reduced-motion:reduce){.fav-heart,.fav-heart.pop svg{transition:none;animation:none}}
+/* The paper star gets the very same little jump. */
+.favorite-star.pop{animation:favHeartPop .3s ease}
+@media (prefers-reduced-motion:reduce){.fav-heart,.fav-heart.pop svg,.favorite-star.pop{transition:none;animation:none}}
+
+/* Empty "Favorite Papers" and "Favorite Media" pages share this exact look. */
+.fav-empty{text-align:center;padding:70px 20px}
+.fav-empty .fav-empty-icon{
+width:44px;height:44px;margin:0 auto 14px;display:block;
+fill:none;stroke:#555;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;
+}
+.fav-empty h2{margin:0 0 8px;font-size:1.25em;font-weight:bold;color:#ddd}
+.fav-empty p{margin:0;color:#888;line-height:1.5;font-size:1em}
+.fav-empty p svg{
+width:1em;height:1em;vertical-align:-.15em;
+stroke-width:2;stroke-linejoin:round;stroke-linecap:round;
+}
+.fav-empty .heart-in{fill:#ff3b4f;stroke:#ff3b4f}
+.fav-empty .star-in{fill:#FFD700;stroke:#FFD700}
+
+/* ---------- Paper star: same round chip and drawn icon as the heart ---------- */
+.favorite-star{
+box-sizing:border-box !important;
+border-radius:50% !important;
+display:flex !important;
+align-items:center !important;
+justify-content:center !important;
+background:rgba(0,0,0,.5) !important;
+font-size:0 !important;
+line-height:0 !important;
+color:#8f8f8f;
+text-shadow:none !important;
+-webkit-tap-highlight-color:transparent;
+}
+.favorite-star::before{
+content:"";
+display:block;
+width:56%;
+height:56%;
+background:currentColor;
+-webkit-mask:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%3E%3Cpolygon%20points='12%202.8%2014.8%208.8%2021.3%209.6%2016.5%2014.1%2017.8%2020.6%2012%2017.4%206.2%2020.6%207.5%2014.1%202.7%209.6%209.2%208.8'%20fill='none'%20stroke='black'%20stroke-width='2'%20stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
+mask:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%3E%3Cpolygon%20points='12%202.8%2014.8%208.8%2021.3%209.6%2016.5%2014.1%2017.8%2020.6%2012%2017.4%206.2%2020.6%207.5%2014.1%202.7%209.6%209.2%208.8'%20fill='none'%20stroke='black'%20stroke-width='2'%20stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
+pointer-events:none;
+}
+.favorite-star:hover{background:rgba(0,0,0,.72) !important}
+.favorite-star.active{color:#FFD700 !important;text-shadow:none !important}
+.favorite-star.active::before{
+-webkit-mask-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%3E%3Cpolygon%20points='12%202.8%2014.8%208.8%2021.3%209.6%2016.5%2014.1%2017.8%2020.6%2012%2017.4%206.2%2020.6%207.5%2014.1%202.7%209.6%209.2%208.8'%20fill='black'%20stroke='black'%20stroke-width='2'%20stroke-linejoin='round'/%3E%3C/svg%3E");
+mask-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%3E%3Cpolygon%20points='12%202.8%2014.8%208.8%2021.3%209.6%2016.5%2014.1%2017.8%2020.6%2012%2017.4%206.2%2020.6%207.5%2014.1%202.7%209.6%209.2%208.8'%20fill='black'%20stroke='black'%20stroke-width='2'%20stroke-linejoin='round'/%3E%3C/svg%3E");
+filter:drop-shadow(0 0 4px rgba(255,215,0,.6));
+}
 </style>
 <script id="favMediaJs">
 /* Favorite media: one small shared helper (the same copy lives on the
@@ -1229,11 +1283,25 @@ pointer-events:none;
     return d.firstChild;
   }
 
+  // The little jump + tiny buzz (phones that support it) when something is
+  // saved. Used by hearts and by the paper star, so they feel identical.
+  function buzz(){
+    try{ if(navigator.vibrate) navigator.vibrate(10); }catch(e){}
+  }
+
+  function pop(el){
+    if(!el) return;
+    el.classList.remove("pop");
+    void el.offsetWidth;
+    el.classList.add("pop");
+  }
+
   function flip(h){
     var on = toggle(h.getAttribute("data-fav"));
     sync();
     h.classList.remove("pop");
-    if(on){ void h.offsetWidth; h.classList.add("pop"); }
+    if(on) pop(h);
+    buzz();
     notify();
   }
 
@@ -1272,6 +1340,8 @@ pointer-events:none;
     heart: heart,
     el: el,
     sync: sync,
+    pop: pop,
+    buzz: buzz,
     count: function(){ return read().size; },
     onChange: function(fn){ listeners.push(fn); }
   };
@@ -2076,6 +2146,13 @@ showNewestBadge = newestDate >= oneYearAgo;
 
     withPreservedState(renderPapers);
 
+    // Same little jump + buzz as the heart on images and videos.
+    FavMedia.buzz();
+
+    if(isFavorite(key)){
+        FavMedia.pop(document.querySelector('.favorite-star[data-paper-key="' + key + '"]'));
+    }
+
 }
 
 window.toggleFavorite = toggleFavorite;
@@ -2476,22 +2553,11 @@ document.getElementById("paperCount").textContent =
     filteredPapers.length === 0
 ){
 
-    container.innerHTML = `
-
-    <div style="
-        text-align:center;
-        padding:70px 20px;
-    ">
-
-        <h2>No Favorite Papers</h2>
-
-        <p style="color:#888;">
-            Tap the ☆ on any paper to save it here.
-        </p>
-
-    </div>
-
-    `;
+    container.innerHTML = `<div class="fav-empty">
+<svg class="fav-empty-icon" viewBox="0 0 24 24" aria-hidden="true"><polygon points="12 2.8 14.8 8.8 21.3 9.6 16.5 14.1 17.8 20.6 12 17.4 6.2 20.6 7.5 14.1 2.7 9.6 9.2 8.8"/></svg>
+<h2>No Favorite Papers</h2>
+<p>Tap the <svg class="star-in" viewBox="0 0 24 24" aria-hidden="true"><polygon points="12 2.8 14.8 8.8 21.3 9.6 16.5 14.1 17.8 20.6 12 17.4 6.2 20.6 7.5 14.1 2.7 9.6 9.2 8.8"/></svg> on any paper to save it here.</p>
+</div>`;
 
     return;
 
@@ -2505,6 +2571,7 @@ filteredPapers.forEach(([key,paper]) => {
 <span
 class="favorite-star
 ${isFavorite(key) ? " active" : ""}"
+data-paper-key="${key}"
 onclick="
 event.stopPropagation();
 toggleFavorite('${key}');
