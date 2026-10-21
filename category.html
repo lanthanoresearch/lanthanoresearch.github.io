@@ -923,6 +923,7 @@ h1{
     transform:translate(-50%,-50%);
 }
 .video-play svg{width:55%;height:55%;transform:translateX(6%)}
+.view-compact .video-play{width:clamp(20px,31cqw,44px)}
 
 /* File names: hidden unless "Show file names" is on; one line, cut off
    with "..." when too long. */
@@ -1119,8 +1120,8 @@ a.gallery-image .fav-heart,
 .view-compact .fav-heart{
     --in:clamp(3px,4.5cqw,6px);
     top:var(--in);right:var(--in);
-    width:clamp(13px,19cqw,32px);
-    height:clamp(13px,19cqw,32px);
+    width:clamp(13px,21cqw,34px);
+    height:clamp(13px,21cqw,34px);
 }
 a.video-thumb .fav-heart{top:calc(var(--in) - 1px);right:calc(var(--in) - 1px)}
 a.gallery-image .fav-heart svg,
