@@ -46,8 +46,10 @@
       "What we have been told.png"
     ],
     "videos": [
-      { "file": "Wwii/Even The Rainbow Bullies Know.3gp.mp4",      "title": "Even The Rainbow Bullies Know",      "duration": "0:26" },
-      { "file": "Wwii/Hitler's Speech (January 30, 1939).mp4",     "title": "Hitler's Speech (January 30, 1939)",     "duration": "6:23" }
+      { "file": "Wwii/Even The Rainbow Bullies Know.3gp.mp4",
+        "size": 4183224,      "title": "Even The Rainbow Bullies Know",      "duration": "0:26" },
+      { "file": "Wwii/Hitler's Speech (January 30, 1939).mp4",
+        "size": 34319186,     "title": "Hitler's Speech (January 30, 1939)",     "duration": "6:23" }
     ],
     "controversial": true
   },
@@ -250,21 +252,25 @@
     "videos": [
       {
         "file": "Sls/Can't touch on Christ's Words.mp4",
+        "size": 19714096,
         "title": "Can't touch on Christ's Words",
         "duration": "0:13"
       },
       {
         "file": "Sls/New Theory.mp4",
+        "size": 106353052,
         "title": "New Theory",
         "duration": "0:50"
       },
       {
         "file": "Sls/No Hope.mp4",
+        "size": 5215642,
         "title": "No Hope",
         "duration": "0:40"
       },
       {
         "file": "Sls/Tribulation Denial, A.I. Shorts.mp4",
+        "size": 8441720,
         "title": "Tribulation Denial, A.I. Shorts",
         "duration": "0:55"
       }
@@ -292,7 +298,8 @@
       "Trinity.png"
     ],
     "videos": [
-      { "file": "predictive programming.mp4", "title": "Predictive Programming", "duration": "2:03", "source": "site", "thumbnail": "prediction.jpg", "group": "Predictive Programming", "groupLabel": "Predictive Programming" }
+      { "file": "predictive programming.mp4", "title": "Predictive Programming", "duration": "2:03", "source": "site", "thumbnail": "prediction.jpg", "group": "Predictive Programming", "groupLabel": "Predictive Programming" },
+      { "file": "Pp/Flat Earth Predictive Programming.mp4", "title": "Flat Earth Predictive Programming", "duration": "3:05", "size": 221397924, "group": "Predictive Programming", "groupLabel": "Predictive Programming" }
     ]
   },
   "corrupt_versions": {
@@ -400,20 +407,34 @@
       "TETR Satellite.png"
     ],
     "videos": [
-      { "file": "Moon/Don Pettit of NASA.mp4", "title": "Don Pettit of NASA", "duration": "0:14" },
-      { "file": "Moon/Hammer Drop slomo timed.mp4", "title": "Hammer Drop slomo timed", "duration": "0:22" },
-      { "file": "Moon/Astronaut Picked up by Wire.mp4", "title": "Astronaut Picked up by Wire", "duration": "0:31" },
-      { "file": "Moon/Threats.mp4", "title": "Threats", "duration": "0:36" },
-      { "file": "Moon/Duke gets the Van Allen Belts Wrong.mp4", "title": "Duke gets the Van Allen Belts Wrong", "duration": "0:47" },
-      { "file": "Moon/Buzz Aldrin Admit.mp4", "title": "Buzz Aldrin Admit", "duration": "0:57" },
-      { "file": "Moon/Neil Armstrong's Cryptic Comment.mp4", "title": "Neil Armstrong's Cryptic Comment", "duration": "1:17" },
-      { "file": "Moon/Hammer Drop.mp4", "title": "Hammer Drop", "duration": "1:23" },
-      { "file": "Moon/How did the Astronaut Not Fall Over.mp4", "title": "How did the Astronaut Not Fall Over", "duration": "2:23" },
-      { "file": "Moon/Apollo 15 flag waving.mp4", "title": "Apollo 15 flag waving", "duration": "3:12" },
-      { "file": "Moon/Testing Shields Against the Van Allen Belts.mp4", "title": "Testing Shields Against the Van Allen Belts", "duration": "7:02" },
-      { "file": "Moon/Radiation Belt Info.mp4", "title": "Radiation Belt Info", "duration": "13:04" },
-      { "file": "Moon/Deathbed Confession.mp4", "title": "Deathbed Confession", "duration": "14:14" },
-      { "file": "Moon/Apollo 11 Press Conference.mp4", "title": "Apollo 11 Press Conference", "duration": "1:23:30" }
+      { "file": "Moon/Don Pettit of NASA.mp4",
+        "size": 1802137, "title": "Don Pettit of NASA", "duration": "0:14" },
+      { "file": "Moon/Hammer Drop slomo timed.mp4",
+        "size": 3863818, "title": "Hammer Drop slomo timed", "duration": "0:22" },
+      { "file": "Moon/Astronaut Picked up by Wire.mp4",
+        "size": 2879338, "title": "Astronaut Picked up by Wire", "duration": "0:31" },
+      { "file": "Moon/Threats.mp4",
+        "size": 10602046, "title": "Threats", "duration": "0:36" },
+      { "file": "Moon/Duke gets the Van Allen Belts Wrong.mp4",
+        "size": 107224149, "title": "Duke gets the Van Allen Belts Wrong", "duration": "0:47" },
+      { "file": "Moon/Buzz Aldrin Admit.mp4",
+        "size": 2730797, "title": "Buzz Aldrin Admit", "duration": "0:57" },
+      { "file": "Moon/Neil Armstrong's Cryptic Comment.mp4",
+        "size": 2246629, "title": "Neil Armstrong's Cryptic Comment", "duration": "1:17" },
+      { "file": "Moon/Hammer Drop.mp4",
+        "size": 5609703, "title": "Hammer Drop", "duration": "1:23" },
+      { "file": "Moon/How did the Astronaut Not Fall Over.mp4",
+        "size": 28079914, "title": "How did the Astronaut Not Fall Over", "duration": "2:23" },
+      { "file": "Moon/Apollo 15 flag waving.mp4",
+        "size": 5370854, "title": "Apollo 15 flag waving", "duration": "3:12" },
+      { "file": "Moon/Testing Shields Against the Van Allen Belts.mp4",
+        "size": 23263188, "title": "Testing Shields Against the Van Allen Belts", "duration": "7:02" },
+      { "file": "Moon/Radiation Belt Info.mp4",
+        "size": 25204937, "title": "Radiation Belt Info", "duration": "13:04" },
+      { "file": "Moon/Deathbed Confession.mp4",
+        "size": 130574528, "title": "Deathbed Confession", "duration": "14:14" },
+      { "file": "Moon/Apollo 11 Press Conference.mp4",
+        "size": 109301759, "title": "Apollo 11 Press Conference", "duration": "1:23:30" }
     ]
   },
   "titanic": {
