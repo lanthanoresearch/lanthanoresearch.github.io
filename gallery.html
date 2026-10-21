@@ -744,17 +744,20 @@ h1{
 .mixrow + .mixrow{
     margin-top:var(--gap);
 }
-.mixrow .gallery-image{
-    flex-basis:0;
+.mixrow .gallery-image,
+.mixstack .gallery-image{
+    flex:none;
     min-width:0;
+}
+.mixrow i{ display:none; }
+.mixstack{
+    flex:none;
+    display:flex;
+    flex-direction:column;
+    gap:var(--gap);
 }
 .mixrow.natural{
     justify-content:flex-start;
-}
-.mixrow.natural .gallery-image{
-    flex:0 0 auto !important;
-    width:calc(var(--ar) * var(--nat-h));
-    max-width:100%;
 }
 
 .mode-switch button{
@@ -2047,9 +2050,12 @@ function fileLabel(path){
     return String(path).split("/").pop().replace(/\.[^/.]+$/, "");
 }
 
-// Mixed layout: tiles (pictures and videos) are packed into rows that all
-// lock to the full width. A row closes when its height gets close to the
-// target; the last row stays natural size if it would be mostly empty.
+// Collage layout (Images and Mixed tabs). Pictures and videos are packed into
+// rows that fill the full width. Nothing is ever stretched: every tile keeps
+// its own shape and is only scaled. Inside a row a cell is either one tile or
+// two/three tiles stacked on top of each other, so a tall picture can sit
+// beside two wide ones and the row still closes with no gaps. The packer picks
+// the breaks and the stacks that keep every row closest to the target height.
 let mixSections = [];
 let settleRaf = 0;
 
@@ -2058,36 +2064,68 @@ function settleSoon(){
     settleRaf = requestAnimationFrame(() => { settleRaf = 0; layoutMixed(); });
 }
 
-// Splits a run of pictures / half-size videos into rows that all lock to the
-// full width, choosing the breaks that keep every row closest to the target
-// height. (The very last row of the page may stay natural size.)
-function packRunDP(tiles, W, gap, T, allowNatural, ar){
+// All ways to cut k tiles into cells of 1 to 3 stacked tiles.
+const CELL_PLANS = {};
+function cellPlans(k){
+    if(CELL_PLANS[k]) return CELL_PLANS[k];
+    const out = [];
+    (function go(left, cur){
+        if(!left){ out.push(cur.slice()); return; }
+        for(let s = 1; s <= Math.min(3, left); s++){
+            cur.push(s); go(left - s, cur); cur.pop();
+        }
+    })(k, []);
+    return CELL_PLANS[k] = out;
+}
+
+// Best way to lay tiles[i..j) in one row: returns { cost, H, cells, stacks }.
+function bestRow(rs, i, j, W, gap, T){
+    const k = j - i;
+    let best = null;
+    cellPlans(k).forEach(plan => {
+        let pos = i, sumA = 0, corr = 0, stacks = 0, three = 0;
+        const cells = [];
+        plan.forEach(s => {
+            let inv = 0;
+            for(let q = 0; q < s; q++) inv += 1 / rs[pos + q];
+            const A = 1 / inv;
+            sumA += A;
+            corr += A * (s - 1);
+            if(s > 1) stacks++;
+            if(s === 3) three++;
+            cells.push({ from: pos, n: s, A });
+            pos += s;
+        });
+        const H = (W - gap * (plan.length - 1) + gap * corr) / sumA;
+        const cost = Math.pow(Math.log(H / T), 2) + stacks * 0.03 + three * 0.05;
+        if(!best || cost < best.cost) best = { cost, H, cells };
+    });
+    return best;
+}
+
+function packRows(tiles, W, gap, T, allowNatural, ar){
     const n = tiles.length;
     if(!n) return [];
+    const rs = tiles.map(ar);
+    const MAXK = 7;
 
     const best = new Array(n + 1).fill(Infinity);
     const from = new Array(n + 1).fill(0);
-    const nat = new Array(n + 1).fill(false);
+    const pick = new Array(n + 1).fill(null);
     best[0] = 0;
 
     for(let j = 1; j <= n; j++){
-        let sum = 0;
-        for(let i = j - 1; i >= 0 && j - i <= 6; i--){
-            sum += ar(tiles[i]);
-            const cnt = j - i;
-            const h = (W - gap * (cnt - 1)) / sum;
-            let cost = Math.pow(Math.log(h / T), 2);
-            let isNat = false;
-
-            if(j === n && allowNatural && h > T * (allowNatural === true ? 1.25 : allowNatural)){
-                cost = 0.04;
-                isNat = true;
+        for(let i = j - 1; i >= 0 && j - i <= MAXK; i--){
+            const r = bestRow(rs, i, j, W, gap, T);
+            let cost = r.cost, natural = false;
+            if(j === n && allowNatural && r.H > T * allowNatural){
+                cost = 0.05 + r.cells.length * 0.002;
+                natural = true;
             }
-
             if(best[i] + cost < best[j]){
                 best[j] = best[i] + cost;
                 from[j] = i;
-                nat[j] = isNat;
+                pick[j] = { r, natural };
             }
         }
     }
@@ -2096,51 +2134,17 @@ function packRunDP(tiles, W, gap, T, allowNatural, ar){
     let j = n;
     while(j > 0){
         const i = from[j];
-        rows.unshift({ tiles: tiles.slice(i, j), natural: j === n && nat[n] });
+        const { r, natural } = pick[j];
+        const H = natural ? T : r.H;
+        rows.unshift({
+            H, natural,
+            cells: r.cells.map(c => ({
+                tiles: tiles.slice(c.from, c.from + c.n),
+                w: c.A * (H - gap * (c.n - 1))
+            }))
+        });
         j = i;
     }
-    return rows;
-}
-
-
-// Row builder that is allowed to pull a nearby picture forward (a short look
-// ahead) when that makes a row line up better, so tall and wide pictures and
-// videos pair off into rows of the same height with no stretched tiles. Tiles
-// stay close to their original order; the last few go through the exact
-// packer above so the end of a section is always tidy.
-function packRun(tiles, W, gap, T, allowNatural, ar){
-    const rest = tiles.slice();
-    const rows = [];
-    const WIN = 9, MAXK = 5, KEEP = 8, LAMBDA = 0.02;
-
-    while(rest.length > KEEP){
-        const m = Math.min(WIN, rest.length);
-        const rs = rest.slice(0, m).map(ar);
-        let bestC = Infinity, bestIdx = null;
-
-        const pick = [0];
-        (function walk(from, sum){
-            const cnt = pick.length;
-            const h = (W - gap * (cnt - 1)) / sum;
-            let c = Math.pow(Math.log(h / T), 2);
-            let pulled = 0;
-            for(let k = 0; k < cnt; k++) pulled += pick[k] - k;
-            c += LAMBDA * pulled;
-            if(c < bestC){ bestC = c; bestIdx = pick.slice(); }
-            if(cnt >= MAXK) return;
-            for(let i = from; i < m; i++){
-                pick.push(i);
-                walk(i + 1, sum + rs[i]);
-                pick.pop();
-            }
-        })(1, rs[0]);
-
-        const chosen = bestIdx.map(i => rest[i]);
-        for(let k = bestIdx.length - 1; k >= 0; k--) rest.splice(bestIdx[k], 1);
-        rows.push({ tiles: chosen, natural: false });
-    }
-
-    packRunDP(rest, W, gap, T, allowNatural, ar).forEach(r => rows.push(r));
     return rows;
 }
 
@@ -2153,30 +2157,13 @@ function layoutMixed(){
         if(!W) return;
 
         const gap = parseFloat(getComputedStyle(el).getPropertyValue("--gap")) || 6;
-        const T = Math.max(170, Math.min(280, W * 0.26));
+        const T = W < 600 ? Math.max(140, W * 0.38) : Math.max(190, Math.min(280, W * 0.26));
         const ar = t => parseFloat(t.style.getPropertyValue("--ar")) || 1.33;
-        const alive = t => !t.dataset.dead;
 
-        const rows = [];
-        let run = [];
+        const tiles = sec.order.map(o => o.flow).filter(t => !t.dataset.dead);
+        const rows = packRows(tiles, W, gap, T, 1.6, ar);
 
-        const flush = (last) => {
-            packRun(run.filter(alive), W, gap, T, last ? 1.25 : 1.7, ar).forEach(r => rows.push(r));
-            run = [];
-        };
-
-        sec.order.forEach((it, idx) => {
-            if(it.flow){
-                run.push(it.flow);
-            }else{
-                flush(false);
-                rows.push({ tiles: it.tiles, natural: false });
-            }
-        });
-        flush(true);
-
-        // The page's final row can only be natural if it is a picture row.
-        const sig = rows.map(r => r.tiles.map(t => sec.all.indexOf(t)).join(",") + (r.natural ? "n" : "")).join("|");
+        const sig = rows.map(r => r.cells.map(c => c.tiles.map(t => sec.all.indexOf(t)).join("+")).join(",") + (r.natural ? "n" : "")).join("|");
 
         if(sig !== sec.sig){
             sec.sig = sig;
@@ -2184,14 +2171,30 @@ function layoutMixed(){
             rows.forEach(row => {
                 const d = document.createElement("div");
                 d.className = "mixrow" + (row.natural ? " natural" : "");
-                row.tiles.forEach(t => d.appendChild(t));
+                row.cells.forEach(c => {
+                    if(c.tiles.length === 1){
+                        d.appendChild(c.tiles[0]);
+                    }else{
+                        const s = document.createElement("div");
+                        s.className = "mixstack";
+                        c.tiles.forEach(t => s.appendChild(t));
+                        d.appendChild(s);
+                    }
+                });
                 el.appendChild(d);
             });
         }
 
-        for(let i = 0; i < el.children.length; i++){
-            el.children[i].style.setProperty("--nat-h", T + "px");
-        }
+        // Exact pixel sizes, so every tile keeps its true shape.
+        rows.forEach(row => {
+            row.cells.forEach(c => {
+                c.tiles.forEach(t => {
+                    t.style.width = c.w + "px";
+                    t.style.height = (c.w / ar(t)) + "px";
+                });
+                if(c.tiles.length > 1) c.tiles[0].parentNode.style.width = c.w + "px";
+            });
+        });
     });
 }
 
@@ -2394,35 +2397,15 @@ function render(){
             return t;
         }
 
-        const cycle = ["pair", "half", "pair", "big", "half", "pair", "half"];
-        const units = [];
-        let vi = 0, ci = 0;
-
-        while(vi < vids.length){
-            const rem = vids.length - vi;
-            let type = cycle[ci++ % cycle.length];
-            if(type === "pair" && rem < 2) type = "big";
-            if(rem === 1) type = "big";
-            const count = type === "pair" ? 2 : 1;
-            units.push({ type, vids: vids.slice(vi, vi + count) });
-            vi += count;
-        }
-
+        // Videos are spread evenly among the pictures; the packer does the rest.
         const order = [];
         let a = 0, b = 0;
 
-        while(a < imgs.length || b < units.length){
+        while(a < imgs.length || b < vids.length){
             const pa = imgs.length ? (a + 0.5) / imgs.length : Infinity;
-            const pb = units.length ? (b + 0.5) / units.length : Infinity;
-
-            if(a < imgs.length && (b >= units.length || pa <= pb)){
-                order.push({ flow: make(imgs[a++]) });
-            }else{
-                const u = units[b++];
-                const tiles = u.vids.map(make);
-                if(u.type === "half") order.push({ flow: tiles[0] });
-                else order.push({ tiles });
-            }
+            const pb = vids.length ? (b + 0.5) / vids.length : Infinity;
+            const it = (a < imgs.length && (b >= vids.length || pa <= pb)) ? imgs[a++] : vids[b++];
+            order.push({ flow: make(it) });
         }
 
         const el = document.createElement("div");
@@ -2430,6 +2413,7 @@ function render(){
         fragment.appendChild(el);
         mixSections.push({ el, all, order, sig: null });
     }
+
 
     // Videos tab: a fixed (never random) rhythm of layouts that repeats:
     // a full-width video, a pair, a big video beside two stacked ones, a
