@@ -914,13 +914,13 @@ h1{
 /* Play button scales with the tile (container units) so it never reaches the heart or the length badge */
 .video-thumb{container-type:inline-size}
 .video-play,.view-comfy .video-play,.view-compact .video-play{
-    width:clamp(16px,24cqw,40px);
-    height:clamp(16px,24cqw,40px);
+    width:clamp(24px,32cqw,46px);
+    height:clamp(24px,32cqw,46px);
     margin:0;
     transform:translate(-50%,-50%);
 }
 .video-play svg{width:55%;height:55%;transform:translateX(6%)}
-.view-compact .video-play{width:clamp(12px,17cqw,26px);height:clamp(12px,19cqw,26px)}
+.view-compact .video-play{width:clamp(20px,29cqw,38px);height:clamp(12px,19cqw,26px)}
 
 /* File names: hidden unless "Show file names" is on; one line, cut off
    with "..." when too long. */
@@ -1108,14 +1108,32 @@ summary:hover{
     margin-top:10px;
 }
 
-/* Hearts on supporting images and videos */
+/* Hearts on supporting images and videos: one rule for both, scaled by tile width
+   so they shrink and tuck toward the corner as the tiles get smaller. */
+a.gallery-image{container-type:inline-size}
 a.gallery-image .fav-heart,
-.video-thumb .fav-heart{top:6px;right:6px}
-.view-comfy .fav-heart{top:4px;right:4px;width:24px;height:24px}
-.view-comfy .fav-heart svg{width:14px;height:14px}
-.view-compact .fav-heart{top:3px;right:3px;width:20px;height:20px}
-.view-compact .fav-heart svg{width:12px;height:12px}
-.view-compact .fav-heart::before{inset:-4px}
+.video-thumb .fav-heart,
+.view-comfy .fav-heart,
+.view-compact .fav-heart{
+    --in:clamp(3px,4.5cqw,6px);
+    top:var(--in);right:var(--in);
+    width:clamp(15px,14cqw,24px);
+    height:clamp(15px,14cqw,24px);
+}
+a.video-thumb .fav-heart{top:calc(var(--in) - 1px);right:calc(var(--in) - 1px)}
+a.gallery-image .fav-heart svg,
+.view-comfy .fav-heart svg,
+.view-compact .fav-heart svg{width:56%;height:56%}
+.fav-heart::before{inset:-5px}
+/* length badge uses the same inset as the heart's mirror position */
+a.gallery-image .video-duration,
+.view-comfy .video-duration,
+.view-compact .video-duration{
+    right:clamp(3px,4.5cqw,6px);
+    bottom:clamp(3px,4.5cqw,6px);
+    font-size:clamp(8px,8.5cqw,11px);
+    padding:1px clamp(2px,3cqw,5px);
+}
 
 /* Star chips: same size family as the hearts */
 .favorite-star{width:32px;height:32px;top:9px;right:13px}
