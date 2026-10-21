@@ -785,31 +785,64 @@ h1{
    thumbnail from this site, never anything from the video storage) ---------- */
 
 .gallery.videos{
-    --row-h:150px;
     --gap:8px;
-    display:grid;
-    grid-template-columns:repeat(2, minmax(0, 1fr));
+    display:flex;
+    flex-direction:column;
+    flex-wrap:nowrap;
+    gap:var(--gap);
 }
 
 .gallery.videos::after{
     display:none;
 }
 
-/* Every video tile is the same 16:9 shape, two across (one across on
-   very narrow screens), whatever shape its thumbnail picture is. */
-.gallery.videos .gallery-image{
+/* Every video group is its own little 12-column grid, so each layout keeps
+   its shape: full width, even pair, uneven pair, or one big video beside two
+   stacked ones. Tiles are 16:9; a side-by-side partner is stretched to match
+   and its picture is cropped to fit. */
+.vu{
+    flex:none;
+    display:grid;
+    grid-template-columns:repeat(12, minmax(0, 1fr));
+    gap:var(--gap);
+}
+.vu .gallery-image{
     flex-basis:auto;
     width:auto;
-    aspect-ratio:16 / 9;
+    min-width:0;
 }
+.vu .gallery-image i{ display:none; }
 
-.gallery.videos .gallery-image i{
-    display:none;
+/* Every video is exactly 16:9 in every layout; layouts only scale tiles up
+   or down. */
+.vu .gallery-image{ aspect-ratio:16 / 9; }
+.vu-big .gallery-image{ grid-column:1 / -1; }
+.vu-pair .gallery-image{ grid-column:span 6; }
+.vu-trio .gallery-image{ grid-column:span 4; }
+
+/* One big video beside two stacked ones: the big tile is sized so its height
+   equals the two small ones plus the gap, with every tile still 16:9. */
+.vu-featL, .vu-featR{
+    --s:calc((100% - var(--gap) * 25 / 9) / 3);
+    --b:calc(var(--s) * 2 + var(--gap) * 16 / 9);
+}
+.vu-featL{ grid-template-columns:var(--b) var(--s); }
+.vu-featR{ grid-template-columns:var(--s) var(--b); }
+.vu-featL .gallery-image, .vu-featR .gallery-image{ grid-column:auto; }
+.vu-featL .gallery-image:nth-child(1){ grid-column:1; grid-row:1 / span 2; }
+.vu-featL .gallery-image:nth-child(2){ grid-column:2; grid-row:1; }
+.vu-featL .gallery-image:nth-child(3){ grid-column:2; grid-row:2; }
+.vu-featR .gallery-image:nth-child(1){ grid-column:2; grid-row:1 / span 2; }
+.vu-featR .gallery-image:nth-child(2){ grid-column:1; grid-row:1; }
+.vu-featR .gallery-image:nth-child(3){ grid-column:1; grid-row:2; }
+
+@media (max-width:599px){
+    .vu-trio .gallery-image:nth-child(1){ grid-column:1 / -1; }
+    .vu-trio .gallery-image:nth-child(n+2){ grid-column:span 6; }
 }
 
 /* Paper-name headings span the full width instead of taking a tile's place. */
 .gallery.videos .paper-break{
-    grid-column:1 / -1;
     flex:none;
 }
 
@@ -818,15 +851,32 @@ h1{
 }
 
 @media (max-width:339px){
-    .gallery.videos{
-        grid-template-columns:minmax(0, 1fr);
-    }
+    .vu{ grid-template-columns:minmax(0, 1fr); }
+    .vu .gallery-image{ grid-column:auto !important; grid-row:auto !important; }
 }
 
-/* A "big" video takes the whole row (Videos tab); the rest sit two across. */
-.gallery.videos .gallery-image.video-big{
-    grid-column:1 / -1;
+/* Play button, time and heart scale with the tile so small tiles stay clean. */
+.video-tile{ container-type:inline-size; }
+.video-tile .video-play{
+    width:clamp(24px,16cqw,46px);
+    height:clamp(24px,16cqw,46px);
+    margin:0;
+    transform:translate(-50%,-50%);
+    box-sizing:border-box;
 }
+.video-tile .video-play svg{ width:52%; height:52%; transform:translateX(6%); }
+.video-tile .video-duration{
+    right:clamp(4px,3cqw,8px);
+    bottom:clamp(4px,3cqw,8px);
+    font-size:clamp(9px,3.4cqw,12px);
+}
+.video-tile .fav-heart{
+    --in:clamp(4px,3cqw,8px);
+    top:var(--in); right:var(--in);
+    width:clamp(20px,9cqw,30px);
+    height:clamp(20px,9cqw,30px);
+}
+.video-tile .fav-heart svg{ width:58%; height:58%; }
 
 .video-tile{
     background:linear-gradient(145deg,#232323,#161616);
@@ -2011,7 +2061,7 @@ function settleSoon(){
 // Splits a run of pictures / half-size videos into rows that all lock to the
 // full width, choosing the breaks that keep every row closest to the target
 // height. (The very last row of the page may stay natural size.)
-function packRun(tiles, W, gap, T, allowNatural, ar){
+function packRunDP(tiles, W, gap, T, allowNatural, ar){
     const n = tiles.length;
     if(!n) return [];
 
@@ -2049,6 +2099,48 @@ function packRun(tiles, W, gap, T, allowNatural, ar){
         rows.unshift({ tiles: tiles.slice(i, j), natural: j === n && nat[n] });
         j = i;
     }
+    return rows;
+}
+
+
+// Row builder that is allowed to pull a nearby picture forward (a short look
+// ahead) when that makes a row line up better, so tall and wide pictures and
+// videos pair off into rows of the same height with no stretched tiles. Tiles
+// stay close to their original order; the last few go through the exact
+// packer above so the end of a section is always tidy.
+function packRun(tiles, W, gap, T, allowNatural, ar){
+    const rest = tiles.slice();
+    const rows = [];
+    const WIN = 9, MAXK = 5, KEEP = 8, LAMBDA = 0.02;
+
+    while(rest.length > KEEP){
+        const m = Math.min(WIN, rest.length);
+        const rs = rest.slice(0, m).map(ar);
+        let bestC = Infinity, bestIdx = null;
+
+        const pick = [0];
+        (function walk(from, sum){
+            const cnt = pick.length;
+            const h = (W - gap * (cnt - 1)) / sum;
+            let c = Math.pow(Math.log(h / T), 2);
+            let pulled = 0;
+            for(let k = 0; k < cnt; k++) pulled += pick[k] - k;
+            c += LAMBDA * pulled;
+            if(c < bestC){ bestC = c; bestIdx = pick.slice(); }
+            if(cnt >= MAXK) return;
+            for(let i = from; i < m; i++){
+                pick.push(i);
+                walk(i + 1, sum + rs[i]);
+                pick.pop();
+            }
+        })(1, rs[0]);
+
+        const chosen = bestIdx.map(i => rest[i]);
+        for(let k = bestIdx.length - 1; k >= 0; k--) rest.splice(bestIdx[k], 1);
+        rows.push({ tiles: chosen, natural: false });
+    }
+
+    packRunDP(rest, W, gap, T, allowNatural, ar).forEach(r => rows.push(r));
     return rows;
 }
 
@@ -2144,7 +2236,7 @@ function render(){
     }
 
     const gallery = document.createElement("div");
-    gallery.className = mode === "mixed" ? "mixed-wrap" : "gallery" + (mode === "videos" ? " videos" : "");
+    gallery.className = (mode === "mixed" || mode === "images") ? "mixed-wrap" : "gallery" + (mode === "videos" ? " videos" : "");
 
     const fragment = document.createDocumentFragment();
     let target = fragment;   // where the next tile goes (a holder in Mixed)
@@ -2195,13 +2287,13 @@ function render(){
         target.appendChild(link);
     }
 
-    function addVideo(v, title, big){
+    function addVideo(v, title){
 
         const name = v.title || fileLabel(v.file);
         const rkey = "v:" + v.file;
 
         const link = document.createElement("a");
-        link.className = "gallery-image video-tile" + (big ? " video-big" : "");
+        link.className = "gallery-image video-tile";
         link.href = videoUrl(v, title);
         link.setAttribute(
             "aria-label",
@@ -2339,30 +2431,33 @@ function render(){
         mixSections.push({ el, all, order, sig: null });
     }
 
-    // Videos tab: a fixed pattern of two pairs then one full-row video, over and
-    // over (never random). A lone leftover video is always a full row.
-    function bigFlags(count){
-        const set = new Set();
-        const pattern = [2, 2, 1];
-        let i = 0, k = 0;
-        while(i < count){
-            const rem = count - i;
-            let unit = pattern[k++ % pattern.length];
-            if(rem === 1) unit = 1;
-            else if(unit === 1 && rem === 2) unit = 2;   // no two full rows in a row
-            if(unit === 1) set.add(i);
-            i += unit;
-        }
-        return set;
-    }
+    // Videos tab: a fixed (never random) rhythm of layouts that repeats:
+    // a full-width video, a pair, a big video beside two stacked ones, a
+    // row of three, and so on. Every tile is always 16:9. A short leftover always ends cleanly.
+    const VU_CYCLE = ["big", "pair", "featL", "trio", "pair", "featR", "trio", "pair"];
+    const VU_NEED = { big: 1, pair: 2, trio: 3, featL: 3, featR: 3 };
+    let vuCount = 0;
 
-    let vidIdx = 0;
-    const flatBig = (mode === "videos" && !paperBreaks) ? bigFlags(total) : new Set();
+    function addVideoUnits(list){
+        let i = 0;
+        while(i < list.length){
+            const rem = list.length - i;
+            let type = VU_CYCLE[vuCount++ % VU_CYCLE.length];
+            if(rem < VU_NEED[type]) type = rem === 1 ? "big" : "pair";
+            const unit = document.createElement("div");
+            unit.className = "vu vu-" + type;
+            fragment.appendChild(unit);
+            target = unit;
+            list.slice(i, i + VU_NEED[type]).forEach(e => addVideo(e.v, e.label));
+            target = fragment;
+            i += VU_NEED[type];
+        }
+    }
 
     groups.forEach(({paper, items}, index) => {
 
         if(paperBreaks){
-            if(index > 0 && mode !== "mixed"){
+            if(index > 0 && mode === "videos"){
                 const fill = document.createElement("div");
                 fill.className = "gallery-fill";
                 fragment.appendChild(fill);
@@ -2389,27 +2484,34 @@ function render(){
             return;
         }
 
-        const localBig = (mode === "videos" && paperBreaks) ? bigFlags(items.length) : null;
+        if(mode === "images"){
+            if(paperBreaks) addMixedBlocks(items.map(src => ({ kind: "image", src, paperTitle: paper.title })));
+            return;
+        }
 
-        items.forEach((item, i) => {
-            if(mode === "videos"){
-                const big = localBig ? localBig.has(i) : flatBig.has(vidIdx++);
-                addVideo(item, paper.label || paper.title, big);
-            }else{
-                addImage(item, paper.title);
-            }
-        });
+        if(mode === "videos"){
+            if(paperBreaks) addVideoUnits(items.map(v => ({ v, label: paper.label || paper.title })));
+            return;
+        }
+
+        items.forEach(item => addImage(item, paper.title));
     });
 
     // Without paper headings, everything is mixed together across papers.
     if(mode === "mixed" && !paperBreaks){
         addMixedBlocks(groups.flatMap(g => g.items));
     }
+    if(mode === "images" && !paperBreaks){
+        addMixedBlocks(groups.flatMap(g => g.items.map(src => ({ kind: "image", src, paperTitle: g.paper.title }))));
+    }
+    if(mode === "videos" && !paperBreaks){
+        addVideoUnits(groups.flatMap(g => g.items.map(v => ({ v, label: g.paper.label || g.paper.title }))));
+    }
 
     gallery.appendChild(fragment);
     container.appendChild(gallery);
 
-    if(mode === "mixed") settleSoon();
+    if(mode === "mixed" || mode === "images") settleSoon();
 
     const end = document.createElement("p");
     end.className = "end-of-list";
