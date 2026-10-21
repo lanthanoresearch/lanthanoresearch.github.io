@@ -1095,7 +1095,188 @@ summary:hover{
     gap:5px;
     margin-top:10px;
 }
+
+/* Hearts on supporting images and videos */
+a.gallery-image .fav-heart,
+.video-thumb .fav-heart{top:6px;right:6px}
+.view-comfy .fav-heart{top:4px;right:4px;width:24px;height:24px}
+.view-comfy .fav-heart svg{width:14px;height:14px}
+.view-compact .fav-heart{top:3px;right:3px;width:20px;height:20px}
+.view-compact .fav-heart svg{width:12px;height:12px}
+.view-compact .fav-heart::before{inset:-4px}
 </style>
+<style id="favMediaCss">
+/* ---------- Favorite media (heart) ----------
+   Same idea as the star on papers, for images and videos. The saved list is
+   the "favoriteMedia" entry in this browser's storage, shared by every page. */
+.fav-heart{
+position:absolute;
+top:6px;
+right:6px;
+width:28px;
+height:28px;
+box-sizing:border-box;
+border-radius:50%;
+display:flex;
+align-items:center;
+justify-content:center;
+background:rgba(0,0,0,.5);
+color:#fff;
+cursor:pointer;
+user-select:none;
+-webkit-user-select:none;
+-webkit-tap-highlight-color:transparent;
+z-index:5;
+transition:transform .15s ease, background .15s ease, color .15s ease;
+}
+.fav-heart::before{content:"";position:absolute;inset:-7px}
+.fav-heart svg{
+width:16px;
+height:16px;
+display:block;
+fill:none;
+stroke:currentColor;
+stroke-width:2;
+stroke-linejoin:round;
+stroke-linecap:round;
+pointer-events:none;
+}
+.fav-heart:hover{transform:scale(1.12);background:rgba(0,0,0,.72)}
+.fav-heart:focus-visible{outline:2px solid #ff8a96;outline-offset:2px}
+.fav-heart.active{color:#ff3b4f}
+.fav-heart.active svg{fill:#ff3b4f;filter:drop-shadow(0 0 4px rgba(255,59,79,.6))}
+.fav-heart.pop svg{animation:favHeartPop .3s ease}
+@keyframes favHeartPop{0%{transform:scale(.7)}55%{transform:scale(1.3)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.fav-heart,.fav-heart.pop svg{transition:none;animation:none}}
+</style>
+<script id="favMediaJs">
+/* Favorite media: one small shared helper (the same copy lives on the
+   gallery, category and home pages). Keys look like "i:<image path>" or
+   "v:<video file>" and are saved as a list under "favoriteMedia". */
+(function(){
+  if(window.FavMedia) return;
+
+  var KEY = "favoriteMedia";
+  var HEART = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>';
+  var mem = null, raw = null, set = new Set(), listeners = [];
+
+  function read(){
+    var r = null;
+    try{ r = localStorage.getItem(KEY); }catch(e){ r = mem; }
+    if(r === raw) return set;
+    raw = r;
+    set = new Set();
+    try{
+      var a = JSON.parse(r || "[]");
+      if(Array.isArray(a)) a.forEach(function(k){ if(typeof k === "string" && k) set.add(k); });
+    }catch(e){}
+    return set;
+  }
+
+  function write(){
+    var s = JSON.stringify(Array.from(set));
+    mem = s;
+    try{ localStorage.setItem(KEY, s); }catch(e){}
+    raw = s;
+  }
+
+  function key(kind, path){
+    return (kind === "video" ? "v:" : "i:") + String(path == null ? "" : path).trim();
+  }
+
+  function esc(t){
+    return String(t).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
+
+  function has(k){ return read().has(k); }
+
+  function toggle(k){
+    read();
+    var on = !set.has(k);
+    if(on) set.add(k); else set.delete(k);
+    write();
+    return on;
+  }
+
+  function paint(el){
+    var on = has(el.getAttribute("data-fav"));
+    el.classList.toggle("active", on);
+    el.setAttribute("aria-pressed", on ? "true" : "false");
+    var label = on ? "Remove from favorite media" : "Add to favorite media";
+    el.setAttribute("aria-label", label);
+    el.setAttribute("title", label);
+  }
+
+  function sync(root){
+    (root || document).querySelectorAll(".fav-heart").forEach(paint);
+  }
+
+  function notify(){
+    listeners.slice().forEach(function(fn){ try{ fn(); }catch(e){} });
+  }
+
+  function heart(kind, path, extra){
+    var k = key(kind, path), on = has(k);
+    var label = on ? "Remove from favorite media" : "Add to favorite media";
+    return '<span class="fav-heart' + (on ? " active" : "") + (extra ? " " + extra : "") +
+      '" role="button" tabindex="0" data-fav="' + esc(k) + '" aria-pressed="' + (on ? "true" : "false") +
+      '" aria-label="' + label + '" title="' + label + '">' + HEART + '</span>';
+  }
+
+  function el(kind, path, extra){
+    var d = document.createElement("div");
+    d.innerHTML = heart(kind, path, extra);
+    return d.firstChild;
+  }
+
+  function flip(h){
+    var on = toggle(h.getAttribute("data-fav"));
+    sync();
+    h.classList.remove("pop");
+    if(on){ void h.offsetWidth; h.classList.add("pop"); }
+    notify();
+  }
+
+  // Captured first, so tapping a heart never opens the image or video under it.
+  document.addEventListener("click", function(e){
+    var h = e.target && e.target.closest ? e.target.closest(".fav-heart") : null;
+    if(!h) return;
+    e.preventDefault();
+    e.stopPropagation();
+    flip(h);
+  }, true);
+
+  document.addEventListener("keydown", function(e){
+    if(e.key !== "Enter" && e.key !== " ") return;
+    var h = e.target && e.target.closest ? e.target.closest(".fav-heart") : null;
+    if(!h) return;
+    e.preventDefault();
+    e.stopPropagation();
+    flip(h);
+  }, true);
+
+  function refresh(){ sync(); notify(); }
+
+  window.addEventListener("storage", function(e){
+    if(e.key === KEY || e.key === null) refresh();
+  });
+  window.addEventListener("pageshow", function(e){ if(e.persisted) refresh(); });
+  document.addEventListener("visibilitychange", function(){
+    if(!document.hidden) refresh();
+  });
+
+  window.FavMedia = {
+    key: key,
+    has: has,
+    toggle: toggle,
+    heart: heart,
+    el: el,
+    sync: sync,
+    count: function(){ return read().size; },
+    onChange: function(fn){ listeners.push(fn); }
+  };
+})();
+</script>
 </head>
 
 
@@ -1822,7 +2003,7 @@ if(currentCategory === "all"){
 
 }else if(currentCategory === "favorites"){
 
-    pageTitle = "Favorites";
+    pageTitle = "Favorite Papers";
 
 }else{
 
@@ -1963,6 +2144,7 @@ function buildGalleryHtml(key, paper){
         src="${image}"
         loading="lazy">
     <span class="tile-name">${escapeHtml(image.split("/").pop().replace(/\.[^/.]+$/, ""))}</span>
+    ${FavMedia.heart("image", image)}
 </a>
 `).join("")}
 
@@ -2069,6 +2251,7 @@ function buildVideoGalleryHtml(key, paper){
     </span>
     <span class="tile-name">${escapeHtml(name)}</span>
     ${v.duration ? `<span class="video-duration">${escapeHtml(v.duration)}</span>` : ""}
+    ${FavMedia.heart("video", file)}
 </a>`;
 
             }).join("")}
