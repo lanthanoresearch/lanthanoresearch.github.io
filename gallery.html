@@ -2079,7 +2079,7 @@ function cellPlans(k){
 }
 
 // Best way to lay tiles[i..j) in one row: returns { cost, H, cells, stacks }.
-function bestRow(rs, i, j, W, gap, T){
+function bestRow(rs, mins, i, j, W, gap, T){
     const k = j - i;
     let best = null;
     cellPlans(k).forEach(plan => {
@@ -2097,7 +2097,20 @@ function bestRow(rs, i, j, W, gap, T){
             pos += s;
         });
         const H = (W - gap * (plan.length - 1) + gap * corr) / sumA;
-        const cost = Math.pow(Math.log(H / T), 2) + stacks * 0.03 + three * 0.05;
+        // Hard-ish floor: every tile must stay big enough to show its heart,
+        // name and (for videos) play button and time without overlapping.
+        // Anything under the floor gets a heavy penalty, so very wide or very
+        // tall pictures get a row or stack that keeps them readable.
+        let small = 0;
+        cells.forEach(c => {
+            const w = c.A * (H - gap * (c.n - 1));
+            for(let q = 0; q < c.n; q++){
+                const m = mins[c.from + q];
+                const v = Math.max(0, (m.w - w) / m.w, (m.h - w / rs[c.from + q]) / m.h);
+                if(v > 0) small += 1 + v * v * 4;
+            }
+        });
+        const cost = Math.pow(Math.log(H / T), 2) + stacks * 0.03 + three * 0.05 + small * 40;
         if(!best || cost < best.cost) best = { cost, H, cells };
     });
     return best;
@@ -2107,6 +2120,10 @@ function packRows(tiles, W, gap, T, allowNatural, ar){
     const n = tiles.length;
     if(!n) return [];
     const rs = tiles.map(ar);
+    // Smallest size a tile may be drawn at (videos need room for play + time).
+    const mins = tiles.map(t => t.classList.contains("video-tile")
+        ? { w: W < 600 ? 112 : 150, h: W < 600 ? 66 : 84 }
+        : { w: W < 600 ? 84 : 110, h: W < 600 ? 62 : 80 });
     const MAXK = 7;
 
     const best = new Array(n + 1).fill(Infinity);
@@ -2116,7 +2133,7 @@ function packRows(tiles, W, gap, T, allowNatural, ar){
 
     for(let j = 1; j <= n; j++){
         for(let i = j - 1; i >= 0 && j - i <= MAXK; i--){
-            const r = bestRow(rs, i, j, W, gap, T);
+            const r = bestRow(rs, mins, i, j, W, gap, T);
             let cost = r.cost, natural = false;
             if(j === n && allowNatural && r.H > T * allowNatural){
                 cost = 0.05 + r.cells.length * 0.002;
@@ -2161,7 +2178,7 @@ function layoutMixed(){
         const ar = t => parseFloat(t.style.getPropertyValue("--ar")) || 1.33;
 
         const tiles = sec.order.map(o => o.flow).filter(t => !t.dataset.dead);
-        const rows = packRows(tiles, W, gap, T, 1.6, ar);
+        const rows = packRows(tiles, W, gap, T, 0, ar);
 
         const sig = rows.map(r => r.cells.map(c => c.tiles.map(t => sec.all.indexOf(t)).join("+")).join(",") + (r.natural ? "n" : "")).join("|");
 
