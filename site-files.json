@@ -1,6 +1,6 @@
 {
  "count": 296,
- "totalBytes": 280313358,
+ "totalBytes": 280314039,
  "files": [
   {
    "path": "1 Thessalonians Original Text.png",
@@ -249,8 +249,8 @@
   },
   {
    "path": "category.html",
-   "size": 71710,
-   "hash": "1d097e60100eab8b"
+   "size": 72193,
+   "hash": "fe1e273090782750"
   },
   {
    "path": "CDC Misinformation (Multiple).png",
@@ -734,8 +734,8 @@
   },
   {
    "path": "index.html",
-   "size": 147047,
-   "hash": "feea3674971721e8"
+   "size": 147245,
+   "hash": "f6c3af4bb9621342"
   },
   {
    "path": "index.js",
