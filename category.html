@@ -914,13 +914,15 @@ h1{
 /* Play button scales with the tile (container units) so it never reaches the heart or the length badge */
 .video-thumb{container-type:inline-size}
 .video-play,.view-comfy .video-play,.view-compact .video-play{
-    width:clamp(24px,32cqw,46px);
-    height:clamp(24px,32cqw,46px);
+    width:clamp(26px,40cqw,56px);
+    height:auto;
+    aspect-ratio:1/1;
+    flex:none;
+    box-sizing:border-box;
     margin:0;
     transform:translate(-50%,-50%);
 }
 .video-play svg{width:55%;height:55%;transform:translateX(6%)}
-.view-compact .video-play{width:clamp(20px,29cqw,38px);height:clamp(12px,19cqw,26px)}
 
 /* File names: hidden unless "Show file names" is on; one line, cut off
    with "..." when too long. */
@@ -1117,8 +1119,8 @@ a.gallery-image .fav-heart,
 .view-compact .fav-heart{
     --in:clamp(3px,4.5cqw,6px);
     top:var(--in);right:var(--in);
-    width:clamp(15px,14cqw,24px);
-    height:clamp(15px,14cqw,24px);
+    width:clamp(13px,19cqw,32px);
+    height:clamp(13px,19cqw,32px);
 }
 a.video-thumb .fav-heart{top:calc(var(--in) - 1px);right:calc(var(--in) - 1px)}
 a.gallery-image .fav-heart svg,
