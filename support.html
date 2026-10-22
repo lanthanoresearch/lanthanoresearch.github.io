@@ -619,14 +619,217 @@ p{
 </a>
 
 
-<!-- ======================================================
-     JSZIP
-     ====================================================== -->
 
-<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 
 
 <script>
+
+
+/*
+==========================================================
+MINI ZIP WRITER
+Builds the ZIP without loading every file into memory: the
+finished archive is a list of pieces (small headers plus the
+downloaded files themselves, which the browser keeps on disk
+when they are large). Files are stored as they are - photos
+and videos are already compressed. Needs no outside library
+and switches to ZIP64 on its own for very large archives.
+==========================================================
+*/
+
+const CRC_TABLE = (function(){
+    const t = new Uint32Array(256);
+    for(let n = 0; n < 256; n++){
+        let c = n;
+        for(let k = 0; k < 8; k++){
+            c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+        }
+        t[n] = c >>> 0;
+    }
+    return t;
+})();
+
+function crcUpdate(crc, bytes){
+    let c = crc;
+    for(let i = 0; i < bytes.length; i++){
+        c = CRC_TABLE[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8);
+    }
+    return c;
+}
+
+async function crcOfBlob(blob, onBytes){
+    let c = 0xFFFFFFFF;
+    const CHUNK = 8 * 1024 * 1024;
+    for(let pos = 0; pos < blob.size; pos += CHUNK){
+        checkCancelled();
+        const part = new Uint8Array(
+            await blob.slice(pos, Math.min(blob.size, pos + CHUNK)).arrayBuffer()
+        );
+        c = crcUpdate(c, part);
+        if(onBytes) onBytes(part.length);
+        // let the page breathe between chunks
+        await new Promise(r => setTimeout(r, 0));
+    }
+    return (c ^ 0xFFFFFFFF) >>> 0;
+}
+
+function MiniZip(prefix, store){
+    this.prefix = prefix || "";
+    this.store = store || { entries: [] };
+}
+
+MiniZip.prototype.folder = function(name){
+    return new MiniZip(this.prefix + name + "/", this.store);
+};
+
+MiniZip.prototype.file = function(name, data){
+    const blob = (data instanceof Blob)
+        ? data
+        : new Blob([data], { type: "application/octet-stream" });
+    this.store.entries.push({ name: this.prefix + name, blob: blob });
+    return this;
+};
+
+MiniZip.prototype.generateAsync = async function(options, onProgress){
+
+    const enc = new TextEncoder();
+    const entries = this.store.entries;
+    const LIMIT = window.__ZIP64_LIMIT || 0xFFFFFFFF;   // test hook
+
+    // Pass 1: checksums (reads each file once, a piece at a time).
+    let total = 0;
+    entries.forEach(e => { total += e.blob.size; });
+    let done = 0;
+
+    for(const e of entries){
+        e.crc = await crcOfBlob(e.blob, n => {
+            done += n;
+            if(onProgress) onProgress({ percent: total ? (done / total) * 100 : 100 });
+        });
+    }
+
+    // Pass 2: lay out headers and data.
+    const now = new Date();
+    const dosTime =
+        (now.getHours() << 11) | (now.getMinutes() << 5) | (now.getSeconds() >> 1);
+    const dosDate =
+        ((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate();
+
+    const parts = [];
+    let offset = 0;
+    const central = [];
+    let needZip64 = entries.length >= 0xFFFF;
+
+    for(const e of entries){
+
+        const nameBytes = enc.encode(e.name);
+        const big = e.blob.size >= LIMIT;
+        e.offset = offset;
+        e.nameBytes = nameBytes;
+        e.big = big;
+
+        const extra = big ? 20 : 0;
+        const h = new DataView(new ArrayBuffer(30 + nameBytes.length + extra));
+        h.setUint32(0, 0x04034b50, true);
+        h.setUint16(4, big ? 45 : 20, true);
+        h.setUint16(6, 0x0800, true);            // names are UTF-8
+        h.setUint16(8, 0, true);                 // stored
+        h.setUint16(10, dosTime, true);
+        h.setUint16(12, dosDate, true);
+        h.setUint32(14, e.crc, true);
+        h.setUint32(18, big ? 0xFFFFFFFF : e.blob.size, true);
+        h.setUint32(22, big ? 0xFFFFFFFF : e.blob.size, true);
+        h.setUint16(26, nameBytes.length, true);
+        h.setUint16(28, extra, true);
+        new Uint8Array(h.buffer).set(nameBytes, 30);
+        if(big){
+            const o = 30 + nameBytes.length;
+            h.setUint16(o, 0x0001, true);
+            h.setUint16(o + 2, 16, true);
+            h.setBigUint64(o + 4, BigInt(e.blob.size), true);
+            h.setBigUint64(o + 12, BigInt(e.blob.size), true);
+        }
+
+        parts.push(h.buffer, e.blob);
+        offset += h.byteLength + e.blob.size;
+        if(big || offset >= LIMIT) needZip64 = true;
+    }
+
+    const cdStart = offset;
+
+    for(const e of entries){
+
+        const bigOff = e.offset >= LIMIT;
+        const z64 = e.big || bigOff;
+        const extraLen = z64 ? (4 + (e.big ? 16 : 0) + (bigOff ? 8 : 0)) : 0;
+        const c = new DataView(new ArrayBuffer(46 + e.nameBytes.length + extraLen));
+        c.setUint32(0, 0x02014b50, true);
+        c.setUint16(4, z64 ? 45 : 20, true);
+        c.setUint16(6, z64 ? 45 : 20, true);
+        c.setUint16(8, 0x0800, true);
+        c.setUint16(10, 0, true);
+        c.setUint16(12, dosTime, true);
+        c.setUint16(14, dosDate, true);
+        c.setUint32(16, e.crc, true);
+        c.setUint32(20, e.big ? 0xFFFFFFFF : e.blob.size, true);
+        c.setUint32(24, e.big ? 0xFFFFFFFF : e.blob.size, true);
+        c.setUint16(28, e.nameBytes.length, true);
+        c.setUint16(30, extraLen, true);
+        c.setUint16(32, 0, true);
+        c.setUint16(34, 0, true);
+        c.setUint16(36, 0, true);
+        c.setUint32(38, 0, true);
+        c.setUint32(42, bigOff ? 0xFFFFFFFF : e.offset, true);
+        new Uint8Array(c.buffer).set(e.nameBytes, 46);
+        if(z64){
+            let o = 46 + e.nameBytes.length;
+            c.setUint16(o, 0x0001, true);
+            c.setUint16(o + 2, extraLen - 4, true);
+            o += 4;
+            if(e.big){
+                c.setBigUint64(o, BigInt(e.blob.size), true);
+                c.setBigUint64(o + 8, BigInt(e.blob.size), true);
+                o += 16;
+            }
+            if(bigOff) c.setBigUint64(o, BigInt(e.offset), true);
+        }
+        parts.push(c.buffer);
+        offset += c.byteLength;
+    }
+
+    const cdSize = offset - cdStart;
+    const count = entries.length;
+
+    if(needZip64 || cdStart >= LIMIT){
+        const r = new DataView(new ArrayBuffer(56 + 20));
+        r.setUint32(0, 0x06064b50, true);
+        r.setBigUint64(4, 44n, true);
+        r.setUint16(12, 45, true);
+        r.setUint16(14, 45, true);
+        r.setUint32(16, 0, true);
+        r.setUint32(20, 0, true);
+        r.setBigUint64(24, BigInt(count), true);
+        r.setBigUint64(32, BigInt(count), true);
+        r.setBigUint64(40, BigInt(cdSize), true);
+        r.setBigUint64(48, BigInt(cdStart), true);
+        r.setUint32(56, 0x07064b50, true);
+        r.setUint32(60, 0, true);
+        r.setBigUint64(64, BigInt(cdStart + cdSize), true);
+        r.setUint32(72, 1, true);
+        parts.push(r.buffer);
+    }
+
+    const end = new DataView(new ArrayBuffer(22));
+    end.setUint32(0, 0x06054b50, true);
+    end.setUint16(8, needZip64 ? 0xFFFF : count, true);
+    end.setUint16(10, needZip64 ? 0xFFFF : count, true);
+    end.setUint32(12, needZip64 ? 0xFFFFFFFF : cdSize, true);
+    end.setUint32(16, needZip64 ? 0xFFFFFFFF : cdStart, true);
+    parts.push(end.buffer);
+
+    return new Blob(parts, { type: "application/zip" });
+};
+
 
 
 /*
@@ -652,6 +855,15 @@ BROWSER STORAGE
 
 const ARCHIVE_STORAGE_KEY =
     "lanthanoArchiveDownloaded";
+
+
+/*
+Images and videos are already compressed files, so squeezing them again
+saves almost nothing and only slows the ZIP step. They are stored as-is.
+(PDFs and text still get compressed.)
+*/
+
+const STORE_ONLY = { compression: "STORE" };
 
 
 /*
@@ -847,6 +1059,40 @@ function visibleVideos(paper){
             typeof v.file === "string" &&
             v.file.trim() &&
             !v.file.trim().startsWith("#$")
+    );
+
+}
+
+
+/*
+Videos with a "group" (for example "Predictive Programming") are stand-alone
+material with no paper. They are filed in their own folder named after the
+group, never inside a paper's folder.
+*/
+
+function groupFolderName(v){
+
+    return cleanFolderName(
+        v.groupLabel ||
+        v.group
+    );
+
+}
+
+
+function paperOnlyVideos(paper){
+
+    return visibleVideos(paper).filter(
+        v => !v.group
+    );
+
+}
+
+
+function groupedVideos(paper){
+
+    return visibleVideos(paper).filter(
+        v => v.group
     );
 
 }
@@ -1683,24 +1929,6 @@ async function downloadArchive(){
 
         /*
         ==================================================
-        CHECK JSZIP
-        ==================================================
-        */
-
-        if(
-            typeof JSZip === "undefined"
-        ){
-
-            throw new Error(
-                "The ZIP library could not be loaded."
-            );
-
-        }
-
-
-
-        /*
-        ==================================================
         LOAD DESCRIPTIONS
         ==================================================
         */
@@ -1747,7 +1975,7 @@ async function downloadArchive(){
         */
 
         const zip =
-            new JSZip();
+            new MiniZip();
 
 
         /*
@@ -1761,13 +1989,12 @@ async function downloadArchive(){
 
 
         /*
-        Videos directly inside main folder.
+        Loose videos listed above (not found in any paper's list) go
+        into the Predictive Programming folder, created only if needed.
         */
 
-        const videosFolder =
-            root.folder(
-                "Videos"
-            );
+        const looseVideosFolderName =
+            "Predictive Programming";
 
 
 
@@ -2133,7 +2360,8 @@ ${new Date().toLocaleString()}
 
                         photoFolder.file(
                             imageName,
-                            imageBlob
+                            imageBlob,
+                            STORE_ONLY
                         );
 
 
@@ -2205,7 +2433,7 @@ ${new Date().toLocaleString()}
                 entries[i];
 
             const paperVideos =
-                visibleVideos(paper);
+                paperOnlyVideos(paper);
 
             if(
                 !paperVideos.length
@@ -2289,7 +2517,8 @@ ${new Date().toLocaleString()}
 
                     paperVideoFolder.file(
                         videoName,
-                        videoBlob
+                        videoBlob,
+                        STORE_ONLY
                     );
 
                 }catch(error){
@@ -2322,6 +2551,141 @@ ${new Date().toLocaleString()}
                     ) * 90,
 
                     `Compiling: ${title} (Video ${j + 1} of ${paperVideos.length})`
+                );
+
+            }
+
+        }
+
+
+
+        /*
+        ==================================================
+        GROUPED VIDEOS (no paper)
+        Each group gets its own folder directly inside
+        Lanthano Research, with just its videos in it.
+        ==================================================
+        */
+
+        const groupUsedNames =
+            {};
+
+        for(
+            let i = 0;
+            i < entries.length;
+            i++
+        ){
+
+            const [
+                key,
+                paper
+            ] =
+                entries[i];
+
+            const vids =
+                groupedVideos(paper);
+
+            for(
+                let j = 0;
+                j < vids.length;
+                j++
+            ){
+
+                checkCancelled();
+
+                const v =
+                    vids[j];
+
+                const file =
+                    v.file.trim();
+
+                const folderName =
+                    groupFolderName(v);
+
+                const used =
+                    groupUsedNames[folderName] ||
+                    (groupUsedNames[folderName] = new Set());
+
+                let videoName =
+                    getFileName(
+                        file
+                    );
+
+                if(
+                    used.has(
+                        videoName
+                    )
+                ){
+
+                    videoName =
+                        `${j + 1} - ${videoName}`;
+
+                }
+
+                used.add(
+                    videoName
+                );
+
+                try{
+
+                    setProgress(
+                        (
+                            completedFiles /
+                            totalFiles
+                        ) * 90,
+
+                        `Compiling: ${folderName} (Video ${j + 1} of ${vids.length})`
+                    );
+
+                    const videoBlob =
+                        v.source === "site"
+                            ? await fetchFile(
+                                file
+                            )
+                            : await fetchGatedVideo(
+                                file
+                            );
+
+                    checkCancelled();
+
+                    root
+                        .folder(folderName)
+                        .file(
+                            videoName,
+                            videoBlob,
+                            STORE_ONLY
+                        );
+
+                }catch(error){
+
+                    if(
+                        error.message ===
+                        "__ARCHIVE_CANCELLED__"
+                    ){
+
+                        throw error;
+
+                    }
+
+                    console.error(
+                        error
+                    );
+
+                    failedFiles.push(
+                        file
+                    );
+
+                }
+
+                completedFiles++;
+
+                setProgress(
+                    (
+                        completedFiles /
+                        totalFiles
+                    ) * 90,
+
+                    `Compiling: ${folderName} (Video ${j + 1} of ${vids.length})`
                 );
 
             }
@@ -2376,10 +2740,13 @@ ${new Date().toLocaleString()}
                 checkCancelled();
 
 
-                videosFolder.file(
-                    videoName,
-                    videoBlob
-                );
+                root
+                    .folder(looseVideosFolderName)
+                    .file(
+                        videoName,
+                        videoBlob,
+                        STORE_ONLY
+                    );
 
 
                 completedFiles++;
@@ -2469,15 +2836,7 @@ ${failedFiles.join("\n")}
         const blob =
             await zip.generateAsync(
 
-                {
-                    type:"blob",
-
-                    compression:"DEFLATE",
-
-                    compressionOptions:{
-                        level:6
-                    }
-                },
+                {},
 
                 metadata => {
 
