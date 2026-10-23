@@ -2038,6 +2038,13 @@ document.getElementById("warningContinue").addEventListener("click", () => {
 
 /* ---------- Gallery ---------- */
 
+// A listed picture that isn't on the site is left out; the count follows.
+function recountTiles(){
+    const [one, many] = WORDS[mode];
+    const n = container.querySelectorAll(".gallery-image").length;
+    countEl.textContent = n + " " + (n === 1 ? one : many);
+}
+
 function applyRatio(link, ratio){
     const r = clampRatio(ratio);
     link.style.setProperty("--ar", r);
@@ -2298,7 +2305,7 @@ function render(){
             settleSoon();
         });
 
-        img.addEventListener("error", () => { link.dataset.dead = "1"; link.remove(); settleSoon(); });
+        img.addEventListener("error", () => { link.dataset.dead = "1"; link.remove(); recountTiles(); settleSoon(); });
 
         link.append(spacer, img);
         addName(link, fileLabel(image));

@@ -3551,6 +3551,56 @@ document.getElementById("searchBox");
 
 
 
+// A listed picture that isn't on the site yet is simply left out of the
+// results: its row disappears and the result counts follow.
+function searchImageMissing(img){
+    const row = img.closest(".search-result");
+    if(!row) return;
+    const box = row.parentNode;
+    row.remove();
+    if(!box) return;
+
+    const n = sel => box.querySelectorAll(sel).length;
+    const pdfs = n(".search-result.pdf-link");
+    const vids = n(".search-result.video-link");
+    const imgs = n(".search-result.image-link");
+    const total = pdfs + vids + imgs;
+    const plural = (c, w) => c + " " + w + (c === 1 ? "" : "s");
+
+    if(!total){
+        const q = (document.getElementById("searchBox") || {}).value || "";
+        box.innerHTML = "";
+        const wrap = document.createElement("div");
+        wrap.className = "search-empty";
+        const t = document.createElement("div");
+        t.className = "search-empty-title";
+        t.textContent = "No results for \u201c" + q + "\u201d";
+        const s = document.createElement("div");
+        s.className = "search-empty-sub";
+        s.textContent = "Check the spelling, or try fewer or more general words.";
+        wrap.append(t, s);
+        box.appendChild(wrap);
+        return;
+    }
+
+    const tally = box.querySelector(".search-tally");
+    if(tally){
+        const bits = [
+            pdfs ? plural(pdfs, "document") : "",
+            vids ? plural(vids, "video") : "",
+            imgs ? plural(imgs, "image") : ""
+        ].filter(Boolean).join(" \u00b7 ");
+        tally.innerHTML = plural(total, "result") + " <span>\u00b7 " + bits + "</span>";
+    }
+
+    // Drop the "Images" heading when nothing is left under it.
+    box.querySelectorAll(".search-section-title").forEach(t => {
+        const next = t.nextElementSibling;
+        if(!next || next.classList.contains("search-section-title")) t.remove();
+    });
+}
+window.searchImageMissing = searchImageMissing;
+
 const searchResults =
 document.getElementById("searchResults");
 Promise.all([
@@ -4698,6 +4748,7 @@ ${FavMedia.heart("image", result.item.imageFile)}
        <img
            src="${result.item.imageFile}"
            class="search-thumb"
+           onerror="searchImageMissing(this)"
        >
        `
    }

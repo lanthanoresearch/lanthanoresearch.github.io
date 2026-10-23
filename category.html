@@ -2224,6 +2224,20 @@ function getPaperBadge(key, paper){
     return html;
 }
 
+// A listed picture that isn't on the site yet simply doesn't show: its tile
+// is removed and the "Supporting Images (n)" count follows.
+function imageMissing(img){
+    const tile = img.closest("a");
+    const box = img.closest("details");
+    if(tile) tile.remove();
+    if(box){
+        const n = box.querySelectorAll(".gallery > a").length;
+        const s = box.querySelector("summary");
+        if(s) s.textContent = s.textContent.replace(/\(\d+\)/, "(" + n + ")");
+    }
+}
+window.imageMissing = imageMissing;
+
 // Builds the gallery markup for a paper (used across all view modes)
 function buildGalleryHtml(key, paper){
 
@@ -2252,7 +2266,8 @@ function buildGalleryHtml(key, paper){
 >
     <img
         src="${image}"
-        loading="lazy">
+        loading="lazy"
+        onerror="imageMissing(this)">
     <span class="tile-name">${escapeHtml(image.split("/").pop().replace(/\.[^/.]+$/, ""))}</span>
     ${FavMedia.heart("image", image)}
 </a>
