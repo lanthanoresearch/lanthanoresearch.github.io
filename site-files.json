@@ -1,6 +1,6 @@
 {
- "count": 296,
- "totalBytes": 280330003,
+ "count": 301,
+ "totalBytes": 282942303,
  "files": [
   {
    "path": "1 Thessalonians Original Text.png",
@@ -101,6 +101,11 @@
    "path": "All Downward Charts.png",
    "size": 858690,
    "hash": "9ae4821b6d6bc571"
+  },
+  {
+   "path": "Antarctica.jpg",
+   "size": 565082,
+   "hash": "42a24460cfe235cf"
   },
   {
    "path": "Artemis stunning photos.png",
@@ -249,8 +254,8 @@
   },
   {
    "path": "category.html",
-   "size": 72783,
-   "hash": "ad7d5da5f07834c7"
+   "size": 73337,
+   "hash": "756722a23c165bfd"
   },
   {
    "path": "CDC Misinformation (Multiple).png",
@@ -449,8 +454,8 @@
   },
   {
    "path": "descriptions.json",
-   "size": 20028,
-   "hash": "b965b19b3ef7d31b"
+   "size": 20160,
+   "hash": "cd1eb1f7cf2d42c7"
   },
   {
    "path": "Desert.png",
@@ -541,6 +546,11 @@
    "path": "Empire State Tower.png",
    "size": 833384,
    "hash": "9df05e3732f26731"
+  },
+  {
+   "path": "Enoch's Earth.jpeg",
+   "size": 177120,
+   "hash": "7e9642288248f116"
   },
   {
    "path": "Fake Moon Rock.png",
@@ -634,8 +644,8 @@
   },
   {
    "path": "gallery.html",
-   "size": 84148,
-   "hash": "c075d10f38345747"
+   "size": 84431,
+   "hash": "fdc15f642ef0cef8"
   },
   {
    "path": "Genetic Degradation.pdf",
@@ -734,8 +744,8 @@
   },
   {
    "path": "index.html",
-   "size": 147245,
-   "hash": "f6c3af4bb9621342"
+   "size": 149215,
+   "hash": "dd53e3ebf73d64d5"
   },
   {
    "path": "index.js",
@@ -806,6 +816,16 @@
    "path": "Modern Signs.png",
    "size": 61974,
    "hash": "69e360e721a545bd"
+  },
+  {
+   "path": "Moon Map Earth.jpg",
+   "size": 1020291,
+   "hash": "bbb86b15d16a1a30"
+  },
+  {
+   "path": "Moon Map.jpg",
+   "size": 634299,
+   "hash": "86a96df38c44c16c"
   },
   {
    "path": "Nagaski or Tokyo.png",
@@ -1466,6 +1486,11 @@
    "path": "Whole earth (night).jpg",
    "size": 286722,
    "hash": "ae65c0e9ebce9841"
+  },
+  {
+   "path": "Wrong Flat Earth.jpg",
+   "size": 212569,
+   "hash": "ce49e5c44f24cc6a"
   },
   {
    "path": "Yellow Fever (1800-2000).png",
