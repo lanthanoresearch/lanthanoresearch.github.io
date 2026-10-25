@@ -1863,12 +1863,31 @@ body.embed-mode #fullscreenBtn{
   gap:8px;
 }
 
-body.embed-mode #embedWrap{
+body.embed-mode #embedWrap,
+body.embed-api #embedWrap{
   display:flex;
 }
 
-body.embed-mode #video{
+body.embed-mode #video,
+body.embed-api #video{
   display:none;
+}
+
+/* YouTube through the API: the page's own controls drive it, so the frame
+   itself ignores taps (a tap on the picture is handled by the page instead),
+   and tools that need the video file itself step aside. */
+body.embed-api #embedFrame{
+  pointer-events:none;
+}
+
+body.embed-api #embedWrap{
+  cursor:pointer;
+}
+
+body.embed-api #downloadFrameBtn,
+body.embed-api #pipBtn,
+body.embed-api #downloadBtn{
+  display:none !important;
 }
 
 #embedFrame{
@@ -3337,8 +3356,9 @@ let src =
     params.get("video") || "";
 
 
-/* ---------- Short link form: video.html?link=<any video link> ----------
-   Everything after "link=" is the video's address, exactly as pasted -
+/* ---------- Short link form: video.html?<any video link> ----------
+   Everything after the "?" is the video's address, exactly as pasted
+   ("video.html?link=<address>" works too) -
    with or without https://, even if it has its own ? and & parts
    (youtube.com/watch?v=...&t=30). "url=" works the same. */
 
@@ -3347,9 +3367,16 @@ function linkFromAddress(){
     const q = window.location.search.replace(/^\?/, "");
     const m = /(?:^|&)(?:link|url)=([\s\S]*)$/i.exec(q);
 
-    if(!m) return "";
+    let v;
 
-    let v = m[1].trim();
+    if(m){
+        v = m[1].trim();
+    }else if(q && !/^[A-Za-z_][\w-]*=/.test(q)){
+        // The simplest form: video.html?youtube.com/watch?v=...
+        v = q.trim();
+    }else{
+        return "";
+    }
 
     // A link that was percent-encoded to fit in an address.
     if(/^https?%3A/i.test(v) || (!/\//.test(v) && /%2F/i.test(v))){
@@ -3374,8 +3401,33 @@ function linkFromAddress(){
 
 }
 
-const addressLink =
-    linkFromAddress();
+/* The page's own links always say "video=" (a file on this site, or a video
+   from the video storage) and are never touched by the link detection above.
+   A "video=" that holds a web address (https://... or youtu.be/...) is also
+   accepted as a link, so the older form keeps working. */
+const videoParamGiven =
+    !!(params.get("video") || "");
+
+const KNOWN_LINK_HOST =
+    /^(www\.|m\.)?(youtube\.com|youtu\.be|youtube-nocookie\.com|music\.youtube\.com|vimeo\.com|player\.vimeo\.com|dailymotion\.com|dai\.ly|streamable\.com|twitch\.tv|clips\.twitch\.tv|bitchute\.com|rumble\.com|odysee\.com|tiktok\.com|facebook\.com|fb\.watch|drive\.google\.com|archive\.org|dropbox\.com)\//i;
+
+let addressLink =
+    videoParamGiven ? "" : linkFromAddress();
+
+if(
+    videoParamGiven &&
+    params.get("source") !== "r2" &&
+    params.get("source") !== "site"
+){
+
+    if(/^https?:\/\//i.test(src)){
+        addressLink = src;
+    }else if(KNOWN_LINK_HOST.test(src)){
+        addressLink = "https://" + src;
+        src = addressLink;
+    }
+
+}
 
 if(addressLink){
     src = addressLink;
@@ -3424,8 +3476,13 @@ function parseEmbed(raw){
         }
         return {
             kind: "YouTube",
+            api: "youtube",
+            id: yt,
+            start: start,
             embed: "https://www.youtube-nocookie.com/embed/" + yt +
-                "?playsinline=1&rel=0" + (start ? "&start=" + start : ""),
+                "?playsinline=1&rel=0&controls=0&disablekb=1&fs=0&iv_load_policy=3&modestbranding=1" +
+                "&enablejsapi=1&origin=" + encodeURIComponent(location.origin) +
+                (start ? "&start=" + start : ""),
             page: "https://www.youtube.com/watch?v=" + yt,
             oembed: "https://www.youtube.com/oembed?format=json&url=" +
                 encodeURIComponent("https://www.youtube.com/watch?v=" + yt)
@@ -3550,7 +3607,9 @@ let embed =
     isLink ? parseEmbed(src) : null;
 
 if(embed){
-    document.body.classList.add("embed-mode");
+    // YouTube is driven through its player API, so this page's own controls
+    // (frame step, speed, bookmarks...) stay; other sites keep their own player.
+    document.body.classList.add(embed.api ? "embed-api" : "embed-mode");
 }
 
 
@@ -3623,7 +3682,9 @@ const poster =
 /* ---------- Elements ---------- */
 
 const video =
-    document.getElementById("video");
+    (embed && embed.api)
+        ? makeEmbedPlayer()
+        : document.getElementById("video");
 
 const title =
     document.getElementById("title");
@@ -4031,7 +4092,7 @@ function syncContentBottom(){
     }
 
     // Embedded players have no floating bar: just leave room for the title bar.
-    if(embed){
+    if(embed && !embed.api){
 
         document.documentElement.style.setProperty(
             "--content-bottom",
@@ -4462,6 +4523,314 @@ function setupHls(url){
 }
 
 
+
+/* ---------- YouTube player behind this page's own controls ----------
+   A small stand-in that looks like a <video> element (position, duration,
+   play/pause, volume, speed, events...) but is backed by YouTube's own
+   player API, so everything in this viewer - the seek bar, back/forward 10s,
+   frame-by-frame, speed, volume, bookmarks, fullscreen - works on it
+   exactly as on any other video. YouTube still does the actual playback. */
+
+function makeEmbedPlayer(){
+
+    const bus = document.createElement("div");
+
+    const S = {
+        t: 0, dur: NaN, paused: true, ended: false,
+        vol: 1, muted: false, rate: 1, buffered: 0,
+        ready: false, started: false, playing: false
+    };
+
+    let yt = null;
+    let poll = null;
+    let lastEmitT = -1;
+
+    function emit(name){
+        try{ bus.dispatchEvent(new Event(name)); }catch(e){}
+    }
+
+    const api = {
+
+        addEventListener: function(n, f, o){ bus.addEventListener(n, f, o); },
+        removeEventListener: function(n, f, o){ bus.removeEventListener(n, f, o); },
+        dispatchEvent: function(e){ return bus.dispatchEvent(e); },
+
+        play: function(){ try{ if(yt) yt.playVideo(); }catch(e){} return Promise.resolve(); },
+        pause: function(){ try{ if(yt) yt.pauseVideo(); }catch(e){} },
+        load: function(){},
+        removeAttribute: function(){},
+        getAttribute: function(n){ return n === "src" ? (embed && embed.page) : null; },
+        canPlayType: function(){ return ""; },
+        requestFullscreen: function(){ return videoStage.requestFullscreen ? videoStage.requestFullscreen() : Promise.reject(); },
+
+        // Frame capture and Picture in Picture can't reach inside YouTube's player.
+        videoWidth: 0,
+        videoHeight: 0,
+        disablePictureInPicture: true,
+        error: null,
+        crossOrigin: null,
+        poster: "",
+        src: "",
+
+        __attach: function(player){
+            yt = player;
+        },
+
+        __state: S,
+        __emit: emit,
+
+        __startPoll: function(){
+            if(poll) return;
+            poll = setInterval(function(){
+
+                if(!yt || !S.ready) return;
+
+                try{
+                    const t = yt.getCurrentTime();
+                    const d = yt.getDuration();
+                    const frac = yt.getVideoLoadedFraction ? yt.getVideoLoadedFraction() : 0;
+
+                    if(typeof t === "number" && !isNaN(t) && !S.seekPending){
+                        S.t = t;
+                    }
+
+                    if(d && d !== S.dur){
+                        S.dur = d;
+                        emit("durationchange");
+                    }
+
+                    S.buffered = Math.max(S.buffered, (frac || 0) * (S.dur || 0));
+                    S.vol = (yt.getVolume ? yt.getVolume() : 100) / 100;
+                    S.muted = !!(yt.isMuted && yt.isMuted());
+
+                    const r = yt.getPlaybackRate ? yt.getPlaybackRate() : 1;
+                    if(r && r !== S.rate){
+                        S.rate = r;
+                        emit("ratechange");
+                    }
+                }catch(e){}
+
+                if(S.t !== lastEmitT){
+                    lastEmitT = S.t;
+                    emit("timeupdate");
+                }
+
+            }, 200);
+        }
+
+    };
+
+    Object.defineProperties(api, {
+
+        currentTime: {
+            get: function(){ return S.t; },
+            set: function(v){
+                v = Math.max(0, Number(v) || 0);
+                if(S.dur) v = Math.min(S.dur, v);
+                S.t = v;
+                S.ended = false;
+                S.seekPending = true;
+                emit("seeking");
+                try{ if(yt) yt.seekTo(v, true); }catch(e){}
+                setTimeout(function(){
+                    S.seekPending = false;
+                    emit("seeked");
+                    emit("timeupdate");
+                }, 250);
+            }
+        },
+
+        duration: { get: function(){ return S.dur; } },
+        paused: { get: function(){ return S.paused; } },
+        ended: { get: function(){ return S.ended; } },
+        seeking: { get: function(){ return !!S.seekPending; } },
+        readyState: { get: function(){ return S.ready ? (S.waiting ? 2 : 4) : 1; } },
+        currentSrc: { get: function(){ return embed ? embed.page : ""; } },
+
+        volume: {
+            get: function(){ return S.vol; },
+            set: function(v){
+                v = Math.min(1, Math.max(0, Number(v) || 0));
+                S.vol = v;
+                try{ if(yt) yt.setVolume(Math.round(v * 100)); }catch(e){}
+                emit("volumechange");
+            }
+        },
+
+        muted: {
+            get: function(){ return S.muted; },
+            set: function(m){
+                S.muted = !!m;
+                try{ if(yt) m ? yt.mute() : yt.unMute(); }catch(e){}
+                emit("volumechange");
+            }
+        },
+
+        playbackRate: {
+            get: function(){ return S.rate; },
+            set: function(r){
+                r = Number(r) || 1;
+                try{
+                    if(yt){
+                        const list = (yt.getAvailablePlaybackRates && yt.getAvailablePlaybackRates()) || [0.25,0.5,0.75,1,1.25,1.5,1.75,2];
+                        const near = list.reduce(function(a, b){ return Math.abs(b - r) < Math.abs(a - r) ? b : a; }, list[0]);
+                        yt.setPlaybackRate(near);
+                        S.rate = near;
+                    }else{
+                        S.rate = r;
+                    }
+                }catch(e){}
+                emit("ratechange");
+            }
+        },
+
+        buffered: {
+            get: function(){
+                const end = S.buffered;
+                return {
+                    length: end > 0 ? 1 : 0,
+                    start: function(){ return 0; },
+                    end: function(){ return end; }
+                };
+            }
+        }
+
+    });
+
+    return api;
+
+}
+
+function setupYouTubeApi(){
+
+    const player = video;      // the stand-in
+    const S = player.__state;
+    const frame = document.getElementById("embedFrame");
+
+    const giveUp = function(msg){
+        statusText.textContent = msg ||
+            "YouTube wouldn't play this video here (its owner may not allow it). Use \"Open on YouTube\" below.";
+        loadingOverlay.style.display = "flex";
+        player.__emit("error");
+    };
+
+    window.__bookmarkSrc = "youtube:" + embed.id;
+
+    const start = function(){
+
+        try{
+            new window.YT.Player(frame, {
+                events: {
+
+                    onReady: function(e){
+                        const yt = e.target;
+                        player.__attach(yt);
+                        S.ready = true;
+                        S.dur = yt.getDuration() || NaN;
+                        S.vol = (yt.getVolume() || 100) / 100;
+                        S.muted = !!yt.isMuted();
+                        S.t = embed.start || 0;
+
+                        try{
+                            const d = yt.getVideoData && yt.getVideoData();
+                            if(d && d.title){
+                                title.textContent = d.title;
+                                document.title = d.title;
+                            }
+                        }catch(err){}
+
+                        loadingOverlay.style.display = "none";
+
+                        ["loadstart", "durationchange", "loadedmetadata", "loadeddata", "canplay"]
+                            .forEach(function(n){ player.__emit(n); });
+
+                        player.__startPoll();
+                    },
+
+                    onStateChange: function(e){
+                        const st = e.data;   // -1 unstarted, 0 ended, 1 playing, 2 paused, 3 buffering, 5 cued
+
+                        S.waiting = (st === 3);
+
+                        if(st === 1){
+                            S.paused = false; S.ended = false; S.waiting = false;
+                            player.__emit("play");
+                            player.__emit("playing");
+                            player.__emit("canplay");
+                        }else if(st === 2){
+                            S.paused = true;
+                            player.__emit("pause");
+                        }else if(st === 0){
+                            S.paused = true; S.ended = true;
+                            player.__emit("pause");
+                            player.__emit("ended");
+                        }else if(st === 3){
+                            player.__emit("waiting");
+                        }
+                    },
+
+                    onError: function(e){
+                        // 2/5: bad request or player trouble; 100: removed/private;
+                        // 101/150/153: the owner doesn't allow playing outside YouTube.
+                        giveUp(
+                            (e && (e.data === 100))
+                                ? "This YouTube video isn't available (removed or private)."
+                                : null
+                        );
+                    }
+
+                }
+            });
+        }catch(err){
+            giveUp();
+        }
+
+    };
+
+    window.__ytStop = function(){
+        try{ player.__state.ready = false; }catch(e){}
+    };
+
+    // Tapping the picture plays/pauses, like a normal video.
+    document.getElementById("embedWrap").addEventListener("click", function(e){
+        if(e.target.closest && e.target.closest("a")) return;
+        if(player.paused) player.play(); else player.pause();
+    });
+
+    const loadApi = function(){
+
+        if(window.YT && window.YT.Player){ start(); return; }
+
+        const previous = window.onYouTubeIframeAPIReady;
+
+        window.onYouTubeIframeAPIReady = function(){
+            try{ if(typeof previous === "function") previous(); }catch(e){}
+            start();
+        };
+
+        const s = document.createElement("script");
+        s.src = "https://www.youtube.com/iframe_api";
+        s.onerror = function(){ giveUp("Couldn't reach YouTube. Check your connection and try again."); };
+        document.head.appendChild(s);
+
+        // If the API never answers, say so instead of spinning forever.
+        setTimeout(function(){
+            if(!S.ready && loadingOverlay.style.display !== "none"){
+                giveUp("YouTube is taking too long to respond. Try again, or use \"Open on YouTube\" below.");
+            }
+        }, 12000);
+
+    };
+
+    // The player page must exist before the API attaches to it.
+    frame.addEventListener("load", function(){
+        // (attached once, on first load)
+    }, { once: true });
+
+    loadApi();
+
+}
+
 /* ---------- Embedded players (YouTube / Vimeo / other links) ---------- */
 
 function fitEmbed(){
@@ -4501,11 +4870,17 @@ function setupEmbed(){
 
     note.append(text, a);
 
-    frame.addEventListener("load", function(){
-        loadingOverlay.style.display = "none";
-    });
+    if(!embed.api){
+        frame.addEventListener("load", function(){
+            loadingOverlay.style.display = "none";
+        });
+    }
 
     frame.src = embed.embed;
+
+    if(embed.api){
+        setupYouTubeApi();
+    }
 
     fitEmbed();
 
@@ -4555,7 +4930,7 @@ function hideBuffering(){
 
 function scheduleBuffering(){
 
-    if(embed || bufferingTimer) return;
+    if((embed && !embed.api) || bufferingTimer) return;
 
     // A short delay, so a brief hiccup doesn't flash the spinner.
     bufferingTimer = setTimeout(function(){
@@ -7026,8 +7401,10 @@ function playLocalFile(file){
     // Leave an embedded player (if one was open) and bring the full viewer back.
     if(embed){
         embed = null;
-        document.body.classList.remove("embed-mode");
+        document.body.classList.remove("embed-mode", "embed-api");
         try{ document.getElementById("embedFrame").src = "about:blank"; }catch(e){}
+        try{ if(window.__ytStop) window.__ytStop(); }catch(e){}
+        window.__bookmarkSrc = "";
     }
 
     hideCoverOverlay();
