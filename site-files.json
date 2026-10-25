@@ -1,6 +1,6 @@
 {
- "count": 301,
- "totalBytes": 282980958,
+ "count": 302,
+ "totalBytes": 283325663,
  "files": [
   {
    "path": "1 Thessalonians Original Text.png",
@@ -454,8 +454,8 @@
   },
   {
    "path": "descriptions.json",
-   "size": 20160,
-   "hash": "cd1eb1f7cf2d42c7"
+   "size": 20189,
+   "hash": "0672900befd2e222"
   },
   {
    "path": "Desert.png",
@@ -754,8 +754,8 @@
   },
   {
    "path": "Israel.pdf",
-   "size": 242794,
-   "hash": "b11b4d0c51548345"
+   "size": 330836,
+   "hash": "8e22d1fc7753b478"
   },
   {
    "path": "Japan Firebombings.png",
@@ -1121,6 +1121,11 @@
    "path": "Star of David.png",
    "size": 265730,
    "hash": "083e38a66236a94c"
+  },
+  {
+   "path": "Star of Remphan.png",
+   "size": 256634,
+   "hash": "b05b90d8f5fb878c"
   },
   {
    "path": "Strange Shadows.png",
