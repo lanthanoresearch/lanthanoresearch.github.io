@@ -1770,6 +1770,335 @@ select:focus-visible{
   background:transparent;
 }
 
+
+/* ============================================================
+   BUFFERING INDICATOR
+
+   A small spinner + "Buffering..." label in the middle of the picture
+   whenever playback has run out of loaded video (or a seek is still
+   loading). Appears after a short delay so quick hiccups don't flash it,
+   and never blocks taps.
+============================================================ */
+
+#bufferingBadge{
+  position:absolute;
+
+  inset:0;
+
+  display:none;
+
+  align-items:center;
+  justify-content:center;
+
+  pointer-events:none;
+
+  z-index:12;
+}
+
+#bufferingBadge.show{
+  display:flex;
+}
+
+#bufferingBadge .bufBox{
+  display:flex;
+
+  flex-direction:column;
+
+  align-items:center;
+
+  gap:10px;
+
+  padding:16px 22px;
+
+  border-radius:14px;
+
+  background:rgba(0,0,0,.6);
+
+  box-shadow:0 6px 20px rgba(0,0,0,.45);
+}
+
+#bufferingBadge .spinner{
+  width:42px;
+  height:42px;
+
+  border-width:4px;
+}
+
+#bufferingBadge .bufText{
+  color:#eee;
+
+  font-size:14px;
+
+  letter-spacing:.2px;
+}
+
+/* ============================================================
+   LINK VIDEOS (opened from a pasted link)
+
+   YouTube and Vimeo links play in their own embedded player, so the
+   page's own transport bar, bookmarks and frame tools (which need the
+   video file itself) step aside; direct video files (.mp4, .webm...)
+   use the full viewer like any other video.
+============================================================ */
+
+body.embed-mode #toolbar,
+body.embed-mode #videoControls,
+body.embed-mode #hideControlsBtn,
+body.embed-mode #downloadBtn,
+body.embed-mode #fullscreenBtn{
+  display:none !important;
+}
+
+#embedWrap{
+  display:none;
+
+  width:100%;
+  height:100%;
+
+  flex-direction:column;
+
+  align-items:center;
+  justify-content:center;
+
+  gap:8px;
+}
+
+body.embed-mode #embedWrap{
+  display:flex;
+}
+
+body.embed-mode #video{
+  display:none;
+}
+
+#embedFrame{
+  display:block;
+
+  border:0;
+
+  background:#000;
+
+  border-radius:6px;
+}
+
+#embedNote{
+  font-size:12.5px;
+
+  color:var(--muted);
+
+  text-align:center;
+}
+
+#embedNote a{
+  color:#8ab4e8;
+}
+
+/* ---------- Open video from a link ---------- */
+
+/* The "Open a Video" menu button is switched off for now (the page and the
+   pop-up still work). Delete this rule to show it again. */
+#linkOpenBtn{
+  display:none !important;
+}
+
+#linkModal{
+  position:fixed;
+
+  inset:0;
+
+  display:flex;
+
+  align-items:center;
+  justify-content:center;
+
+  padding:20px;
+
+  background:rgba(0,0,0,.55);
+
+  z-index:9800;
+}
+
+#linkModal.hidden{
+  display:none;
+}
+
+#linkCard{
+  width:100%;
+  max-width:380px;
+
+  padding:20px;
+
+  background:#1e1e1e;
+
+  border:1px solid #3a3a3a;
+
+  border-radius:13px;
+
+  box-shadow:0 12px 32px rgba(0,0,0,.55);
+}
+
+#linkCard h3{
+  margin:0 0 6px;
+
+  font-size:16px;
+
+  color:#fff;
+}
+
+#linkCard p{
+  margin:0 0 12px;
+
+  color:#bbb;
+
+  font-size:13px;
+
+  line-height:1.45;
+}
+
+#linkInput{
+  width:100%;
+
+  margin-bottom:6px;
+
+  padding:10px;
+
+  font-size:16px;
+}
+
+#linkError{
+  min-height:18px;
+
+  margin-bottom:8px;
+
+  color:#ff8080;
+
+  font-size:12.5px;
+}
+
+#linkOpenGo{
+  width:100%;
+
+  padding:11px 10px;
+
+  font-size:14px;
+
+  border-radius:8px;
+
+  background:#2f7cff;
+
+  border-color:#2f7cff;
+}
+
+#linkOpenGo:hover{
+  background:#4a8dff;
+}
+
+#openFromLinkBtn,
+#openFromDeviceBtn{
+  display:flex;
+
+  align-items:center;
+
+  gap:14px;
+
+  width:100%;
+
+  margin:0 0 10px;
+
+  padding:14px;
+
+  text-align:left;
+
+  background:#2a2a2a;
+
+  border:1px solid #3a3a3a;
+
+  border-radius:10px;
+}
+
+#openFromLinkBtn:hover,
+#openFromDeviceBtn:hover{
+  background:#343434;
+}
+
+#openFromLinkBtn svg,
+#openFromDeviceBtn svg{
+  flex:0 0 auto;
+
+  color:#8ab4e8;
+}
+
+#openFromLinkBtn span,
+#openFromDeviceBtn span{
+  display:flex;
+
+  flex-direction:column;
+
+  gap:3px;
+
+  min-width:0;
+}
+
+#openFromLinkBtn b,
+#openFromDeviceBtn b{
+  font-size:14.5px;
+
+  color:#fff;
+}
+
+#openFromLinkBtn small,
+#openFromDeviceBtn small{
+  font-size:12px;
+
+  line-height:1.35;
+
+  color:#aaa;
+}
+
+#openBackBtn{
+  width:100%;
+
+  margin-top:6px;
+
+  background:transparent;
+
+  border:0;
+
+  color:#999;
+
+  font-size:12px;
+
+  padding:6px;
+}
+
+#openBackBtn:hover{
+  color:#ccc;
+
+  background:transparent;
+}
+
+#linkCancel{
+  width:100%;
+
+  margin-top:6px;
+
+  background:transparent;
+
+  border:0;
+
+  color:#999;
+
+  font-size:12px;
+
+  padding:6px;
+}
+
+#linkCancel:hover{
+  color:#ccc;
+
+  background:transparent;
+}
+
 /* ============================================================
    TITLE BAR
 ============================================================ */
@@ -2682,6 +3011,24 @@ body.video-fullscreen.fs-rotate #videoStage{
 
     </video>
 
+    <div id="bufferingBadge" aria-live="polite">
+      <div class="bufBox">
+        <div class="spinner"></div>
+        <div class="bufText">Buffering...</div>
+      </div>
+    </div>
+
+    <div id="embedWrap">
+      <iframe
+        id="embedFrame"
+        title="Video player"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
+        allowfullscreen
+        referrerpolicy="strict-origin-when-cross-origin"
+      ></iframe>
+      <div id="embedNote"></div>
+    </div>
+
     <div id="coverOverlay" class="hidden">
       <img id="coverImage" alt="">
       <button id="replayBtn" aria-label="Replay">
@@ -2731,6 +3078,48 @@ body.video-fullscreen.fs-rotate #videoStage{
     Fullscreen
   </button>
 
+  <button id="linkOpenBtn">
+    Open a Video
+  </button>
+
+</div>
+
+<!-- ==========================================================
+     OPEN VIDEO FROM LINK
+========================================================== -->
+
+<div id="linkModal" class="hidden" role="dialog" aria-modal="true" aria-labelledby="linkTitle">
+  <div id="linkCard">
+
+    <div id="openChoiceView">
+      <h3 id="linkTitle">Open a Video</h3>
+      <p>Where is the video?</p>
+
+      <button id="openFromLinkBtn" class="openChoice" type="button">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1.5 1.5"></path><path d="M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1.5-1.5"></path></svg>
+        <span><b>From a link</b><small>YouTube, Vimeo and other sites, or a direct video file link</small></span>
+      </button>
+
+      <button id="openFromDeviceBtn" class="openChoice" type="button">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"></rect><line x1="12" y1="18" x2="12" y2="18.01"></line></svg>
+        <span><b>From this device</b><small>Pick a video file saved on your phone or computer</small></span>
+      </button>
+
+      <button id="linkCancel" type="button">Cancel</button>
+    </div>
+
+    <div id="openLinkView" style="display:none">
+      <h3>Open from a Link</h3>
+      <p>Paste the video's web address. YouTube, Vimeo, Dailymotion, Twitch, Streamable, Facebook, TikTok and others play in their own player; a direct link to a video file (.mp4, .webm, .mov, .m3u8) uses the full viewer.</p>
+      <input id="linkInput" type="url" inputmode="url" placeholder="https://" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <div id="linkError" role="alert"></div>
+      <button id="linkOpenGo" type="button">Open</button>
+      <button id="openBackBtn" type="button">Back</button>
+    </div>
+
+    <input id="deviceFileInput" type="file" accept="video/*,.mkv,.mov,.m4v,.avi,.wmv,.flv,.3gp,.ts,.webm,.ogv" style="display:none">
+
+  </div>
 </div>
 
 <!-- ==========================================================
@@ -2944,8 +3333,225 @@ const params =
     );
 
 
-const src =
+let src =
     params.get("video") || "";
+
+
+/* ---------- Short link form: video.html?link=<any video link> ----------
+   Everything after "link=" is the video's address, exactly as pasted -
+   with or without https://, even if it has its own ? and & parts
+   (youtube.com/watch?v=...&t=30). "url=" works the same. */
+
+function linkFromAddress(){
+
+    const q = window.location.search.replace(/^\?/, "");
+    const m = /(?:^|&)(?:link|url)=([\s\S]*)$/i.exec(q);
+
+    if(!m) return "";
+
+    let v = m[1].trim();
+
+    // A link that was percent-encoded to fit in an address.
+    if(/^https?%3A/i.test(v) || (!/\//.test(v) && /%2F/i.test(v))){
+        try{ v = decodeURIComponent(v); }catch(e){}
+    }
+
+    if(!v) return "";
+
+    if(/^\/\//.test(v)){
+        v = "https:" + v;
+    }else if(!/^[a-z][a-z0-9+.-]*:/i.test(v)){
+        // "youtube.com/watch?v=..." and other bare forms: assume https.
+        if(/^[^\s\/]+\.[^\s\/]+/.test(v)) v = "https://" + v;
+    }
+
+    try{
+        const u = new URL(v);
+        return (u.protocol === "https:" || u.protocol === "http:") ? u.href : "";
+    }catch(e){
+        return "";
+    }
+
+}
+
+const addressLink =
+    linkFromAddress();
+
+if(addressLink){
+    src = addressLink;
+}
+
+
+/* ---------- Videos opened from a pasted link ----------
+   source=link: the video is a web address typed or pasted into
+   "Open Video from Link". YouTube and Vimeo links play in their own
+   embedded player; anything else is treated as a direct video file. */
+
+function safeDecode(v){
+    try{ return decodeURIComponent(v); }catch(e){ return v; }
+}
+
+function parseEmbed(raw){
+
+    let u;
+    try{ u = new URL(raw); }catch(e){ return null; }
+
+    if(u.protocol !== "https:" && u.protocol !== "http:") return null;
+
+    const host = u.hostname.replace(/^www\./, "").replace(/^m\./, "");
+    const idOk = id => /^[\w-]{11}$/.test(id || "");
+
+    let yt = "";
+
+    if(host === "youtu.be"){
+        yt = u.pathname.split("/")[1] || "";
+    }else if(
+        host === "youtube.com" ||
+        host === "music.youtube.com" ||
+        host === "youtube-nocookie.com"
+    ){
+        const parts = u.pathname.split("/").filter(Boolean);
+        if(parts[0] === "watch") yt = u.searchParams.get("v") || "";
+        else if(["shorts", "embed", "live", "v"].indexOf(parts[0]) !== -1) yt = parts[1] || "";
+    }
+
+    if(idOk(yt)){
+        let start = 0;
+        const t = u.searchParams.get("t") || u.searchParams.get("start") || "";
+        const m = /^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s?)?$/.exec(t);
+        if(m && t){
+            start = (+m[1] || 0) * 3600 + (+m[2] || 0) * 60 + (+m[3] || 0);
+        }
+        return {
+            kind: "YouTube",
+            embed: "https://www.youtube-nocookie.com/embed/" + yt +
+                "?playsinline=1&rel=0" + (start ? "&start=" + start : ""),
+            page: "https://www.youtube.com/watch?v=" + yt,
+            oembed: "https://www.youtube.com/oembed?format=json&url=" +
+                encodeURIComponent("https://www.youtube.com/watch?v=" + yt)
+        };
+    }
+
+    if(host === "vimeo.com" || host === "player.vimeo.com"){
+        const parts = u.pathname.split("/").filter(Boolean);
+        const id = parts.filter(s => /^\d+$/.test(s))[0];
+        if(id){
+            return {
+                kind: "Vimeo",
+                embed: "https://player.vimeo.com/video/" + id,
+                page: "https://vimeo.com/" + id,
+                oembed: "https://vimeo.com/api/oembed.json?url=" +
+                    encodeURIComponent("https://vimeo.com/" + id)
+            };
+        }
+    }
+
+    // ---- Other sites that offer an embeddable player ----
+    const seg = u.pathname.split("/").filter(Boolean);
+    const last = seg[seg.length - 1] || "";
+    const parent = encodeURIComponent(location.hostname || "localhost");
+
+    if(host === "dailymotion.com" || host === "dai.ly"){
+        const id = host === "dai.ly" ? seg[0] : (seg[0] === "video" ? seg[1] : "");
+        if(/^[a-z0-9]+$/i.test(id || "")){
+            return { kind: "Dailymotion", embed: "https://www.dailymotion.com/embed/video/" + id, page: "https://www.dailymotion.com/video/" + id };
+        }
+    }
+
+    if(host === "streamable.com"){
+        const id = seg[0] === "e" ? seg[1] : seg[0];
+        if(/^[a-z0-9]+$/i.test(id || "")){
+            return { kind: "Streamable", embed: "https://streamable.com/e/" + id, page: "https://streamable.com/" + id };
+        }
+    }
+
+    if(host === "twitch.tv" || host === "clips.twitch.tv"){
+        if(seg[0] === "videos" && /^\d+$/.test(seg[1] || "")){
+            return { kind: "Twitch", embed: "https://player.twitch.tv/?video=v" + seg[1] + "&parent=" + parent + "&autoplay=false", page: u.href };
+        }
+        const clip = host === "clips.twitch.tv" ? seg[0] : (seg[1] === "clip" ? seg[2] : "");
+        if(clip){
+            return { kind: "Twitch", embed: "https://clips.twitch.tv/embed?clip=" + encodeURIComponent(clip) + "&parent=" + parent + "&autoplay=false", page: u.href };
+        }
+        if(host === "twitch.tv" && seg.length === 1 && /^\w+$/.test(seg[0])){
+            return { kind: "Twitch", embed: "https://player.twitch.tv/?channel=" + seg[0] + "&parent=" + parent + "&autoplay=false", page: u.href };
+        }
+    }
+
+    if(host === "bitchute.com" && seg[0] === "video" && seg[1]){
+        return { kind: "BitChute", embed: "https://www.bitchute.com/embed/" + encodeURIComponent(seg[1]) + "/", page: u.href };
+    }
+
+    if(host === "rumble.com"){
+        const m = /^(v[a-z0-9]+)/i.exec(last);
+        if(m && seg[0] !== "embed"){
+            return { kind: "Rumble", embed: "https://rumble.com/embed/" + m[1] + "/", page: u.href };
+        }
+        if(seg[0] === "embed" && seg[1]){
+            return { kind: "Rumble", embed: "https://rumble.com/embed/" + seg[1] + "/", page: u.href };
+        }
+    }
+
+    if(host === "odysee.com"){
+        const claim = seg.filter(s => s.charAt(0) !== "@" && s !== "$" && s !== "embed");
+        if(claim.length){
+            const name = claim[claim.length - 1].split(":");
+            return { kind: "Odysee", embed: "https://odysee.com/$/embed/" + encodeURIComponent(name[0]) + (name[1] ? "/" + encodeURIComponent(name[1]) : ""), page: u.href };
+        }
+    }
+
+    if(host === "tiktok.com"){
+        const i = seg.indexOf("video");
+        if(i !== -1 && /^\d+$/.test(seg[i + 1] || "")){
+            return { kind: "TikTok", embed: "https://www.tiktok.com/embed/v2/" + seg[i + 1], page: u.href };
+        }
+    }
+
+    if(host === "facebook.com" || host === "fb.watch"){
+        if(host === "fb.watch" || /\/videos?\//.test(u.pathname) || u.pathname.indexOf("/watch") === 0 || u.pathname.indexOf("/reel/") === 0){
+            return { kind: "Facebook", embed: "https://www.facebook.com/plugins/video.php?show_text=false&href=" + encodeURIComponent(u.href), page: u.href };
+        }
+    }
+
+    if(host === "drive.google.com"){
+        const m = /\/file\/d\/([\w-]+)/.exec(u.pathname);
+        const id = m ? m[1] : (u.searchParams.get("id") || "");
+        if(id){
+            return { kind: "Google Drive", embed: "https://drive.google.com/file/d/" + id + "/preview", page: "https://drive.google.com/file/d/" + id + "/view" };
+        }
+    }
+
+    if(host === "archive.org" && seg[0] === "details" && seg[1]){
+        return { kind: "Internet Archive", embed: "https://archive.org/embed/" + encodeURIComponent(seg[1]), page: u.href };
+    }
+
+    return null;
+
+}
+
+const isLink =
+    !!src &&
+    (!!addressLink || params.get("source") === "link") &&
+    /^https?:\/\//i.test(src);
+
+// Dropbox "share" links open a web page; ?raw=1 gives the file itself.
+if(isLink){
+    try{
+        const du = new URL(src);
+        if(/(^|\.)dropbox\.com$/.test(du.hostname)){
+            du.searchParams.delete("dl");
+            du.searchParams.set("raw", "1");
+            src = du.href;
+        }
+    }catch(e){}
+}
+
+let embed =
+    isLink ? parseEmbed(src) : null;
+
+if(embed){
+    document.body.classList.add("embed-mode");
+}
 
 
 
@@ -3424,6 +4030,18 @@ function syncContentBottom(){
 
     }
 
+    // Embedded players have no floating bar: just leave room for the title bar.
+    if(embed){
+
+        document.documentElement.style.setProperty(
+            "--content-bottom",
+            `${Math.ceil(titleBar.getBoundingClientRect().height)}px`
+        );
+
+        return;
+
+    }
+
     const barRect =
         videoControls.getBoundingClientRect();
 
@@ -3733,9 +4351,17 @@ if(!src){
     loadingOverlay.style.display =
         "flex";
 
+}else if(embed){
+
+    setupEmbed();
+
 }else if(isR2){
 
     r2Load(0);
+
+}else if(isLink && /\.m3u8(\?|#|$)/i.test(src) && !video.canPlayType("application/vnd.apple.mpegurl")){
+
+    setupHls(src);
 
 }else{
 
@@ -3761,15 +4387,26 @@ if(!src){
 
 if(src){
 
-    const filename =
-        src
-            .split("/")
-            .pop();
+    let filename;
+
+    if(isLink){
+        try{
+            filename = new URL(src).pathname.split("/").pop() || new URL(src).hostname;
+        }catch(e){
+            filename = src;
+        }
+    }else{
+        filename =
+            src
+                .split("/")
+                .pop();
+    }
 
 
     const displayName =
-        (isR2 && params.get("title")) ||
-        decodeURIComponent(filename)
+        ((isR2 || isLink) && params.get("title")) ||
+        (embed ? embed.kind + " Video" : "") ||
+        safeDecode(filename)
             .replace(/\.[^/.]+$/, "")
             .replace(/[-_]+/g, " ")
             .replace(/\b\w/g, function(char){
@@ -3787,6 +4424,182 @@ if(src){
         displayName;
 
 }
+
+
+/* ---------- Live / streaming links (.m3u8) ----------
+   Safari plays these natively; other browsers get the small hls.js
+   helper, loaded only when such a link is opened. */
+
+let hlsPlayer = null;
+
+function setupHls(url){
+
+    const fail = function(){
+        statusText.textContent =
+            "This stream couldn't be played here. Try Open in New Tab from the menu.";
+        loadingOverlay.style.display = "flex";
+    };
+
+    const start = function(){
+        if(!window.Hls || !window.Hls.isSupported()){ fail(); return; }
+        try{ if(hlsPlayer) hlsPlayer.destroy(); }catch(e){}
+        hlsPlayer = new window.Hls();
+        hlsPlayer.on(window.Hls.Events.ERROR, function(ev, data){
+            if(data && data.fatal) fail();
+        });
+        hlsPlayer.loadSource(url);
+        hlsPlayer.attachMedia(video);
+    };
+
+    if(window.Hls){ start(); return; }
+
+    const s = document.createElement("script");
+    s.src = "https://cdn.jsdelivr.net/npm/hls.js@1.5.13/dist/hls.min.js";
+    s.onload = start;
+    s.onerror = fail;
+    document.head.appendChild(s);
+
+}
+
+
+/* ---------- Embedded players (YouTube / Vimeo / other links) ---------- */
+
+function fitEmbed(){
+
+    const frame = document.getElementById("embedFrame");
+    const wrap = document.getElementById("embedWrap");
+    const note = document.getElementById("embedNote");
+
+    if(!frame || !wrap) return;
+
+    const pad = document.body.classList.contains("video-fullscreen") ? 0 : 30;
+    const W = Math.max(120, wrap.parentNode.clientWidth - pad);
+    const H = Math.max(80, wrap.parentNode.clientHeight - pad - (note.offsetHeight + 8));
+
+    const w = Math.min(W, H * 16 / 9);
+
+    frame.style.width = Math.floor(w) + "px";
+    frame.style.height = Math.floor(w * 9 / 16) + "px";
+
+}
+
+function setupEmbed(){
+
+    const frame = document.getElementById("embedFrame");
+    const note = document.getElementById("embedNote");
+
+    note.innerHTML = "";
+
+    const text = document.createElement("span");
+    text.textContent = "Video not playing? ";
+
+    const a = document.createElement("a");
+    a.href = embed.page;
+    a.target = "_blank";
+    a.rel = "noopener";
+    a.textContent = "Open on " + embed.kind;
+
+    note.append(text, a);
+
+    frame.addEventListener("load", function(){
+        loadingOverlay.style.display = "none";
+    });
+
+    frame.src = embed.embed;
+
+    fitEmbed();
+
+    window.addEventListener("resize", fitEmbed);
+    window.addEventListener("orientationchange", fitEmbed);
+
+    // Also refit whenever the viewing area itself changes (reading mode,
+    // fullscreen, the toolbar appearing or hiding).
+    if(window.ResizeObserver){
+        new ResizeObserver(fitEmbed).observe(document.getElementById("viewer"));
+    }
+
+    // Use the real video title when the site shares it.
+    try{
+        fetch(embed.oembed)
+            .then(r => r.ok ? r.json() : null)
+            .then(d => {
+                if(d && d.title){
+                    title.textContent = d.title;
+                    document.title = d.title;
+                }
+            })
+            .catch(function(){});
+    }catch(e){}
+
+}
+
+
+/* ---------- Buffering indicator ---------- */
+
+const bufferingBadge =
+    document.getElementById("bufferingBadge");
+
+let bufferingTimer =
+    null;
+
+function hideBuffering(){
+
+    if(bufferingTimer){
+        clearTimeout(bufferingTimer);
+        bufferingTimer = null;
+    }
+
+    bufferingBadge.classList.remove("show");
+
+}
+
+function scheduleBuffering(){
+
+    if(embed || bufferingTimer) return;
+
+    // A short delay, so a brief hiccup doesn't flash the spinner.
+    bufferingTimer = setTimeout(function(){
+
+        bufferingTimer = null;
+
+        if(
+            video.readyState < 3 &&
+            !video.ended &&
+            !video.error &&
+            loadingOverlay.style.display !== "flex" &&
+            (video.currentSrc || video.getAttribute("src"))
+        ){
+            bufferingBadge.classList.add("show");
+        }
+
+    }, 300);
+
+}
+
+["waiting", "stalled", "seeking"].forEach(function(name){
+    video.addEventListener(name, function(){
+        if(name === "stalled" && video.paused) return;
+        scheduleBuffering();
+    });
+});
+
+video.addEventListener("play", function(){
+    if(video.readyState < 3) scheduleBuffering();
+});
+
+["playing", "canplay", "canplaythrough", "seeked", "ended", "error", "emptied", "abort"]
+    .forEach(function(name){
+        video.addEventListener(name, function(){
+            if(name === "seeked" && video.readyState < 3) return;
+            hideBuffering();
+        });
+    });
+
+video.addEventListener("timeupdate", function(){
+    if(video.readyState >= 3 && bufferingBadge.classList.contains("show")){
+        hideBuffering();
+    }
+});
 
 
 /* ---------- Loading ---------- */
@@ -3850,7 +4663,11 @@ video.addEventListener(
         }
 
         statusText.textContent =
-            "Unable to load video.";
+            window.__localName
+                ? "Your browser can't play this file (its video format isn't supported here). Try an MP4 or WebM version."
+                : isLink
+                ? "This link couldn't be played here. It may not point straight to a video file, or its site may not allow other pages to play it. Try Open in New Tab from the menu."
+                : "Unable to load video.";
 
         loadingOverlay.style.display =
             "flex";
@@ -4796,7 +5613,7 @@ function escapeHtml(value){
     under its own fixed key.
 */
 function bookmarksStorageKey(){
-    return `videoBookmarks:${src}`;
+    return `videoBookmarks:${window.__bookmarkSrc || src}`;
 }
 
 function loadBookmarkSettings(){
@@ -6099,6 +6916,169 @@ document.addEventListener(
 );
 
 
+/* ---------- Open Video from Link ---------- */
+
+const linkModal = document.getElementById("linkModal");
+const linkInput = document.getElementById("linkInput");
+const linkError = document.getElementById("linkError");
+
+function showOpenView(which){
+    document.getElementById("openChoiceView").style.display = which === "choice" ? "" : "none";
+    document.getElementById("openLinkView").style.display = which === "link" ? "" : "none";
+    if(which === "link"){
+        setTimeout(function(){ try{ linkInput.focus(); }catch(e){} }, 50);
+    }
+}
+
+function openLinkModal(){
+    linkError.textContent = "";
+    linkInput.value = "";
+    showOpenView("choice");
+    linkModal.classList.remove("hidden");
+}
+
+function closeLinkModal(){
+    linkModal.classList.add("hidden");
+    try{ linkInput.blur(); }catch(e){}
+}
+
+function normalizeLink(value){
+
+    let v = String(value || "").trim();
+
+    if(!v) return "";
+
+    if(!/^[a-z][a-z0-9+.-]*:/i.test(v)){
+        // "youtube.com/watch?v=..." and similar: assume https.
+        if(/^[^\s\/]+\.[^\s\/]+/.test(v)) v = "https://" + v;
+    }
+
+    try{
+        const u = new URL(v);
+        if(u.protocol !== "https:" && u.protocol !== "http:") return "";
+        return u.href;
+    }catch(e){
+        return "";
+    }
+
+}
+
+function submitLink(){
+
+    const url = normalizeLink(linkInput.value);
+
+    if(!url){
+        linkError.textContent = "That doesn't look like a web link. Paste the full address.";
+        return;
+    }
+
+    const page = location.pathname.split("/").pop() || "video.html";
+
+    location.assign(
+        page +
+        "?video=" + encodeURIComponent(url) +
+        "&source=link" +
+        "&return=" + encodeURIComponent(returnPage)
+    );
+
+}
+
+document.getElementById("linkOpenBtn").addEventListener("click", function(){
+    menu.style.display = "none";
+    openLinkModal();
+});
+
+document.getElementById("linkOpenGo").addEventListener("click", submitLink);
+document.getElementById("linkCancel").addEventListener("click", closeLinkModal);
+document.getElementById("openFromLinkBtn").addEventListener("click", function(){ showOpenView("link"); });
+document.getElementById("openBackBtn").addEventListener("click", function(){ linkError.textContent = ""; showOpenView("choice"); });
+
+/* ---------- A video file from this device ----------
+   The file is played straight from the device through the browser; nothing
+   is uploaded anywhere. */
+
+const deviceFileInput = document.getElementById("deviceFileInput");
+let localObjectUrl = "";
+
+document.getElementById("openFromDeviceBtn").addEventListener("click", function(){
+    deviceFileInput.value = "";
+    deviceFileInput.click();
+});
+
+deviceFileInput.addEventListener("change", function(){
+    const file = deviceFileInput.files && deviceFileInput.files[0];
+    if(file) playLocalFile(file);
+});
+
+function playLocalFile(file){
+
+    closeLinkModal();
+
+    if(file.type && file.type.indexOf("video/") !== 0 && !/\.(mkv|mov|m4v|avi|wmv|flv|3gp|ts|webm|ogv|mp4)$/i.test(file.name)){
+        showToast("That doesn't look like a video file.");
+        return;
+    }
+
+    try{ video.pause(); }catch(e){}
+
+    try{ if(hlsPlayer){ hlsPlayer.destroy(); hlsPlayer = null; } }catch(e){}
+
+    // Leave an embedded player (if one was open) and bring the full viewer back.
+    if(embed){
+        embed = null;
+        document.body.classList.remove("embed-mode");
+        try{ document.getElementById("embedFrame").src = "about:blank"; }catch(e){}
+    }
+
+    hideCoverOverlay();
+    hideBuffering();
+    video.removeAttribute("poster");
+    video.removeAttribute("crossorigin");
+
+    if(localObjectUrl){
+        try{ URL.revokeObjectURL(localObjectUrl); }catch(e){}
+    }
+
+    localObjectUrl = URL.createObjectURL(file);
+
+    src = localObjectUrl;
+    window.__localName = file.name;
+    window.__bookmarkSrc = "device:" + file.name + ":" + file.size;
+
+    const name = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]+/g, " ");
+
+    title.textContent = name;
+    document.title = name;
+
+    statusText.textContent = "Loading video...";
+    loadingOverlay.style.display = "flex";
+
+    video.src = localObjectUrl;
+    video.load();
+
+    syncViewerTop();
+    syncVideoBarLift();
+
+    showToast("Opened from this device");
+
+}
+
+linkModal.addEventListener("click", function(e){
+    if(e.target === linkModal) closeLinkModal();
+});
+
+linkInput.addEventListener("keydown", function(e){
+    if(e.key === "Enter"){ e.preventDefault(); submitLink(); }
+    else if(e.key === "Escape"){ e.preventDefault(); closeLinkModal(); }
+    e.stopPropagation();
+});
+
+linkInput.addEventListener("input", function(){ linkError.textContent = ""; });
+
+/* Keyboard shortcuts elsewhere on the page must not fire while typing. */
+linkModal.addEventListener("keyup", function(e){ e.stopPropagation(); });
+
+
 /* ---------- Download ---------- */
 
 /* Videos from the private bucket go through the gate: the page asks for a
@@ -6184,7 +7164,8 @@ downloadButton.addEventListener(
             href;
 
         link.download =
-            decodeURIComponent(
+            window.__localName ||
+            safeDecode(
                 src.split("/").pop()
             );
 
