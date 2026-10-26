@@ -1,8 +1,18 @@
-const CACHE_NAME = "lanthano-research-v4";
+const CACHE_NAME = "lanthano-research-v5";
 
 // Filled by the "Offline App" option on support.html (offline-app.js).
 // It is NOT deleted on activate, so the saved copy survives updates.
 const OFFLINE_CACHE = "lanthano-offline-app";
+
+// Everything else on the site (pages, images, covers, PDFs, scripts, data)
+// is kept here as it is used - only what someone actually opens or sees, never
+// fetched ahead of time. Like the other two it survives updates.
+const SITE_CACHE = "lanthano-site-files";
+
+// Whole videos saved by video.html. They are only ever put in by that page,
+// and played back through the fake address /__video/<file>.
+const VIDEO_CACHE = "lanthano-saved-videos";
+const VIDEO_PREFIX = "/__video/";
 
 // The offline / not-found fallback page.
 const OFFLINE_URL = "/404.html";
@@ -38,7 +48,7 @@ self.addEventListener("activate", event => {
     caches.keys().then(keys =>
       Promise.all(
         keys
-          .filter(key => key !== CACHE_NAME && key !== OFFLINE_CACHE)
+          .filter(key => ![CACHE_NAME, OFFLINE_CACHE, SITE_CACHE, VIDEO_CACHE].includes(key))
           .map(key => caches.delete(key))
       )
     )
@@ -67,15 +77,15 @@ async function findCached(request) {
 
 // Browsers request video/audio in byte ranges. A saved file is a plain
 // 200 response, so slice it into a proper 206 when a range is asked for.
-async function rangeFromCache(request, cached) {
+async function rangeFromCache(request, cached, forcedType) {
   const header = request.headers.get("range");
   if (!header || !cached) return cached;
 
   const match = /bytes=(\d*)-(\d*)/.exec(header);
   if (!match) return cached;
 
-  const buffer = await cached.arrayBuffer();
-  const size = buffer.byteLength;
+  const blob = await cached.blob();
+  const size = blob.size;
 
   let start = match[1] ? parseInt(match[1], 10) : 0;
   let end = match[2] ? parseInt(match[2], 10) : size - 1;
@@ -87,11 +97,18 @@ async function rangeFromCache(request, cached) {
 
   end = Math.min(end, size - 1);
 
-  return new Response(buffer.slice(start, end + 1), {
+  if (start > end || start >= size) {
+    return new Response("", {
+      status: 416,
+      headers: { "Content-Range": "bytes */" + size }
+    });
+  }
+
+  return new Response(blob.slice(start, end + 1), {
     status: 206,
     statusText: "Partial Content",
     headers: {
-      "Content-Type": cached.headers.get("Content-Type") || "application/octet-stream",
+      "Content-Type": forcedType || cached.headers.get("Content-Type") || "application/octet-stream",
       "Content-Range": "bytes " + start + "-" + end + "/" + size,
       "Content-Length": String(end - start + 1),
       "Accept-Ranges": "bytes"
@@ -116,10 +133,10 @@ async function networkFirst(request, fallbackToOfflinePage) {
         ])
       : await network;
 
-    // Keep the saved copy fresh for files that were saved earlier.
-    if (cached && response && response.status === 200) {
-      const copy = response.clone();
-      caches.open(OFFLINE_CACHE).then(cache => cache.put(request.url, copy)).catch(() => {});
+    // Remember what came back so the next visit still works offline, and
+    // keep any copy saved earlier fresh.
+    if (response && response.status === 200 && !request.headers.has("range") && looksRight(response, request.url)) {
+      store(request.url, response.clone());
     }
 
     return response;
@@ -135,6 +152,135 @@ async function networkFirst(request, fallbackToOfflinePage) {
   }
 }
 
+// ---------------------------------------------------------------------
+// Big, rarely-changing files (images, PDFs, saved site videos).
+// Served from the saved copy straight away, then checked in the background
+// with a tiny "has this changed?" request. A changed file replaces the saved
+// one; a saved file that doesn't look right (wrong type, an error page saved
+// by mistake) is thrown away and fetched again.
+// ---------------------------------------------------------------------
+
+const FAST_EXT = /\.(png|jpe?g|gif|webp|avif|svg|ico|bmp|pdf|mp4|webm|m4v|mov)$/i;
+const CHECKED_AT = new Map();        // url -> last time it was checked
+const CHECK_EVERY = 60 * 60 * 1000;  // at most once an hour per file
+
+function extOf(url) {
+  const m = /\.([a-z0-9]+)$/i.exec(new URL(url).pathname);
+  return m ? m[1].toLowerCase() : "";
+}
+
+// Does this response look like the kind of file its address says it is?
+function looksRight(res, url) {
+  if (!res || res.status !== 200) return false;
+
+  const type = (res.headers.get("content-type") || "").toLowerCase();
+  const ext = extOf(url);
+
+  if (/^(png|jpe?g|gif|webp|avif|bmp|ico)$/.test(ext)) return type.startsWith("image/");
+  if (ext === "svg") return type.includes("svg");
+  if (ext === "pdf") return type.includes("pdf");
+  if (/^(mp4|webm|m4v|mov)$/.test(ext)) return type.startsWith("video/") || type.includes("octet-stream");
+  if (ext === "json") return type.includes("json") || type.includes("text/plain");
+
+  // Pages and scripts: just refuse an empty answer.
+  const len = res.headers.get("content-length");
+  return !(len !== null && Number(len) === 0);
+}
+
+// Save a copy in the site cache (pages without their ?query), and refresh the
+// "Offline App" copy too when one exists so it can't go stale.
+async function store(url, response) {
+  try {
+    const u = new URL(url);
+    if (/\.html?$/i.test(u.pathname) || u.pathname.endsWith("/")) u.search = "";
+    const key = u.href;
+
+    await (await caches.open(SITE_CACHE)).put(key, response.clone());
+
+    const offline = await caches.open(OFFLINE_CACHE);
+    if (await offline.match(key)) await offline.put(key, response);
+  } catch (e) {}
+}
+
+async function fastFile(event) {
+  const request = event.request;
+  const url = request.url;
+  const ranged = request.headers.has("range");
+
+  let cached = await caches.match(url);
+
+  if (cached && !looksRight(cached, url)) {
+    // Saved copy is wrong: drop it and start over.
+    for (const name of [SITE_CACHE, OFFLINE_CACHE]) {
+      try { await (await caches.open(name)).delete(url); } catch (e) {}
+    }
+    cached = undefined;
+  }
+
+  if (cached) {
+    const last = CHECKED_AT.get(url) || 0;
+
+    if (Date.now() - last > CHECK_EVERY) {
+      CHECKED_AT.set(url, Date.now());
+      event.waitUntil(revalidate(url, cached));
+    }
+
+    return ranged ? rangeFromCache(request, cached) : cached;
+  }
+
+  // Not saved yet: fetch it, and save a copy if it's a whole, correct file.
+  try {
+    const response = await fetch(request);
+
+    if (!ranged && response.status === 200 && looksRight(response, url)) {
+      event.waitUntil(store(url, response.clone()));
+    }
+
+    return response;
+  } catch (error) {
+    return Response.error();
+  }
+}
+
+// Ask the server "has it changed?" (a 304 costs almost nothing). Only a
+// changed, correct file replaces the saved copy.
+async function revalidate(url, cached) {
+  try {
+    const headers = {};
+    const etag = cached.headers.get("etag");
+    const modified = cached.headers.get("last-modified");
+    if (etag) headers["If-None-Match"] = etag;
+    if (modified) headers["If-Modified-Since"] = modified;
+
+    const res = await fetch(url, { headers, cache: "no-cache" });
+
+    if (res.status === 304) return;
+
+    if (looksRight(res, url)) {
+      await store(url, res);
+    }
+  } catch (e) {
+    // Offline or a bad moment: keep the saved copy, try again later.
+  }
+}
+
+// ---------------------------------------------------------------------
+// Videos saved by video.html
+// ---------------------------------------------------------------------
+
+async function savedVideo(request) {
+  const cache = await caches.open(VIDEO_CACHE);
+  const cached = await cache.match(request.url, { ignoreSearch: true });
+
+  if (!cached) return new Response("", { status: 404 });
+
+  const type = cached.headers.get("Content-Type") || "video/mp4";
+
+  if (!request.headers.has("range")) return cached;
+
+  return rangeFromCache(request, cached, type);
+}
+
 self.addEventListener("fetch", event => {
   if (event.request.method !== "GET") return;
 
@@ -143,6 +289,12 @@ self.addEventListener("fetch", event => {
   // Ignore requests outside this site.
   if (url.origin !== self.location.origin) return;
 
+  // Whole videos saved by video.html (played from the device).
+  if (url.pathname.startsWith(VIDEO_PREFIX)) {
+    event.respondWith(savedVideo(event.request));
+    return;
+  }
+
   // Page navigations: live site first, then the saved copy, then 404.html
   // (whose own script detects navigator.onLine to show "no connection").
   if (event.request.mode === "navigate") {
@@ -150,6 +302,13 @@ self.addEventListener("fetch", event => {
     return;
   }
 
-  // Everything else (scripts, JSON, PDFs, images, video).
+  // Images, PDFs and similar big files: saved copy first, checked in the
+  // background, replaced if the file changed.
+  if (FAST_EXT.test(url.pathname)) {
+    event.respondWith(fastFile(event));
+    return;
+  }
+
+  // Everything else (scripts, JSON, styles): live first, saved copy as backup.
   event.respondWith(networkFirst(event.request, false));
 });

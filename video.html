@@ -3101,6 +3101,10 @@ body.video-fullscreen.fs-rotate #videoStage{
     Open a Video
   </button>
 
+  <button id="saveToggleBtn" style="display:none">
+    Saving videos: On
+  </button>
+
 </div>
 
 <!-- ==========================================================
@@ -4284,12 +4288,479 @@ function r2Stop(message){
 let r2Ticket = "";
 let r2Cors = true;
 
+/* ---------- Saving videos on this device ----------
+
+   Videos from the bucket are kept in this browser's storage, so watching
+   them again (or offline) doesn't ask the server for anything.
+
+   How it decides (kept deliberately small):
+   - Only the video you are watching is saved, plus at most ONE more from
+     the same paper per day. Nothing outside that paper is ever fetched.
+   - Never on data saver / slow / mobile-data connections, and only room
+     the browser can spare (always leaving 300 MB free).
+   - A log (in this browser) records, per video: when it was saved, which
+     version, how many times it failed or was found deleted, and when it may
+     next be tried. Failures back off: 1 day, 3, 7, 14, then once a month.
+     A video the browser keeps deleting waits 3 days, then 7, then a month.
+     After a year of trouble without a copy that survived a month, it stops
+     for good (until the video's version number changes).
+   - A video entry in descriptions.json can carry "v": 2 (any number or
+     text). When that changes, the saved copy is replaced by a new one.
+   - Server limits still apply on top, and "limit reached" pauses it.
+   Turn it off any time from the menu (this also clears saved videos). */
+
+const SAVE_CACHE = "lanthano-saved-videos";
+const SAVE_STATE_KEY = "savedVideoLog2";
+const SAVE_OFF_KEY = "savedVideosOff";
+const WATCH_KEY = "videosWatched";
+const DAY_MS = 86400000;
+const SAVE_LIMITS = {
+    perFilePerDay: 3,
+    perDay: 10,
+    relatedEveryMs: 24 * 3600 * 1000,
+    streakStop: 3,
+    pauseMs: DAY_MS,
+    limitPauseMs: 6 * 3600 * 1000,
+    headroom: 300 * 1024 * 1024,
+    budgetShare: 0.6,
+    maxFileBytes: 3 * 1024 * 1024 * 1024,
+    perFileTimeoutMs: 40 * 60 * 1000
+};
+
+function saveFailDelay(n){
+    return [1, 3, 7, 14][Math.min(n, 5) - 1] * DAY_MS || 30 * DAY_MS;
+}
+
+function saveEvictDelay(n){
+    return (n <= 1 ? 3 : n === 2 ? 7 : 30) * DAY_MS;
+}
+
+function saveLogFail(rec, now, evicted){
+    if(!rec.first) rec.first = now;
+    if(evicted){ rec.ev = (rec.ev || 0) + 1; rec.ok = 0; }
+    else rec.fails = (rec.fails || 0) + 1;
+    rec.next = now + (evicted ? saveEvictDelay(rec.ev) : saveFailDelay(rec.fails));
+    if(now - rec.first > 365 * DAY_MS) rec.gave = true;
+}
+
+function saveLogHealthy(rec, now){
+    if(rec.ok && now - rec.ok > 30 * DAY_MS && (rec.first || rec.fails || rec.ev)){
+        rec.first = 0; rec.fails = 0; rec.ev = 0; rec.next = 0; rec.gave = false;
+    }
+}
+
+function markWatched(file){
+    try{
+        const w = JSON.parse(localStorage.getItem(WATCH_KEY) || "{}") || {};
+        const r = w[file] || { n: 0 };
+        r.n++; r.t = Date.now();
+        w[file] = r;
+        localStorage.setItem(WATCH_KEY, JSON.stringify(w));
+    }catch(e){}
+}
+
+function watchedList(){
+    try{ return JSON.parse(localStorage.getItem(WATCH_KEY) || "{}") || {}; }
+    catch(e){ return {}; }
+}
+
+let usingSaved = false;
+let savingStarted = false;
+let saveAbort = null;
+
+function savedKey(file){
+    return new URL("/__video/" + encodeURIComponent(file), location.origin).href;
+}
+
+function savingOff(){
+    try{ return localStorage.getItem(SAVE_OFF_KEY) === "1"; }catch(e){ return false; }
+}
+
+function saveStateRead(){
+    try{ return JSON.parse(localStorage.getItem(SAVE_STATE_KEY) || "{}") || {}; }
+    catch(e){ return {}; }
+}
+
+function saveStateWrite(s){
+    try{ localStorage.setItem(SAVE_STATE_KEY, JSON.stringify(s)); }catch(e){}
+}
+
+function storageAvailable(){
+    return ("caches" in window) && !!navigator.storage;
+}
+
+async function savedDelete(file){
+    try{
+        const c = await caches.open(SAVE_CACHE);
+        await c.delete(savedKey(file));
+    }catch(e){}
+}
+
+async function savedBlob(file){
+    try{
+        if(!storageAvailable()) return null;
+        const c = await caches.open(SAVE_CACHE);
+        const hit = await c.match(savedKey(file));
+        return hit ? await hit.blob() : null;
+    }catch(e){
+        return null;
+    }
+}
+
+// Starts playing the saved copy, if there is one. True when it did.
+async function playSaved(resumeAt){
+
+    try{
+
+        if(!storageAvailable()) return false;
+
+        const c = await caches.open(SAVE_CACHE);
+        const hit = await c.match(savedKey(src));
+
+        if(!hit) return false;
+
+        usingSaved = true;
+        r2ResumeAt = resumeAt || 0;
+        video.removeAttribute("crossorigin");
+
+        if(navigator.serviceWorker && navigator.serviceWorker.controller){
+            // The service worker serves it (with seeking) from storage.
+            video.src = "/__video/" + encodeURIComponent(src);
+        }else{
+            video.src = URL.createObjectURL(await hit.blob());
+        }
+
+        video.load();
+        return true;
+
+    }catch(e){
+        usingSaved = false;
+        return false;
+    }
+
+}
+
+function saveConnectionOk(){
+    const c = navigator.connection;
+    if(!navigator.onLine) return false;
+    if(!c) return true;
+    return !(c.saveData || /^(slow-2g|2g)$/.test(c.effectiveType || "") || c.type === "cellular");
+}
+
+// Fetches one whole video into storage. Returns "ok", "skip", "fail",
+// "quota" (out of room) or "stop" (the server said no / limit).
+async function saveOne(file, state, rec){
+
+    const now = Date.now();
+
+    state.tries = state.tries || {};
+    const t = (state.tries[file] || []).filter(n => now - n < DAY_MS);
+    state.tries[file] = t;
+
+    if(t.length >= SAVE_LIMITS.perFilePerDay) return "skip";
+
+    state.day = (state.day || []).filter(n => now - n < DAY_MS);
+    if(state.day.length >= SAVE_LIMITS.perDay) return "stop";
+
+    t.push(now);
+    state.day.push(now);
+    saveStateWrite(state);
+
+    saveAbort = new AbortController();
+    const timer = setTimeout(() => saveAbort.abort(), SAVE_LIMITS.perFileTimeoutMs);
+
+    const drop = res => { try{ res.body && res.body.cancel(); }catch(e){} };
+
+    try{
+
+        const tk = await fetch(
+            VIDEO_API + "/ticket?f=" + encodeURIComponent(file),
+            { cache: "no-store", signal: saveAbort.signal }
+        );
+
+        if(tk.status === 429 || tk.status === 503) return "stop";
+        if(!tk.ok) return "fail";
+
+        const ticket = (await tk.json()).t;
+
+        const res = await fetch(
+            VIDEO_API + "/play?t=" + encodeURIComponent(ticket),
+            { signal: saveAbort.signal }
+        );
+
+        if(res.status === 429 || res.status === 503){ drop(res); return "stop"; }
+        if(res.status !== 200){ drop(res); return "fail"; }
+
+        const type = (res.headers.get("content-type") || "").toLowerCase();
+        const len = Number(res.headers.get("content-length")) || 0;
+
+        if(type && !type.startsWith("video/") && !type.includes("octet-stream")){
+            drop(res);
+            return "fail";
+        }
+
+        if(len > SAVE_LIMITS.maxFileBytes){ drop(res); return "skip"; }
+
+        // Room: leave headroom, and keep the whole library within its share.
+        try{
+            const est = await navigator.storage.estimate();
+            if(est && est.quota){
+                const free = est.quota - (est.usage || 0);
+                const used = Object.keys(state.rec || {}).reduce((n, k) => n + ((state.rec[k] && state.rec[k].size) || 0), 0);
+                const watched = !!watchedList()[file];
+
+                if(free < len + SAVE_LIMITS.headroom){ drop(res); return "quota"; }
+                if(!watched && used + len > est.quota * SAVE_LIMITS.budgetShare){ drop(res); return "quota"; }
+            }
+        }catch(e){}
+
+        const cache = await caches.open(SAVE_CACHE);
+
+        try{
+            await cache.put(savedKey(file), res);
+        }catch(e){
+            await cache.delete(savedKey(file));
+            return (e && e.name === "QuotaExceededError") ? "quota" : "fail";
+        }
+
+        // Looks right? (the whole file, not a cut-off one)
+        const stored = await cache.match(savedKey(file));
+        const blob = stored ? await stored.blob() : null;
+
+        if(!blob || blob.size < 1024 || (len && blob.size !== len)){
+            await cache.delete(savedKey(file));
+            return "fail";
+        }
+
+        rec.size = blob.size;
+        return "ok";
+
+    }catch(e){
+        return "fail";
+    }finally{
+        clearTimeout(timer);
+        saveAbort = null;
+    }
+
+}
+
+// Saves the video being watched, and (at most one a day) one more video from
+// the same paper. Nothing else is ever fetched.
+async function saveAllVideos(){
+
+    if(savingStarted || savingOff() || !storageAvailable()) return;
+    savingStarted = true;
+
+    try{
+
+        const state = saveStateRead();
+        const now = Date.now();
+
+        state.rec = state.rec || {};
+
+        if(state.pauseUntil && now < state.pauseUntil) return;
+        if(!saveConnectionOk()) return;
+
+        try{ if(navigator.storage.persist) navigator.storage.persist(); }catch(e){}
+
+        const res = await fetch("/descriptions.json", { cache: "no-cache" });
+        if(!res.ok) return;
+        const data = await res.json();
+
+        // The paper (or group of standalone videos) this video belongs to.
+        const same = [];
+        let mine = null;
+
+        Object.keys(data).forEach(k => {
+            const list = (data[k].videos || []).filter(v =>
+                v && typeof v.file === "string" &&
+                !v.file.trim().startsWith("#$") && v.source !== "site"
+            ).map(v => ({
+                file: v.file.trim(),
+                ver: String(v.v === undefined ? "" : v.v),
+                group: v.group || ""
+            }));
+
+            const hit = list.find(v => v.file === src);
+
+            if(hit && !mine){
+                mine = hit;
+                list.forEach(v => {
+                    if(v.file !== src && v.group === hit.group) same.push(v);
+                });
+            }
+        });
+
+        if(!mine) return;   // not a listed video: leave it alone
+
+        const cache = await caches.open(SAVE_CACHE);
+
+        // One attempt for a video: updates its log, returns the result.
+        const attempt = async function(e, allowNow){
+
+            const rec = state.rec[e.file] || (state.rec[e.file] = {});
+            const have = await cache.match(savedKey(e.file));
+            const t0 = Date.now();
+
+            if(have){
+
+                saveLogHealthy(rec, t0);
+
+                if(rec.ver !== undefined && rec.ver !== e.ver && !rec.gave){
+                    // New version number: replace the saved copy.
+                    await cache.delete(savedKey(e.file));
+                    rec.first = 0; rec.fails = 0; rec.ev = 0; rec.next = 0; rec.gave = false;
+                }else{
+                    rec.ver = e.ver;
+                    if(!rec.ok) rec.ok = t0;
+                    return "have";
+                }
+
+            }else{
+
+                // Saved before, gone now: deleted by the browser or a person.
+                if(rec.ok) saveLogFail(rec, t0, true);
+
+                if(rec.ver !== undefined && rec.ver !== e.ver){
+                    rec.first = 0; rec.fails = 0; rec.ev = 0; rec.next = 0; rec.gave = false;
+                }
+
+            }
+
+            if(rec.gave) return "wait";
+            if(rec.next && t0 < rec.next) return "wait";
+
+            const r = await saveOne(e.file, state, rec);
+            const t1 = Date.now();
+
+            if(r === "ok"){
+                rec.ok = t1; rec.ver = e.ver; rec.fails = 0; rec.next = 0;
+            }else if(r === "fail"){
+                saveLogFail(rec, t1, false);
+                rec.ver = e.ver;
+            }else if(r === "stop"){
+                state.pauseUntil = t1 + SAVE_LIMITS.limitPauseMs;
+            }
+
+            saveStateWrite(state);
+            return r;
+
+        };
+
+        // 1. The video being watched.
+        const first = await attempt(mine, true);
+
+        // A fresh download starts the one-a-day clock for related videos.
+        if(first === "ok"){
+            state.lastRelated = Date.now();
+            saveStateWrite(state);
+        }
+
+        // 2. Only when that one was already stored (so this visit fetched
+        //    nothing yet): one more from the same paper, no more often than
+        //    once a day.
+        if(first === "have"){
+
+            if(now - (state.lastRelated || 0) >= SAVE_LIMITS.relatedEveryMs){
+
+                for(const e of same){
+
+                    if(savingOff() || !saveConnectionOk()) break;
+
+                    if(await cache.match(savedKey(e.file))){
+                        const rec = state.rec[e.file] || (state.rec[e.file] = {});
+                        saveLogHealthy(rec, Date.now());
+                        continue;
+                    }
+
+                    const rec = state.rec[e.file] || {};
+                    if(rec.gave || (rec.next && Date.now() < rec.next)) continue;
+
+                    state.lastRelated = Date.now();
+                    saveStateWrite(state);
+                    await attempt(e, false);
+                    break;   // never more than one
+
+                }
+
+            }
+
+        }
+
+        saveStateWrite(state);
+
+    }catch(e){
+        // Saving is a bonus; it must never get in the way of watching.
+    }finally{
+        savingStarted = false;
+    }
+
+}
+
+// Begin a while after the video has actually started playing.
+video.addEventListener("playing", function(){
+
+    if(!isR2 || savingOff()) return;
+    if(window.__saveScheduled) return;
+    window.__saveScheduled = true;
+
+    markWatched(src);
+
+    // (If this video came from the saved copy, there is nothing to fetch for it
+    // and the check below is just a quick look at the log.)
+    setTimeout(saveAllVideos, 15000);
+
+}, { once: true });
+
+// Menu: turn saving off (and clear what was saved) or back on.
+(function(){
+
+    const btn = document.getElementById("saveToggleBtn");
+
+    if(!btn || !storageAvailable()) return;
+
+    const label = () => {
+        btn.textContent = "Saving videos: " + (savingOff() ? "Off" : "On");
+    };
+
+    if(isR2) btn.style.display = "";
+    label();
+
+    btn.addEventListener("click", async function(){
+
+        menu.style.display = "none";
+
+        if(savingOff()){
+            try{ localStorage.removeItem(SAVE_OFF_KEY); }catch(e){}
+            label();
+            showToast("Videos will be saved on this device.");
+            return;
+        }
+
+        try{ localStorage.setItem(SAVE_OFF_KEY, "1"); }catch(e){}
+        try{ if(saveAbort) saveAbort.abort(); }catch(e){}
+
+        try{ await caches.delete(SAVE_CACHE); }catch(e){}
+        try{ localStorage.removeItem(SAVE_STATE_KEY); }catch(e){}
+
+        label();
+        showToast("Saved videos cleared. Saving is off.");
+
+    });
+
+})();
+
 async function r2Load(resumeAt){
 
     if(r2Busy) return;
     r2Busy = true;
 
     try{
+
+        // Saved on this device already? Play that: no ticket, no server.
+        if(await playSaved(resumeAt)){
+            return;
+        }
 
         const gate = r2Check();
 
@@ -4389,6 +4860,15 @@ async function r2Load(resumeAt){
 // Called by the video's error event for these videos: one more try
 // (with a fresh ticket, resuming where it stopped), then a pause.
 function r2MediaError(){
+
+    // A saved copy that won't play is thrown away and the video is fetched
+    // normally (and saved again later).
+    if(usingSaved){
+        usingSaved = false;
+        savedDelete(src);
+        r2Load(video.currentTime || 0);
+        return;
+    }
 
     if(!r2Retried){
         r2Retried = true;
@@ -7495,7 +7975,14 @@ downloadButton.addEventListener(
         let href = src;
         let revoke = null;
 
-        if(isR2){
+        const savedCopy = isR2 ? await savedBlob(src) : null;
+
+        if(savedCopy){
+
+            href = URL.createObjectURL(savedCopy);
+            revoke = href;
+
+        }else if(isR2){
 
             try{
 
