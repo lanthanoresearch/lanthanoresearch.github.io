@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="icon" type="image/png" href="file_000000000c40722f92b1fe6758cb4855.png">
+<meta charset="UTF-8">
+<script src="site-tools.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#111111">
+<meta name="robots" content="noindex">
+<title>Settings</title>
+<style>
+
+body{
+    margin:0;
+    background:#111;
+    color:#eee;
+    font-family:Arial,sans-serif;
+}
+
+section{
+    max-width:850px;
+    margin:auto;
+    padding:40px 20px 100px;
+}
+
+h1{
+    text-align:center;
+    margin:0 0 25px;
+    font-size:32px;
+}
+
+h2{
+    margin-top:0;
+    margin-bottom:12px;
+}
+
+.card{
+    background:#1d1d1d;
+    padding:20px;
+    margin:15px 0;
+    border-radius:10px;
+}
+
+.back{
+    color:white;
+    text-decoration:none;
+    display:inline-block;
+    margin-bottom:20px;
+}
+
+.back:hover{
+    text-decoration:underline;
+}
+
+p{
+    line-height:1.55;
+    margin:8px 0;
+}
+
+.note{
+    color:#999;
+    font-size:0.9em;
+}
+
+.rows{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    margin-top:12px;
+}
+
+/* A plain row (label left, control right) - same look as the picker rows. */
+.row{
+    box-sizing:border-box;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:10px 16px;
+    border-radius:8px;
+    background:#2e2e2e;
+    color:#eee;
+    font-size:13.5px;
+}
+
+.row .name{
+    flex:1;
+    min-width:0;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+
+.row .name a{
+    color:#eee;
+    text-decoration:none;
+}
+
+.row .name a:hover{
+    text-decoration:underline;
+}
+
+.row .size{
+    color:#999;
+    white-space:nowrap;
+}
+
+.row button.small{
+    background:#292929;
+    color:#eee;
+    border:1px solid #383838;
+    border-radius:6px;
+    padding:5px 10px;
+    font:inherit;
+    font-size:12.5px;
+    cursor:pointer;
+}
+
+.row button.small:hover{
+    background:#353535;
+}
+
+.empty{
+    color:#777;
+    font-style:italic;
+    padding:10px 16px;
+}
+
+.bar{
+    height:8px;
+    border-radius:6px;
+    background:#333;
+    overflow:hidden;
+    margin:10px 0 6px;
+}
+
+.bar i{
+    display:block;
+    height:100%;
+    width:0;
+    background:#2f7cff;
+}
+
+.actions{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-top:14px;
+}
+
+.btn{
+    padding:10px 18px;
+    background:#333;
+    color:#fff;
+    border:none;
+    border-radius:7px;
+    font-size:15px;
+    font-family:inherit;
+    cursor:pointer;
+}
+
+.btn:hover{
+    background:#444;
+}
+
+.btn.danger{
+    background:transparent;
+    border:1px solid #5a2c2c;
+    color:#ff8080;
+    font-size:14px;
+}
+
+.btn.danger:hover{
+    background:#301a1a;
+    border-color:#7a3a3a;
+}
+
+/* Toggle switch - copied from the Settings panel on Category / Gallery. */
+.toggleSwitch{
+    position:relative;
+    flex:0 0 auto;
+    width:42px;
+    height:24px;
+    padding:0;
+    background:#3a3a3a;
+    border:1px solid #444;
+    border-radius:999px;
+    cursor:pointer;
+}
+
+.toggleSwitch .toggleKnob{
+    position:absolute;
+    top:2px;
+    left:2px;
+    width:18px;
+    height:18px;
+    border-radius:50%;
+    background:#ccc;
+    transition:left .15s ease, background .15s ease;
+}
+
+.toggleSwitch.active{
+    background:#2f7cff;
+    border-color:#2f7cff;
+}
+
+.toggleSwitch.active .toggleKnob{
+    left:20px;
+    background:#fff;
+}
+
+</style>
+</head>
+<body>
+
+<section>
+
+    <a class="back" href="index.html"><svg class="back-arrow" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:1em;height:1em;vertical-align:-.12em;margin-right:.35em;flex-shrink:0"><path d="M18 4.5v15L5.5 12z"/></svg> Home</a>
+
+    <h1>Settings</h1>
+
+    <div class="card">
+        <h2>Appearance</h2>
+        <div class="rows" id="appearance"></div>
+    </div>
+
+    <div class="card" id="installCard" hidden>
+        <h2>Install app</h2>
+        <p class="note">Add Lanthano Research to this device so it opens like an app and works offline.</p>
+        <div class="actions"><button type="button" class="btn" id="installBtn">Install</button></div>
+    </div>
+
+    <div class="card">
+        <h2>Search</h2>
+        <p class="note">How results are shown when you search on the home page.</p>
+        <div class="rows" id="searchRows"></div>
+        <p class="note" id="layoutNote"></p>
+        <p class="note" style="margin-top:14px">The most of each kind to show.</p>
+        <div class="rows" id="countRows"></div>
+        <div class="rows">
+            <div class="row">
+                <span>Always fill slots</span>
+                <button type="button" class="toggleSwitch" id="fillToggle" role="switch" aria-checked="false" aria-label="Always fill slots"><span class="toggleKnob"></span></button>
+            </div>
+        </div>
+        <p class="note">Off: only good matches are shown. On: weaker partial matches fill each section up to its number.</p>
+        <div class="actions"><button type="button" class="btn" id="searchReset">Reset search settings</button></div>
+    </div>
+
+</section>
+
+<script>
+(function(){
+"use strict";
+var VIDEO_CACHE = "lanthano-saved-videos";
+var SITE_CACHE = "lanthano-site-files";
+var OFFLINE_CACHE = "lanthano-offline-app";
+var STATE_KEY = "savedVideoLog2";
+var OFF_KEY = "savedVideosOff";
+
+function $(id){ return document.getElementById(id); }
+function mb(n){
+  if(n >= 1073741824) return (n / 1073741824).toFixed(2) + " GB";
+  if(n >= 1048576) return (n / 1048576).toFixed(n >= 104857600 ? 0 : 1) + " MB";
+  if(n >= 1024) return Math.round(n / 1024) + " KB";
+  return n + " B";
+}
+function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+
+/* Appearance: the same picker rows as the Settings panel */
+if(window.LT) LT.addAppearanceRows($("appearance"));
+
+/* Install (only shown when the browser offers it) */
+function showInstall(){ if(window.LT && LT.canInstall()) $("installCard").hidden = false; }
+window.addEventListener("beforeinstallprompt", function(){ setTimeout(showInstall, 0); });
+setTimeout(showInstall, 300);
+$("installBtn").addEventListener("click", function(){ if(LT.install()) $("installCard").hidden = true; });
+
+/* Search settings: the home page reads these from the same place */
+var KEY = "searchSettings";
+var COUNTS = [1,2,4,6,8,10,15,20];
+var DEFAULTS = {fill:false, layout:"grouped", order:"pdfs,videos,images", limits:{pdfs:4, videos:6, images:8}};
+function load(){
+  var st = JSON.parse(JSON.stringify(DEFAULTS));
+  try{
+    var raw = JSON.parse(localStorage.getItem(KEY) || "{}");
+    if(raw && typeof raw === "object"){
+      if(typeof raw.fill === "boolean") st.fill = raw.fill;
+      if(raw.layout === "grouped" || raw.layout === "mixed") st.layout = raw.layout;
+      ["pdfs","videos","images"].forEach(function(k){
+        var n = raw.limits && Number(raw.limits[k]);
+        if(COUNTS.indexOf(n) !== -1) st.limits[k] = n;
+      });
+    }
+  }catch(e){}
+  return st;
+}
+function save(st){ try{ localStorage.setItem(KEY, JSON.stringify(st)); }catch(e){} }
+
+function paintToggle(btn, on){
+  btn.classList.toggle("active", on);
+  btn.setAttribute("aria-checked", on ? "true" : "false");
+}
+function row(box, label){
+  var b = document.createElement("button");
+  b.type = "button";
+  b.className = "ltPickRow videoPickerRow";
+  b.innerHTML = LT.pickerRowHtml(label);
+  box.appendChild(b);
+  return b;
+}
+var repaint = [];
+function buildSearch(){
+  $("searchRows").innerHTML = "";
+  $("countRows").innerHTML = "";
+  repaint = [];
+  var layout = row($("searchRows"), "Show results as");
+  repaint.push(LT.bindPicker(layout, [{value:"grouped", label:"Sections"}, {value:"mixed", label:"Mixed"}],
+    function(){ return load().layout; },
+    function(v){ var st = load(); st.layout = v; save(st); note(); }));
+  [["pdfs","Documents"],["videos","Videos"],["images","Images"]].forEach(function(p){
+    var r = row($("countRows"), p[1]);
+    repaint.push(LT.bindPicker(r, COUNTS.map(function(n){ return {value:String(n), label:String(n)}; }),
+      function(){ return String(load().limits[p[0]]); },
+      function(v){ var st = load(); st.limits[p[0]] = Number(v); save(st); }));
+  });
+  paintToggle($("fillToggle"), load().fill);
+  note();
+}
+function note(){
+  $("layoutNote").textContent = load().layout === "grouped"
+    ? "Sections: documents first, then videos, then images."
+    : "Mixed: one list ranked by relevance. Documents rank highest, then videos, then images.";
+}
+$("fillToggle").addEventListener("click", function(){
+  var st = load(); st.fill = !st.fill; save(st); paintToggle(this, st.fill);
+});
+$("searchReset").addEventListener("click", function(){
+  try{ localStorage.removeItem(KEY); }catch(e){}
+  buildSearch();
+  if(window.LT) LT.toast("Search settings reset");
+});
+buildSearch();
+})();
+</script>
+</body>
+</html>

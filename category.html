@@ -85,9 +85,22 @@
 
     <link rel="icon" type="image/png" href="file_000000000c40722f92b1fe6758cb4855.png">
 <meta charset="UTF-8">
+<script src="site-tools.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>All Research</title>
 
+<meta name="description" content="Browse every Lanthano Research paper by category: historical, scientific, biblical, political and more.">
+<link rel="canonical" href="https://lanthanoresearch.com/category.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Lanthano Research">
+<meta property="og:title" content="All Research | Lanthano Research">
+<meta property="og:description" content="Browse every Lanthano Research paper by category: historical, scientific, biblical, political and more.">
+<meta property="og:url" content="https://lanthanoresearch.com/category.html">
+<meta property="og:image" content="https://lanthanoresearch.com/file_000000000c40722f92b1fe6758cb4855.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="All Research | Lanthano Research">
+<meta name="twitter:description" content="Browse every Lanthano Research paper by category: historical, scientific, biblical, political and more.">
+<meta name="twitter:image" content="https://lanthanoresearch.com/file_000000000c40722f92b1fe6758cb4855.png">
 <style>
 body{
     margin:0;
@@ -1143,6 +1156,43 @@ a.gallery-image .video-duration,
 .view-comfy .favorite-star{width:26px;height:26px;top:6px;right:9px}
 .view-compact .favorite-star{width:24px;height:24px;top:5px;right:9px}
 </style>
+<style id="paperDlCss">
+/* Download chip: same round chip as the star, sitting just left of it. */
+.paper-dl{
+    position:absolute;
+    top:9px;
+    right:51px;
+    width:32px;
+    height:32px;
+    box-sizing:border-box;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:rgba(0,0,0,.5);
+    color:#8f8f8f;
+    cursor:pointer;
+    user-select:none;
+    -webkit-user-select:none;
+    -webkit-tap-highlight-color:transparent;
+    transition:transform .15s ease, background .15s ease;
+}
+.paper-dl svg{
+    width:56%;
+    height:56%;
+    fill:none;
+    stroke:currentColor;
+    stroke-width:2;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+    pointer-events:none;
+}
+.paper-dl:hover{transform:scale(1.12);background:rgba(0,0,0,.72)}
+.paper-dl.open{background:rgba(0,0,0,.72);color:#ddd}
+.paper-dl:focus-visible{outline:2px solid #777;outline-offset:2px}
+.view-comfy .paper-dl{width:26px;height:26px;top:6px;right:41px}
+.view-compact .paper-dl{width:24px;height:24px;top:5px;right:39px}
+</style>
 <style id="favMediaCss">
 /* ---------- Favorite media (heart) ----------
    Same idea as the star on papers, for images and videos. The saved list is
@@ -1504,7 +1554,7 @@ const params =
     new URLSearchParams(window.location.search);
 
 const currentCategory =
-    params.get("category");
+    params.get("category") || "all";
 
     let favoritePapers = [];
 let newestKey = "";
@@ -2656,6 +2706,12 @@ paper.updated.split("-")[0]}
     ${Number(pageCounts[key]) || 0} ${(Number(pageCounts[key]) || 0) === 1 ? "page" : "pages"}
 </p>`;
 
+        const dlHtml = `
+<span class="paper-dl" id="dl-${key}" role="button" tabindex="0" aria-haspopup="true" aria-expanded="false" aria-label="Download" title="Download"
+data-paper-key="${key}"
+onclick="event.stopPropagation(); paperDownload(this, '${key}');"
+onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();paperDownload(this, '${key}');}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11"/><path d="M7.5 11 12 15.5 16.5 11"/><path d="M5 19.5h14"/></svg></span>`;
+
         const readBtnHtml = `
                   <a class="button pdf-link read-btn"
    href="pdf.html?file=${encodeURIComponent(paper.url)}&paper=${encodeURIComponent(paper.title)}&return=${encodeURIComponent(window.location.href)}">
@@ -2702,6 +2758,7 @@ if(
             cardHtml = `
             <div class="card">
             ${starHtml}
+${dlHtml.replace('class="paper-dl"', 'class="paper-dl" style="display:none"')}
 ${getPaperBadge(key, paper)}
 
                 <div class="card-body">
@@ -2763,6 +2820,7 @@ ${getPaperBadge(key, paper)}
             cardHtml = `
             <div class="card">
             ${starHtml}
+${dlHtml}
 ${getPaperBadge(key, paper)}
 
                 <div class="card-body">
@@ -2786,6 +2844,7 @@ ${getPaperBadge(key, paper)}
             cardHtml = `
             <div class="card">
             ${starHtml}
+${dlHtml}
 ${getPaperBadge(key, paper)}
 
                 <div class="card-body">
@@ -2991,6 +3050,13 @@ function saveOpenDetails(){
     );
 
 }
+// The download chip on each paper: PDF, all images (.zip), all videos.
+window.paperDownload = function(btn, key){
+    const entry = papers.find(p => p[0] === key);
+    if(!entry || !window.LT) return;
+    LT.downloadMenu(btn, entry[1]);
+};
+
 window.showWarningContent = function(key){
 
     sessionStorage.setItem(
@@ -3005,6 +3071,9 @@ window.showWarningContent = function(key){
     document.getElementById(
         "content-" + key
     ).style.display = "block";
+
+    const dl = document.getElementById("dl-" + key);
+    if(dl) dl.style.display = "";
 
 };
     });

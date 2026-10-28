@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="icon" type="image/png" href="file_000000000c40722f92b1fe6758cb4855.png">
+<meta charset="UTF-8">
+<script src="site-tools.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#111111">
+<meta name="robots" content="noindex">
+<title>Storage</title>
+<style>
+
+body{
+    margin:0;
+    background:#111;
+    color:#eee;
+    font-family:Arial,sans-serif;
+}
+
+section{
+    max-width:850px;
+    margin:auto;
+    padding:40px 20px 100px;
+}
+
+h1{
+    text-align:center;
+    margin:0 0 25px;
+    font-size:32px;
+}
+
+h2{
+    margin-top:0;
+    margin-bottom:12px;
+}
+
+.card{
+    background:#1d1d1d;
+    padding:20px;
+    margin:15px 0;
+    border-radius:10px;
+}
+
+.back{
+    color:white;
+    text-decoration:none;
+    display:inline-block;
+    margin-bottom:20px;
+}
+
+.back:hover{
+    text-decoration:underline;
+}
+
+p{
+    line-height:1.55;
+    margin:8px 0;
+}
+
+.note{
+    color:#999;
+    font-size:0.9em;
+}
+
+.rows{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    margin-top:12px;
+}
+
+/* A plain row (label left, control right) - same look as the picker rows. */
+.row{
+    box-sizing:border-box;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:10px 16px;
+    border-radius:8px;
+    background:#2e2e2e;
+    color:#eee;
+    font-size:13.5px;
+}
+
+.row .name{
+    flex:1;
+    min-width:0;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+
+.row .name a{
+    color:#eee;
+    text-decoration:none;
+}
+
+.row .name a:hover{
+    text-decoration:underline;
+}
+
+.row .size{
+    color:#999;
+    white-space:nowrap;
+}
+
+.row button.small{
+    background:#292929;
+    color:#eee;
+    border:1px solid #383838;
+    border-radius:6px;
+    padding:5px 10px;
+    font:inherit;
+    font-size:12.5px;
+    cursor:pointer;
+}
+
+.row button.small:hover{
+    background:#353535;
+}
+
+.empty{
+    color:#777;
+    font-style:italic;
+    padding:10px 16px;
+}
+
+.bar{
+    height:8px;
+    border-radius:6px;
+    background:#333;
+    overflow:hidden;
+    margin:10px 0 6px;
+}
+
+.bar i{
+    display:block;
+    height:100%;
+    width:0;
+    background:#2f7cff;
+}
+
+.actions{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-top:14px;
+}
+
+.btn{
+    padding:10px 18px;
+    background:#333;
+    color:#fff;
+    border:none;
+    border-radius:7px;
+    font-size:15px;
+    font-family:inherit;
+    cursor:pointer;
+}
+
+.btn:hover{
+    background:#444;
+}
+
+.btn.danger{
+    background:transparent;
+    border:1px solid #5a2c2c;
+    color:#ff8080;
+    font-size:14px;
+}
+
+.btn.danger:hover{
+    background:#301a1a;
+    border-color:#7a3a3a;
+}
+
+/* Toggle switch - copied from the Settings panel on Category / Gallery. */
+.toggleSwitch{
+    position:relative;
+    flex:0 0 auto;
+    width:42px;
+    height:24px;
+    padding:0;
+    background:#3a3a3a;
+    border:1px solid #444;
+    border-radius:999px;
+    cursor:pointer;
+}
+
+.toggleSwitch .toggleKnob{
+    position:absolute;
+    top:2px;
+    left:2px;
+    width:18px;
+    height:18px;
+    border-radius:50%;
+    background:#ccc;
+    transition:left .15s ease, background .15s ease;
+}
+
+.toggleSwitch.active{
+    background:#2f7cff;
+    border-color:#2f7cff;
+}
+
+.toggleSwitch.active .toggleKnob{
+    left:20px;
+    background:#fff;
+}
+
+</style>
+</head>
+<body>
+
+<section>
+
+    <a class="back" href="index.html"><svg class="back-arrow" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:1em;height:1em;vertical-align:-.12em;margin-right:.35em;flex-shrink:0"><path d="M18 4.5v15L5.5 12z"/></svg> Home</a>
+
+    <h1>Storage</h1>
+
+    <div class="card">
+        <h2>Saved on this device</h2>
+        <p class="note">To load faster, your browser keeps copies of the pages, pictures, PDFs and videos you open. Everything stays on this device.</p>
+        <div class="bar"><i id="usedBar"></i></div>
+        <p class="note" id="usedText">Checking&hellip;</p>
+
+        <div class="rows" id="videoList"></div>
+
+        <div class="rows">
+            <div class="row">
+                <span>Keep videos I watch</span>
+                <button type="button" class="toggleSwitch" id="saveToggle" role="switch" aria-checked="true" aria-label="Keep videos I watch on this device"><span class="toggleKnob"></span></button>
+            </div>
+        </div>
+
+        <p class="note" id="siteText"></p>
+        <p class="note" id="offlineText"></p>
+
+        <div class="actions">
+            <button type="button" class="btn danger" id="clearVideos">Remove saved videos</button>
+            <button type="button" class="btn danger" id="clearSite">Clear pages, pictures and PDFs</button>
+            <button type="button" class="btn danger" id="clearOffline" hidden>Remove offline app copy</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Favorites &amp; bookmarks</h2>
+        <p class="note">Your favorites, bookmarks and settings are kept only in this browser. Save them to a file to move to another phone or computer, then restore them there.</p>
+        <div class="actions">
+            <button type="button" class="btn" id="bkExport">Back up to a file</button>
+            <button type="button" class="btn" id="bkImport">Restore from a file</button>
+        </div>
+    </div>
+
+</section>
+
+<script>
+(function(){
+"use strict";
+var VIDEO_CACHE = "lanthano-saved-videos";
+var SITE_CACHE = "lanthano-site-files";
+var OFFLINE_CACHE = "lanthano-offline-app";
+var STATE_KEY = "savedVideoLog2";
+var OFF_KEY = "savedVideosOff";
+
+function $(id){ return document.getElementById(id); }
+function mb(n){
+  if(n >= 1073741824) return (n / 1073741824).toFixed(2) + " GB";
+  if(n >= 1048576) return (n / 1048576).toFixed(n >= 104857600 ? 0 : 1) + " MB";
+  if(n >= 1024) return Math.round(n / 1024) + " KB";
+  return n + " B";
+}
+function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+
+async function entries(name){
+  if(!("caches" in window)) return [];
+  if(!(await caches.has(name))) return [];
+  var c = await caches.open(name);
+  var keys = await c.keys();
+  var out = [];
+  for(var i = 0; i < keys.length; i++){
+    var res = await c.match(keys[i]);
+    var len = res ? parseInt(res.headers.get("content-length") || "0", 10) : 0;
+    if(!len && res && name !== VIDEO_CACHE){
+      try{ len = (await res.clone().blob()).size; }catch(e){}
+    }
+    out.push({req: keys[i], size: len || 0});
+  }
+  return out;
+}
+function sum(list){ return list.reduce(function(n, x){ return n + x.size; }, 0); }
+
+async function usage(){
+  try{
+    var e = await navigator.storage.estimate();
+    var used = e.usage || 0, quota = e.quota || 0;
+    $("usedText").textContent = mb(used) + " used" + (quota ? " of about " + mb(quota) + " this browser allows for this site" : "");
+    $("usedBar").style.width = quota ? Math.max(1, Math.min(100, used / quota * 100)) + "%" : "0";
+  }catch(e){
+    $("usedText").textContent = "Your browser does not report how much space is used.";
+  }
+}
+
+async function videos(){
+  var list = await entries(VIDEO_CACHE);
+  var box = $("videoList");
+  box.innerHTML = "";
+  if(!list.length){
+    box.innerHTML = '<div class="empty">No videos saved yet. A video is saved the first time you watch it.</div>';
+    $("clearVideos").hidden = true;
+    return;
+  }
+  $("clearVideos").hidden = false;
+  list.sort(function(a, b){ return b.size - a.size; });
+  list.forEach(function(x){
+    var file = "";
+    try{ file = decodeURIComponent(new URL(x.req.url).pathname.replace(/^\/__video\//, "")); }catch(e){}
+    var title = file.split("/").pop().replace(/\.[a-z0-9]+$/i, "");
+    var row = document.createElement("div");
+    row.className = "row";
+    row.innerHTML = '<div class="name"><a href="video.html?video=' + encodeURIComponent(file) + '&source=site&title=' + encodeURIComponent(title) +
+      '" title="' + esc(file) + '">' + esc(title) + '</a></div><div class="size">' + mb(x.size) +
+      '</div><button type="button" class="small">Remove</button>';
+    row.querySelector("button").addEventListener("click", async function(){
+      var c = await caches.open(VIDEO_CACHE);
+      await c.delete(x.req);
+      try{
+        var s = JSON.parse(localStorage.getItem(STATE_KEY) || "{}") || {};
+        if(s.rec && s.rec[file]) delete s.rec[file];
+        localStorage.setItem(STATE_KEY, JSON.stringify(s));
+      }catch(e){}
+      refresh();
+    });
+    box.appendChild(row);
+  });
+}
+
+async function site(){
+  var list = await entries(SITE_CACHE);
+  $("siteText").textContent = list.length
+    ? "Pages, pictures and PDFs: " + list.length + " files, about " + mb(sum(list)) + ". They are saved as you look at them and replaced when the site is updated."
+    : "Pages, pictures and PDFs: nothing saved yet.";
+  $("clearSite").hidden = !list.length;
+}
+async function offline(){
+  var list = await entries(OFFLINE_CACHE);
+  $("offlineText").textContent = list.length
+    ? "Offline copy of the site: " + list.length + " files, about " + mb(sum(list)) + "."
+    : "";
+  $("offlineText").hidden = !list.length;
+  $("clearOffline").hidden = !list.length;
+}
+
+async function refresh(){
+  await Promise.all([usage(), videos(), site(), offline()]);
+}
+
+function paintToggle(btn, on){
+  btn.classList.toggle("active", on);
+  btn.setAttribute("aria-checked", on ? "true" : "false");
+}
+
+var saveOn = localStorage.getItem(OFF_KEY) !== "1";
+paintToggle($("saveToggle"), saveOn);
+$("saveToggle").addEventListener("click", function(){
+  saveOn = !saveOn;
+  try{ if(saveOn) localStorage.removeItem(OFF_KEY); else localStorage.setItem(OFF_KEY, "1"); }catch(e){}
+  paintToggle(this, saveOn);
+});
+
+$("clearVideos").addEventListener("click", async function(){
+  if(!confirm("Remove all saved videos from this device? They will download again if you watch them.")) return;
+  await caches.delete(VIDEO_CACHE);
+  try{ localStorage.removeItem(STATE_KEY); }catch(e){}
+  refresh();
+});
+$("clearSite").addEventListener("click", async function(){
+  if(!confirm("Clear saved pages, pictures and PDFs? They will be saved again as you open them.")) return;
+  await caches.delete(SITE_CACHE);
+  refresh();
+});
+$("clearOffline").addEventListener("click", async function(){
+  if(!confirm("Remove the offline copy of the site?")) return;
+  await caches.delete(OFFLINE_CACHE);
+  refresh();
+});
+$("bkExport").addEventListener("click", function(){ window.LT && LT.exportBackup(); });
+$("bkImport").addEventListener("click", function(){ window.LT && LT.importBackup(); });
+
+refresh();
+})();
+</script>
+</body>
+</html>

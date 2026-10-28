@@ -5,6 +5,7 @@
 <link rel="icon" type="image/png" href="file_000000000c40722f92b1fe6758cb4855.png">
 
 <meta charset="UTF-8">
+<script src="site-tools.js"></script>
 
 <meta
   name="viewport"
@@ -346,7 +347,8 @@ select:focus-visible{
   border-radius:6px;
 }
 
-#downloadFrameBtn{
+#downloadFrameBtn,
+#transcriptBtn{
   gap:6px;
 }
 
@@ -1885,6 +1887,7 @@ body.embed-api #embedWrap{
 }
 
 body.embed-api #downloadFrameBtn,
+body.embed-api #transcriptBtn,
 body.embed-api #pipBtn,
 body.embed-api #downloadBtn{
   display:none !important;
@@ -2882,6 +2885,8 @@ body.video-fullscreen.fs-rotate #videoStage{
 
   <button id="downloadFrameBtn" class="toolButton" title="Download current frame" aria-label="Download current frame"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M5 21h14"></path></svg><span>Frame</span></button>
 
+  <button id="transcriptBtn" class="toolButton" style="display:none" title="Transcript" aria-label="Transcript"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"></path></svg><span>Transcript</span></button>
+
   <button id="bookmarkButton" class="toolButton iconButton" title="Bookmarks" aria-haspopup="true"><svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor"><path d="M6 3a1 1 0 0 0-1 1v17l7-4.5 7 4.5V4a1 1 0 0 0-1-1H6z"></path></svg></button>
 
 </div>
@@ -2981,6 +2986,18 @@ body.video-fullscreen.fs-rotate #videoStage{
         <button id="pipBtn" class="videoPickerRow" title="Picture in Picture" aria-label="Picture in Picture">
           <span>Picture in Picture</span>
           <span class="videoPickerValue"><span id="pipStatusLabel">Off</span></span>
+        </button>
+        <button id="captionsRow" class="videoPickerRow" style="display:none" aria-label="Captions">
+          <span>Captions</span>
+          <span class="videoPickerValue"><span id="captionsRowLabel">Off</span></span>
+        </button>
+        <button id="transcriptRow" class="videoPickerRow" style="display:none" aria-label="Transcript">
+          <span>Transcript</span>
+          <span class="videoPickerValue"><span>Open</span></span>
+        </button>
+        <button id="abLoopBtn" class="videoPickerRow" title="Tap once to mark the start (A), again to mark the end (B), again to turn the loop off" aria-label="A to B loop">
+          <span>A–B loop</span>
+          <span class="videoPickerValue"><span id="abLoopLabel">Off</span></span>
         </button>
         <div class="videoPickerRow" id="autoplayRow">
           <span>Autoplay</span>
@@ -3093,9 +3110,14 @@ body.video-fullscreen.fs-rotate #videoStage{
     Share Video
   </button>
 
+  <button id="timeLinkBtn">
+    Copy link at this time
+  </button>
+
   <button id="fullscreenBtn">
     Fullscreen
   </button>
+
 
   <button id="linkOpenBtn">
     Open a Video
@@ -3104,6 +3126,9 @@ body.video-fullscreen.fs-rotate #videoStage{
   <button id="saveToggleBtn" style="display:none">
     Saving videos: On
   </button>
+
+  <button data-lt="cite">Cite / Reference</button>
+  <button data-lt="report">Report a correction</button>
 
 </div>
 
@@ -9607,6 +9632,368 @@ video.playbackRate =
     currentSpeed();
 
 
+
+/* ============================================================
+   A-B LOOP, LINK AT THIS TIME, CONTEXT FOR CITE / REPORT
+============================================================ */
+(function(){
+
+  const abBtn = document.getElementById("abLoopBtn");
+  const abLabel = document.getElementById("abLoopLabel");
+  let A = null, B = null, raf = 0;
+
+  function fmt(t){
+    try{ return formatTimestamp(t); }catch(e){ return t.toFixed(2) + "s"; }
+  }
+
+  function paint(){
+    if(A === null) abLabel.textContent = "Off";
+    else if(B === null) abLabel.textContent = "A " + fmt(A);
+    else abLabel.textContent = fmt(A) + " – " + fmt(B);
+    abBtn.classList.toggle("active", A !== null);
+  }
+
+  function tick(){
+    raf = 0;
+    if(A === null || B === null) return;
+    if(!video.paused){
+      const t = video.currentTime;
+      if(t >= B - 0.02 || t < A - 0.6){
+        video.currentTime = A;
+      }
+    }
+    raf = requestAnimationFrame(tick);
+  }
+
+  function start(){
+    if(!raf && A !== null && B !== null) raf = requestAnimationFrame(tick);
+  }
+
+  abBtn.addEventListener("click", () => {
+    const now = video.currentTime || 0;
+    if(A === null){
+      A = now;
+    }else if(B === null){
+      if(now < A){ B = A; A = now; }
+      else if(now - A < 0.05){ return; }
+      else B = now;
+      video.currentTime = A;
+      try{ video.play(); }catch(e){}
+      start();
+    }else{
+      A = null; B = null;
+    }
+    paint();
+  });
+
+  video.addEventListener("play", start);
+  video.addEventListener("ended", () => {
+    if(A !== null && B !== null){
+      video.currentTime = A;
+      try{ video.play(); }catch(e){}
+    }
+  });
+
+  /* ---- ?t=SECONDS opens at that moment ---- */
+  const startAt = parseFloat(params.get("t"));
+  if(startAt > 0){
+    const go = () => { try{ video.currentTime = startAt; }catch(e){} };
+    if(video.readyState >= 1) go();
+    else video.addEventListener("loadedmetadata", go, { once:true });
+  }
+
+  function linkAtTime(){
+    const u = new URL(window.location.href);
+    u.searchParams.delete("return");
+    u.searchParams.set("t", String(Math.floor(video.currentTime || 0)));
+    u.hash = "";
+    return u.href;
+  }
+
+  document.getElementById("timeLinkBtn").addEventListener("click", () => {
+    document.getElementById("menu").style.display = "none";
+    if(window.LT && LT.copy) LT.copy(linkAtTime());
+  });
+
+  window.LT = window.LT || {};
+  window.LT.context = () => ({
+    time: fmt(video.currentTime || 0),
+    link: linkAtTime()
+  });
+
+})();
+
+/* ============================================================
+   CAPTIONS + TRANSCRIPT
+   A transcript is a WebVTT (.vtt) or SRT file named after the video
+   and kept in the transcripts/ folder, e.g.
+     video "911/Tower 7 falling.mp4"  ->  transcripts/Tower 7 falling.vtt
+     YouTube video with id abc123      ->  transcripts/yt-abc123.vtt
+   If one exists, this adds a CC button (captions over the video)
+   and a Transcript panel (click a line to jump there, search inside
+   it). transcripts-list.json (made by build-transcripts.js) says
+   which videos have one, so no request is wasted on the others.
+============================================================ */
+(function(){
+
+  let base = "";
+  try{
+    if(embed && embed.api === "youtube" && embed.id) base = "yt-" + embed.id;
+    else if(!isLink && src) base = String(src).split("/").pop().replace(/\.[^/.]+$/, "");
+  }catch(e){}
+  if(!base) return;
+
+  const stage = document.getElementById("videoStage");
+  const ccBtn = document.createElement("button"); /* captions are switched from the Settings menu */
+  const trBtn = document.getElementById("transcriptBtn");
+  const ccRow = document.getElementById("captionsRow");
+  const ccRowLabel = document.getElementById("captionsRowLabel");
+  const trRow = document.getElementById("transcriptRow");
+
+  let cues = [];
+  let captionsOn = false;
+  try{ captionsOn = localStorage.getItem("videoCaptions") === "1"; }catch(e){}
+
+  const css = document.createElement("style");
+  css.textContent =
+    "#trCaption{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--titlebar-h) + 150px);" +
+      "max-width:min(80vw,900px);z-index:40;text-align:center;pointer-events:none;" +
+      "background:rgba(0,0,0,.78);color:#fff;padding:6px 12px;border-radius:8px;font:600 clamp(15px,2.2vw,22px)/1.35 Arial,sans-serif;" +
+      "text-shadow:0 1px 2px #000}" +
+    "#trCaption:empty{display:none}" +
+    "#trPanel{position:fixed;top:104px;right:12px;bottom:calc(var(--titlebar-h) + 12px);width:min(380px,calc(100vw - 24px));z-index:60;background:#222;color:#eee;padding:8px;box-sizing:border-box;" +
+      "border:1px solid #333;border-radius:10px;display:flex;flex-direction:column;font:13.5px Arial,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.5)}" +
+    "#trPanel.hidden{display:none}" +
+    "#trHead{display:flex;align-items:center;gap:8px;margin:0 0 8px;padding:0 2px 8px;border-bottom:1px solid #333}" +
+    "#trHead h4{margin:0;flex:1;font-size:14px;font-weight:600;color:#eee}" +
+    "#trHead button{background:none;color:#aaa;border:0;border-radius:6px;padding:4px 8px;font:inherit;cursor:pointer}" +
+    "#trHead button:hover{color:#fff;background:#383838}" +
+    "#trSearchRow{padding:0 0 6px}" +
+    "#trSearch{width:100%;box-sizing:border-box;background:#1d1d1d;color:#fff;border:1px solid #333;border-radius:8px;padding:9px 12px;font:inherit}" +
+    "#trSearch::placeholder{color:#777}" +
+    "#trCount{color:#777;font-size:12px;margin:6px 2px 0;min-height:14px}" +
+    "#trList{flex:1;overflow:auto;padding:0;display:flex;flex-direction:column;gap:2px;-webkit-overflow-scrolling:touch}" +
+    ".trRow{display:flex;gap:10px;width:100%;text-align:left;background:none;border:0;color:#cfcfcf;padding:8px 10px;border-radius:8px;cursor:pointer;font:inherit;line-height:1.4}" +
+    ".trRow:hover{background:#383838}" +
+    ".trRow.active{background:#2e2e2e;color:#fff}" +
+    ".trTime{color:#888;min-width:44px;font-variant-numeric:tabular-nums}" +
+    ".trRow.active .trTime{color:#ddd}" +
+    ".trRow mark{background:#fff;color:#000;border-radius:3px;padding:0 2px}" +
+    "body.video-fullscreen #trPanel{top:12px;bottom:12px}" +
+    "@media (max-width:700px){#trPanel{top:auto;left:12px;right:12px;width:auto;height:46vh;bottom:calc(var(--titlebar-h) + 12px)}" +
+      "#trList{padding-bottom:150px}#trCaption{bottom:calc(var(--titlebar-h) + 170px)}}";
+  document.head.appendChild(css);
+
+  const caption = document.createElement("div");
+  caption.id = "trCaption";
+  caption.setAttribute("aria-live", "off");
+  stage.appendChild(caption);
+
+  const panel = document.createElement("div");
+  panel.id = "trPanel";
+  panel.className = "hidden";
+  panel.innerHTML =
+    '<div id="trHead"><h4>Transcript</h4><button type="button" id="trDownload" title="Download as text">.txt</button>' +
+    '<button type="button" id="trClose" aria-label="Close transcript">✕</button></div>' +
+    '<div id="trSearchRow"><input id="trSearch" type="search" placeholder="Search this transcript" autocomplete="off">' +
+    '<div id="trCount"></div></div><div id="trList"></div>';
+  stage.appendChild(panel);
+
+  const list = panel.querySelector("#trList");
+  const searchBox = panel.querySelector("#trSearch");
+  const countBox = panel.querySelector("#trCount");
+
+  function esc(s){ return String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+  function stamp(t){
+    t = Math.max(0, Math.floor(t));
+    const h = Math.floor(t / 3600), m = Math.floor(t % 3600 / 60), s = t % 60;
+    return (h ? h + ":" + String(m).padStart(2, "0") : m) + ":" + String(s).padStart(2, "0");
+  }
+  function toSeconds(x){
+    const p = x.replace(",", ".").split(":").map(parseFloat);
+    while(p.length < 3) p.unshift(0);
+    return p[0] * 3600 + p[1] * 60 + p[2];
+  }
+  function clean(t){
+    return t.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"').replace(/&amp;/g, "&").replace(/\s+/g, " ").trim();
+  }
+  function parse(text){
+    const out = [];
+    text.replace(/\r/g, "").replace(/^﻿/, "").split(/\n\s*\n/).forEach(block => {
+      const lines = block.split("\n");
+      const i = lines.findIndex(l => l.indexOf("-->") >= 0);
+      if(i < 0) return;
+      const m = /([\d:.,]+)\s*-->\s*([\d:.,]+)/.exec(lines[i]);
+      if(!m) return;
+      const t = clean(lines.slice(i + 1).join(" "));
+      if(!t) return;
+      const prev = out[out.length - 1];
+      if(prev && prev.t === t) { prev.e = toSeconds(m[2]); return; }
+      out.push({ s: toSeconds(m[1]), e: toSeconds(m[2]), t });
+    });
+    return out.sort((a, b) => a.s - b.s);
+  }
+
+  /* ---------- panel ---------- */
+  let rows = [];
+  function render(query){
+    const q = (query || "").trim().toLowerCase();
+    let shown = 0;
+    list.innerHTML = "";
+    rows = [];
+    const re = q ? new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi") : null;
+    cues.forEach((c, i) => {
+      if(q && c.t.toLowerCase().indexOf(q) < 0) return;
+      shown++;
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "trRow";
+      b.dataset.i = String(i);
+      b.innerHTML = '<span class="trTime">' + stamp(c.s) + '</span><span>' +
+        (re ? esc(c.t).replace(new RegExp(esc(q).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi"), x => "<mark>" + x + "</mark>") : esc(c.t)) + '</span>';
+      list.appendChild(b);
+      rows.push(b);
+    });
+    countBox.textContent = q ? (shown + (shown === 1 ? " match" : " matches")) : "";
+    lastActive = -1;
+    highlight(true);
+  }
+
+  let userScrollAt = 0;
+  list.addEventListener("wheel", () => { userScrollAt = Date.now(); }, { passive:true });
+  list.addEventListener("touchmove", () => { userScrollAt = Date.now(); }, { passive:true });
+
+  list.addEventListener("click", e => {
+    const b = e.target.closest(".trRow");
+    if(!b) return;
+    const c = cues[+b.dataset.i];
+    try{ video.currentTime = c.s; }catch(err){}
+    try{ video.play(); }catch(err){}
+  });
+
+  function activeIndex(t){
+    let lo = 0, hi = cues.length - 1, ans = -1;
+    while(lo <= hi){
+      const mid = (lo + hi) >> 1;
+      if(cues[mid].s <= t){ ans = mid; lo = mid + 1; } else hi = mid - 1;
+    }
+    return ans;
+  }
+
+  let lastActive = -1;
+  function highlight(force){
+    const t = video.currentTime || 0;
+    const i = activeIndex(t);
+
+    // captions over the video
+    const c = i >= 0 && t < cues[i].e + 0.25 ? cues[i] : null;
+    caption.textContent = captionsOn && c ? c.t : "";
+
+    if(panel.classList.contains("hidden")) return;
+    if(i === lastActive && !force) return;
+    lastActive = i;
+    let el = null;
+    rows.forEach(r => {
+      const on = +r.dataset.i === i;
+      r.classList.toggle("active", on);
+      if(on) el = r;
+    });
+    if(el && Date.now() - userScrollAt > 3000){
+      const top = el.offsetTop - list.clientHeight / 3;
+      list.scrollTo({ top: Math.max(0, top), behavior: force ? "auto" : "smooth" });
+    }
+  }
+
+  // Sit just under the toolbar so the page menu stays reachable
+  // (in fullscreen / on phones the stylesheet decides instead).
+  function placePanel(){
+    const tb = document.getElementById("toolbar");
+    const sheet = window.matchMedia("(max-width:700px)").matches || document.body.classList.contains("video-fullscreen");
+    panel.style.top = (!sheet && tb) ? Math.round(tb.getBoundingClientRect().bottom) + "px" : "";
+  }
+  window.addEventListener("resize", placePanel);
+
+  function openPanel(q){
+    placePanel();
+    panel.classList.remove("hidden");
+    if(typeof q === "string") searchBox.value = q;
+    render(searchBox.value);
+    if(typeof q === "string" && q) searchBox.scrollIntoView({ block:"nearest" });
+  }
+  function closePanel(){ panel.classList.add("hidden"); }
+
+  panel.querySelector("#trClose").addEventListener("click", closePanel);
+  searchBox.addEventListener("input", () => render(searchBox.value));
+  // keep the viewer's own keyboard shortcuts out of the way while typing
+  searchBox.addEventListener("keydown", e => e.stopPropagation());
+  searchBox.addEventListener("keyup", e => e.stopPropagation());
+  panel.addEventListener("click", e => e.stopPropagation());
+
+  panel.querySelector("#trDownload").addEventListener("click", () => {
+    const text = cues.map(c => "[" + stamp(c.s) + "] " + c.t).join("\n") + "\n";
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([text], { type:"text/plain" }));
+    a.download = (document.getElementById("title").textContent.trim() || base) + " - transcript.txt";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+  });
+
+  /* ---------- captions toggle ---------- */
+  function paintCaptions(){
+    ccBtn.setAttribute("aria-pressed", captionsOn ? "true" : "false");
+    ccBtn.style.background = captionsOn ? "#fff" : "";
+    ccBtn.style.color = captionsOn ? "#111" : "";
+    ccRowLabel.textContent = captionsOn ? "On" : "Off";
+    highlight(true);
+  }
+  function toggleCaptions(){
+    captionsOn = !captionsOn;
+    try{ localStorage.setItem("videoCaptions", captionsOn ? "1" : "0"); }catch(e){}
+    paintCaptions();
+  }
+  ccBtn.addEventListener("click", toggleCaptions);
+  ccRow.addEventListener("click", toggleCaptions);
+  trBtn.addEventListener("click", () => panel.classList.contains("hidden") ? openPanel() : closePanel());
+  trRow.addEventListener("click", () => {
+    const m = document.getElementById("videoSettingsMenu"); if(m) m.classList.add("hidden");
+    openPanel();
+  });
+
+  ["timeupdate", "seeked", "seeking", "play", "loadedmetadata"].forEach(ev => video.addEventListener(ev, () => highlight(false)));
+
+  /* ---------- load ---------- */
+  function ready(){
+    if(!cues.length) return;
+    [ccBtn, trBtn, ccRow, trRow].forEach(b => { b.style.display = ""; });
+    paintCaptions();
+    window.LT = window.LT || {};
+    window.LT.transcript = { cues, open: openPanel };
+    const q = params.get("q");
+    if(q) openPanel(q);
+  }
+
+  function fetchText(url){
+    return fetch(url).then(r => {
+      const type = r.headers.get("content-type") || "";
+      if(!r.ok || /text\/html/i.test(type)) throw new Error("none");
+      return r.text();
+    });
+  }
+
+  fetchText("transcripts-list.json").then(t => {
+    const l = JSON.parse(t);
+    return Array.isArray(l) && l.indexOf(base) >= 0;
+  }, () => true).then(has => {
+    if(!has) return;
+    const name = "transcripts/" + encodeURIComponent(base);
+    return fetchText(name + ".vtt").catch(() => fetchText(name + ".srt")).then(text => {
+      cues = parse(text);
+      ready();
+    });
+  }).catch(() => {});
+
+})();
 </script>
 
 

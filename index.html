@@ -51,12 +51,25 @@
 <link rel="icon" type="image/png" href="file_000000000c40722f92b1fe6758cb4855.png">
 <link rel="stylesheet" href="featured-video.css">
     <meta charset="UTF-8">
+<script src="site-tools.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#111111">
 
-<title>Lanthano Research</title><style>
+<title>Lanthano Research</title><meta name="description" content="An independent archive of research papers, images and videos on controversial ideas, judged by evidence.">
+<link rel="canonical" href="https://lanthanoresearch.com/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Lanthano Research">
+<meta property="og:title" content="Lanthano Research">
+<meta property="og:description" content="An independent archive of research papers, images and videos on controversial ideas, judged by evidence.">
+<meta property="og:url" content="https://lanthanoresearch.com/">
+<meta property="og:image" content="https://lanthanoresearch.com/file_000000000c40722f92b1fe6758cb4855.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Lanthano Research">
+<meta name="twitter:description" content="An independent archive of research papers, images and videos on controversial ideas, judged by evidence.">
+<meta name="twitter:image" content="https://lanthanoresearch.com/file_000000000c40722f92b1fe6758cb4855.png">
+<style>
 
 
     .qr-block{
@@ -1077,6 +1090,7 @@ border-bottom:1px solid #333;
 opacity:.6;
 background:#2a2a2a;
 }
+
 .search-wrapper{
 position:relative;
 max-width:800px;
@@ -2544,7 +2558,7 @@ disabled
 type="button"
 id="sxBtn"
 class="sx-gear"
-aria-label="Search settings"
+aria-label="Search filters"
 aria-expanded="false"
 >
 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1z"></path></svg>
@@ -2555,43 +2569,27 @@ aria-expanded="false"
 <div class="sx-panel" id="sxPanel" role="dialog" aria-modal="true" aria-labelledby="sxHeading" tabindex="-1">
 <div class="sx-head">
 <div class="sx-headtext">
-<h3 id="sxHeading">Search settings</h3>
-<p class="sx-sub">Choose how search results are shown.</p>
+<h3 id="sxHeading">Search filters</h3>
+<p class="sx-sub">Only show results from papers that match.</p>
 </div>
-<button type="button" class="sx-close" id="sxClose" aria-label="Close settings" title="Close">✕</button>
+<button type="button" class="sx-close" id="sxClose" aria-label="Close filters" title="Close">✕</button>
 </div>
 <div class="sx-scroll">
 
-<div class="sx-title">Layout</div>
-<button type="button" class="sx-row" id="sx-layoutOpen" data-picker="layout" aria-haspopup="true" aria-expanded="false">
-<span>Show results as</span>
-<span class="sx-value"><span id="sx-layoutValue"></span><span class="sx-caret" aria-hidden="true"></span></span>
+<button type="button" class="sx-row" id="sx-fcatOpen" data-picker="fcat" aria-haspopup="true" aria-expanded="false">
+<span>Category</span>
+<span class="sx-value"><span id="sx-fcatValue"></span><span class="sx-caret" aria-hidden="true"></span></span>
 </button>
-<p class="sx-note" id="sx-layoutNote"></p>
-
-<div class="sx-title">Number of results</div>
-<p class="sx-note">The most of each kind to show.</p>
-<button type="button" class="sx-row" id="sx-pdfsOpen" data-picker="pdfs" aria-haspopup="true" aria-expanded="false">
-<span>Documents</span>
-<span class="sx-value"><span id="sx-pdfsValue"></span><span class="sx-caret" aria-hidden="true"></span></span>
+<button type="button" class="sx-row" id="sx-fmediaOpen" data-picker="fmedia" aria-haspopup="true" aria-expanded="false">
+<span>Contains</span>
+<span class="sx-value"><span id="sx-fmediaValue"></span><span class="sx-caret" aria-hidden="true"></span></span>
 </button>
-<button type="button" class="sx-row" id="sx-videosOpen" data-picker="videos" aria-haspopup="true" aria-expanded="false">
-<span>Videos</span>
-<span class="sx-value"><span id="sx-videosValue"></span><span class="sx-caret" aria-hidden="true"></span></span>
-</button>
-<button type="button" class="sx-row" id="sx-imagesOpen" data-picker="images" aria-haspopup="true" aria-expanded="false">
-<span>Images</span>
-<span class="sx-value"><span id="sx-imagesValue"></span><span class="sx-caret" aria-hidden="true"></span></span>
+<button type="button" class="sx-row" id="sx-fyearOpen" data-picker="fyear" aria-haspopup="true" aria-expanded="false">
+<span>Updated</span>
+<span class="sx-value"><span id="sx-fyearValue"></span><span class="sx-caret" aria-hidden="true"></span></span>
 </button>
 
-<div class="sx-title">Matching</div>
-<div class="sx-row" id="sx-fillRow">
-<span id="sx-fillLabel">Always fill slots</span>
-<button type="button" class="sx-toggle" id="sx-fill" role="switch" aria-checked="false" aria-labelledby="sx-fillLabel"><span class="sx-knob"></span></button>
-</div>
-<p class="sx-note">Off: only good matches are shown. On: weaker partial matches fill each section up to its number.</p>
-
-<button type="button" class="sx-row sx-resetRow" id="sx-reset">Reset to defaults</button>
+<button type="button" class="sx-row sx-resetRow" id="sx-reset">Clear filters</button>
 
 </div>
 </div>
@@ -2772,6 +2770,10 @@ tag();
 <a href="contact.html">Contact</a>
 
     <a href="support.html">Support</a>
+
+<a href="storage.html">Storage</a>
+
+<a href="settings.html">Settings</a>
 
 <button class="share-button" onclick="shareSite()">
 Share Site
@@ -3282,7 +3284,7 @@ if(x.length >= 4 && x.length <= 20) m.set(x, (m.get(x) || 0) + w);
 });
 };
 pdfList.forEach(r => { add(r._title, 25); add(r._body, 1); });
-videoList.forEach(r => add(r._title, 10));
+videoList.forEach(r => { add(r._title, 10); add(r._txText, 1); });
 imageList.forEach(r => add(r._title, 5));
 searchVocab = m;
 return m;
@@ -3332,12 +3334,115 @@ return best;
 function tokenHasHits(tok){
 const re = searchWordRe(stemToken(tok));
 return pdfList.some(r => re.test(r._title) || re.test(r._body)) ||
-videoList.some(r => re.test(r._title)) ||
+videoList.some(r => re.test(r._title) || (r._txText && re.test(r._txText))) ||
 imageList.some(r => re.test(r._title));
 }
 
 let searchHighlight = [];
 let searchExactQuery = null;
+
+/* ---------- Search filters: category, contains, updated ---------- */
+let searchFilters = { category:"", media:"", year:"" };
+try{ Object.assign(searchFilters, JSON.parse(sessionStorage.getItem("searchFilters") || "{}")); }catch(e){}
+
+function passesFilters(item){
+const f = searchFilters;
+if(!f.category && !f.media && !f.year) return true;
+const p = papersByUrl[item.paperUrl || item.url];
+if(!p) return false;
+if(f.category && !(p.category || []).includes(f.category)) return false;
+const hasV = !!(p.videos && p.videos.length), hasI = !!(p.images && p.images.length);
+if(f.media === "videos" && !hasV) return false;
+if(f.media === "images" && !hasI) return false;
+if(f.media === "both" && !(hasV && hasI)) return false;
+if(f.year && String(p.updated || "").slice(0,4) !== f.year) return false;
+return true;
+}
+
+// Choices for the Filter rows in Search settings (filled in once papers load).
+const FILTER_CHOICES = {
+fcat: [["", "All categories"]],
+fmedia: [["", "Anything"], ["videos", "Has videos"], ["images", "Has images"], ["both", "Videos and images"]],
+fyear: [["", "Any year"]]
+};
+
+function buildSearchFilters(){
+const papers = Object.values(papersByUrl || {});
+if(!papers.length) return;
+const cats = [...new Set(papers.flatMap(p => p.category || []))].sort();
+const years = [...new Set(papers.map(p => String(p.updated || "").slice(0,4)).filter(Boolean))].sort().reverse();
+FILTER_CHOICES.fcat = [["", "All categories"], ...cats.map(c => [c, c.charAt(0).toUpperCase() + c.slice(1)])];
+FILTER_CHOICES.fyear = [["", "Any year"], ...years.map(y => [y, "Updated " + y])];
+if(window.__sxApply) window.__sxApply();
+}
+
+function saveSearchFilters(){
+try{ sessionStorage.setItem("searchFilters", JSON.stringify(searchFilters)); }catch(e){}
+}
+
+// "Medical · Has videos" - shown with the result count while filters are on.
+function filterSummary(){
+const out = [];
+const f = searchFilters;
+if(f.category) out.push(f.category.charAt(0).toUpperCase() + f.category.slice(1));
+if(f.media) out.push((FILTER_CHOICES.fmedia.find(o => o[0] === f.media) || [0, ""])[1]);
+if(f.year) out.push("Updated " + f.year);
+return out.join(" · ");
+}
+
+/* ---------- Video transcripts: search words that are spoken ---------- */
+function videoBase(file){
+return String(file || "").split("/").pop().replace(/\.[^/.]+$/, "");
+}
+
+function loadTranscripts(){
+fetch("transcripts.json").then(r => {
+if(!r.ok) throw new Error("none");
+return r.json();
+}).then(j => {
+const map = (j && j.videos) || {};
+let any = false;
+videoList.forEach(r => {
+const chunks = map[videoBase(r.videoFile)];
+if(!chunks || !chunks.length) return;
+r._txRaw = chunks;
+r._txText = chunks.map(c => c[1]).join(" ").toLowerCase();
+any = true;
+});
+if(any) searchVocab = null;
+if(any && searchBox.value.trim().length >= 2){
+searchBox.dispatchEvent(new Event("input"));
+}
+}).catch(() => {});
+}
+
+// The first piece of a video's transcript that matches the search, or null.
+function transcriptHit(item, matchers){
+if(!item._txRaw || !matchers) return null;
+const { phraseRe, tokRes } = matchers;
+let all = null;
+for(const c of item._txRaw){
+const low = c[1].toLowerCase();
+if(phraseRe.test(low)) return { t:c[0], text:c[1], low };
+if(!all && tokRes.every(r => r.test(low))) all = { t:c[0], text:c[1], low };
+}
+return all;
+}
+
+function transcriptSnippet(hit, matchers){
+let pos = 0;
+const m = matchers.phraseRe.exec(hit.low);
+if(m) pos = m.index;
+else{
+for(const r of matchers.tokRes){ const x = r.exec(hit.low); if(x){ pos = x.index; break; } }
+}
+if(hit.low.length !== hit.text.length) pos = 0;
+const start = Math.max(0, pos - 60);
+let out = hit.text.slice(start, start + 170).trim();
+if(start > 0) out = "…" + out;
+if(start + 170 < hit.text.length) out += "…";
+return out;
+}
 
 function rankSearch(query, opts){
 
@@ -3454,6 +3559,7 @@ const minS = fill ? 18 : SEARCH_MIN_SCORE;
 const fuzzy = fuzzyMap(fuse);
 let out = [];
 list.forEach((item, index) => {
+if(!passesFilters(item)) return;
 let score = scorer(item);
 let fuzzyHit = false;
 if(score < minS && fuzzy.has(item)){
@@ -3493,7 +3599,9 @@ return Math.min(50, titleScore(field((paperTitle || "").toLowerCase())));
 const videos = pick(videoList, item =>
 Math.max(
 titleScore(field(item._title)),
-relatedScore(item.paperTitle)
+relatedScore(item.paperTitle),
+// words spoken in the video (from its transcript), ranked below title matches
+item._txText ? Math.min(60, bodyScore(field(item._txText))) : 0
 ), videoFuse, searchSettings.limits.videos, item => relatedScore(item.paperTitle), 30);
 
 const images = pick(imageList, item =>
@@ -3808,6 +3916,7 @@ videoThumb:(v.thumbnail && String(v.thumbnail).trim())
 ? String(v.thumbnail).trim()
 : "thumbnails/" + base + ".jpg",
 paperTitle:label,
+paperUrl:paper.url,
 warning: paper.warning,
 searchText:
 (
@@ -3837,6 +3946,8 @@ videoList = videoRecords;
 videoRecords.forEach(r => { r._title = (r.videoTitle || "").toLowerCase(); });
 
 searchReady = true;
+buildSearchFilters();
+loadTranscripts();
 
 searchBox.disabled = false;
 searchBox.placeholder = "Search all research...";
@@ -4110,18 +4221,14 @@ let sxOpenPicker = null;
 // Live at the page root so nothing in the layout can clip or offset them.
 document.body.append(sxBlocker, sxPanel, sxPopup);
 
-const SX_PICKERS = {
-layout: {
-options: [["grouped", "Sections"], ["mixed", "Mixed"]],
-get: () => searchSettings.layout,
-set: v => { searchSettings.layout = v; }
-}
-};
-["pdfs", "videos", "images"].forEach(key => {
+const SX_PICKERS = {};
+
+const FILTER_KEYS = { fcat:"category", fmedia:"media", fyear:"year" };
+Object.keys(FILTER_KEYS).forEach(key => {
 SX_PICKERS[key] = {
-options: SEARCH_COUNT_CHOICES.map(n => [String(n), String(n)]),
-get: () => String(searchSettings.limits[key]),
-set: v => { searchSettings.limits[key] = Number(v); }
+get options(){ return FILTER_CHOICES[key]; },
+get: () => searchFilters[FILTER_KEYS[key]] || "",
+set: v => { searchFilters[FILTER_KEYS[key]] = v; saveSearchFilters(); }
 };
 });
 
@@ -4134,19 +4241,11 @@ const cur = g.options.find(o => o[0] === g.get());
 const el = document.getElementById("sx-" + key + "Value");
 if(el) el.textContent = cur ? cur[1] : "";
 });
-const note = document.getElementById("sx-layoutNote");
-if(note){
-note.textContent = searchSettings.layout === "grouped"
-? "Sections: documents first, then videos, then images."
-: "Mixed: one list ranked by relevance. Documents rank highest, then videos, then images.";
-}
-const fill = document.getElementById("sx-fill");
-fill.classList.toggle("sx-on", searchSettings.fill);
-fill.setAttribute("aria-checked", searchSettings.fill ? "true" : "false");
 }
 
+window.__sxApply = () => applySx();
+
 function sxChanged(){
-saveSearchSettings();
 applySx();
 if(searchReady && searchBox.value.trim().length >= 2){
 searchBox.dispatchEvent(new Event("input"));
@@ -4274,7 +4373,6 @@ sxPanel.classList.remove("sx-open");
 sxBlocker.classList.add("sx-hidden");
 sxBtn.setAttribute("aria-expanded", "false");
 sxUnlockScroll();
-saveSearchSettings();
 if(searchReady && searchBox.value.trim().length >= 2){
 // Make sure what's on screen reflects the current settings.
 searchBox.dispatchEvent(new Event("input"));
@@ -4315,11 +4413,9 @@ const t = e.target.closest("button");
 if(!t) return;
 if(t.id === "sxClose"){
 setSxOpen(false);
-}else if(t.id === "sx-fill"){
-searchSettings.fill = !searchSettings.fill;
-sxChanged();
 }else if(t.id === "sx-reset"){
-searchSettings = JSON.parse(JSON.stringify(SEARCH_DEFAULTS));
+searchFilters = { category:"", media:"", year:"" };
+saveSearchFilters();
 sxChanged();
 }
 });
@@ -4551,7 +4647,8 @@ html += `
 html += `<div class="search-correct"><div class="search-correct-main">No exact match. Showing the closest results.</div></div>`;
 }
 
-html += `<div class="search-tally">${plural(total, "result")} <span>· ${tally}</span></div>`;
+const fsum = filterSummary();
+html += `<div class="search-tally">${plural(total, "result")} <span>· ${tally}</span>${fsum ? ` <span>· Filtered: ${escHtml(fsum)}</span>` : ""}</div>`;
 html += `</div>`;
 
 }
@@ -4655,11 +4752,25 @@ videoResults.forEach(result => {
 
 const vr = result.item;
 
-const videoHref =
+let videoHref =
 "video.html?video=" + encodeURIComponent(vr.videoFile) +
 (vr.videoSite ? "" : "&source=r2") +
 "&title=" + encodeURIComponent(vr.videoTitle) +
 "&paper=" + encodeURIComponent(vr.paperTitle);
+
+// If the words were found in what is SAID in the video (and not in its
+// title), show the spoken line and open the video at that moment.
+let spoken = "";
+if(vr._txRaw && ranked.matchers){
+const tm = ranked.matchers;
+const inTitle = tm.phraseRe.test(vr._title) || tm.tokRes.every(r => r.test(vr._title));
+const hit = inTitle ? null : transcriptHit(vr, tm);
+if(hit){
+videoHref += "&t=" + Math.floor(hit.t) + "&q=" + encodeURIComponent(query);
+const mm = Math.floor(hit.t / 60), ss = String(Math.floor(hit.t % 60)).padStart(2, "0");
+spoken = `<div class="search-snippet">Said at ${mm}:${ss}: “${highlightMatch(transcriptSnippet(hit, tm), query)}”</div>`;
+}
+}
 
 videoItems.push(`
 <a
@@ -4704,6 +4815,7 @@ ${FavMedia.heart("video", vr.videoFile)}
        <div class="search-source">
            Video${vr.videoDuration ? " • " + vr.videoDuration : ""} • From: ${highlightMatch(vr.paperTitle, query)}
        </div>
+       ${spoken}
 
    </div>
 
@@ -4806,7 +4918,7 @@ if(!html){
 searchResults.innerHTML = `
        <div class="search-empty">
            <div class="search-empty-title">No results for &ldquo;${escHtml(query)}&rdquo;</div>
-           <div class="search-empty-sub">Check the spelling, or try fewer or more general words.</div>
+           <div class="search-empty-sub">${filterSummary() ? "Filters are on (" + escHtml(filterSummary()) + "). Change them in Search settings, or " : ""}${filterSummary() ? "try" : "Check the spelling, or try"} fewer or more general words.</div>
        </div>
    `;
 

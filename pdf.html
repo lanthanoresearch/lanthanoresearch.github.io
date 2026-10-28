@@ -3,8 +3,20 @@
 <head>
 <link rel="icon" type="image/png" href="file_000000000c40722f92b1fe6758cb4855.png">
 <meta charset="UTF-8">
+<script src="site-tools.js"></script>
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <title>PDF Viewer</title>
+<meta name="description" content="Read a paper from the Lanthano Research archive.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Lanthano Research">
+<meta property="og:title" content="Paper | Lanthano Research">
+<meta property="og:description" content="Read a paper from the Lanthano Research archive.">
+<meta property="og:image" content="https://lanthanoresearch.com/file_000000000c40722f92b1fe6758cb4855.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Paper | Lanthano Research">
+<meta name="twitter:description" content="Read a paper from the Lanthano Research archive.">
+<meta name="twitter:image" content="https://lanthanoresearch.com/file_000000000c40722f92b1fe6758cb4855.png">
+
 <style>
 
 /* ============================================================
@@ -4505,6 +4517,8 @@ body.reading-mode #readingModeFloat{
 
 <button id="bookmarkButton" class="toolButton iconButton" title="Bookmarks" aria-haspopup="true"><svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor"><path d="M6 3a1 1 0 0 0-1 1v17l7-4.5 7 4.5V4a1 1 0 0 0-1-1H6z"></path></svg></button>
 
+<button id="sourcesButton" class="toolButton" data-lt="sources" style="display:none" title="Sources" aria-label="Sources"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-right:5px;flex-shrink:0"><path d="M10 13a5 5 0 0 0 7.1 0l3-3a5 5 0 0 0-7.1-7.1l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.1 0l-3 3a5 5 0 0 0 7.1 7.1l1.7-1.7"/></svg>Sources</button>
+
 <div class="pageControls">
 <label>Page</label>
 <input id="pageNumber" value="1" inputmode="numeric" aria-label="Page number">
@@ -4689,6 +4703,9 @@ body.reading-mode #readingModeFloat{
 <button id="newTabBtn">Open in New Tab</button>
 <button id="copyLinkBtn">Share PDF</button>
 <button id="fullscreenBtn">Fullscreen</button>
+  <button data-lt="cite">Cite / Reference</button>
+  <button data-lt="report">Report a correction</button>
+
 </div>
 <!-- ==========================================================
      IMAGE CONTEXT MENU
@@ -17164,11 +17181,7 @@ document.getElementById("fullscreenBtn").onclick = async () => {
    SHARE
 ============================================================ */
 
-document.getElementById("copyLinkBtn").addEventListener("click", async () => {
-
-  const url = window.location.href;
-
-  menu.style.display = "none";
+async function shareLink(url){
 
   if(navigator.share){
 
@@ -17187,15 +17200,44 @@ document.getElementById("copyLinkBtn").addEventListener("click", async () => {
     return;
   }
 
+  if(window.LT && LT.copy){
+    LT.copy(url);
+    return;
+  }
+
   try{
-
     await navigator.clipboard.writeText(url);
-
-    alert("Link copied to clipboard!");
-
   }catch{
     window.prompt("Copy this link:", url);
   }
+}
+
+document.getElementById("copyLinkBtn").addEventListener("click", () => {
+
+  menu.style.display = "none";
+
+  const whole = new URL(window.location.href);
+  whole.searchParams.delete("return");
+  whole.searchParams.delete("page");
+  whole.hash = "";
+
+  const page = getNearestVisiblePage();
+
+  // On page 1 there is nothing to choose between.
+  if(page <= 1 || !window.LT || !LT.ask){
+    shareLink(whole.href);
+    return;
+  }
+
+  LT.ask(
+    "Share this PDF",
+    "Share the whole PDF, or a link that opens it on page " + page + "?",
+    [
+      { label: "Whole PDF", primary: true, onClick: () => shareLink(whole.href) },
+      { label: "From page " + page, onClick: () => shareLink(linkToCurrentPage()) }
+    ]
+  );
+
 });
 
 /* ============================================================
@@ -17772,7 +17814,24 @@ try{
   // this usually resolves instantly.
   await controversialGate;
 
-  maybeOfferResume();
+  // A link like pdf.html?file=...&page=12 opens straight on that page
+  // (and skips the "resume where you left off" question).
+  let deepLinked = false;
+  try{
+    const wantPage = parseInt(params.get("page"), 10);
+    if(wantPage > 0){
+      const view = await ensurePageView(Math.min(pdfDoc.numPages, wantPage));
+      if(view){
+        pageInput.value = String(view.pageNumber);
+        await scrollToView(view);
+        deepLinked = true;
+      }
+    }
+  }catch(error){
+    console.warn("Could not open the linked page:", error);
+  }
+
+  if(!deepLinked) maybeOfferResume();
 
   void (async () => {
 
@@ -17826,6 +17885,29 @@ try{
     </div>
   `;
 }
+
+/* ============================================================
+   Link to the current page (used by Share) + context for Cite / Report
+============================================================ */
+
+function linkToCurrentPage(){
+  const u = new URL(window.location.href);
+  u.searchParams.delete("return");
+  u.searchParams.set("page", String(getNearestVisiblePage()));
+  u.hash = "";
+  return u.href;
+}
+
+window.LT = window.LT || {};
+if(LT.hasSources){
+  LT.hasSources().then(yes => {
+    if(yes) document.getElementById("sourcesButton").style.display = "";
+  });
+}
+window.LT.context = () => ({
+  page: String(getNearestVisiblePage()),
+  link: linkToCurrentPage()
+});
 
 /* ============================================================
    CLEANUP
