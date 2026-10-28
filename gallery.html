@@ -85,9 +85,22 @@
 
 <link rel="icon" type="image/png" href="file_000000000c40722f92b1fe6758cb4855.png">
 <meta charset="UTF-8">
+<script src="site-tools.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Gallery</title>
 
+<meta name="description" content="Images and videos from the Lanthano Research archive, grouped by the paper they belong to.">
+<link rel="canonical" href="https://lanthanoresearch.com/gallery.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Lanthano Research">
+<meta property="og:title" content="Gallery | Lanthano Research">
+<meta property="og:description" content="Images and videos from the Lanthano Research archive, grouped by the paper they belong to.">
+<meta property="og:url" content="https://lanthanoresearch.com/gallery.html">
+<meta property="og:image" content="https://lanthanoresearch.com/file_000000000c40722f92b1fe6758cb4855.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Gallery | Lanthano Research">
+<meta name="twitter:description" content="Images and videos from the Lanthano Research archive, grouped by the paper they belong to.">
+<meta name="twitter:image" content="https://lanthanoresearch.com/file_000000000c40722f92b1fe6758cb4855.png">
 <style>
 body{
     margin:0;
@@ -625,6 +638,39 @@ h1{
 }
 
 .paper-break-count{ order:2; }
+
+/* Download this section as a .zip: a quiet icon at the end of the heading line. */
+.paper-break-dl{
+    order:4;
+    flex:0 0 auto;
+    box-sizing:border-box;
+    width:30px;
+    height:30px;
+    margin:-6px 0;
+    padding:0;
+    border:0;
+    border-radius:50%;
+    background:transparent;
+    color:#777;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+    transition:background .15s ease, color .15s ease;
+}
+.paper-break-dl svg{
+    width:17px;
+    height:17px;
+    fill:none;
+    stroke:currentColor;
+    stroke-width:2;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+    pointer-events:none;
+}
+.paper-break-dl:hover{ background:#262626; color:#ddd; }
+.paper-break-dl:focus-visible{ outline:2px solid #777; outline-offset:1px; }
 
 /* Pushes the last row of a paper to stay natural width instead of
    stretching a lone picture across the whole page. */
@@ -2484,6 +2530,26 @@ function render(){
                 items.length + " " + (items.length === 1 ? one : many).toLowerCase();
 
             brk.append(name, count);
+
+            // One download button per section: its pictures and/or videos as a .zip.
+            const dl = document.createElement("button");
+            dl.type = "button";
+            dl.className = "paper-break-dl";
+            dl.title = "Download this section (.zip)";
+            dl.setAttribute("aria-label", "Download " + (paper.label || paper.title) + " as a zip");
+            dl.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11"/><path d="M7.5 11 12 15.5 16.5 11"/><path d="M5 19.5h14"/></svg>';
+            dl.addEventListener("click", e => {
+                e.stopPropagation();
+                if(!window.LT || !LT.zipAssets) return;
+                let imgs = [], vids = [];
+                if(mode === "images") imgs = items.slice();
+                else if(mode === "videos") vids = items.slice();
+                else{
+                    items.forEach(it => { if(it.kind === "video") vids.push(it.v); else if(it.src) imgs.push(it.src); });
+                }
+                LT.zipAssets(paper.label || paper.title, imgs, vids);
+            });
+            brk.appendChild(dl);
             fragment.appendChild(brk);
         }
 

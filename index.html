@@ -247,7 +247,8 @@ overflow:hidden;
 cursor:pointer;
 transition:.2s ease;
 
-height:260px;
+/* min-height (not height) so larger text sizes grow the card instead of cutting it off */
+min-height:260px;
 }
 .featured-card:hover{
 background:#252525;
@@ -302,6 +303,10 @@ object-fit:cover;
 
 display:block;
 
+position:absolute;
+
+inset:0;
+
 }
 
 .featured-content{
@@ -345,6 +350,10 @@ z-index:500;
 
 
 .featured-pdf-icon{
+
+position:absolute;
+
+inset:0;
 
 width:100%;
 
@@ -493,7 +502,7 @@ position:relative;
 
 width:320px;
 
-height:100%;
+align-self:stretch;
 
 overflow:hidden;
 
@@ -634,7 +643,7 @@ flex-shrink:0;
 
 flex-direction:column;
 
-height:400px;
+min-height:400px;
 
 }
 
@@ -2748,7 +2757,8 @@ var cs=getComputedStyle(all[i]);
 if(parseFloat(cs.borderTopLeftRadius)>0&&all[i].getBoundingClientRect().width>200){
 var r=all[i].getBoundingClientRect();
 var gap=c.getBoundingClientRect().top-r.bottom;
-c.style.marginTop=(10-gap)+"px";
+var z=parseFloat(document.documentElement.style.zoom)||1;
+c.style.marginTop=(10-gap/z)+"px";
 return;
 }
 }

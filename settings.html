@@ -209,6 +209,7 @@ p{
     background:#fff;
 }
 
+a.inl{color:#9ab8ff}
 </style>
 </head>
 <body>
@@ -224,9 +225,20 @@ p{
         <div class="rows" id="appearance"></div>
     </div>
 
+    <div class="card">
+        <h2>Videos</h2>
+        <div class="rows">
+            <div class="row">
+                <span>Keep videos I watch</span>
+                <button type="button" class="toggleSwitch" id="saveToggle" role="switch" aria-checked="true" aria-label="Keep videos I watch"><span class="toggleKnob"></span></button>
+            </div>
+        </div>
+        <p class="note">On: a video is kept on this device the first time you watch it, so it replays faster. Off: nothing new is kept. Videos already kept can be removed on the <a href="storage.html" class="inl">Storage</a> page.</p>
+    </div>
+
     <div class="card" id="installCard" hidden>
         <h2>Install app</h2>
-        <p class="note">Add Lanthano Research to this device so it opens like an app and works offline.</p>
+        <p class="note">Add Lanthano Research to this device so it opens like an app.</p>
         <div class="actions"><button type="button" class="btn" id="installBtn">Install</button></div>
     </div>
 
@@ -252,10 +264,6 @@ p{
 <script>
 (function(){
 "use strict";
-var VIDEO_CACHE = "lanthano-saved-videos";
-var SITE_CACHE = "lanthano-site-files";
-var OFFLINE_CACHE = "lanthano-offline-app";
-var STATE_KEY = "savedVideoLog2";
 var OFF_KEY = "savedVideosOff";
 
 function $(id){ return document.getElementById(id); }
@@ -266,6 +274,20 @@ function mb(n){
   return n + " B";
 }
 function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+
+/* Keep videos I watch */
+var saveOn = true;
+try{ saveOn = localStorage.getItem(OFF_KEY) !== "1"; }catch(e){}
+function paintSave(){
+  $("saveToggle").classList.toggle("active", saveOn);
+  $("saveToggle").setAttribute("aria-checked", saveOn ? "true" : "false");
+}
+paintSave();
+$("saveToggle").addEventListener("click", function(){
+  saveOn = !saveOn;
+  try{ if(saveOn) localStorage.removeItem(OFF_KEY); else localStorage.setItem(OFF_KEY, "1"); }catch(e){}
+  paintSave();
+});
 
 /* Appearance: the same picker rows as the Settings panel */
 if(window.LT) LT.addAppearanceRows($("appearance"));

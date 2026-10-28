@@ -209,6 +209,7 @@ p{
     background:#fff;
 }
 
+a.inl{color:#9ab8ff}
 </style>
 </head>
 <body>
@@ -227,20 +228,13 @@ p{
 
         <div class="rows" id="videoList"></div>
 
-        <div class="rows">
-            <div class="row">
-                <span>Keep videos I watch</span>
-                <button type="button" class="toggleSwitch" id="saveToggle" role="switch" aria-checked="true" aria-label="Keep videos I watch on this device"><span class="toggleKnob"></span></button>
-            </div>
-        </div>
+        <p class="note">Videos you watch are kept here so they replay faster. You can turn that off in <a href="settings.html" class="inl">Settings</a>.</p>
 
         <p class="note" id="siteText"></p>
-        <p class="note" id="offlineText"></p>
 
         <div class="actions">
             <button type="button" class="btn danger" id="clearVideos">Remove saved videos</button>
             <button type="button" class="btn danger" id="clearSite">Clear pages, pictures and PDFs</button>
-            <button type="button" class="btn danger" id="clearOffline" hidden>Remove offline app copy</button>
         </div>
     </div>
 
@@ -260,9 +254,7 @@ p{
 "use strict";
 var VIDEO_CACHE = "lanthano-saved-videos";
 var SITE_CACHE = "lanthano-site-files";
-var OFFLINE_CACHE = "lanthano-offline-app";
 var STATE_KEY = "savedVideoLog2";
-var OFF_KEY = "savedVideosOff";
 
 function $(id){ return document.getElementById(id); }
 function mb(n){
@@ -323,6 +315,7 @@ async function videos(){
       '" title="' + esc(file) + '">' + esc(title) + '</a></div><div class="size">' + mb(x.size) +
       '</div><button type="button" class="small">Remove</button>';
     row.querySelector("button").addEventListener("click", async function(){
+      if(!(await LT.confirmDelete("Remove this video?", "\u201c" + title + "\u201d will be removed from this device. It downloads again if you watch it.", "Remove video"))) return;
       var c = await caches.open(VIDEO_CACHE);
       await c.delete(x.req);
       try{
@@ -343,46 +336,19 @@ async function site(){
     : "Pages, pictures and PDFs: nothing saved yet.";
   $("clearSite").hidden = !list.length;
 }
-async function offline(){
-  var list = await entries(OFFLINE_CACHE);
-  $("offlineText").textContent = list.length
-    ? "Offline copy of the site: " + list.length + " files, about " + mb(sum(list)) + "."
-    : "";
-  $("offlineText").hidden = !list.length;
-  $("clearOffline").hidden = !list.length;
-}
-
 async function refresh(){
-  await Promise.all([usage(), videos(), site(), offline()]);
+  await Promise.all([usage(), videos(), site()]);
 }
-
-function paintToggle(btn, on){
-  btn.classList.toggle("active", on);
-  btn.setAttribute("aria-checked", on ? "true" : "false");
-}
-
-var saveOn = localStorage.getItem(OFF_KEY) !== "1";
-paintToggle($("saveToggle"), saveOn);
-$("saveToggle").addEventListener("click", function(){
-  saveOn = !saveOn;
-  try{ if(saveOn) localStorage.removeItem(OFF_KEY); else localStorage.setItem(OFF_KEY, "1"); }catch(e){}
-  paintToggle(this, saveOn);
-});
 
 $("clearVideos").addEventListener("click", async function(){
-  if(!confirm("Remove all saved videos from this device? They will download again if you watch them.")) return;
+  if(!(await LT.confirmDelete("Remove all saved videos?", "Every video saved on this device will be removed. They download again if you watch them.", "Remove all videos"))) return;
   await caches.delete(VIDEO_CACHE);
   try{ localStorage.removeItem(STATE_KEY); }catch(e){}
   refresh();
 });
 $("clearSite").addEventListener("click", async function(){
-  if(!confirm("Clear saved pages, pictures and PDFs? They will be saved again as you open them.")) return;
+  if(!(await LT.confirmDelete("Clear saved pages and files?", "Saved pages, pictures and PDFs will be cleared from this device. They are saved again as you open them.", "Clear saved files"))) return;
   await caches.delete(SITE_CACHE);
-  refresh();
-});
-$("clearOffline").addEventListener("click", async function(){
-  if(!confirm("Remove the offline copy of the site?")) return;
-  await caches.delete(OFFLINE_CACHE);
   refresh();
 });
 $("bkExport").addEventListener("click", function(){ window.LT && LT.exportBackup(); });

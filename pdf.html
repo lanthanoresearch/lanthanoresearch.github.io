@@ -4703,8 +4703,11 @@ body.reading-mode #readingModeFloat{
 <button id="newTabBtn">Open in New Tab</button>
 <button id="copyLinkBtn">Share PDF</button>
 <button id="fullscreenBtn">Fullscreen</button>
-  <button data-lt="cite">Cite / Reference</button>
-  <button data-lt="report">Report a correction</button>
+  <button id="moreBtn" type="button" aria-expanded="false" aria-controls="moreList">More<span class="moreCaret" aria-hidden="true"></span></button>
+  <div id="moreList" class="moreList" hidden>
+    <button data-lt="cite">Reference PDF</button>
+    <button data-lt="report">Report a correction</button>
+  </div>
 
 </div>
 <!-- ==========================================================

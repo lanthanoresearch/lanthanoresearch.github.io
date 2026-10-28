@@ -3110,10 +3110,6 @@ body.video-fullscreen.fs-rotate #videoStage{
     Share Video
   </button>
 
-  <button id="timeLinkBtn">
-    Copy link at this time
-  </button>
-
   <button id="fullscreenBtn">
     Fullscreen
   </button>
@@ -3123,12 +3119,11 @@ body.video-fullscreen.fs-rotate #videoStage{
     Open a Video
   </button>
 
-  <button id="saveToggleBtn" style="display:none">
-    Saving videos: On
-  </button>
-
-  <button data-lt="cite">Cite / Reference</button>
-  <button data-lt="report">Report a correction</button>
+  <button id="moreBtn" type="button" aria-expanded="false" aria-controls="moreList">More<span class="moreCaret" aria-hidden="true"></span></button>
+  <div id="moreList" class="moreList" hidden>
+    <button data-lt="cite">Reference video</button>
+    <button data-lt="report">Report a correction</button>
+  </div>
 
 </div>
 
@@ -8172,98 +8167,82 @@ newTabButton.addEventListener(
 
 /* ---------- Share ---------- */
 
+function shareTime(sec){
+    sec = Math.floor(sec);
+    const h = Math.floor(sec / 3600);
+    const m = Math.floor((sec % 3600) / 60);
+    const s = sec % 60;
+    return h
+        ? h + ":" + String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0")
+        : m + ":" + String(s).padStart(2, "0");
+}
+
+async function shareVideoLink(url){
+
+    if(navigator.share && typeof navigator.share === "function"){
+
+        try{
+
+            await navigator.share({
+                title: title.textContent,
+                text: title.textContent,
+                url: url
+            });
+
+            return;
+
+        }catch(error){
+
+            // Cancelled in the share sheet: nothing more to do.
+            if(error && error.name === "AbortError") return;
+
+        }
+
+    }
+
+    if(window.LT && LT.copy){
+        LT.copy(url);
+        return;
+    }
+
+    try{
+        await navigator.clipboard.writeText(url);
+    }catch(error){
+        window.prompt("Copy this link:", url);
+    }
+
+}
+
 shareButton.addEventListener(
     "click",
-    async function(){
-
-        const url =
-            window.location.href;
-
+    function(){
 
         menu.style.display =
             "none";
 
+        const whole = new URL(window.location.href);
+        whole.searchParams.delete("return");
+        whole.searchParams.delete("t");
+        whole.hash = "";
 
-        /* Native device/browser sharing */
+        const at = Math.floor(video.currentTime || 0);
 
-        if(
-            navigator.share &&
-            typeof navigator.share === "function"
-        ){
-
-            try{
-
-                await navigator.share({
-
-                    title:
-                        title.textContent,
-
-                    text:
-                        title.textContent,
-
-                    url:
-                        url
-
-                });
-
-                return;
-
-            }catch(error){
-
-                /*
-                    If the user cancelled the
-                    native share dialog, stop.
-                */
-
-                if(
-                    error &&
-                    error.name === "AbortError"
-                ){
-
-                    return;
-
-                }
-
-            }
-
+        // At the very start there is nothing to choose between.
+        if(at < 2 || !window.LT || !LT.ask){
+            shareVideoLink(whole.href);
+            return;
         }
 
+        const from = new URL(whole.href);
+        from.searchParams.set("t", String(at));
 
-        /* Automatic clipboard fallback */
-
-        if(
-            navigator.clipboard &&
-            typeof navigator.clipboard.writeText === "function"
-        ){
-
-            try{
-
-                await navigator.clipboard.writeText(
-                    url
-                );
-
-                alert(
-                    "Link copied to clipboard!"
-                );
-
-                return;
-
-            }catch(error){
-
-                /*
-                    Continue to manual fallback.
-                */
-
-            }
-
-        }
-
-
-        /* Manual fallback */
-
-        window.prompt(
-            "Copy this link:",
-            url
+        LT.ask(
+            "Share this video",
+            "Share the whole video, or a link that starts at " + shareTime(at) + "?",
+            [
+                { label: "Whole video", primary: true, onClick: () => shareVideoLink(whole.href) },
+                { label: "From " + shareTime(at), onClick: () => shareVideoLink(from.href) }
+            ]
         );
 
     }
@@ -9709,11 +9688,6 @@ video.playbackRate =
     u.hash = "";
     return u.href;
   }
-
-  document.getElementById("timeLinkBtn").addEventListener("click", () => {
-    document.getElementById("menu").style.display = "none";
-    if(window.LT && LT.copy) LT.copy(linkAtTime());
-  });
 
   window.LT = window.LT || {};
   window.LT.context = () => ({

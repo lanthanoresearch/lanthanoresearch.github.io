@@ -1047,8 +1047,11 @@ body.reading-mode #readingModeFloat{
     Looking for PDF…
   </a>
 
-  <button data-lt="cite">Cite / Reference</button>
-  <button data-lt="report">Report a correction</button>
+  <button id="moreBtn" type="button" aria-expanded="false" aria-controls="moreList">More<span class="moreCaret" aria-hidden="true"></span></button>
+  <div id="moreList" class="moreList" hidden>
+    <button data-lt="cite">Reference image</button>
+    <button data-lt="report">Report a correction</button>
+  </div>
 
 </div>
 
