@@ -650,14 +650,14 @@ h1{
     padding:0;
     border:0;
     border-radius:50%;
-    background:transparent;
-    color:#777;
+    background:#222;
+    color:#8f8f8f;
     display:flex;
     align-items:center;
     justify-content:center;
     cursor:pointer;
     -webkit-tap-highlight-color:transparent;
-    transition:background .15s ease, color .15s ease;
+    transition:transform .15s ease, background .15s ease, color .15s ease;
 }
 .paper-break-dl svg{
     width:17px;
@@ -669,7 +669,8 @@ h1{
     stroke-linejoin:round;
     pointer-events:none;
 }
-.paper-break-dl:hover{ background:#262626; color:#ddd; }
+.paper-break-dl:hover{ transform:scale(1.12); background:#2c2c2c; }
+.paper-break-dl.open{ background:#2c2c2c; color:#ddd; }
 .paper-break-dl:focus-visible{ outline:2px solid #777; outline-offset:1px; }
 
 /* Pushes the last row of a paper to stay natural width instead of
@@ -1755,11 +1756,20 @@ function applySettingsUI(){
 }
 
 function closeMenus(){
+    if(window.LT && LT.closePopup) LT.closePopup();
     settingsPanel.classList.remove("open");
     settingsButton.setAttribute("aria-expanded", "false");
     sortPanel.classList.remove("open");
     sortDropdown.classList.remove("open");
 }
+
+// a download menu opening closes the settings / sort panels, so only one is ever open
+document.addEventListener("ltpopupopen", () => {
+    settingsPanel.classList.remove("open");
+    settingsButton.setAttribute("aria-expanded", "false");
+    sortPanel.classList.remove("open");
+    sortDropdown.classList.remove("open");
+});
 
 settingsButton.addEventListener("click", (e) => {
     e.stopPropagation();
@@ -2535,19 +2545,21 @@ function render(){
             const dl = document.createElement("button");
             dl.type = "button";
             dl.className = "paper-break-dl";
-            dl.title = "Download this section (.zip)";
-            dl.setAttribute("aria-label", "Download " + (paper.label || paper.title) + " as a zip");
+            dl.title = "Download";
+            dl.setAttribute("aria-label", "Download " + (paper.label || paper.title));
+            dl.setAttribute("aria-haspopup", "true");
+            dl.setAttribute("aria-expanded", "false");
             dl.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11"/><path d="M7.5 11 12 15.5 16.5 11"/><path d="M5 19.5h14"/></svg>';
             dl.addEventListener("click", e => {
                 e.stopPropagation();
-                if(!window.LT || !LT.zipAssets) return;
+                if(!window.LT || !LT.mediaMenu) return;
                 let imgs = [], vids = [];
                 if(mode === "images") imgs = items.slice();
                 else if(mode === "videos") vids = items.slice();
                 else{
                     items.forEach(it => { if(it.kind === "video") vids.push(it.v); else if(it.src) imgs.push(it.src); });
                 }
-                LT.zipAssets(paper.label || paper.title, imgs, vids);
+                LT.mediaMenu(dl, paper.label || paper.title, imgs, vids);
             });
             brk.appendChild(dl);
             fragment.appendChild(brk);

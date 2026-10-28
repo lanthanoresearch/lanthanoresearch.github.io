@@ -28,8 +28,8 @@ function set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
    style sheets use is mapped to the chosen theme (dark grays become
    light ones for Light and Sepia, get a blue or green tint for Midnight
    and Forest), and the accent blue is turned into the chosen accent.
-   Pictures and videos are never touched. The three viewers (PDF, video,
-   image) always stay dark, like their own black stage.
+   Pictures, videos and the pages of a PDF are never touched. The three
+   viewers (PDF, video, image) follow the theme like every other page.
 --------------------------------------------------------------- */
 var root = document.documentElement;
 
@@ -40,7 +40,7 @@ var THEME_DEFS = {
   midnight: {light:false, h:222, s:0.34},
   forest:   {light:false, h:150, s:0.24}
 };
-var ACCENT_HUE = {blue:null, teal:174, green:140, orange:26, red:2, purple:268, pink:328};
+var ACCENT_HUE = {"default":null, blue:216, teal:174, green:142, orange:26, red:2, purple:268, pink:328};
 
 function systemLight(){
   try{ return window.matchMedia("(prefers-color-scheme: light)").matches; }catch(e){ return false; }
@@ -51,15 +51,22 @@ function themeName(){
   return THEME_DEFS[t] ? t : "dark";
 }
 function accentName(){
-  var a = get("lt_accent") || "blue";
-  return ACCENT_HUE.hasOwnProperty(a) ? a : "blue";
+  var a = get("lt_accent") || "default";
+  return ACCENT_HUE.hasOwnProperty(a) ? a : "default";
 }
 
 var TE = {
   store: [], sheets: new WeakSet(), orig: new WeakMap(), written: new WeakMap(), attrs: new WeakMap(),
-  T: THEME_DEFS.dark, accent: null, active: false, obs: null, hold: null
+  T: THEME_DEFS.dark, accent: null, tH: 0, tS: 0, active: false, obs: null, hold: null
 };
 
+/* The tint every gray gets: the theme's own (Sepia, Midnight, Forest), or a soft one in the accent's color. */
+function setTint(){
+  var T = TE.T;
+  if(T.s){ TE.tH = T.h; TE.tS = T.s; }
+  else if(TE.accent != null){ TE.tH = TE.accent; TE.tS = T.light ? 0.2 : 0.17; }
+  else { TE.tH = 0; TE.tS = 0; }
+}
 function rgb2hsl(r, g, b){
   r /= 255; g /= 255; b /= 255;
   var mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, d = mx - mn, h = 0, s = 0;
@@ -126,7 +133,7 @@ function mapTok(tok, ctx){
   }else if(T.light){
     if(neutral){
       if(ctx.keepText) return tok;
-      l = 1 - l; h = T.h; s = T.s;
+      l = 1 - l; h = TE.tH; s = TE.tS;
       if(ctx.text && l > 0.45) l = 0.45;
     }else if(l < 0.32 || l > 0.85){
       l = 1 - l;
@@ -139,11 +146,15 @@ function mapTok(tok, ctx){
       ctx.kept = true;
     }
   }else if(neutral){
-    if(!T.s) return tok;
-    h = T.h; s = T.s * Math.pow(1 - l, 0.8);
+    if(!TE.tS) return tok;
+    h = TE.tH; s = TE.tS * Math.pow(1 - l, 0.8);
   }
 
-  if(!neutral && A != null && hs.c >= 0.25 && hs.h >= 195 && hs.h <= 248) h = A;
+  if(!neutral && A != null && hs.c >= 0.25 && hs.h >= 195 && hs.h <= 248){
+    h = A;
+    // bright accent hues (orange, green, teal) need to be darker behind white text
+    if(!ctx.text && !ctx.shadow && A >= 20 && A <= 200){ var cap = A >= 70 ? 0.26 : 0.38; if(l > cap) l = cap; }
+  }
   if(!neutral && A == null && !T.light) return tok;
   if(T.light && ctx.text && !neutral && h >= 70 && h <= 200) l = Math.min(l, 0.26);
   var rgb = hsl2rgb(h, Math.max(0, Math.min(1, s)), Math.max(0, Math.min(1, l)));
@@ -216,13 +227,22 @@ function walkRules(rules, f){
     if(r.cssRules) walkRules(r.cssRules, f);
   }
 }
+/* Things that must keep their own colors in every theme: the white paper of a PDF page and what is drawn
+   on it, and the black surface a video plays on. */
+var PROTECT = path === "pdf.html"
+  ? /(^|[\s,>+~(])\.(page|pageCanvas|textLayer|searchHighlightLayer|search-highlight|linkLayer)(?![\w-])/
+  : path === "video.html"
+    ? /(^|[\s,>+~(])#(video|coverOverlay|videoStage|embedFrame)(?![\w-])/
+    : /(?!)/;
 function processSheet(sh){
   if(!sh || TE.sheets.has(sh)) return;
+  if(sh.ownerNode && sh.ownerNode.id === "ltAccentCss") return;
   TE.sheets.add(sh);
   var rules;
   try{ rules = sh.cssRules; }catch(e){ return; }
   if(!rules) return;
   walkRules(rules, function(r){
+    if(PROTECT.test(r.selectorText || "")) return;
     var props = collectProps(r.style);
     if(!props.length) return;
     var rec = {st:r.style, props:props, sel:r.selectorText || ""};
@@ -295,12 +315,44 @@ function watch(){
   TE.obs.observe(root, {childList:true, subtree:true, attributes:true, attributeFilter:["style"]});
 }
 
+/* The accent itself: buttons, the selected tab, the back arrow, text selection, focus rings and scroll bars.
+   Written after the colors are mapped, so it is never re-mapped. */
+function accentCss(){
+  var old = document.getElementById("ltAccentCss");
+  var A = TE.accent;
+  if(A == null){ if(old) old.remove(); return; }
+  var L = TE.T.light;
+  var main = "hsl(" + A + ",85%," + (L ? "34%" : "64%") + ")";
+  var btn = "hsl(" + A + "," + (L ? "75%,86%" : "42%,27%") + ")";
+  var btnH = "hsl(" + A + "," + (L ? "75%,80%" : "46%,33%") + ")";
+  var edge = "hsl(" + A + "," + (L ? "55%,68%" : "45%,40%") + ")";
+  var soft = "hsla(" + A + ",85%," + (L ? "40%" : "60%") + ",.28)";
+  var txt = L ? "#1a1a1a" : "#fff";
+  var css =
+    "html{accent-color:" + main + ";scrollbar-color:" + edge + " transparent}" +
+    "::selection{background:" + soft + "}" +
+    ".button:not(.danger):not(.secondary),.btn:not(.danger):not(.secondary),.small{background:" + btn + " !important;color:" + txt + " !important;box-shadow:inset 0 0 0 1px " + edge + "}" +
+    ".button:not(.danger):not(.secondary):hover,.btn:not(.danger):not(.secondary):hover,.small:hover{background:" + btnH + " !important}" +
+    ".mode-pill{background:" + btn + " !important;box-shadow:inset 0 0 0 1px " + edge + " !important}" +
+    ".back,.back-arrow{color:" + main + " !important}" +
+    ".paper-option.active,.sort-option.active,.ltOpt.active{background:" + btn + " !important;color:" + txt + " !important}" +
+    ".ltOpt .ltOptCheck,.ltPickCaret{color:" + main + "}" +
+    ".ltPickCaret{border-top-color:" + main + "}" +
+    ".ltPrimary{background:" + (L ? main : "hsl(" + A + ",70%,46%)") + " !important;border-color:" + main + " !important;color:#fff !important}" +
+    ".ltModal a:not(.ltPrimary){color:" + main + " !important}" +
+    ":focus-visible{outline-color:" + main + " !important}" +
+    ".paper-dl.open,.paper-break-dl.open{color:" + main + " !important}";
+  if(!old){ old = document.createElement("style"); old.id = "ltAccentCss"; }
+  old.textContent = css;
+  (document.head || root).appendChild(old);   // last in the head, so it wins
+}
 function applyTheme(){
-  if(VIEWER) return;
   var name = themeName(), acc = accentName();
   TE.T = THEME_DEFS[name];
   TE.accent = ACCENT_HUE[acc];
-  TE.active = name !== "dark" || acc !== "blue";
+  TE.active = name !== "dark" || acc !== "default";
+  setTint();
+  accentCss();
   root.setAttribute("data-lt-theme", name);
   root.style.colorScheme = TE.T.light ? "light" : "";
   if(TE.active || TE.store.length){
@@ -329,10 +381,10 @@ applyText();
 
 /* Hide the page for a moment (in the right background color) so a
    chosen theme never flashes the dark one first. */
-if(!VIEWER){
+{
   var first = THEME_DEFS[themeName()], firstAcc = accentName();
-  if(themeName() !== "dark" || firstAcc !== "blue"){
-    TE.T = first; TE.accent = ACCENT_HUE[firstAcc]; TE.active = true;
+  if(themeName() !== "dark" || firstAcc !== "default"){
+    TE.T = first; TE.accent = ACCENT_HUE[firstAcc]; TE.active = true; setTint();
     var bg = mapValue("#111111", {shadow:false, keepText:false, kept:false});
     TE.hold = document.createElement("style");
     TE.hold.textContent = "html{background:" + bg + " !important}body{visibility:hidden !important}";
@@ -526,6 +578,14 @@ function bindPicker(row, opts, get, setv){
   return paint;
 }
 document.addEventListener("click", function(){ closePopup(); });
+/* A page's own buttons stop clicks from travelling on, so also watch in the capture phase:
+   a tap on anything except the popup or the button that opened it closes the popup. */
+document.addEventListener("click", function(e){
+  if(!popup) return;
+  var t = e.target;
+  if(t && t.nodeType === 1 && (popup.el.contains(t) || popup.row.contains(t))) return;
+  closePopup();
+}, true);
 // Scrolling the page (or anything else) closes an open popup, like tapping elsewhere does.
 window.addEventListener("scroll", function(e){
   if(popup && !(e.target && e.target.nodeType === 1 && popup.el.contains(e.target))) closePopup();
@@ -816,7 +876,7 @@ var THEMES = [
   {value:"midnight", label:"Midnight"}, {value:"forest", label:"Forest"}, {value:"auto", label:"Automatic"}
 ];
 var ACCENTS = [
-  {value:"blue", label:"Blue"}, {value:"teal", label:"Teal"}, {value:"green", label:"Green"},
+  {value:"default", label:"Default"}, {value:"blue", label:"Blue"}, {value:"teal", label:"Teal"}, {value:"green", label:"Green"},
   {value:"orange", label:"Orange"}, {value:"red", label:"Red"}, {value:"purple", label:"Purple"}, {value:"pink", label:"Pink"}
 ];
 var SIZES = [{value:"0.9", label:"Small"}, {value:"1", label:"Normal"}, {value:"1.15", label:"Large"}, {value:"1.3", label:"Larger"}];
@@ -877,6 +937,8 @@ function menu(anchor, items){
   anchor.classList.add("open");
   anchor.setAttribute("aria-expanded", "true");
   popup = {el:pop, row:anchor};
+  // lets the page close its own panels (settings, sort ...) so only one menu is ever open
+  try{ document.dispatchEvent(new CustomEvent("ltpopupopen", {detail:{anchor:anchor}})); }catch(e){}
 }
 
 /* A centred prompt with a few choices. buttons: [{label, primary, onClick}] */
@@ -943,6 +1005,14 @@ function downloadMenu(anchor, paper){
   if(imgs) items.push({label:"All images (" + imgs + ")", note:".zip", onClick:function(){ zipImages(paper); }});
   if(vids) items.push({label:"All videos (" + vids + ")", note:".zip", onClick:function(){ zipVideos(paper); }});
   menu(anchor, items);
+}
+
+/* A section of a gallery: one entry, named for what the section holds. */
+function mediaMenu(anchor, title, images, videos){
+  var ni = realList(images).length, nv = realList(videos).length;
+  if(!ni && !nv){ toast("Nothing to download here"); return; }
+  var label = ni && nv ? "All images and videos (" + (ni + nv) + ")" : ni ? "All images (" + ni + ")" : "All videos (" + nv + ")";
+  menu(anchor, [{label:label, note:".zip", onClick:function(){ zipAssets(title, images, videos); }}]);
 }
 
 /* ---------------------------------------------------------------
@@ -1105,6 +1175,8 @@ window.LT.hasSources = function(){
   return findPaper(it.type, it.name).then(function(p){ return !!(p && p.sources && p.sources.length); });
 };
 window.LT.ask = ask;
+window.LT.closePopup = closePopup;
+window.LT.mediaMenu = mediaMenu;
 window.LT.confirmStep = confirmStep;
 window.LT.confirmDelete = confirmDelete;
 window.LT.downloadMenu = downloadMenu;

@@ -729,7 +729,7 @@ h1{
     .paper-badge{
     position:absolute;
     top:14px;
-    right:52px;
+    right:92px;
     color:#fff;
     font-size:.72em;
     font-weight:bold;
@@ -748,7 +748,7 @@ h1{
 }
 
 .paper-badge.newest.with-featured{
-    right:150px;
+    right:190px;
 }
 
 
@@ -1083,13 +1083,26 @@ summary:hover{
 .view-comfy .paper-badge{
     font-size:0.6em;
     padding:4px 8px;
-    top:9px;
-    right:36px;
+    top:19px;
+    right:76px;
+    transform:translateY(-50%);
+}
+
+.view-compact .paper-badge{
+    top:17px;
+}
+
+.view-compact .paper-badge{
+    right:72px;
 }
 
 .view-compact .paper-badge.newest.with-featured,
 .view-comfy .paper-badge.newest.with-featured{
-    right:104px;
+    right:144px;
+}
+
+.view-compact .paper-badge.newest.with-featured{
+    right:140px;
 }
 
 .view-compact .read-time-line,
@@ -1812,12 +1825,22 @@ function closeOptionPopup(){
 }
 
 function closeMenus(){
+    if(window.LT && LT.closePopup) LT.closePopup();
     settingsPanel.classList.remove("open");
     settingsButton.setAttribute("aria-expanded", "false");
     sortPanel.classList.remove("open");
     sortDropdown.classList.remove("open");
     closeOptionPopup();
 }
+
+// a download menu opening closes the settings / sort panels, so only one is ever open
+document.addEventListener("ltpopupopen", () => {
+    settingsPanel.classList.remove("open");
+    settingsButton.setAttribute("aria-expanded", "false");
+    sortPanel.classList.remove("open");
+    sortDropdown.classList.remove("open");
+    closeOptionPopup();
+});
 
 settingsButton.addEventListener("click", (e) => {
     e.stopPropagation();
