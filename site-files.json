@@ -1,6 +1,6 @@
 {
  "count": 306,
- "totalBytes": 283432743,
+ "totalBytes": 283455188,
  "files": [
   {
    "path": "1 Thessalonians Original Text.png",
@@ -644,8 +644,8 @@
   },
   {
    "path": "gallery.html",
-   "size": 84431,
-   "hash": "fdc15f642ef0cef8"
+   "size": 87462,
+   "hash": "6b047cec55abacc3"
   },
   {
    "path": "Genetic Degradation.pdf",
@@ -734,8 +734,8 @@
   },
   {
    "path": "image.html",
-   "size": 44439,
-   "hash": "f62d93c7cbf86549"
+   "size": 44645,
+   "hash": "ce9d2ea6a5f13c17"
   },
   {
    "path": "Images.html",
@@ -744,8 +744,8 @@
   },
   {
    "path": "index.html",
-   "size": 153835,
-   "hash": "47849ab21db159ff"
+   "size": 154061,
+   "hash": "bce526a1fb11780b"
   },
   {
    "path": "index.js",
@@ -899,8 +899,8 @@
   },
   {
    "path": "pdf.html",
-   "size": 547957,
-   "hash": "bc8ac1bdddd8c8b3"
+   "size": 548161,
+   "hash": "392dc5a7b54637f7"
   },
   {
    "path": "pdfjs/build/pdf.mjs",
@@ -1089,8 +1089,8 @@
   },
   {
    "path": "settings.html",
-   "size": 8846,
-   "hash": "0ac5a9dec64d148f"
+   "size": 9781,
+   "hash": "990a563837bd57f3"
   },
   {
    "path": "Shadows Point.png",
@@ -1129,8 +1129,8 @@
   },
   {
    "path": "site-tools.js",
-   "size": 34711,
-   "hash": "a314828da1ccb10d"
+   "size": 53350,
+   "hash": "3df8fc513b894480"
   },
   {
    "path": "Star of David.png",
@@ -1144,8 +1144,8 @@
   },
   {
    "path": "storage.html",
-   "size": 10649,
-   "hash": "7bf6cf3d97415019"
+   "size": 9671,
+   "hash": "d690168a2f4d2200"
   },
   {
    "path": "Strange Shadows.png",
@@ -1479,8 +1479,8 @@
   },
   {
    "path": "video.html",
-   "size": 238552,
-   "hash": "817638dd1013a211"
+   "size": 238734,
+   "hash": "0244a586a8e7c0a9"
   },
   {
    "path": "What is Everything.pdf",
