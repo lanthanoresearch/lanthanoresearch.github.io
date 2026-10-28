@@ -1,6 +1,6 @@
 {
  "count": 306,
- "totalBytes": 283460718,
+ "totalBytes": 283483892,
  "files": [
   {
    "path": "1 Thessalonians Original Text.png",
@@ -254,8 +254,8 @@
   },
   {
    "path": "category.html",
-   "size": 77090,
-   "hash": "2ec10ab817b08aa3"
+   "size": 77348,
+   "hash": "4a98ed518266bf4a"
   },
   {
    "path": "CDC Misinformation (Multiple).png",
@@ -744,8 +744,8 @@
   },
   {
    "path": "index.html",
-   "size": 154061,
-   "hash": "bce526a1fb11780b"
+   "size": 154653,
+   "hash": "5e0187842baa48c3"
   },
   {
    "path": "index.js",
@@ -1089,8 +1089,8 @@
   },
   {
    "path": "settings.html",
-   "size": 9781,
-   "hash": "990a563837bd57f3"
+   "size": 9996,
+   "hash": "a9d75c15187e409f"
   },
   {
    "path": "Shadows Point.png",
@@ -1129,8 +1129,8 @@
   },
   {
    "path": "site-tools.js",
-   "size": 57741,
-   "hash": "16893c1f49ab051e"
+   "size": 64022,
+   "hash": "64c2684ab197d715"
   },
   {
    "path": "Star of David.png",
@@ -1144,8 +1144,8 @@
   },
   {
    "path": "storage.html",
-   "size": 9671,
-   "hash": "d690168a2f4d2200"
+   "size": 10464,
+   "hash": "531e7cce7403e540"
   },
   {
    "path": "Strange Shadows.png",
@@ -1479,8 +1479,8 @@
   },
   {
    "path": "video.html",
-   "size": 238734,
-   "hash": "0244a586a8e7c0a9"
+   "size": 253769,
+   "hash": "adb7a6b7679a5d91"
   },
   {
    "path": "What is Everything.pdf",
