@@ -1,6 +1,6 @@
 {
- "count": 302,
- "totalBytes": 283346372,
+ "count": 306,
+ "totalBytes": 283432743,
  "files": [
   {
    "path": "1 Thessalonians Original Text.png",
@@ -254,8 +254,8 @@
   },
   {
    "path": "category.html",
-   "size": 73337,
-   "hash": "756722a23c165bfd"
+   "size": 76493,
+   "hash": "ce6e0dc9eacd3e96"
   },
   {
    "path": "CDC Misinformation (Multiple).png",
@@ -734,8 +734,8 @@
   },
   {
    "path": "image.html",
-   "size": 43526,
-   "hash": "5c75d5f9d664925a"
+   "size": 44439,
+   "hash": "f62d93c7cbf86549"
   },
   {
    "path": "Images.html",
@@ -744,8 +744,8 @@
   },
   {
    "path": "index.html",
-   "size": 149215,
-   "hash": "dd53e3ebf73d64d5"
+   "size": 153835,
+   "hash": "47849ab21db159ff"
   },
   {
    "path": "index.js",
@@ -899,8 +899,8 @@
   },
   {
    "path": "pdf.html",
-   "size": 544715,
-   "hash": "a051c50524f086c6"
+   "size": 547957,
+   "hash": "bc8ac1bdddd8c8b3"
   },
   {
    "path": "pdfjs/build/pdf.mjs",
@@ -1008,6 +1008,11 @@
    "hash": "4b7a2eecc955013d"
   },
   {
+   "path": "robots.txt",
+   "size": 123,
+   "hash": "5014cb602f3c0ece"
+  },
+  {
    "path": "Rupes Nigra.png",
    "size": 16695095,
    "hash": "5be242ac8fc16422"
@@ -1069,8 +1074,8 @@
   },
   {
    "path": "search-index.json",
-   "size": 1026208,
-   "hash": "a2f2117ea9619d0c"
+   "size": 1030378,
+   "hash": "1c90aa6c1664b80e"
   },
   {
    "path": "Seasons.png",
@@ -1081,6 +1086,11 @@
    "path": "Seref.png",
    "size": 68237,
    "hash": "871c89c657d5bf23"
+  },
+  {
+   "path": "settings.html",
+   "size": 8846,
+   "hash": "0ac5a9dec64d148f"
   },
   {
    "path": "Shadows Point.png",
@@ -1118,6 +1128,11 @@
    "hash": "da21368f14b04fe0"
   },
   {
+   "path": "site-tools.js",
+   "size": 34711,
+   "hash": "a314828da1ccb10d"
+  },
+  {
    "path": "Star of David.png",
    "size": 265730,
    "hash": "083e38a66236a94c"
@@ -1126,6 +1141,11 @@
    "path": "Star of Remphan.png",
    "size": 256634,
    "hash": "b05b90d8f5fb878c"
+  },
+  {
+   "path": "storage.html",
+   "size": 10649,
+   "hash": "7bf6cf3d97415019"
   },
   {
    "path": "Strange Shadows.png",
@@ -1459,8 +1479,8 @@
   },
   {
    "path": "video.html",
-   "size": 222611,
-   "hash": "35caa3d4e0f857ef"
+   "size": 238552,
+   "hash": "817638dd1013a211"
   },
   {
    "path": "What is Everything.pdf",
