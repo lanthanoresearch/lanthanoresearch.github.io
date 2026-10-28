@@ -56,7 +56,7 @@ function accentName(){
 }
 
 var TE = {
-  store: [], sheets: new WeakSet(), orig: new WeakMap(), written: new WeakMap(), attrs: new WeakMap(),
+  store: [], sheets: new WeakSet(), inl: new WeakMap(), attrs: new WeakMap(),
   T: THEME_DEFS.dark, accent: null, tH: 0, tS: 0, active: false, obs: null, hold: null
 };
 
@@ -173,10 +173,13 @@ function mapValue(v, ctx){
 }
 
 /* props: [[name, value, priority]] on a CSSStyleDeclaration */
-function applyProps(st, props, sel){
+function applyProps(st, props, sel, rec){
   var T = TE.T;
   if(!TE.active || (/knob/i.test(sel) && /active|\.on\b|checked/i.test(sel))){
-    props.forEach(function(p){ if(st.getPropertyValue(p[0]) !== p[1]) st.setProperty(p[0], p[1], p[2]); });
+    props.forEach(function(p){
+      if(st.getPropertyValue(p[0]) !== p[1]) st.setProperty(p[0], p[1], p[2]);
+      if(rec) rec[p[0]] = {o:p[1], m:p[1]};
+    });
     return;
   }
   var bgKept = false;
@@ -190,9 +193,10 @@ function applyProps(st, props, sel){
     });
   }
   props.forEach(function(p){
-    var cx = {shadow:/shadow/.test(p[0]), keepText: bgKept && (p[0] === "color" || p[0] === "-webkit-text-fill-color"), text: p[0] === "color" || p[0] === "--btn-text", kept:false};
+    var cx = {shadow:/shadow/.test(p[0]), keepText: bgKept && (p[0] === "color" || p[0] === "-webkit-text-fill-color"), text: p[0] === "color" || p[0] === "--btn-text" || (T.light && p[0].indexOf("--") === 0), kept:false};
     var nv = mapAny(p[0], p[1], cx);
     if(st.getPropertyValue(p[0]) !== nv) st.setProperty(p[0], nv, p[2]);
+    if(rec) rec[p[0]] = {o:p[1], m:nv};
   });
 }
 
@@ -233,10 +237,12 @@ var PROTECT = path === "pdf.html"
   ? /(^|[\s,>+~(])\.(page|pageCanvas|textLayer|searchHighlightLayer|search-highlight|linkLayer)(?![\w-])/
   : path === "video.html"
     ? /(^|[\s,>+~(])#(video|coverOverlay|videoStage|embedFrame)(?![\w-])/
-    : /(?!)/;
+    : (path === "index.html" || path === "")
+      ? /\.research-tools/      // the four home buttons keep their own colors (Papers gold, Media red, Discover purple, Timeline blue)
+      : /(?!)/;
 function processSheet(sh){
   if(!sh || TE.sheets.has(sh)) return;
-  if(sh.ownerNode && sh.ownerNode.id === "ltAccentCss") return;
+  if(sh.ownerNode && /^lt(Accent|Home)Css$/.test(sh.ownerNode.id || "")) return;
   TE.sheets.add(sh);
   var rules;
   try{ rules = sh.cssRules; }catch(e){ return; }
@@ -254,20 +260,24 @@ function processAllSheets(){
   for(var i = 0; i < document.styleSheets.length; i++) processSheet(document.styleSheets[i]);
 }
 
-/* style="..." attributes written by the page or by its scripts */
+/* style="..." attributes written by the page or by its scripts.
+   Each color property remembers the page's own value (o) and what was written for it (m), so a
+   value the page sets later is mapped fresh, our own writes are recognised and never repeated
+   (that is what keeps the page from looping), and switching theme can start from the original. */
 function inlineApply(elm){
-  var cur = elm.getAttribute("style");
-  if(cur == null) return;
-  var w = TE.written.get(elm);
-  var o;
-  if(w !== undefined && w === cur) o = TE.orig.get(elm);
-  else { o = cur; TE.orig.set(elm, cur); }
-  if(o === undefined) return;
-  if(!TE.active && w === undefined) return;
-  if(o !== cur) elm.setAttribute("style", o);
-  var props = collectProps(elm.style);
-  if(props.length) applyProps(elm.style, props, "");
-  TE.written.set(elm, elm.getAttribute("style"));
+  var st = elm.style;
+  if(!st || !st.length) return;
+  var rec = TE.inl.get(elm);
+  var props = [];
+  for(var i = 0; i < st.length; i++){
+    var n = st[i], v = st.getPropertyValue(n);
+    if(!v || !(HAS_COLOR.test(v) || (n.indexOf("--") === 0 && TRIPLE.test(v)))) continue;
+    var r = rec && rec[n];
+    props.push([n, (r && r.m === v) ? r.o : v, st.getPropertyPriority(n)]);
+  }
+  if(!props.length || (!TE.active && !rec)) return;
+  if(!rec){ rec = {}; TE.inl.set(elm, rec); }
+  applyProps(st, props, "", rec);
 }
 var SVG_ATTRS = ["fill", "stroke", "stop-color"];
 function attrApply(elm){
@@ -340,11 +350,32 @@ function accentCss(){
     ".ltPickCaret{border-top-color:" + main + "}" +
     ".ltPrimary{background:" + (L ? main : "hsl(" + A + ",70%,46%)") + " !important;border-color:" + main + " !important;color:#fff !important}" +
     ".ltModal a:not(.ltPrimary){color:" + main + " !important}" +
+    ".back-link,.home-button{color:" + main + " !important}" +
+    ".share-button,.top-button,.quiz-stage button{background:" + btn + " !important;color:" + txt + " !important;box-shadow:inset 0 0 0 1px " + edge + "}" +
+    ".share-button:hover,.top-button:hover,.quiz-stage button:hover{background:" + btnH + " !important}" +
+    ".progress-fill{background:" + main + " !important}" +
+    ".paper-link{color:" + main + " !important}" +
+    (/^(about|contact|support)\.html$/.test(path) ? ".card h2{color:" + main + " !important}.card{box-shadow:inset 0 0 0 1px " + edge + "}" : "") +
     ":focus-visible{outline-color:" + main + " !important}" +
     ".paper-dl.open,.paper-break-dl.open{color:" + main + " !important}";
   if(!old){ old = document.createElement("style"); old.id = "ltAccentCss"; }
   old.textContent = css;
   (document.head || root).appendChild(old);   // last in the head, so it wins
+}
+/* The four home buttons keep their own colors in every theme. In the light themes their text needs a darker shade. */
+function homeCss(){
+  var old = document.getElementById("ltHomeCss");
+  if(!(path === "index.html" || path === "") || !TE.T.light){ if(old) old.remove(); return; }
+  var b = {favorites:["196,146,0","110,78,0"], media:["214,32,54","158,18,38"], discover:["120,76,224","84,44,176"], timeline:["30,110,230","20,76,170"]};
+  var css = "";
+  for(var k in b){
+    css += ".research-tools ." + k + "-button{--btn:" + b[k][0] + ";--btn-text:" + b[k][1] + "}";
+    css += ".research-tools ." + k + "-button:hover,.research-tools ." + k + "-button:focus-visible{background:rgba(var(--btn),.2);" +
+      "border-color:rgb(var(--btn));color:rgb(var(--btn-text));box-shadow:0 0 14px rgba(var(--btn),.22)}";
+  }
+  if(!old){ old = document.createElement("style"); old.id = "ltHomeCss"; }
+  old.textContent = css;
+  (document.head || root).appendChild(old);
 }
 function applyTheme(){
   var name = themeName(), acc = accentName();
@@ -353,6 +384,7 @@ function applyTheme(){
   TE.active = name !== "dark" || acc !== "default";
   setTint();
   accentCss();
+  homeCss();
   root.setAttribute("data-lt-theme", name);
   root.style.colorScheme = TE.T.light ? "light" : "";
   if(TE.active || TE.store.length){
@@ -378,6 +410,13 @@ function applyText(){
   root.style.zoom = z === 1 ? "" : String(z);
 }
 applyText();
+/* A page restored from the back button, or another open tab changing the setting, picks up the current theme. */
+window.addEventListener("pageshow", function(e){
+  if(e.persisted){ try{ applyTheme(); applyText(); }catch(x){} }
+});
+window.addEventListener("storage", function(e){
+  if(!e.key || /^lt_(theme|accent|text)$/.test(e.key)){ try{ applyTheme(); applyText(); }catch(x){} }
+});
 
 /* Hide the page for a moment (in the right background color) so a
    chosen theme never flashes the dark one first. */
@@ -443,12 +482,22 @@ css.textContent =
   '.ltPrimary{display:block;box-sizing:border-box;width:100%;padding:11px 10px;border:1px solid #2f7cff;border-radius:8px;' +
     'background:#2f7cff;color:#fff;font:14px Arial,sans-serif;text-align:center;text-decoration:none;cursor:pointer}' +
   '.ltPrimary:hover{background:#4a8dff}' +
-  '#menu .moreCaret{display:inline-block;margin-left:8px;border-left:5px solid transparent;border-right:5px solid transparent;' +
-    'border-top:6px solid currentColor;vertical-align:middle;opacity:.7;transition:transform .15s ease}' +
-  '#menu #moreBtn[aria-expanded="true"] .moreCaret{transform:rotate(180deg)}' +
-  '#menu .moreList[hidden]{display:none}' +
-  '#menu .moreList{display:flex;flex-direction:column}' +
-  '#menu .moreList button{padding-left:30px;font-size:.95em;opacity:.92}' +
+  /* "More" in the viewers' menus: a row that opens a second panel with its own back row */
+  '#menu #moreBtn{display:flex;align-items:center;justify-content:space-between;gap:12px}' +
+  '#menu .moreChev{flex:0 0 auto;width:7px;height:7px;margin:0 3px 0 0;border-top:2px solid currentColor;border-right:2px solid currentColor;' +
+    'transform:rotate(45deg);opacity:.65}' +
+  '#menu .moreList{display:none;flex-direction:column}' +
+  '#menu.ltSub > :not(#moreList){display:none !important}' +
+  '#menu.ltSub .moreList{display:flex}' +
+  '#menu .moreHead{display:flex;align-items:center;gap:10px;margin:0 0 6px !important;padding:8px 8px !important;background:transparent !important;' +
+    'border:0 !important;box-shadow:none !important;border-radius:8px;font-weight:600;color:inherit}' +
+  '#menu .moreHead:hover{background:rgba(128,128,128,.16) !important}' +
+  '#menu .moreHead .moreChev{transform:rotate(-135deg);margin:0 0 0 3px}' +
+  '#menu .moreOpt{display:flex;align-items:center;gap:12px;padding-top:9px !important;padding-bottom:9px !important}' +
+  '#menu .moreOpt svg{flex:0 0 auto;width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;opacity:.85}' +
+  '#menu .moreTxt{display:flex;flex-direction:column;gap:2px;min-width:0;line-height:1.25}' +
+  '#menu .moreTxt b{font-weight:600;font-size:.95em}' +
+  '#menu .moreTxt small{font-size:.78em;opacity:.62;font-weight:400}' +
   '.ltDanger{display:block;box-sizing:border-box;width:100%;margin:0 0 8px;padding:11px 10px;border:1px solid #5a2c2c;border-radius:8px;' +
     'background:transparent;color:#ff8080;font:14px Arial,sans-serif;text-align:center;cursor:pointer}' +
   '.ltDanger:hover{background:#301a1a;border-color:#7a3a3a}' +
@@ -521,6 +570,15 @@ function modal(titleHtml, bodyHtml, onClose){
    Picker row + option popup (same look and behaviour as the
    Settings panel's View / Reading Speed pickers)
 --------------------------------------------------------------- */
+/* The text-size setting zooms the whole page, and a fixed popup's left/top are zoomed with it. These give
+   positions in the page's own (unzoomed) pixels, so a popup lands exactly on the button that opened it. */
+function zoomF(){ var z = parseFloat(root.style.zoom); return z > 0 ? z : 1; }
+function cssRect(elm){
+  var r = elm.getBoundingClientRect(), z = zoomF();
+  return {left:r.left / z, top:r.top / z, right:r.right / z, bottom:r.bottom / z, width:r.width / z, height:r.height / z};
+}
+function vw(){ return window.innerWidth / zoomF(); }
+function vh(){ return window.innerHeight / zoomF(); }
 var popup = null;
 function closePopup(){
   if(!popup) return;
@@ -565,12 +623,13 @@ function bindPicker(row, opts, get, setv){
     });
     pop.addEventListener("click", function(ev){ ev.stopPropagation(); });
     document.body.appendChild(pop);
-    var r = row.getBoundingClientRect(), w = Math.min(190, window.innerWidth - 24);
-    var left = Math.max(12, Math.min(r.left + r.width / 2 - w / 2, window.innerWidth - w - 12));
+    var r = cssRect(row), w = Math.min(190, vw() - 24);
+    pop.style.maxWidth = (vw() - 24) + "px";
+    var left = Math.max(12, Math.min(r.left + r.width / 2 - w / 2, vw() - w - 12));
     pop.style.left = left + "px";
-    var below = window.innerHeight - r.bottom - 8, above = r.top - 8;
+    var below = vh() - r.bottom - 8, above = r.top - 8;
     if(below >= 160 || below >= above){ pop.style.top = (r.bottom + 8) + "px"; }
-    else{ pop.style.bottom = (window.innerHeight - r.top + 8) + "px"; }
+    else{ pop.style.bottom = (vh() - r.top + 8) + "px"; }
     row.classList.add("open");
     row.setAttribute("aria-expanded", "true");
     popup = {el:pop, row:row};
@@ -899,9 +958,15 @@ function addAppearanceRows(container){
   container.appendChild(t);
   container.appendChild(c);
   container.appendChild(z);
-  bindPicker(t, THEMES, themeValue, setTheme);
-  bindPicker(c, ACCENTS, accentValue, setAccent);
-  bindPicker(z, SIZES, sizeValue, setSize);
+  var paints = [bindPicker(t, THEMES, themeValue, setTheme), bindPicker(c, ACCENTS, accentValue, setAccent), bindPicker(z, SIZES, sizeValue, setSize)];
+  repaintAppearance = function(){ paints.forEach(function(f){ f(); }); };
+}
+var repaintAppearance = function(){};
+/* Back to the original look: dark theme, no accent, normal text size. */
+function resetAppearance(){
+  try{ localStorage.removeItem("lt_theme"); localStorage.removeItem("lt_accent"); localStorage.removeItem("lt_text"); }catch(e){}
+  applyTheme(); applyText(); repaintAppearance();
+  toast("Appearance reset");
 }
 
 /* ---------------------------------------------------------------
@@ -929,11 +994,12 @@ function menu(anchor, items){
   });
   pop.addEventListener("click", function(ev){ ev.stopPropagation(); });
   document.body.appendChild(pop);
-  var r = anchor.getBoundingClientRect(), w = Math.min(230, window.innerWidth - 24);
-  pop.style.left = Math.max(12, Math.min(r.right - w, window.innerWidth - w - 12)) + "px";
-  var below = window.innerHeight - r.bottom - 8, above = r.top - 8;
+  var r = cssRect(anchor), w = Math.min(230, vw() - 24);
+  pop.style.maxWidth = (vw() - 24) + "px";
+  pop.style.left = Math.max(12, Math.min(r.right - w, vw() - w - 12)) + "px";
+  var below = vh() - r.bottom - 8, above = r.top - 8;
   if(below >= 150 || below >= above){ pop.style.top = (r.bottom + 8) + "px"; }
-  else{ pop.style.bottom = (window.innerHeight - r.top + 8) + "px"; }
+  else{ pop.style.bottom = (vh() - r.top + 8) + "px"; }
   anchor.classList.add("open");
   anchor.setAttribute("aria-expanded", "true");
   popup = {el:pop, row:anchor};
@@ -1175,6 +1241,11 @@ window.LT.hasSources = function(){
   return findPaper(it.type, it.name).then(function(p){ return !!(p && p.sources && p.sources.length); });
 };
 window.LT.ask = ask;
+window.LT.zoom = zoomF;
+window.LT.rect = cssRect;
+window.LT.vw = vw;
+window.LT.vh = vh;
+window.LT.resetAppearance = resetAppearance;
 window.LT.closePopup = closePopup;
 window.LT.mediaMenu = mediaMenu;
 window.LT.confirmStep = confirmStep;
@@ -1187,20 +1258,40 @@ window.LT.install = function(){ if(!deferredInstall) return false; deferredInsta
 window.LT.canInstall = function(){ return !!deferredInstall; };
 
 function collapseMore(){
-  var b = document.getElementById("moreBtn"), l = document.getElementById("moreList");
-  if(b && l){ l.hidden = true; b.setAttribute("aria-expanded", "false"); }
+  var m = document.getElementById("menu"), b = document.getElementById("moreBtn"), l = document.getElementById("moreList");
+  // only touch what is actually changing: even an unchanged write counts as a change to a mutation observer
+  if(m && m.classList.contains("ltSub")) m.classList.remove("ltSub");
+  if(m && m.style.minWidth) m.style.minWidth = "";
+  if(l && !l.hidden) l.hidden = true;
+  if(b && b.getAttribute("aria-expanded") !== "false") b.setAttribute("aria-expanded", "false");
 }
+var ICONS = {
+  cite:   '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h4v5c0 2.5-1.5 4.2-4 4.6"/><path d="M14 7h4v5c0 2.5-1.5 4.2-4 4.6"/></svg>',
+  report: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/></svg>'
+};
+var SUBS = {cite:"Copy a citation (APA, MLA and more)", report:"Tell us about a mistake"};
 function ready(){
-  var mb = document.getElementById("moreBtn"), ml = document.getElementById("moreList");
-  if(mb && ml){
+  var mb = document.getElementById("moreBtn"), ml = document.getElementById("moreList"), menuEl = document.getElementById("menu");
+  if(mb && ml && menuEl){
+    mb.innerHTML = '<span>More</span><span class="moreChev" aria-hidden="true"></span>';
+    // each option: icon, title and a short line about what it does
+    [].forEach.call(ml.querySelectorAll("button[data-lt]"), function(btn){
+      var k = btn.getAttribute("data-lt");
+      btn.classList.add("moreOpt");
+      btn.innerHTML = (ICONS[k] || "") + '<span class="moreTxt"><b>' + esc(btn.textContent.trim()) + '</b><small>' + esc(SUBS[k] || "") + '</small></span>';
+    });
+    var back = el("button", {type:"button", "class":"moreHead", "aria-label":"Back to menu"}, '<span class="moreChev" aria-hidden="true"></span><span>More</span>');
+    ml.insertBefore(back, ml.firstChild);
     mb.addEventListener("click", function(e){
       e.stopPropagation();
-      ml.hidden = !ml.hidden;
-      mb.setAttribute("aria-expanded", ml.hidden ? "false" : "true");
+      menuEl.style.minWidth = menuEl.getBoundingClientRect().width / zoomF() + "px";   // the second panel keeps the first one's width
+      menuEl.classList.add("ltSub");
+      ml.hidden = false;
+      mb.setAttribute("aria-expanded", "true");
     });
-    // Starts folded every time the menu is opened again.
-    var menuEl = document.getElementById("menu");
-    if(menuEl && window.MutationObserver){
+    back.addEventListener("click", function(e){ e.stopPropagation(); collapseMore(); });
+    // Starts on the main list every time the menu is opened again.
+    if(window.MutationObserver){
       new MutationObserver(function(){
         if(getComputedStyle(menuEl).display === "none") collapseMore();
       }).observe(menuEl, {attributes:true, attributeFilter:["style", "class"]});

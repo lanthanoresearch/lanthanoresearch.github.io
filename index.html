@@ -4304,20 +4304,24 @@ sxList.appendChild(b);
 }
 
 function positionSxPopup(rowEl){
-const rect = rowEl.getBoundingClientRect();
-const w = Math.min(190, window.innerWidth - 24);
+// the text-size setting zooms the page, so measure in the page's own pixels
+const Z = (window.LT && LT.zoom) ? LT.zoom() : 1;
+const vw = window.innerWidth / Z, vh = window.innerHeight / Z;
+const r0 = rowEl.getBoundingClientRect();
+const rect = { left:r0.left / Z, top:r0.top / Z, right:r0.right / Z, bottom:r0.bottom / Z, width:r0.width / Z, height:r0.height / Z };
+const w = Math.min(190, vw - 24);
 const margin = 12;
 let left = rect.left + rect.width / 2 - w / 2;
-left = Math.max(margin, Math.min(left, window.innerWidth - w - margin));
+left = Math.max(margin, Math.min(left, vw - w - margin));
 sxPopup.style.left = left + "px";
-const below = window.innerHeight - rect.bottom - 8;
+const below = vh - rect.bottom - 8;
 const above = rect.top - 8;
 if(below >= 160 || below >= above){
 sxPopup.style.top = (rect.bottom + 8) + "px";
 sxPopup.style.bottom = "auto";
 sxPopup.style.maxHeight = Math.max(120, Math.min(420, below - 8)) + "px";
 }else{
-sxPopup.style.bottom = (window.innerHeight - rect.top + 8) + "px";
+sxPopup.style.bottom = (vh - rect.top + 8) + "px";
 sxPopup.style.top = "auto";
 sxPopup.style.maxHeight = Math.max(120, Math.min(420, above - 8)) + "px";
 }
@@ -6311,6 +6315,8 @@ try{
         document.body.appendChild(pop);
     }
 
+    function scaled(q, Z){ return { left:q.left / Z, top:q.top / Z, right:q.right / Z, bottom:q.bottom / Z, width:q.width / Z, height:q.height / Z }; }
+
     // The popup IS the card: it starts exactly on top of it, same size, and
     // grows downward to show the details. (It shifts up only if it would run
     // off the bottom of the screen.)
@@ -6320,8 +6326,9 @@ try{
         if(!pop) build();
         clearTimeout(closing);
 
-        var r = bar.getBoundingClientRect();
-        var vh = window.innerHeight;
+        var Z = (window.LT && LT.zoom) ? LT.zoom() : 1;     // text size zooms the page: measure in its own pixels
+        var r = scaled(bar.getBoundingClientRect(), Z);
+        var vh = window.innerHeight / Z;
         barH = r.height;
 
         pop.innerHTML = "";
@@ -6423,7 +6430,7 @@ try{
         document.removeEventListener("keydown", onKey, true);
         window.removeEventListener("resize", onAnyScroll);
 
-        var r = bar.getBoundingClientRect();
+        var r = scaled(bar.getBoundingClientRect(), (window.LT && LT.zoom) ? LT.zoom() : 1);
         pop.classList.remove("st-full");
         pop.style.top = r.top + "px";
         pop.style.height = barH + "px";

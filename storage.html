@@ -228,7 +228,7 @@ a.inl{color:#9ab8ff}
 
         <div class="rows" id="videoList"></div>
 
-        <p class="note">Videos you watch are kept here so they replay faster. You can turn that off in <a href="settings.html" class="inl">Settings</a>.</p>
+        <p class="note" id="keepNote"></p>
 
         <p class="note" id="siteText"></p>
 
@@ -257,6 +257,13 @@ var SITE_CACHE = "lanthano-site-files";
 var STATE_KEY = "savedVideoLog2";
 
 function $(id){ return document.getElementById(id); }
+/* "Keep videos I watch" lives in Settings; every sentence here follows it. */
+function keeping(){ try{ return localStorage.getItem("savedVideosOff") !== "1"; }catch(e){ return true; } }
+function paintKeepNote(){
+  $("keepNote").innerHTML = keeping()
+    ? 'Videos you watch are kept here so they replay faster. You can turn that off in <a href="settings.html" class="inl">Settings</a>.'
+    : 'Keeping videos is turned off, so new videos are not saved. You can turn it back on in <a href="settings.html" class="inl">Settings</a>.';
+}
 function mb(n){
   if(n >= 1073741824) return (n / 1073741824).toFixed(2) + " GB";
   if(n >= 1048576) return (n / 1048576).toFixed(n >= 104857600 ? 0 : 1) + " MB";
@@ -299,7 +306,9 @@ async function videos(){
   var box = $("videoList");
   box.innerHTML = "";
   if(!list.length){
-    box.innerHTML = '<div class="empty">No videos saved yet. A video is saved the first time you watch it.</div>';
+    box.innerHTML = '<div class="empty">' + (keeping()
+      ? 'No videos saved yet. A video is saved the first time you watch it.'
+      : 'No videos saved. Keeping videos is turned off in Settings.') + '</div>';
     $("clearVideos").hidden = true;
     return;
   }
@@ -315,7 +324,7 @@ async function videos(){
       '" title="' + esc(file) + '">' + esc(title) + '</a></div><div class="size">' + mb(x.size) +
       '</div><button type="button" class="small">Remove</button>';
     row.querySelector("button").addEventListener("click", async function(){
-      if(!(await LT.confirmDelete("Remove this video?", "\u201c" + title + "\u201d will be removed from this device. It downloads again if you watch it.", "Remove video"))) return;
+      if(!(await LT.confirmDelete("Remove this video?", "\u201c" + title + "\u201d will be removed from this device. " + (keeping() ? "It downloads again if you watch it." : "It will not be saved again while keeping videos is turned off."), "Remove video"))) return;
       var c = await caches.open(VIDEO_CACHE);
       await c.delete(x.req);
       try{
@@ -337,11 +346,12 @@ async function site(){
   $("clearSite").hidden = !list.length;
 }
 async function refresh(){
+  paintKeepNote();
   await Promise.all([usage(), videos(), site()]);
 }
 
 $("clearVideos").addEventListener("click", async function(){
-  if(!(await LT.confirmDelete("Remove all saved videos?", "Every video saved on this device will be removed. They download again if you watch them.", "Remove all videos"))) return;
+  if(!(await LT.confirmDelete("Remove all saved videos?", "Every video saved on this device will be removed. " + (keeping() ? "They download again if you watch them." : "They will not be saved again while keeping videos is turned off."), "Remove all videos"))) return;
   await caches.delete(VIDEO_CACHE);
   try{ localStorage.removeItem(STATE_KEY); }catch(e){}
   refresh();
@@ -355,6 +365,7 @@ $("bkExport").addEventListener("click", function(){ window.LT && LT.exportBackup
 $("bkImport").addEventListener("click", function(){ window.LT && LT.importBackup(); });
 
 refresh();
+window.addEventListener("pageshow", function(e){ if(e.persisted) refresh(); });
 })();
 </script>
 </body>

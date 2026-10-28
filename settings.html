@@ -223,6 +223,7 @@ a.inl{color:#9ab8ff}
     <div class="card">
         <h2>Appearance</h2>
         <div class="rows" id="appearance"></div>
+        <div class="actions"><button type="button" class="btn" id="appearanceReset">Reset appearance</button></div>
     </div>
 
     <div class="card">
@@ -291,6 +292,7 @@ $("saveToggle").addEventListener("click", function(){
 
 /* Appearance: the same picker rows as the Settings panel */
 if(window.LT) LT.addAppearanceRows($("appearance"));
+$("appearanceReset").addEventListener("click", function(){ if(window.LT) LT.resetAppearance(); });
 
 /* Install (only shown when the browser offers it) */
 function showInstall(){ if(window.LT && LT.canInstall()) $("installCard").hidden = false; }
