@@ -1,6 +1,6 @@
 {
  "count": 309,
- "totalBytes": 283573424,
+ "totalBytes": 283576949,
  "files": [
   {
    "path": "1 Thessalonians Original Text.png",
@@ -1099,8 +1099,8 @@
   },
   {
    "path": "settings.html",
-   "size": 13296,
-   "hash": "73ee62e825d5b629"
+   "size": 14213,
+   "hash": "755316554ab36106"
   },
   {
    "path": "Shadows Point.png",
@@ -1139,8 +1139,8 @@
   },
   {
    "path": "site-tools.js",
-   "size": 74355,
-   "hash": "d3c5a8bb57cf7eac"
+   "size": 76963,
+   "hash": "a1d88922261e0f79"
   },
   {
    "path": "sitemap.xml",
