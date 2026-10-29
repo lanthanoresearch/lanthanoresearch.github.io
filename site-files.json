@@ -1,6 +1,6 @@
 {
  "count": 309,
- "totalBytes": 283547767,
+ "totalBytes": 283557173,
  "files": [
   {
    "path": "1 Thessalonians Original Text.png",
@@ -59,8 +59,8 @@
   },
   {
    "path": "about.html",
-   "size": 9335,
-   "hash": "e59a1bafd7574237"
+   "size": 11334,
+   "hash": "05f0af9cb0d28408"
   },
   {
    "path": "AGC stackup.png",
@@ -284,8 +284,8 @@
   },
   {
    "path": "contact.html",
-   "size": 7454,
-   "hash": "a43cfe434b977051"
+   "size": 9085,
+   "hash": "7fb67925fcd1cf0a"
   },
   {
    "path": "cover1.png",
@@ -504,8 +504,8 @@
   },
   {
    "path": "download.html",
-   "size": 61270,
-   "hash": "f6c726a4173ee48b"
+   "size": 62844,
+   "hash": "89a9d48e1dc0ef96"
   },
   {
    "path": "Dragon.png",
@@ -749,8 +749,8 @@
   },
   {
    "path": "index.html",
-   "size": 155603,
-   "hash": "069bf4ce27f8495d"
+   "size": 155279,
+   "hash": "7dcc27cd3685a4d1"
   },
   {
    "path": "index.js",
@@ -964,8 +964,8 @@
   },
   {
    "path": "privacy.html",
-   "size": 6774,
-   "hash": "f188786f7c630cfb"
+   "size": 7379,
+   "hash": "b64959f2fecd1188"
   },
   {
    "path": "Privacy.pdf",
@@ -1099,8 +1099,8 @@
   },
   {
    "path": "settings.html",
-   "size": 9689,
-   "hash": "fc7f4527f7bce535"
+   "size": 11952,
+   "hash": "fa18235714aca4d3"
   },
   {
    "path": "Shadows Point.png",
@@ -1139,8 +1139,8 @@
   },
   {
    "path": "site-tools.js",
-   "size": 74234,
-   "hash": "3c7962524f423ded"
+   "size": 74251,
+   "hash": "a9e7665d1bff4855"
   },
   {
    "path": "sitemap.xml",
@@ -1159,8 +1159,8 @@
   },
   {
    "path": "storage.html",
-   "size": 13446,
-   "hash": "35c7c595bc60466c"
+   "size": 15087,
+   "hash": "0ad7e337b6280d36"
   },
   {
    "path": "Strange Shadows.png",
