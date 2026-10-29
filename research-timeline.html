@@ -1097,9 +1097,25 @@ filter:drop-shadow(0 0 4px rgba(255,215,0,.6));
     z-index:50;
   }
 
-  .paper.popup-open .paper-description,
-  .paper:hover .paper-description,
-  .paper-description:hover{
+  /* One popup at a time, driven by script (hover with a mouse, tap or click
+     to pin). It is never shown by :hover alone, so a touch screen cannot
+     leave a second one open behind it. */
+  .paper:not(.popup-open) .paper-description,
+  .paper:not(.popup-open):hover .paper-description,
+  .paper:not(.popup-open) .paper-description:hover{
+    opacity:0;
+    visibility:hidden;
+    pointer-events:none;
+    transform:
+      translateX(var(--popup-left,0px))
+      translateY(8px);
+  }
+
+  .paper.popup-open{
+    z-index:100;
+  }
+
+  .paper.popup-open .paper-description{
     display:block !important;
     opacity:1 !important;
     visibility:visible !important;
@@ -1107,6 +1123,18 @@ filter:drop-shadow(0 0 4px rgba(255,215,0,.6));
     transform:
       translateX(var(--popup-left,0px))
       translateY(0);
+  }
+
+  /* Not enough room above the card: open below it instead. */
+  .paper.popup-below .paper-description{
+    bottom:auto;
+    top:calc(100% - 1px);
+  }
+
+  .paper.popup-below:not(.popup-open) .paper-description{
+    transform:
+      translateX(var(--popup-left,0px))
+      translateY(-8px);
   }
 
   .stats{
@@ -1121,6 +1149,16 @@ filter:drop-shadow(0 0 4px rgba(255,215,0,.6));
    ========================================================= */
 
 @media (orientation:landscape) and (max-height:600px){
+
+  .hero{
+    margin-bottom:12px;
+  }
+
+  .hero .hero-badge{
+    width:52px;
+    height:52px;
+    border-width:6px;
+  }
 
   main{
     padding:20px 16px 130px;
@@ -2068,13 +2106,15 @@ function resetTimelineInteraction(){
 
   document
     .querySelectorAll(
-      ".paper.popup-left,.paper.popup-right"
+      ".paper.popup-left,.paper.popup-right,.paper.popup-below,.paper.popup-pinned"
     )
     .forEach(p => {
 
       p.classList.remove(
         "popup-left",
-        "popup-right"
+        "popup-right",
+        "popup-below",
+        "popup-pinned"
       );
 
     });
@@ -2123,173 +2163,288 @@ function handleOrientationChange(){
 }
 
 
-function positionLandscapePopup(paperEl){
+const landscapeQuery = window.matchMedia("(orientation: landscape)");
+let popupHoverTimer = null;
+let popupScrollFrame = 0;
 
-  if(
-    !window.matchMedia(
-      "(orientation: landscape)"
-    ).matches
-  ){
+function isLandscapeMode(){
+  return landscapeQuery.matches;
+}
+
+function closePaperPopup(paper){
+  if(!paper){
+    return;
+  }
+  paper.classList.remove(
+    "popup-open",
+    "popup-below",
+    "popup-pinned"
+  );
+  paper.style.removeProperty("--popup-left");
+}
+
+/* Only one popup may be open at once: opening one closes every other. */
+function closeOtherPopups(except){
+  document
+    .querySelectorAll(".paper.popup-open")
+    .forEach(p => {
+      if(p !== except){
+        closePaperPopup(p);
+      }
+    });
+}
+
+function openPaperPopup(paper, pin){
+  closeOtherPopups(paper);
+  clearTimeout(popupHoverTimer);
+  paper.classList.add("popup-open");
+  if(pin){
+    paper.classList.add("popup-pinned");
+  }
+  positionLandscapePopup(paper, true);
+}
+
+/*
+ * Keeps the popup fully on screen: slid sideways to stay inside the window,
+ * flipped below the card when there is no room above, and the page is nudged
+ * if neither side has enough room.
+ */
+function positionLandscapePopup(paperEl, allowScroll){
+
+  if(!isLandscapeMode()){
     return;
   }
 
   const popup =
-    paperEl.querySelector(
-      ".paper-description"
-    );
+    paperEl.querySelector(".paper-description");
 
   if(!popup){
     return;
   }
 
+  const margin =
+    window.innerHeight <= 600 ? 5 : 8;
+
   const paperRect =
     paperEl.getBoundingClientRect();
 
+  const popupWidth =
+    popup.offsetWidth || 310;
+
+  const popupHeight =
+    popup.offsetHeight || 0;
+
+  /* sideways */
   const timelineRect =
     timeline.getBoundingClientRect();
 
-  const isShortLandscape =
-    window.innerHeight <= 600;
+  let minLeft =
+    Math.max(margin, timelineRect.left + margin);
 
-  const popupWidth =
-    isShortLandscape
-      ? Math.min(
-          190,
-          window.innerWidth - 20
-        )
-      : Math.min(
-          310,
-          window.innerWidth - 20
-        );
+  let maxLeft =
+    Math.min(
+      window.innerWidth - popupWidth - margin,
+      timelineRect.right - popupWidth - margin
+    );
 
-  const edgeGap =
-    isShortLandscape ? 5 : 8;
+  if(maxLeft < minLeft){
+    minLeft = margin;
+    maxLeft =
+      Math.max(
+        margin,
+        window.innerWidth - popupWidth - margin
+      );
+  }
 
   const desiredLeft =
     paperRect.left +
     (paperRect.width / 2) -
     (popupWidth / 2);
 
-  const minLeft =
-    timelineRect.left +
-    edgeGap;
-
-  const maxLeft =
-    Math.max(
-      minLeft,
-      timelineRect.right -
-      popupWidth -
-      edgeGap
-    );
-
-  const viewportLeft =
-    Math.max(
-      minLeft,
-      Math.min(
-        maxLeft,
-        desiredLeft
-      )
-    );
+  const left =
+    Math.max(minLeft, Math.min(maxLeft, desiredLeft));
 
   paperEl.style.setProperty(
     "--popup-left",
-    (
-      viewportLeft -
-      paperRect.left
-    ) + "px"
+    (left - paperRect.left) + "px"
   );
-}
 
+  /* up or down */
+  let bottomBound = window.innerHeight;
+
+  const legend =
+    document.querySelector(".legend");
+
+  if(
+    legend &&
+    getComputedStyle(legend).position === "fixed"
+  ){
+    bottomBound =
+      Math.min(
+        bottomBound,
+        legend.getBoundingClientRect().top
+      );
+  }
+
+  bottomBound -= margin;
+
+  const spaceAbove =
+    paperRect.top - margin;
+
+  const spaceBelow =
+    bottomBound - paperRect.bottom;
+
+  let below = false;
+
+  if(spaceAbove >= popupHeight){
+    below = false;
+  }else if(spaceBelow >= popupHeight){
+    below = true;
+  }else{
+    below = spaceBelow > spaceAbove;
+  }
+
+  paperEl.classList.toggle("popup-below", below);
+
+  if(allowScroll){
+
+    const missing =
+      below
+        ? popupHeight - spaceBelow
+        : popupHeight - spaceAbove;
+
+    if(missing > 1){
+      window.scrollBy({
+        top: below ? missing : -missing,
+        behavior: "smooth"
+      });
+    }
+  }
+}
 
 document.addEventListener(
   "click",
   e => {
 
+    if(!isLandscapeMode()){
+      return;
+    }
+
     const paper =
       e.target.closest(".paper");
 
+    if(!paper){
+      document
+        .querySelectorAll(".paper.popup-open")
+        .forEach(closePaperPopup);
+      return;
+    }
+
     if(
-      window.matchMedia(
-        "(orientation: landscape)"
-      ).matches
+      e.target.closest(".favorite-star") ||
+      e.target.closest(".paper-link")
     ){
+      return;
+    }
 
-      const openPapers =
-        document.querySelectorAll(
-          ".paper.popup-open"
-        );
+    /* taps inside the open popup leave it alone */
+    if(e.target.closest(".paper-description")){
+      return;
+    }
 
-      if(!paper){
+    if(
+      paper.classList.contains("popup-open") &&
+      paper.classList.contains("popup-pinned")
+    ){
+      closePaperPopup(paper);
+      return;
+    }
 
-        openPapers.forEach(
-          x =>
-            x.classList.remove(
-              "popup-open"
-            )
-        );
+    openPaperPopup(paper, true);
+  }
+);
 
-        return;
-      }
+/* A mouse shows the popup while hovering; a tap or click pins it. */
+document.addEventListener(
+  "pointerover",
+  e => {
 
-      if(
-        e.target.closest(
-          ".favorite-star"
-        ) ||
-        e.target.closest(
-          ".paper-link"
-        )
-      ){
-        return;
-      }
+    if(e.pointerType !== "mouse" || !isLandscapeMode()){
+      return;
+    }
 
-      openPapers.forEach(x => {
+    const paper =
+      e.target.closest(".paper");
 
-        if(x !== paper){
+    if(!paper){
+      return;
+    }
 
-          x.classList.remove(
-            "popup-open"
-          );
+    clearTimeout(popupHoverTimer);
 
-        }
-
-      });
-
-      paper.classList.toggle(
-        "popup-open"
-      );
-
-      if(
-        paper.classList.contains(
-          "popup-open"
-        )
-      ){
-
-        positionLandscapePopup(
-          paper
-        );
-      }
+    if(!paper.classList.contains("popup-open")){
+      openPaperPopup(paper, false);
     }
   }
 );
 
-
 document.addEventListener(
-  "mouseenter",
+  "pointerout",
   e => {
 
-    const paper =
-      e.target.closest
-        ? e.target.closest(".paper")
-        : null;
-
-    if(paper){
-      positionLandscapePopup(
-        paper
-      );
+    if(e.pointerType !== "mouse" || !isLandscapeMode()){
+      return;
     }
 
+    const paper =
+      e.target.closest(".paper");
+
+    if(
+      !paper ||
+      (e.relatedTarget && paper.contains(e.relatedTarget)) ||
+      paper.classList.contains("popup-pinned")
+    ){
+      return;
+    }
+
+    clearTimeout(popupHoverTimer);
+
+    popupHoverTimer =
+      setTimeout(() => closePaperPopup(paper), 120);
+  }
+);
+
+document.addEventListener(
+  "keydown",
+  e => {
+    if(e.key === "Escape"){
+      document
+        .querySelectorAll(".paper.popup-open")
+        .forEach(closePaperPopup);
+    }
+  }
+);
+
+/* Scrolling moves the card under the popup: keep it on screen. */
+window.addEventListener(
+  "scroll",
+  () => {
+
+    if(popupScrollFrame || !isLandscapeMode()){
+      return;
+    }
+
+    popupScrollFrame =
+      requestAnimationFrame(() => {
+
+        popupScrollFrame = 0;
+
+        document
+          .querySelectorAll(".paper.popup-open")
+          .forEach(p => positionLandscapePopup(p, false));
+      });
   },
-  true
+  { passive: true }
 );
 
 
@@ -2301,10 +2456,10 @@ window.addEventListener(
 
     document
       .querySelectorAll(
-        ".paper.popup-open, .paper:hover"
+        ".paper.popup-open"
       )
       .forEach(
-        positionLandscapePopup
+        p => positionLandscapePopup(p, false)
       );
 
   }
