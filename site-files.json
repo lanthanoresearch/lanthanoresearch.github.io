@@ -1,6 +1,6 @@
 {
  "count": 306,
- "totalBytes": 283497853,
+ "totalBytes": 283510920,
  "files": [
   {
    "path": "1 Thessalonians Original Text.png",
@@ -1089,8 +1089,8 @@
   },
   {
    "path": "settings.html",
-   "size": 10814,
-   "hash": "8448a951781cf8bd"
+   "size": 9689,
+   "hash": "fc7f4527f7bce535"
   },
   {
    "path": "Shadows Point.png",
@@ -1129,8 +1129,8 @@
   },
   {
    "path": "site-tools.js",
-   "size": 70813,
-   "hash": "a11a09b954a39f36"
+   "size": 71304,
+   "hash": "a8fc2644bda21d96"
   },
   {
    "path": "Star of David.png",
@@ -1144,8 +1144,8 @@
   },
   {
    "path": "storage.html",
-   "size": 10464,
-   "hash": "531e7cce7403e540"
+   "size": 13446,
+   "hash": "35c7c595bc60466c"
   },
   {
    "path": "Strange Shadows.png",
@@ -1479,8 +1479,8 @@
   },
   {
    "path": "video.html",
-   "size": 253769,
-   "hash": "adb7a6b7679a5d91"
+   "size": 264488,
+   "hash": "c9692d28f2b77639"
   },
   {
    "path": "What is Everything.pdf",
