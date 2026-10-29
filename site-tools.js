@@ -327,6 +327,54 @@ function watch(){
   TE.obs.observe(root, {childList:true, subtree:true, attributes:true, attributeFilter:["style"]});
 }
 
+
+/* ---------------------------------------------------------------
+   Stronger accent (optional): carries the accent color onto the research
+   list, gallery and viewers - card borders, titles, controls - the way the
+   About / Contact / Download pages already have it. Turned off from
+   Settings > Appearance, or by removing this block and its one call below.
+--------------------------------------------------------------- */
+function accentStrong(){ return get("lt_accent_strong") !== "0"; }
+function setAccentStrong(on){ set("lt_accent_strong", on ? "1" : "0"); applyTheme(); }
+
+function boostCss(main, edge, soft, A, L){
+  var muted = "hsl(" + A + ",32%," + (L ? "34%" : "72%") + ")";
+  var line = "hsla(" + A + ",65%," + (L ? "38%" : "62%") + ",.4)";
+  var ring = "inset 0 0 0 1px " + edge;
+  var css = "";
+  var cat = path === "category.html", gal = path === "gallery.html";
+  var view = /^(pdf|video|image)\.html$/.test(path);
+  if(cat || gal){
+    css += ".sort-btn,.settings-btn{box-shadow:" + ring + "}" +
+           ".info-bar>p,#paperCount,#imageCount{color:" + muted + " !important}" +
+           ".end-of-list{color:" + muted + " !important;opacity:.8}";
+  }
+  if(cat){
+    css += ".view-detailed>.card,.view-compact>.card,.card{box-shadow:" + ring + "}" +
+           ".card h2{color:" + main + " !important}" +
+           ".read-time-line,.card-date,.card-pages{color:" + muted + " !important}" +
+           ".image-details>summary{color:" + muted + " !important}" +
+           ".card-cover{box-shadow:0 0 0 1px " + edge + "}";
+  }
+  if(gal){
+    css += ".paper-break{color:" + main + " !important}" +
+           ".paper-break::after{background:" + line + " !important}" +
+           ".paper-break-count{color:" + muted + " !important}" +
+           ".mode-switch{box-shadow:" + ring + "}" +
+           ".gallery-image{box-shadow:0 0 0 1px " + edge + "}" +
+           ".paper-break-dl{box-shadow:" + ring + "}";
+  }
+  if(view){
+    css += "#toolbar{box-shadow:inset 0 -1px 0 " + edge + "}" +
+           "#titleBar{box-shadow:inset 0 1px 0 " + edge + "}" +
+           ".title-text{color:" + main + " !important}" +
+           ".toolButton,.zoomControls,.pageControls,.videoNavGroup{box-shadow:" + ring + "}" +
+           ".toolButton svg,.videoCtrlBtn:not(#videoPlayPauseBtn) svg{color:" + main + "}" +
+           ".videoTimeLabel{color:" + muted + " !important}";
+  }
+  return css;
+}
+
 /* The accent itself: buttons, the selected tab, the back arrow, text selection, focus rings and scroll bars.
    Written after the colors are mapped, so it is never re-mapped. */
 function accentCss(){
@@ -366,6 +414,7 @@ function accentCss(){
     (/^(about|contact|download|privacy|settings|storage)\.html$/.test(path) ? ".card h2{color:" + main + " !important}.card{box-shadow:inset 0 0 0 1px " + edge + "}" : "") +
     ":focus-visible{outline-color:" + main + " !important}" +
     ".paper-dl.open,.paper-break-dl.open{color:" + main + " !important}";
+  if(accentStrong()) css += boostCss(main, edge, soft, A, L);
   if(!old){ old = document.createElement("style"); old.id = "ltAccentCss"; }
   old.textContent = css;
   (document.head || root).appendChild(old);   // last in the head, so it wins
@@ -423,7 +472,7 @@ window.addEventListener("pageshow", function(e){
   if(e.persisted){ try{ applyTheme(); applyText(); }catch(x){} }
 });
 window.addEventListener("storage", function(e){
-  if(!e.key || /^lt_(theme|accent|text)$/.test(e.key)){ try{ applyTheme(); applyText(); }catch(x){} }
+  if(!e.key || /^lt_(theme|accent|accent_strong|text)$/.test(e.key)){ try{ applyTheme(); applyText(); }catch(x){} }
 });
 
 /* Hide the page for a moment (in the right background color) so a
@@ -1012,7 +1061,7 @@ function addAppearanceRows(container){
 var repaintAppearance = function(){};
 /* Back to the original look: dark theme, no accent, normal text size. */
 function resetAppearance(){
-  try{ localStorage.removeItem("lt_theme"); localStorage.removeItem("lt_accent"); localStorage.removeItem("lt_text"); }catch(e){}
+  try{ localStorage.removeItem("lt_theme"); localStorage.removeItem("lt_accent"); localStorage.removeItem("lt_text"); localStorage.removeItem("lt_accent_strong"); }catch(e){}
   applyTheme(); applyText(); repaintAppearance();
   toast("Appearance reset");
 }
@@ -1287,6 +1336,8 @@ window.LT.importBackup = importBackup;
 window.LT.bindPicker = bindPicker;
 window.LT.pickerRowHtml = pickerRowHtml;
 window.LT.addAppearanceRows = addAppearanceRows;
+window.LT.accentStrong = accentStrong;
+window.LT.setAccentStrong = setAccentStrong;
 window.LT.menu = menu;
 window.LT.hasSources = function(){
   var it = currentItem();
