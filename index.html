@@ -1381,6 +1381,20 @@ transition:left .15s ease, background .15s ease;
 .sx-toggle.sx-on .sx-knob{left:20px;background:#fff}
 .sx-gear:focus-visible,.sx-close:focus-visible,.sx-row:focus-visible,.sx-opt:focus-visible,.sx-toggle:focus-visible{outline:2px solid #777;outline-offset:1px}
 
+
+/* Recent searches */
+.search-history-head{display:flex;align-items:center;justify-content:space-between;padding:10px 15px;background:#181818;color:#aaa;font-size:.9em;font-weight:bold;border-bottom:1px solid #333}
+.search-history-clear{background:none;border:0;color:#aaa;font:inherit;font-weight:normal;font-size:.95em;cursor:pointer;padding:2px 4px;border-radius:6px}
+.search-history-clear:hover{color:#fff}
+.search-history-row{display:flex;align-items:center;border-bottom:1px solid #2a2a2a}
+.search-history-row:last-child{border-bottom:0}
+.search-history-pick{flex:1;min-width:0;display:flex;align-items:center;gap:12px;background:none;border:0;color:#eee;font:inherit;font-size:1em;text-align:left;padding:13px 15px;cursor:pointer}
+.search-history-pick span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.search-history-pick svg{width:17px;height:17px;flex:0 0 auto;color:#888}
+.search-history-pick:hover,.search-history-pick:focus-visible{background:#262626}
+.search-history-x{background:none;border:0;color:#888;font-size:14px;cursor:pointer;padding:13px 15px}
+.search-history-x:hover{color:#fff}
+
 #searchBox:focus{
 outline:none;
 border-color:#666;
@@ -2597,7 +2611,7 @@ class="sx-gear"
 aria-label="Search filters"
 aria-expanded="false"
 >
-<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1z"></path></svg>
+<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5h16l-6.2 7.3v5.6l-3.6 1.9v-7.5z"></path></svg>
 </button>
 
 <div class="sx-blocker sx-hidden" id="sxBlocker"></div>
@@ -4626,6 +4640,111 @@ searchBox.addEventListener("click", reopen);
 console.error("Search scroll-close helper failed to start:", err);
 }
 
+/* ---------- Search history: recent searches when you tap the empty box ---------- */
+const HISTORY_KEY = "searchHistory";
+const HISTORY_ON_KEY = "searchHistoryOn";
+const HISTORY_MAX = 10;
+let lastSavedSearch = "";
+let historyIdleTimer = null;
+
+function historyOn(){
+try{ return localStorage.getItem(HISTORY_ON_KEY) !== "0"; }catch(e){ return true; }
+}
+function loadHistory(){
+try{
+const h = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
+return Array.isArray(h) ? h.filter(x => typeof x === "string" && x.trim()).slice(0, HISTORY_MAX) : [];
+}catch(e){ return []; }
+}
+function saveHistory(list){
+try{ localStorage.setItem(HISTORY_KEY, JSON.stringify(list.slice(0, HISTORY_MAX))); }catch(e){}
+}
+function addHistory(q){
+q = String(q || "").trim().replace(/\s+/g, " ");
+if(q.length < 2 || !historyOn()) return;
+const low = q.toLowerCase();
+let list = loadHistory().filter(x => x.toLowerCase() !== low);
+// typing "mars" then "mars hoax" keeps only the longer one
+if(lastSavedSearch && low.startsWith(lastSavedSearch.toLowerCase()) && low.length > lastSavedSearch.length){
+list = list.filter(x => x.toLowerCase() !== lastSavedSearch.toLowerCase());
+}
+list.unshift(q);
+saveHistory(list);
+lastSavedSearch = q;
+}
+function renderHistory(){
+if(!searchReady || !historyOn()) return false;
+const list = loadHistory();
+if(!list.length) return false;
+const clock = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7.5V12l3 2"></path></svg>';
+searchResults.innerHTML =
+'<div class="search-history-head"><span>Recent searches</span><button type="button" class="search-history-clear">Clear</button></div>' +
+list.map((q, i) =>
+'<div class="search-history-row"><button type="button" class="search-history-pick" data-i="' + i + '">' + clock + '<span>' + escHtml(q) + '</span></button>' +
+'<button type="button" class="search-history-x" data-i="' + i + '" aria-label="Remove ' + escHtml(q) + ' from recent searches" title="Remove">\u2715</button></div>'
+).join("");
+searchResults.style.display = "block";
+searchResults.scrollTop = 0;
+return true;
+}
+
+searchResults.addEventListener("click", e => {
+const pick = e.target.closest(".search-history-pick");
+const del = e.target.closest(".search-history-x");
+const clr = e.target.closest(".search-history-clear");
+if(pick || del || clr){
+// the rows are rebuilt below, so keep the page's "tapped outside" check from seeing a detached target
+e.stopPropagation();
+e.preventDefault();
+}
+if(pick){
+const q = loadHistory()[parseInt(pick.dataset.i, 10)];
+if(!q) return;
+searchBox.value = q;
+searchBox.dispatchEvent(new Event("input"));
+searchBox.focus({ preventScroll: true });
+return;
+}
+if(del){
+const list = loadHistory();
+list.splice(parseInt(del.dataset.i, 10), 1);
+saveHistory(list);
+if(!renderHistory()) searchResults.style.display = "none";
+return;
+}
+if(clr){
+saveHistory([]);
+lastSavedSearch = "";
+searchResults.style.display = "none";
+return;
+}
+// opening a result counts as a real search
+if(e.target.closest(".search-result") && !e.target.closest(".favorite-star")){
+addHistory(searchBox.value);
+}
+}, true);
+
+searchBox.addEventListener("keydown", e => {
+if(e.key === "Enter") addHistory(searchBox.value);
+});
+
+// Nothing opened and no Enter: keep a search that paused on real results
+searchBox.addEventListener("input", () => {
+clearTimeout(historyIdleTimer);
+const q = searchBox.value.trim();
+if(!q) lastSavedSearch = "";
+if(q.length < 3) return;
+historyIdleTimer = setTimeout(() => {
+if(searchBox.value.trim() === q && searchResults.querySelector(".search-result")) addHistory(q);
+}, 3500);
+});
+
+function showHistoryIfEmpty(){
+if(searchBox.value.trim().length === 0) renderHistory();
+}
+searchBox.addEventListener("focus", showHistoryIfEmpty);
+searchBox.addEventListener("click", showHistoryIfEmpty);
+
 searchBox.addEventListener("input", () => {
 
 loadFavorites();
@@ -4641,6 +4760,10 @@ sessionStorage.setItem(
 query
 );
 
+
+if(query.length === 0 && renderHistory()){
+return;
+}
 
 if(query.length < 2){
 

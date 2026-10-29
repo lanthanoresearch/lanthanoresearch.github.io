@@ -349,8 +349,9 @@ function backupSummary(){
   var groups = [
     ["Favorites", /favorite/i, 0],
     ["Bookmarks", /bookmark/i, 0],
-    ["Theme, colors and text size", /^lt_(theme|accent|text)$/, 0],
-    ["Search and display settings", /^(searchSettings|viewMode|paperSort|showFileNames|qrRatio|featuredVideoRatio|readingLevel|videoCaptions|galleryMode|videosDefaultOpen|imagesDefaultOpen|savedVideosOff)$|readAloud|setting/i, 0],
+    ["Theme, colors and text size", /^lt_(theme|accent|accent_strong|text)$/, 0],
+    ["Search history", /^searchHistory$/, 0],
+    ["Search and display settings", /^(searchSettings|viewMode|paperSort|showFileNames|qrRatio|featuredVideoRatio|readingLevel|videoCaptions|galleryMode|videosDefaultOpen|imagesDefaultOpen|savedVideosOff|searchHistoryOn)$|readAloud|setting/i, 0],
     ["Other saved data", /./, 0]
   ];
   var skip = /^(savedVideoLog|archiveStatsCache|archiveFileSizes|lt_seen|lt_hit|lt_last_backup)/;

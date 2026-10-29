@@ -295,7 +295,14 @@ html{scroll-behavior:smooth}
             </div>
         </div>
         <p class="note">Off: only good matches are shown. On: weaker partial matches fill each section up to its number.</p>
-        <div class="actions"><button type="button" class="btn" id="searchReset">Reset search settings</button></div>
+        <div class="rows">
+            <div class="row">
+                <span>Remember my searches</span>
+                <button type="button" class="toggleSwitch" id="historyToggle" role="switch" aria-checked="true" aria-label="Remember my searches"><span class="toggleKnob"></span></button>
+            </div>
+        </div>
+        <p class="note">Shows your recent searches when you tap the empty search box on the home page. They stay on this device.</p>
+        <div class="actions"><button type="button" class="btn" id="searchReset">Reset search settings</button><button type="button" class="btn" id="historyClear">Clear search history</button></div>
     </div>
 
 </section>
@@ -316,6 +323,25 @@ function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&
 /* Appearance: the same picker rows as the Settings panel */
 if(window.LT) LT.addAppearanceRows($("appearance"));
 $("appearanceReset").addEventListener("click", function(){ if(window.LT){ LT.resetAppearance(); paintStrong(); } });
+
+/* Search history on/off and clear */
+function paintHistory(){
+  var on = true;
+  try{ on = localStorage.getItem("searchHistoryOn") !== "0"; }catch(e){}
+  var b = $("historyToggle");
+  b.classList.toggle("active", on);
+  b.setAttribute("aria-checked", on ? "true" : "false");
+}
+$("historyToggle").addEventListener("click", function(){
+  var on = true;
+  try{ on = localStorage.getItem("searchHistoryOn") !== "0"; localStorage.setItem("searchHistoryOn", on ? "0" : "1"); }catch(e){}
+  paintHistory();
+});
+$("historyClear").addEventListener("click", function(){
+  try{ localStorage.removeItem("searchHistory"); }catch(e){}
+  if(window.LT) LT.toast("Search history cleared");
+});
+paintHistory();
 
 /* Stronger accent color on/off */
 function paintStrong(){
