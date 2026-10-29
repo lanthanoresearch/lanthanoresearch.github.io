@@ -320,6 +320,34 @@ html{scroll-behavior:smooth}
     opacity:.6;
     background:#2a2a2a;
 }
+
+/* ---- Saved of total, Save all, progress, leave warning ---- */
+.statLine{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:14px 2px 0;font-size:14px;color:#ddd}
+.statLine .statSize{color:#999;font-size:13px;white-space:nowrap}
+.statBar{height:6px;margin:8px 0 0}
+.saveRow{display:flex;align-items:center;gap:12px;margin-top:12px;min-height:40px}
+.saveRow .btn{padding:9px 18px;font-size:14.5px;min-width:112px}
+.saveRow .btn:disabled{opacity:.55;cursor:default}
+.saveHint{color:#999;font-size:13px}
+.saveProg{margin-top:12px;background:#262d3d;border:1px solid #2f4f8f;border-radius:10px;padding:12px 14px}
+.saveProg[hidden],.saveRow[hidden]{display:none}
+.progTop{display:flex;align-items:center;gap:12px}
+.progText{flex:1;min-width:0;color:#fff;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.progPct{color:#cfd9f2;font-size:13px}
+.saveProg .bar{margin:10px 0 8px;height:6px}
+.progBot{display:flex;align-items:center;justify-content:space-between;gap:10px;color:#9aa4bd;font-size:12.5px}
+.progBot .small{background:transparent;border:1px solid #3a4a6e;color:#cfd9f2;border-radius:6px;padding:5px 12px;font:inherit;font-size:12.5px;cursor:pointer}
+.progBot .small:hover{background:#2c3550}
+.leave-popup{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.78);z-index:9999;align-items:center;justify-content:center;padding:20px}
+.leave-popup-box{width:100%;max-width:450px;background:#1d1d1d;border:1px solid #444;border-radius:10px;padding:22px;box-shadow:0 10px 40px rgba(0,0,0,0.5)}
+.leave-popup-box h2{margin-top:0;margin-bottom:12px}
+.leave-popup-box p{color:#ccc;line-height:1.5}
+.leave-popup-box p.leave-popup-warning{color:#ff5555;font-weight:bold}
+.leave-popup-buttons{display:flex;gap:10px;margin-top:20px}
+.leave-popup-button{flex:1;padding:11px 15px;border:none;border-radius:7px;font-size:15px;cursor:pointer}
+.stay-button{background:#fff;color:#111}.stay-button:hover{background:#ddd}
+.leave-button{background:#333;color:#fff}.leave-button:hover{background:#444}
+@media(max-width:600px){.leave-popup-buttons{flex-direction:column}}
 </style>
 </head>
 <body>
@@ -333,8 +361,8 @@ html{scroll-behavior:smooth}
     <h1 style="margin-bottom:30px">Storage</h1>
 
     <div class="card">
-        <h2 class="hd"><span class="pv-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="6" rx="7.5" ry="3"/><path d="M4.5 6v6c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3V6"/><path d="M4.5 12v6c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-6"/></svg></span>Saved on this device</h2>
-        <p class="note">To load faster, your browser keeps copies of the videos, pictures, PDFs and pages you open. Everything stays on this device, and each kind below has its own switch.</p>
+        <h2 class="hd"><span class="pv-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="6" rx="7.5" ry="3"/><path d="M4.5 6v6c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3V6"/><path d="M4.5 12v6c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-6"/></svg></span>Saved in this browser</h2>
+        <p class="note"><b>Saved</b> means this browser holds a copy of a file so it opens without loading again. Saved files stay inside the browser and are not put on your device. Each kind below has its own switch and a Save all button.</p>
         <div class="bar"><i id="usedBar"></i></div>
         <p class="note" id="usedText">Checking&hellip;</p>
         <p class="offlineLine" id="offlineLine"></p>
@@ -350,12 +378,20 @@ html{scroll-behavior:smooth}
         <h2 class="hd"><span class="pv-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span>Pages</h2>
         <div class="rows">
             <div class="row">
-                <span>Keep pages I visit</span>
-                <button type="button" class="toggleSwitch" id="pageToggle" role="switch" aria-checked="true" aria-label="Keep pages I visit"><span class="toggleKnob"></span></button>
+                <span>Save pages I visit</span>
+                <button type="button" class="toggleSwitch" id="pageToggle" role="switch" aria-checked="true" aria-label="Save pages I visit"><span class="toggleKnob"></span></button>
             </div>
         </div>
-        <p class="note">Every page you visit is kept on this device along with the files it needs, so it opens fast and works offline. Turning this off only stops new pages from being kept; saved ones stay until you remove them.</p>
-        <p class="sumLine" id="pageSum"></p>
+        <p class="note">Every page you visit is saved in this browser along with the files it needs, so it opens without loading again and works offline. Turning this off only stops new pages from being saved; saved ones stay until you remove them.</p>
+        <div class="statLine"><span id="pageStat">Counting&hellip;</span><span class="statSize" id="pageStatSize"></span></div>
+        <div class="bar statBar"><i id="pageStatBar"></i></div>
+        <div class="saveRow" id="pageSaveRow"><button type="button" class="btn" id="pageSaveAll" disabled>Save all</button><span class="saveHint" id="pageSaveHint"></span></div>
+        <div class="saveProg" id="pageProg" hidden>
+            <div class="progTop"><span class="progText" id="pageProgText"></span><span class="progPct" id="pageProgPct">0%</span></div>
+            <div class="bar"><i id="pageProgBar"></i></div>
+            <div class="progBot"><span id="pageProgSub"></span><button type="button" class="small" id="pageProgStop">Stop</button></div>
+        </div>
+        <p class="note" id="pageSaveMsg" hidden></p>
         <div class="listState loading" id="pageState">Loading&hellip;</div>
         <button type="button" class="seeBtn" id="pageSee" hidden><span class="seeLabel" id="pageSeeLabel"></span><span class="seeMeta" id="pageSeeMeta"></span><span class="seeChev" aria-hidden="true">&rsaquo;</span></button>
     </div>
@@ -363,12 +399,21 @@ html{scroll-behavior:smooth}
         <h2 class="hd"><span class="pv-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/><path d="M10 13h6M10 17h6"/></svg></span>PDFs</h2>
         <div class="rows">
             <div class="row">
-                <span>Keep PDFs I open</span>
-                <button type="button" class="toggleSwitch" id="pdfToggle" role="switch" aria-checked="true" aria-label="Keep PDFs I open"><span class="toggleKnob"></span></button>
+                <span>Save PDFs I open</span>
+                <button type="button" class="toggleSwitch" id="pdfToggle" role="switch" aria-checked="true" aria-label="Save PDFs I open"><span class="toggleKnob"></span></button>
             </div>
         </div>
-        <p class="note">Every PDF you open is kept on this device, so it opens faster and works offline. Turning this off only stops new PDFs from being kept; saved ones stay until you remove them.</p>
+        <p class="note">Every PDF you open is saved in this browser, so it opens without loading again and works offline. Turning this off only stops new PDFs from being saved; saved ones stay until you remove them.</p>
 
+        <div class="statLine"><span id="pdfStat">Counting&hellip;</span><span class="statSize" id="pdfStatSize"></span></div>
+        <div class="bar statBar"><i id="pdfStatBar"></i></div>
+        <div class="saveRow" id="pdfSaveRow"><button type="button" class="btn" id="pdfSaveAll" disabled>Save all</button><span class="saveHint" id="pdfSaveHint"></span></div>
+        <div class="saveProg" id="pdfProg" hidden>
+            <div class="progTop"><span class="progText" id="pdfProgText"></span><span class="progPct" id="pdfProgPct">0%</span></div>
+            <div class="bar"><i id="pdfProgBar"></i></div>
+            <div class="progBot"><span id="pdfProgSub"></span><button type="button" class="small" id="pdfProgStop">Stop</button></div>
+        </div>
+        <p class="note" id="pdfSaveMsg" hidden></p>
         <div class="listState loading" id="pdfState">Loading&hellip;</div>
         <button type="button" class="seeBtn" id="pdfSee" hidden><span class="seeLabel" id="pdfSeeLabel"></span><span class="seeMeta" id="pdfSeeMeta"></span><span class="seeChev" aria-hidden="true">&rsaquo;</span></button>
     </div>
@@ -376,12 +421,20 @@ html{scroll-behavior:smooth}
         <h2 class="hd"><span class="pv-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10.5 9.5v5l4-2.5z"/></svg></span>Videos</h2>
         <div class="rows">
             <div class="row">
-                <span>Keep videos I watch</span>
-                <button type="button" class="toggleSwitch" id="saveToggle" role="switch" aria-checked="true" aria-label="Keep videos I watch"><span class="toggleKnob"></span></button>
+                <span>Save videos I watch</span>
+                <button type="button" class="toggleSwitch" id="saveToggle" role="switch" aria-checked="true" aria-label="Save videos I watch"><span class="toggleKnob"></span></button>
             </div>
         </div>
-        <p class="note">Every video you watch is kept on this device, so it replays faster and works offline. Turning this off only stops new videos from being kept; saved ones stay until you remove them.</p>
-        <p class="sumLine" id="vidSum"></p>
+        <p class="note">Every video you watch is saved in this browser, so it plays without loading again and works offline. Turning this off only stops new videos from being saved; saved ones stay until you remove them.</p>
+        <div class="statLine"><span id="vidStat">Counting&hellip;</span><span class="statSize" id="vidStatSize"></span></div>
+        <div class="bar statBar"><i id="vidStatBar"></i></div>
+        <div class="saveRow" id="vidSaveRow"><button type="button" class="btn" id="vidSaveAll" disabled>Save all</button><span class="saveHint" id="vidSaveHint"></span></div>
+        <div class="saveProg" id="vidProg" hidden>
+            <div class="progTop"><span class="progText" id="vidProgText"></span><span class="progPct" id="vidProgPct">0%</span></div>
+            <div class="bar"><i id="vidProgBar"></i></div>
+            <div class="progBot"><span id="vidProgSub"></span><button type="button" class="small" id="vidProgStop">Stop</button></div>
+        </div>
+        <p class="note" id="vidSaveMsg" hidden></p>
         <p class="sumLine" id="vidSaving" hidden></p>
         <p class="note" id="vidIssue" hidden></p>
         <div class="listState loading" id="vidState">Loading&hellip;</div>
@@ -391,12 +444,21 @@ html{scroll-behavior:smooth}
         <h2 class="hd"><span class="pv-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="M4 17l5-4.5 3.5 3 3-2.5L20 16"/></svg></span>Pictures</h2>
         <div class="rows">
             <div class="row">
-                <span>Keep pictures I view</span>
-                <button type="button" class="toggleSwitch" id="imgToggle" role="switch" aria-checked="true" aria-label="Keep pictures I view"><span class="toggleKnob"></span></button>
+                <span>Save pictures I view</span>
+                <button type="button" class="toggleSwitch" id="imgToggle" role="switch" aria-checked="true" aria-label="Save pictures I view"><span class="toggleKnob"></span></button>
             </div>
         </div>
-        <p class="note">Every picture you view is kept on this device, so it shows faster and works offline. Turning this off only stops new pictures from being kept; saved ones stay until you remove them.</p>
+        <p class="note">Every picture you view is saved in this browser, so it shows without loading again and works offline. Turning this off only stops new pictures from being saved; saved ones stay until you remove them.</p>
 
+        <div class="statLine"><span id="imgStat">Counting&hellip;</span><span class="statSize" id="imgStatSize"></span></div>
+        <div class="bar statBar"><i id="imgStatBar"></i></div>
+        <div class="saveRow" id="imgSaveRow"><button type="button" class="btn" id="imgSaveAll" disabled>Save all</button><span class="saveHint" id="imgSaveHint"></span></div>
+        <div class="saveProg" id="imgProg" hidden>
+            <div class="progTop"><span class="progText" id="imgProgText"></span><span class="progPct" id="imgProgPct">0%</span></div>
+            <div class="bar"><i id="imgProgBar"></i></div>
+            <div class="progBot"><span id="imgProgSub"></span><button type="button" class="small" id="imgProgStop">Stop</button></div>
+        </div>
+        <p class="note" id="imgSaveMsg" hidden></p>
         <div class="listState loading" id="imgState">Loading&hellip;</div>
         <button type="button" class="seeBtn" id="imgSee" hidden><span class="seeLabel" id="imgSeeLabel"></span><span class="seeMeta" id="imgSeeMeta"></span><span class="seeChev" aria-hidden="true">&rsaquo;</span></button>
     </div>
@@ -404,7 +466,7 @@ html{scroll-behavior:smooth}
     <div class="card">
         <h2 class="hd"><span class="pv-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="5" rx="1.6"/><path d="M5 9v8a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3V9"/><path d="M12 12v4"/><path d="M10 14.5l2 2 2-2"/></svg></span>Backup &amp; restore</h2>
         <p class="note">A backup is a snapshot of everything this site has saved in this browser, taken at the moment you tap the button: your favorites, bookmarks, theme, colors and text size, display and search settings, saved places and every other preference. Save it to a file to keep it safe or to move to another phone or computer, then restore it there.</p>
-        <p class="note">Saved videos, pictures, PDFs and pages are not part of a backup. They download again when needed.</p>
+        <p class="note">Saved videos, pictures, PDFs and pages are not part of a backup. They load again when needed.</p>
         <ul class="sumList" id="bkList"></ul>
         <p class="note" id="bkLast"></p>
         <div class="actions">
@@ -415,6 +477,18 @@ html{scroll-behavior:smooth}
 
 </section>
 
+<div id="leavePopup" class="leave-popup" role="dialog" aria-modal="true" aria-labelledby="leaveTitle">
+    <div class="leave-popup-box">
+        <h2 id="leaveTitle">Still Saving</h2>
+        <p class="leave-popup-warning">Leaving this page will stop the saving.</p>
+        <p>Files already saved stay saved, but the rest will not be. If you leave now, you can start Save all again later.</p>
+        <div class="leave-popup-buttons">
+            <button type="button" class="leave-popup-button stay-button" id="stayBtn">Stay on Page</button>
+            <button type="button" class="leave-popup-button leave-button" id="leaveBtn">Leave Anyway</button>
+        </div>
+    </div>
+</div>
+
 <script>
 (function(){
 "use strict";
@@ -423,7 +497,7 @@ var SITE_CACHE = "lanthano-site-files";
 var STATE_KEY = "savedVideoLog2";
 
 function $(id){ return document.getElementById(id); }
-/* "Keep videos I watch" is the toggle on this page; every sentence here follows it. */
+/* "Save videos I watch" is the toggle on this page; every sentence here follows it. */
 function keeping(){ try{ return localStorage.getItem("savedVideosOff") !== "1"; }catch(e){ return true; } }
 var saveToggle = $("saveToggle");
 function paintToggle(){
@@ -573,7 +647,7 @@ async function fillList(kind, cacheName, test, mk, quiet, emptyText, sorter){
         if(tok !== tokens[kind]) return null;
         var res = await c.match(keys[i]);
         var len = res ? parseInt(res.headers.get("content-length") || "0", 10) : 0;
-        if(!len && res && cacheName !== VIDEO_CACHE){ try{ len = (await res.clone().blob()).size; }catch(e){} }
+        if(res && cacheName !== VIDEO_CACHE && (!len || !(IMG_RE.test(pathOf(keys[i])) || PDF_RE.test(pathOf(keys[i]))))){ try{ len = (await res.clone().blob()).size; }catch(e){} }
         items.push({req: keys[i], size: len || 0});
       }
     }
@@ -589,6 +663,7 @@ async function fillList(kind, cacheName, test, mk, quiet, emptyText, sorter){
     $(kind + "SeeLabel").textContent = "View all saved " + (kind === "page" ? "pages" : NOUN[kind][1]);
     $(kind + "SeeMeta").textContent = items.length + " \u00b7 " + mb(bytes);
   }
+  paintStats(kind);
   return items;
 }
 
@@ -668,25 +743,20 @@ function videoRow(item, removable){
     }catch(e){}
     removedOne(row);
   } : null, "Remove this video?",
-  "“" + title + "” will be removed from this device. " + (keeping() ? "It downloads again if you watch it." : "It will not be saved again while keeping videos is turned off."));
+  "“" + title + "” will be removed from your saved files. " + (keeping() ? "It loads again if you watch it." : "It will not be saved again while saving videos is turned off."));
 }
 
 function paintVideoSummary(items){
-  var total = catalog.reduce(function(n, v){ return n + vidSize(v); }, 0);
   var have = items.length, bytes = items.reduce(function(n, x){ return n + x.size; }, 0);
   savedFiles = {};
   items.forEach(function(x){ savedFiles[nameOf(x.req)] = 1; });
-  var n = catalog.length;
-  $("vidSum").textContent = n
-    ? plural(have, "video", "videos") + " saved (" + mb(bytes) + ") of " + n + " on the site, about " + mb(total) + " in all."
-    : plural(have, "video", "videos") + " saved (" + mb(bytes) + ").";
   tile("tVid", bytes, have);
 }
 
 async function videos(quiet){
   var items = await fillList("vid", VIDEO_CACHE, function(p){ return p.indexOf("/__video/") === 0; }, videoRow, quiet,
     keeping() ? "No videos saved yet. A video is saved the first time you watch it."
-              : "No videos saved. Keeping videos is turned off.");
+              : "No videos saved. Saving videos is turned off.");
   if(items) paintVideoSummary(items);
 }
 
@@ -703,14 +773,14 @@ function imageRow(item, removable){
   var short = name.split("/").pop();
   return rowFor(item, short, "image.html?image=" + encodeURIComponent(name), removable ? async function(x, row){
     await removeOneSite(x); removedOne(row);
-  } : null, "Remove this picture?", "“" + short + "” will be removed from this device. " + (LT.filePrefs.on("images") ? "It is saved again when you view it." : "It will not be saved again while keeping pictures is turned off."));
+  } : null, "Remove this picture?", "“" + short + "” will be removed from your saved files. " + (LT.filePrefs.on("images") ? "It is saved again when you view it." : "It will not be saved again while saving pictures is turned off."));
 }
 function pdfRow(item, removable){
   var name = nameOf(item.req);
   var title = pdfTitles[name] || name.split("/").pop().replace(/\.pdf$/i, "");
   return rowFor(item, title, "pdf.html?file=" + encodeURIComponent(name), removable ? async function(x, row){
     await removeOneSite(x); removedOne(row);
-  } : null, "Remove this PDF?", "“" + title + "” will be removed from this device. " + (LT.filePrefs.on("pdfs") ? "It is saved again when you open it." : "It will not be saved again while keeping PDFs is turned off."));
+  } : null, "Remove this PDF?", "“" + title + "” will be removed from your saved files. " + (LT.filePrefs.on("pdfs") ? "It is saved again when you open it." : "It will not be saved again while saving PDFs is turned off."));
 }
 var HTML_RE = /\.html?$/i;
 function pageLabel(name){
@@ -726,24 +796,24 @@ function pageRow(item, removable){
   var label = pageLabel(name);
   return rowFor(item, label, isPage ? (name === "" ? "index.html" : name) : null, removable ? async function(x, row){
     await removeOneSite(x); removedOne(row);
-  } : null, "Remove this saved " + (isPage ? "page" : "file") + "?", "“" + label + "” will be removed from this device. " + (LT.filePrefs.on("pages") ? "It is saved again when you visit it." : "It will not be saved again while keeping pages is turned off."));
+  } : null, "Remove this saved " + (isPage ? "page" : "file") + "?", "“" + label + "” will be removed from your saved files. " + (LT.filePrefs.on("pages") ? "It is saved again when you visit it." : "It will not be saved again while saving pages is turned off."));
 }
 
 async function pictures(quiet){
   var items = await fillList("img", SITE_CACHE, function(p){ return IMG_RE.test(p); }, imageRow, quiet,
-    LT.filePrefs.on("images") ? "No pictures saved yet. A picture is saved the first time you view it." : "No pictures saved. Keeping pictures is turned off.");
+    LT.filePrefs.on("images") ? "No pictures saved yet. A picture is saved the first time you view it." : "No pictures saved. Saving pictures is turned off.");
   if(!items) return;
   tile("tImg", bytesOf(items), items.length);
 }
 async function pdfs(quiet){
   var items = await fillList("pdf", SITE_CACHE, function(p){ return PDF_RE.test(p); }, pdfRow, quiet,
-    LT.filePrefs.on("pdfs") ? "No PDFs saved yet. A PDF is saved the first time you open it." : "No PDFs saved. Keeping PDFs is turned off.");
+    LT.filePrefs.on("pdfs") ? "No PDFs saved yet. A PDF is saved the first time you open it." : "No PDFs saved. Saving PDFs is turned off.");
   if(!items) return;
   tile("tPdf", bytesOf(items), items.length);
 }
 async function pages(quiet){
   var items = await fillList("page", SITE_CACHE, function(p){ return !IMG_RE.test(p) && !PDF_RE.test(p); }, pageRow, quiet,
-    LT.filePrefs.on("pages") ? "No pages saved yet. A page is saved, with everything it needs, when you visit it." : "No pages saved. Keeping pages is turned off.",
+    LT.filePrefs.on("pages") ? "No pages saved yet. A page is saved, with everything it needs, when you visit it." : "No pages saved. Saving pages is turned off.",
     function(a, b){
       var ap = HTML_RE.test(pathOf(a.req)) || /\/$/.test(pathOf(a.req)), bp = HTML_RE.test(pathOf(b.req)) || /\/$/.test(pathOf(b.req));
       if(ap !== bp) return ap ? -1 : 1;
@@ -751,25 +821,24 @@ async function pages(quiet){
     });
   if(!items) return;
   var n = items.filter(function(x){ return HTML_RE.test(pathOf(x.req)) || /\/$/.test(pathOf(x.req)); }).length;
-  $("pageSum").textContent = items.length ? plural(n, "page", "pages") + " saved, with " + plural(items.length - n, "file", "files") + " they need (" + mb(bytesOf(items)) + " in all)." : "";
   tile("tPage", bytesOf(items), n);
 }
 
 var CFG = {
   vid: {title: "Saved videos", mk: videoRow, clearTitle: "Remove all saved videos?",
-    clearText: function(){ return "Every video saved on this device will be removed. " + (keeping() ? "They download again if you watch them." : "They will not be saved again while keeping videos is turned off."); },
+    clearText: function(){ return "Every video saved in this browser will be removed. " + (keeping() ? "They load again if you watch them." : "They will not be saved again while saving videos is turned off."); },
     clearAll: async function(){
       await caches.delete(VIDEO_CACHE);
       try{ localStorage.removeItem(STATE_KEY); }catch(e){}
     }},
   img: {title: "Saved pictures", mk: imageRow, clearTitle: "Remove all saved pictures?",
-    clearText: function(){ return "Every picture saved on this device will be removed. " + (LT.filePrefs.on("images") ? "They are saved again as you view them." : "They will not be saved again while keeping pictures is turned off."); },
+    clearText: function(){ return "Every picture saved in this browser will be removed. " + (LT.filePrefs.on("images") ? "They are saved again as you view them." : "They will not be saved again while saving pictures is turned off."); },
     clearAll: function(){ return removeFromSite(data.img); }},
   pdf: {title: "Saved PDFs", mk: pdfRow, clearTitle: "Remove all saved PDFs?",
-    clearText: function(){ return "Every PDF saved on this device will be removed. " + (LT.filePrefs.on("pdfs") ? "They are saved again as you open them." : "They will not be saved again while keeping PDFs is turned off."); },
+    clearText: function(){ return "Every PDF saved in this browser will be removed. " + (LT.filePrefs.on("pdfs") ? "They are saved again as you open them." : "They will not be saved again while saving PDFs is turned off."); },
     clearAll: function(){ return removeFromSite(data.pdf); }},
   page: {title: "Saved pages", mk: pageRow, clearTitle: "Remove all saved pages?",
-    clearText: function(){ return "Saved pages and the files they need will be removed from this device. " + (LT.filePrefs.on("pages") ? "They are saved again as you visit them." : "They will not be saved again while keeping pages is turned off.") + " Pictures and PDFs are kept separately."; },
+    clearText: function(){ return "Saved pages and the files they need will be removed from your saved files. " + (LT.filePrefs.on("pages") ? "They are saved again as you visit them." : "They will not be saved again while saving pages is turned off.") + " Pictures and PDFs are kept separately."; },
     clearAll: function(){ return removeFromSite(data.page); }}
 };
 ["vid", "img", "pdf", "page"].forEach(function(k){ $(k + "See").addEventListener("click", function(){ openAll(k); }); });
@@ -794,13 +863,318 @@ var paintImgToggle = bindFileToggle("images", "imgToggle", pictures);
 var paintPdfToggle = bindFileToggle("pdfs", "pdfToggle", pdfs);
 var paintPageToggle = bindFileToggle("pages", "pageToggle", pages);
 
+/* ---------- What is on the site, and how much of it is saved ---------- */
+var TEXT_RE = /\.(html?|mjs|js|css|json|webmanifest)$/i, VID_RE = /\.(mp4|webm|m4v|mov)$/i;
+var NOT_PAGE = /^(site-files\.json|package(-lock)?\.json|build-[\w-]+\.js|app\.yml|transcripts\/|node_modules\/|\.github\/)/;
+var UNIT = {vid: "videos", img: "pictures", pdf: "PDFs", page: "files"};
+var ONE = {vid: "video", img: "picture", pdf: "PDF", page: "file"};
+var totals = {vid: [], img: [], pdf: [], page: []}, totalsReady = false, totalsPromise = null;
+function normName(n){ n = String(n).replace(/^\/+/, ""); return n === "" ? "index.html" : n; }
+function keyOf(item){ return normName(nameOf(item.req)); }
+function siteUrl(name){ return new URL(name.split("/").map(encodeURIComponent).join("/"), location.origin + "/").href; }
+function lsGet(k){ try{ return JSON.parse(localStorage.getItem(k) || "null"); }catch(e){ return null; } }
+function lsSet(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+function pool(list, n, fn){
+  var i = 0;
+  return Promise.all(Array.apply(null, Array(Math.min(n, list.length))).map(async function(){
+    while(i < list.length){ var x = list[i++]; try{ await fn(x); }catch(e){} }
+  }));
+}
+function checkFetch(url, opts){
+  opts = opts || {};
+  opts.cache = opts.cache || "no-store";
+  opts.headers = Object.assign({"x-lt-check": "1"}, opts.headers || {});
+  return fetch(url, opts);
+}
+
+/* Best source first: the site's own file list. Otherwise it is worked out from
+   descriptions.json, the sitemap and the pages themselves. */
+async function manifestFiles(){
+  try{
+    var r = await checkFetch("site-files.json", {cache: "no-cache"});
+    if(!r.ok) return null;
+    var j = await r.json(), list = Array.isArray(j) ? j : j.files;
+    return list && list.length ? list.filter(function(f){ return f && typeof f.path === "string"; }) : null;
+  }catch(e){ return null; }
+}
+async function sizesOf(names){
+  var cache = lsGet("lt_sizeCache") || {}, now = Date.now(), need = [];
+  names.forEach(function(n){ if(!cache[n] || now - cache[n][1] > 7 * 86400000) need.push(n); });
+  await pool(need, 6, async function(n){
+    var r = await checkFetch(siteUrl(n), {method: "HEAD"});
+    if(r.ok) cache[n] = [Number(r.headers.get("content-length")) || 0, now];
+  });
+  if(need.length) lsSet("lt_sizeCache", cache);
+  return cache;
+}
+async function readSaved(name){
+  try{
+    var hit = await caches.match(siteUrl(name), {ignoreSearch: true});
+    if(hit){ var b = await hit.blob(); return {text: await b.text(), size: b.size}; }
+  }catch(e){}
+  return null;
+}
+async function scanPages(){
+  var memo = lsGet("lt_pageScan");
+  if(memo && Date.now() - memo.t < 12 * 3600000 && memo.files && memo.files.length) return memo.files;
+  var seen = {}, queue = [], out = [];
+  function add(n){
+    n = normName(n);
+    if(seen[n] || NOT_PAGE.test(n) || Object.keys(seen).length > 160) return;
+    seen[n] = 1; queue.push(n);
+  }
+  add("index.html");
+  try{
+    var sm = await (await checkFetch("sitemap.xml", {cache: "no-cache"})).text();
+    sm.replace(/<loc>([^<]+)<\/loc>/g, function(_, u){
+      try{ add(decodeURIComponent(new URL(u.replace(/&amp;/g, "&")).pathname)); }catch(e){}
+    });
+  }catch(e){}
+  var REF = /["']([A-Za-z0-9_\-. %\/]+\.(?:html?|mjs|js|css|json|webmanifest))(?:[?#][^"'\s]*)?["']/g;
+  async function visit(){
+    while(queue.length){
+      var n = queue.shift(), got = await readSaved(n);
+      if(!got){
+        try{
+          var r = await checkFetch(siteUrl(n));
+          if(r.status !== 200) continue;
+          var b = await r.blob();
+          got = {text: await b.text(), size: b.size};
+        }catch(e){ continue; }
+      }
+      out.push({path: n, size: got.size});
+      if(/\.html?$/i.test(n) || (/\.m?js$/i.test(n) && n.indexOf("/") < 0)){
+        var m; REF.lastIndex = 0;
+        while((m = REF.exec(got.text))){
+          var ref = m[1].replace(/^\.\//, "").replace(/^\/+/, "");
+          if(/^(\.\.|https?:)/.test(ref) || !TEXT_RE.test(ref)) continue;
+          try{ ref = decodeURIComponent(ref); }catch(e){}
+          add(ref);
+        }
+      }
+    }
+  }
+  await Promise.all([visit(), visit(), visit(), visit()]);
+  if(out.length) lsSet("lt_pageScan", {t: Date.now(), files: out});
+  return out;
+}
+async function loadTotals(){
+  var out = {vid: [], img: [], pdf: [], page: []};
+  try{
+    var cat = ENGINE ? await LT.videoSaver.catalog() : [];
+    out.vid = cat.map(function(v){ return {name: v.file, size: vidSize(v), v: v}; });
+  }catch(e){}
+  var files = await manifestFiles();
+  if(files){
+    files.forEach(function(f){
+      var p = f.path, size = Number(f.size) || 0;
+      if(VID_RE.test(p)) return;
+      if(PDF_RE.test(p)) out.pdf.push({name: p, size: size, url: siteUrl(p)});
+      else if(IMG_RE.test(p)) out.img.push({name: p, size: size, url: siteUrl(p)});
+      else if(TEXT_RE.test(p) && !NOT_PAGE.test(p)) out.page.push({name: p, size: size, url: siteUrl(p)});
+    });
+  }else{
+    var names = {img: {}, pdf: {}};
+    try{
+      var d = await (await fetch("/descriptions.json", {cache: "no-cache"})).json();
+      Object.keys(d).forEach(function(k){
+        if(d[k] && d[k].url && PDF_RE.test(d[k].url)) names.pdf[d[k].url] = 1;
+        ((d[k] && d[k].images) || []).forEach(function(i){ if(typeof i === "string" && IMG_RE.test(i)) names.img[i] = 1; });
+      });
+    }catch(e){}
+    var sz = await sizesOf(Object.keys(names.pdf).concat(Object.keys(names.img)));
+    Object.keys(names.pdf).forEach(function(n){ out.pdf.push({name: n, size: sz[n] ? sz[n][0] : 0, url: siteUrl(n)}); });
+    Object.keys(names.img).forEach(function(n){ out.img.push({name: n, size: sz[n] ? sz[n][0] : 0, url: siteUrl(n)}); });
+    (await scanPages()).forEach(function(f){ out.page.push({name: f.path, size: f.size, url: siteUrl(f.path)}); });
+  }
+  return out;
+}
+function startTotals(){
+  if(!totalsPromise){
+    totalsPromise = loadTotals().catch(function(){ return totals; }).then(function(t){ totals = t; totalsReady = true; paintAllStats(); return t; });
+  }
+  return totalsPromise;
+}
+
+/* Everything on the site plus anything saved that the list does not know, by name. */
+function merged(kind){
+  var map = {}, order = [];
+  (totals[kind] || []).forEach(function(t){
+    if(!map[t.name]){ map[t.name] = {name: t.name, total: t.size, saved: false, have: 0, url: t.url, v: t.v}; order.push(t.name); }
+  });
+  (data[kind] || []).forEach(function(x){
+    var n = keyOf(x), e = map[n];
+    if(!e){ e = map[n] = {name: n, total: 0, saved: true, have: x.size}; order.push(n); }
+    e.saved = true; e.have = x.size;
+    if(!e.total) e.total = x.size;
+  });
+  return order.map(function(n){ return map[n]; });
+}
+function paintStats(kind){
+  var main = $(kind + "Stat");
+  if(!main) return;
+  var items = data[kind] || [], bar = $(kind + "StatBar"), btn = $(kind + "SaveAll");
+  if(!totalsReady){
+    main.textContent = items.length + " " + (items.length === 1 ? ONE[kind] : UNIT[kind]) + " saved";
+    $(kind + "StatSize").textContent = "counting what is on the site…";
+    bar.style.width = "0";
+    btn.disabled = true;
+    return;
+  }
+  var m = merged(kind), saved = m.filter(function(e){ return e.saved; });
+  var haveBytes = saved.reduce(function(n, e){ return n + e.have; }, 0);
+  var totalBytes = m.reduce(function(n, e){ return n + Math.max(e.total, e.saved ? e.have : 0); }, 0);
+  main.textContent = saved.length + " of " + m.length + " " + (m.length === 1 ? ONE[kind] : UNIT[kind]) + " saved";
+  $(kind + "StatSize").textContent = totalBytes ? mb(haveBytes) + " of " + mb(totalBytes) : mb(haveBytes);
+  var frac = totalBytes ? haveBytes / totalBytes : (m.length ? saved.length / m.length : 0);
+  bar.style.width = Math.min(100, Math.round(frac * 100)) + "%";
+  var left = m.length - saved.length;
+  btn.textContent = left ? "Save all" : "All saved";
+  btn.disabled = !left || !ENGINE || !!runKind;
+  $(kind + "SaveHint").textContent = left ? left + " left" : "";
+}
+function paintAllStats(){ ["page", "pdf", "vid", "img"].forEach(paintStats); }
+
+/* ---------- Save all, with progress ---------- */
+var runKind = "", runCtl = null, allowLeave = false;
+function setProg(kind, text, pct, sub){
+  $(kind + "ProgText").textContent = text;
+  $(kind + "ProgPct").textContent = pct + "%";
+  $(kind + "ProgBar").style.width = pct + "%";
+  if(sub !== undefined) $(kind + "ProgSub").textContent = sub;
+}
+function labelOf(kind, e){
+  if(kind === "vid") return (e.v && e.v.title) || e.name.split("/").pop();
+  if(kind === "pdf") return pdfTitles[e.name] || e.name.split("/").pop().replace(/\.pdf$/i, "");
+  return kind === "page" ? pageLabel(e.name) : e.name.split("/").pop();
+}
+/* One picture, PDF or page into storage. Resolves the size saved, or 0 if it failed. */
+async function putSite(e, signal){
+  var res = await checkFetch(e.url, {cache: "reload", signal: signal});
+  if(res.status !== 200){ try{ res.body && res.body.cancel(); }catch(x){} return 0; }
+  var ct = (res.headers.get("content-type") || "").toLowerCase();
+  if((PDF_RE.test(e.name) || IMG_RE.test(e.name)) && ct.indexOf("text/html") > -1){ try{ res.body && res.body.cancel(); }catch(x){} return 0; }
+  var u = new URL(e.url);
+  if(/\.html?$/i.test(u.pathname) || /\/$/.test(u.pathname)) u.search = "";
+  var size = (await res.clone().blob()).size;
+  await (await caches.open(SITE_CACHE)).put(u.href, res);
+  return size || 1;
+}
+function prefOn(kind){
+  return kind === "vid" ? keeping() : LT.filePrefs.on(kind === "img" ? "images" : kind === "pdf" ? "pdfs" : "pages");
+}
+async function saveAll(kind){
+  if(runKind || !ENGINE) return;
+  await startTotals();
+  var todo = merged(kind).filter(function(e){ return !e.saved; });
+  var msg = $(kind + "SaveMsg");
+  msg.hidden = true;
+  if(!todo.length){ LT.toast("Everything here is already saved"); return; }
+  if(kind === "vid" && LT.videoSaver.isRunning()){ LT.toast("A video is being saved already. Try again in a moment."); return; }
+  var needBytes = todo.reduce(function(n, e){ return n + e.total; }, 0);
+  var on = prefOn(kind);
+  var what = kind === "vid" ? "videos" : kind === "img" ? "pictures" : kind === "pdf" ? "PDFs" : "pages";
+  var net = navigator.connection && (navigator.connection.type === "cellular" || navigator.connection.saveData) ? " You appear to be on mobile data or data saver." : "";
+  if(!on || kind === "vid" || needBytes > 100e6){
+    var ok = await LT.confirmStep(
+      on ? "Save " + plural(todo.length, ONE[kind], UNIT[kind]) + "?" : "Turn on saving " + what + "?",
+      (on ? "" : "Saving " + what + " is turned off. ") + "This keeps " + plural(todo.length, "item", "items") + (needBytes ? " (about " + mb(needBytes) + ")" : "") + " in this browser so they open without loading again. It is not a download, so nothing is added to your device’s files." + net + " Keep this page open until it finishes.",
+      on ? "Save all" : "Turn on and save all");
+    if(!ok) return;
+    if(!on){
+      if(kind === "vid"){ try{ localStorage.removeItem("savedVideosOff"); }catch(e){} }
+      else await LT.filePrefs.set(kind === "img" ? "images" : kind === "pdf" ? "pdfs" : "pages", true);
+      paintToggle(); paintImgToggle(); paintPdfToggle(); paintPageToggle(); paintOffline();
+    }
+  }
+  try{
+    var est = await navigator.storage.estimate();
+    if(est && est.quota && est.quota - (est.usage || 0) < needBytes + 300 * 1048576){
+      msg.hidden = false;
+      msg.textContent = "Not enough free space in this browser to save everything (it needs about " + mb(needBytes) + " and " + mb(Math.max(0, est.quota - (est.usage || 0))) + " is free). Remove some saved files and try again.";
+      return;
+    }
+  }catch(e){}
+  try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
+
+  runKind = kind; runCtl = new AbortController(); allowLeave = false;
+  paintAllStats();
+  $(kind + "SaveRow").hidden = true;
+  $(kind + "Prog").hidden = false;
+  var weight = todo.reduce(function(n, e){ return n + (e.total || 1); }, 0), doneW = 0, doneN = 0, failN = 0, why = "";
+  function pct(extra){ return Math.min(100, Math.floor((doneW + (extra || 0)) / weight * 100)); }
+  setProg(kind, "Starting…", 0, "0 of " + todo.length + " saved");
+  async function one(e){
+    if(runCtl.signal.aborted || why) return;
+    var w = e.total || 1, sig = runCtl.signal, okk = false;
+    setProg(kind, "Saving " + labelOf(kind, e), pct(), (doneN - failN) + " of " + todo.length + " saved");
+    if(kind === "vid"){
+      var r = await LT.videoSaver.fetchOne(e.v, sig, function(f){ $(kind + "ProgPct").textContent = pct(f * w) + "%"; $(kind + "ProgBar").style.width = pct(f * w) + "%"; });
+      if(r && r.size){ LT.videoSaver.commit(e.v, r.size); okk = true; }
+      else if(r === "quota") why = "space";
+      else if(r === "stop") why = "server";
+      else if(r === "abort") return;
+    }else{
+      okk = (await putSite(e, sig)) > 0;
+    }
+    if(sig.aborted && !okk) return;
+    doneW += w; doneN++;
+    if(!okk) failN++;
+    setProg(kind, $(kind + "ProgText").textContent, pct(), (doneN - failN) + " of " + todo.length + " saved" + (failN ? " · " + failN + " failed" : ""));
+    if(kind === "vid") await videos(true);
+  }
+  try{
+    if(kind === "vid"){ for(var i = 0; i < todo.length && !why && !runCtl.signal.aborted; i++) await one(todo[i]); }
+    else await pool(todo, 4, one);
+  }catch(e){}
+  var stopped = runCtl.signal.aborted;
+  runKind = ""; runCtl = null; allowLeave = true;
+  $(kind + "Prog").hidden = true;
+  $(kind + "SaveRow").hidden = false;
+  await refresh(true);
+  var good = doneN - failN, left = todo.length - doneN;
+  msg.hidden = false;
+  if(why === "space") msg.textContent = "Stopped because this browser ran out of room. " + plural(good, "item was", "items were") + " saved. Remove some saved files to make space.";
+  else if(why === "server") msg.textContent = "The video server asked for a pause. " + plural(good, "video was", "videos were") + " saved. Try Save all again in a little while.";
+  else if(stopped) msg.textContent = "Stopped. " + plural(good, "item was", "items were") + " saved" + (left ? "; " + left + " not saved." : ".");
+  else if(failN) msg.textContent = (good ? plural(good, "item was", "items were") + " saved and " + failN + " could not be saved." : "Nothing could be saved right now.") + " Tap Save all to try again.";
+  else { msg.hidden = true; LT.toast("All " + what + " are saved"); }
+}
+
+/* ---------- Leaving while saving: the same warning style as the Download page ---------- */
+var leaveNext = null;
+document.addEventListener("click", function(ev){
+  if(!runKind || ev.defaultPrevented || ev.button || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) return;
+  var a = ev.target.closest && ev.target.closest("a[href]");
+  if(!a || a.target === "_blank" || a.hasAttribute("download")) return;
+  var h = a.getAttribute("href") || "";
+  if(!h || h.charAt(0) === "#" || /^(javascript|mailto|tel):/i.test(h)) return;
+  ev.preventDefault(); ev.stopPropagation();
+  leaveNext = a.href;
+  $("leavePopup").style.display = "flex";
+}, true);
+window.addEventListener("beforeunload", function(ev){
+  if(runKind && !allowLeave){ ev.preventDefault(); ev.returnValue = ""; }
+});
+$("stayBtn").addEventListener("click", function(){ $("leavePopup").style.display = "none"; leaveNext = null; });
+$("leaveBtn").addEventListener("click", function(){
+  allowLeave = true;
+  if(runCtl) runCtl.abort();
+  $("leavePopup").style.display = "none";
+  location.href = leaveNext || "index.html";
+});
+["page", "pdf", "vid", "img"].forEach(function(k){
+  $(k + "SaveAll").addEventListener("click", function(){ saveAll(k); });
+  $(k + "ProgStop").addEventListener("click", function(){ if(runCtl) runCtl.abort(); });
+});
+
 /* One line that says whether everything you visit is being saved. */
 function paintOffline(){
   var all = ENGINE && keeping() && LT.filePrefs.on("images") && LT.filePrefs.on("pdfs") && LT.filePrefs.on("pages");
   var el = $("offlineLine");
   el.className = "offlineLine" + (all ? " ready" : "");
   el.textContent = !ENGINE ? "" : all
-    ? "Offline mode is on: everything you visit is saved on this device."
+    ? "Offline mode is on: everything you visit is saved in this browser."
     : "Turn on every switch below and everything you visit is saved for offline use.";
 }
 
@@ -825,14 +1199,14 @@ async function paintIssues(){
     var plan = await LT.videoSaver.plan();
     var wait = plan.blocked.map(function(b){ return "\u201c" + b.v.title + "\u201d (" + b.why + ")"; });
     var st = LT.videoSaver.state();
-    var paused = st.pauseUntil && Date.now() < st.pauseUntil ? (st.pauseWhy === "space" ? "Not enough free space on this device, so saving is paused for a few hours. " : "The video server asked for a pause, so saving waits for about an hour. ") : "";
+    var paused = st.pauseUntil && Date.now() < st.pauseUntil ? (st.pauseWhy === "space" ? "Not enough free space in this browser, so saving is paused for a few hours. " : "The video server asked for a pause, so saving waits for about an hour. ") : "";
     var queued = plan.todo.length ? plural(plan.todo.length, "video is", "videos are") + " waiting to be saved. " : "";
     box.textContent = paused + queued + (wait.length ? "Will try again: " + wait.join(", ") + "." : "");
     box.hidden = !box.textContent;
   }catch(e){ box.hidden = true; }
 }
 async function runSaver(){
-  if(!ENGINE || !keeping() || LT.videoSaver.isRunning()){ paintIssues(); return; }
+  if(!ENGINE || !keeping() || runKind || LT.videoSaver.isRunning()){ paintIssues(); return; }
   var line = $("vidSaving");
   var res = await LT.videoSaver.run({
     onItem: function(i, n, v){ line.hidden = false; line.textContent = "Saving " + (i + 1) + " of " + n + ": " + v.title; },
@@ -843,7 +1217,7 @@ async function runSaver(){
   if(res.saved) await refresh(true);
   paintIssues();
 }
-loadMeta().then(function(){ return refresh(); }).then(runSaver);
+loadMeta().then(function(){ startTotals(); return refresh(); }).then(runSaver);
 window.addEventListener("pageshow", function(e){ if(e.persisted) refresh(); });
 })();
 </script>

@@ -231,6 +231,9 @@ a.inl{color:#9ab8ff}
 .verBox[data-state="outdated"] .verDot{background:#f0a93a;box-shadow:0 0 0 4px rgba(240,169,58,.18)}
 .verBox[data-state="error"] .verDot{background:#e5645a;box-shadow:0 0 0 4px rgba(229,100,90,.18)}
 @keyframes verSpin{to{transform:rotate(360deg)}}
+.verBarWrap{height:6px;border-radius:6px;background:#333;overflow:hidden;margin-top:10px}
+.verBarWrap[hidden]{display:none}
+.verBarWrap i{display:block;height:100%;width:0;background:#2f7cff;transition:width .2s}
 .btn.primary{background:#2f7cff;color:#fff}
 .btn.primary:hover{background:#4a8dff}
 .btn:disabled{opacity:.55;cursor:default}
@@ -291,11 +294,12 @@ html{scroll-behavior:smooth}
 
     <div class="card" id="updateCard">
         <h2 class="hd"><span class="pv-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.5-3.5L4 9"/><path d="M4 4v5h5"/><path d="M4 13a8 8 0 0 0 14.5 3.5L20 15"/><path d="M20 20v-5h-5"/></svg></span>App updates</h2>
-        <p class="note">The site checks for a new version each time you open it. If something looks out of date, update it here. Your favorites, bookmarks and settings are kept.</p>
+        <p class="note">The site checks for a new version each time you open it. This compares everything your browser has saved (pages, PDFs, pictures and videos) with the live site and replaces whatever changed. Nothing is downloaded to your device, and your favorites, bookmarks and settings are kept.</p>
         <div class="verBox" id="verBox" data-state="checking">
             <span class="verDot" id="verDot"></span>
             <div class="verTxt"><b id="verTitle">Checking your version&hellip;</b><span id="verSub"></span></div>
         </div>
+        <div class="verBarWrap" id="verBarWrap" hidden><i id="verBar"></i></div>
         <div class="actions"><button type="button" class="btn" id="updateBtn" disabled>Checking&hellip;</button></div>
         <p class="note" id="updateNote"></p>
     </div>
@@ -450,9 +454,10 @@ buildSearch();
 (function(){
   var b=document.getElementById("updateBtn"), n=document.getElementById("updateNote");
   var box=document.getElementById("verBox"), title=document.getElementById("verTitle"), sub=document.getElementById("verSub");
+  var barWrap=document.getElementById("verBarWrap"), bar=document.getElementById("verBar");
   if(!b) return;
-  var TEXT = /\.(html|js|mjs|css|json)$/i;
-  var busy = false;
+  var busy = false, found = [];
+  var NAMES = {page: ["page or file", "pages and files"], picture: ["picture", "pictures"], pdf: ["PDF", "PDFs"], video: ["video", "videos"]};
 
   function show(state, t, s, btn, primary){
     box.setAttribute("data-state", state);
@@ -460,91 +465,75 @@ buildSearch();
     b.textContent = btn; b.disabled = (state === "checking" || state === "updating");
     b.classList.toggle("primary", !!primary);
     b.setAttribute("data-mode", state);
+    if(state !== "updating" && state !== "checking") barWrap.hidden = true;
   }
-  function hex(buf){ return Array.prototype.map.call(new Uint8Array(buf), function(x){ return x.toString(16).padStart(2, "0"); }).join(""); }
-  async function sha1(buf){ return hex(await crypto.subtle.digest("SHA-1", buf)); }
-
-  /* Every page and script this browser has saved is compared with the live
-     one. The server is asked "has it changed?" (a tiny answer when it hasn't);
-     if it sends the file anyway, the two are compared byte for byte. Nothing
-     needs to be published for this to work. */
-  async function check(){
-    var jobs = [], seen = {};
-    try{
-      var names = await caches.keys();
-      for(var i = 0; i < names.length; i++){
-        if(names[i] === "lanthano-saved-videos" || names[i] === "lanthano-prefs") continue;
-        var c = await caches.open(names[i]);
-        var keys = await c.keys();
-        keys.forEach(function(k){
-          var p; try{ p = new URL(k.url).pathname; }catch(e){ return; }
-          if(!(TEXT.test(p) || /\/$/.test(p)) || seen[k.url]) return;
-          seen[k.url] = 1;
-          jobs.push({c: c, k: k});
-        });
-      }
-    }catch(e){}
-    var changed = [], failed = false, idx = 0;
-    async function worker(){
-      while(idx < jobs.length && !failed){
-        var j = jobs[idx++];
-        try{
-          var cached = await j.c.match(j.k);
-          if(!cached) continue;
-          var h = {"x-lt-check": "1"};
-          var et = cached.headers.get("etag"), lm = cached.headers.get("last-modified");
-          if(et) h["If-None-Match"] = et; else if(lm) h["If-Modified-Since"] = lm;
-          var fresh = await fetch(j.k.url, {cache: "no-store", headers: h});
-          if(fresh.status === 304) continue;
-          if(fresh.status === 200){
-            var a = await sha1(await cached.clone().arrayBuffer());
-            var b2 = await sha1(await fresh.arrayBuffer());
-            if(a !== b2){
-              /* A page the server rewrites differently on every request can never
-                 be "the same"; ask once more and ignore it if it keeps changing. */
-              var again = await fetch(j.k.url, {cache: "no-store", headers: {"x-lt-check": "1"}});
-              var b3 = again.status === 200 ? await sha1(await again.arrayBuffer()) : b2;
-              if(b3 === b2) changed.push(new URL(j.k.url).pathname);
-            }
-          }else if(fresh.status >= 500){ failed = true; }
-        }catch(e){ failed = true; }
-      }
-    }
-    await Promise.all([worker(), worker(), worker(), worker()]);
-    if(failed) return {state: "error"};
-    try{ var reg = await navigator.serviceWorker.getRegistration(); if(reg) await reg.update(); }catch(e){}
-    return {state: changed.length ? "outdated" : "current", changed: changed.length, checked: jobs.length};
+  function progress(done, total){
+    barWrap.hidden = false;
+    bar.style.width = (total ? Math.round(done / total * 100) : 0) + "%";
   }
+  function describe(list){
+    var by = {};
+    list.forEach(function(x){ by[x.kind] = (by[x.kind] || 0) + 1; });
+    return Object.keys(NAMES).filter(function(k){ return by[k]; }).map(function(k){ return by[k] + " " + NAMES[k][by[k] === 1 ? 0 : 1]; }).join(", ");
+  }
+  var READY = !!(window.LT && LT.savedUpdates);
 
   async function run(justUpdated){
     if(busy) return; busy = true;
     n.textContent = "";
+    if(!READY){
+      busy = false;
+      show("error", "Update check unavailable", "Some site files are out of date. Upload the newest site-tools.js and reload.", "Try again");
+      return;
+    }
     show("checking", "Checking your version…", "", "Checking…");
-    var r = await check();
+    progress(0, 1);
+    var r;
+    try{ r = await LT.savedUpdates.check(function(d, t){ progress(d, t); sub.textContent = "Checked " + d + " of " + t + " saved files"; }); }
+    catch(e){ r = {error: true, changed: [], checked: 0}; }
     busy = false;
+    barWrap.hidden = true;
+    found = r.changed || [];
     var when = new Date().toLocaleTimeString([], {hour: "numeric", minute: "2-digit"});
-    if(r.state === "error"){
+    if(r.error && !found.length){
       show("error", "Couldn’t check the version", "Check your connection and try again.", "Try again");
-    }else if(r.state === "current"){
+    }else if(!found.length){
       show("current", justUpdated ? "Updated. You have the most current version." : "You have the most current version.", "Checked " + r.checked + (r.checked === 1 ? " saved file" : " saved files") + " at " + when + ".", "Check again");
     }else{
-      show("outdated", "A newer version is available", r.changed + (r.changed === 1 ? " file is" : " files are") + " out of date. Your favorites, bookmarks and settings are kept.", "Update", true);
+      show("outdated", "A newer version is available", describe(found) + " " + (found.length === 1 ? "is" : "are") + " out of date. Your favorites, bookmarks and settings are kept.", "Update", true);
     }
   }
 
   b.addEventListener("click", async function(){
     if(busy) return;
     if(b.getAttribute("data-mode") !== "outdated"){ run(false); return; }
-    if(!window.LT || !LT.updateApp){ return; }
     busy = true;
-    show("updating", "Updating…", "Getting the latest version. The page will reload.", "Updating…");
-    try{ sessionStorage.setItem("ltJustUpdated", "1"); }catch(e){}
-    await new Promise(function(r){ setTimeout(r, 700); });
-    LT.updateApp().catch(function(){
+    var total = found.length, textChanged = found.some(function(x){ return x.kind === "page"; });
+    show("updating", "Updating 0 of " + total + "…", "Replacing the saved copies with the latest ones.", "Updating…");
+    progress(0, total);
+    var res;
+    try{
+      res = await LT.savedUpdates.apply(found, function(d, t, item){
+        title.textContent = "Updating " + Math.min(d + 1, t) + " of " + t + "…";
+        sub.textContent = item && item.title ? item.title : "";
+        progress(d, t);
+      });
+    }catch(e){ res = {updated: 0, failed: total}; }
+    if(res.failed && !res.updated){
       busy = false;
-      try{ sessionStorage.removeItem("ltJustUpdated"); }catch(e){}
       show("error", "Couldn’t update", "Check your connection and try again.", "Try again");
-    });
+      return;
+    }
+    if(textChanged){
+      /* Pages and scripts changed: let the new service worker take over and reload once. */
+      try{ sessionStorage.setItem("ltJustUpdated", "1"); }catch(e){}
+      try{ if(LT.checkForUpdate) await LT.checkForUpdate(true); }catch(e){}
+      try{ var reg = await navigator.serviceWorker.getRegistration(); if(reg && reg.waiting) reg.waiting.postMessage({type: "skip-waiting"}); }catch(e){}
+      setTimeout(function(){ location.reload(); }, 350);
+      return;
+    }
+    busy = false;
+    run(true);
   });
 
   var just = false;

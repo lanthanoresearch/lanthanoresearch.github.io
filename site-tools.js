@@ -1535,8 +1535,141 @@ function vsAutoStart(){
   }, 8000);
 }
 window.LT = window.LT || {};
-window.LT.videoSaver = {run:vsRun, plan:vsPlan, catalog:vsCatalog, state:vsState, watched:vsWatched, off:vsOff, key:vsKey, isRunning:function(){ return VS.running; }};
+window.LT.videoSaver = {fetchOne:vsFetch, commit:function(v, size){ var st = vsState(); st.rec = st.rec || {}; st.rec[v.file] = {ok:Date.now(), ver:v.ver, size:size, fails:0, next:0, last:{t:Date.now(), r:"ok"}}; vsWrite(st); }, run:vsRun, plan:vsPlan, catalog:vsCatalog, state:vsState, watched:vsWatched, off:vsOff, key:vsKey, isRunning:function(){ return VS.running; }};
 vsAutoStart();
+
+/* ---------------------------------------------------------------
+   Keeping saved copies up to date (Settings > Update)
+   "Saved" means a copy the browser holds so things load without waiting. This
+   compares every saved page, script, picture, PDF and video with the live one,
+   and replaces whatever changed. A saved video from the video server is
+   replaced when its "v" number in descriptions.json goes up.
+--------------------------------------------------------------- */
+var SU = {TEXT:/\.(html|js|mjs|css|json|webmanifest)$/i, IMG:/\.(png|jpe?g|gif|webp|avif|bmp|ico|svg)$/i, PDF:/\.pdf$/i};
+function suKind(path){
+  if(SU.PDF.test(path)) return "pdf";
+  if(SU.IMG.test(path)) return "picture";
+  if(SU.TEXT.test(path) || /\/$/.test(path)) return "page";
+  return "";
+}
+function suHex(buf){ return Array.prototype.map.call(new Uint8Array(buf), function(x){ return x.toString(16).padStart(2, "0"); }).join(""); }
+function suHash(buf){ return crypto.subtle.digest("SHA-1", buf).then(suHex); }
+function suSiteUrl(file){ return new URL(file.split("/").map(encodeURIComponent).join("/"), location.origin + "/").href; }
+
+/* Resolves {changed:[{kind,title,...}], checked, error} */
+async function suCheck(onProgress){
+  var out = {changed:[], checked:0, error:false};
+  if(!window.caches) return out;
+  var jobs = [], seen = {};
+  try{
+    var names = await caches.keys();
+    for(var i = 0; i < names.length; i++){
+      if(names[i] === "lanthano-prefs" || names[i] === VS.CACHE) continue;
+      var c = await caches.open(names[i]);
+      (await c.keys()).forEach(function(k){
+        var p; try{ p = new URL(k.url).pathname; }catch(e){ return; }
+        var kind = suKind(decodeURIComponent(p));
+        if(!kind) return;
+        if(seen[k.url]){ seen[k.url].targets.push({c:c, k:k}); return; }   // same file saved in more than one place
+        seen[k.url] = {kind:kind, c:c, k:k, url:k.url, targets:[{c:c, k:k}]};
+        jobs.push(seen[k.url]);
+      });
+    }
+    VS.catalog = null;   // read descriptions.json fresh, so a changed "v" is seen
+    var cat = await vsCatalog(), by = {}, st = vsState();
+    cat.forEach(function(v){ by[v.file] = v; });
+    var vc = await caches.open(VS.CACHE);
+    (await vc.keys()).forEach(function(k){
+      var file; try{ file = decodeURIComponent(new URL(k.url).pathname.replace(/^\/__video\//, "")); }catch(e){ return; }
+      var v = by[file]; if(!v) return;
+      var rec = (st.rec && st.rec[file]) || {};
+      if(v.site){
+        if(rec.ver !== undefined && rec.ver !== v.ver){ out.checked++; out.changed.push({kind:"video", title:v.title, v:v, version:true}); }
+        else jobs.push({kind:"video", c:vc, k:k, url:suSiteUrl(file), v:v});
+        return;
+      }
+      out.checked++;
+      if(rec.ver !== undefined && rec.ver !== v.ver) out.changed.push({kind:"video", title:v.title, v:v, version:true});
+    });
+  }catch(e){}
+  var idx = 0, failed = false, done = 0;
+  async function worker(){
+    while(idx < jobs.length && !failed){
+      var j = jobs[idx++];
+      try{
+        var cached = await j.c.match(j.k);
+        if(!cached) continue;
+        var h = {"x-lt-check":"1"};
+        var et = cached.headers.get("etag"), lm = cached.headers.get("last-modified");
+        if(et) h["If-None-Match"] = et; else if(lm) h["If-Modified-Since"] = lm;
+        var fresh = await fetch(j.url, {cache:"no-store", headers:h});
+        out.checked++;
+        if(fresh.status === 304){ continue; }
+        if(fresh.status === 200 && j.kind === "video"){
+          // Big file: compare size instead of reading it all.
+          var fl = Number(fresh.headers.get("content-length")) || 0, cl = Number(cached.headers.get("content-length")) || 0;
+          try{ fresh.body && fresh.body.cancel(); }catch(e){}
+          if(fl && cl && fl !== cl) out.changed.push({kind:"video", v:j.v, title:j.v.title, url:j.url});
+          done++; if(onProgress) onProgress(done, jobs.length);
+          continue;
+        }
+        if(fresh.status === 200){
+          var a = await suHash(await cached.clone().arrayBuffer());
+          var b = await suHash(await fresh.arrayBuffer());
+          if(a !== b){
+            if(j.kind === "page"){
+              // A page the server rewrites differently on every request is never "the same".
+              var again = await fetch(j.url, {cache:"no-store", headers:{"x-lt-check":"1"}});
+              var b3 = again.status === 200 ? await suHash(await again.arrayBuffer()) : b;
+              if(b3 !== b) continue;
+            }
+            out.changed.push({kind:j.kind, c:j.c, k:j.k, url:j.url, v:j.v, targets:j.targets, title:j.v ? j.v.title : decodeURIComponent(new URL(j.url).pathname.split("/").pop() || "Home")});
+          }
+        }else if(fresh.status >= 500){ failed = true; }
+      }catch(e){ failed = true; }
+      done++;
+      if(onProgress) onProgress(done, jobs.length);
+    }
+  }
+  await Promise.all([worker(), worker(), worker(), worker()]);
+  if(failed) out.error = true;
+  try{ var reg = await navigator.serviceWorker.getRegistration(); if(reg) await reg.update(); }catch(e){}
+  return out;
+}
+/* Replaces what changed. onProgress(done, total, item). Resolves {updated, failed}. */
+async function suApply(changed, onProgress){
+  var out = {updated:0, failed:0}, total = changed.length, done = 0;
+  var small = changed.filter(function(x){ return x.kind !== "video"; }), vids = changed.filter(function(x){ return x.kind === "video"; });
+  var idx = 0;
+  async function worker(){
+    while(idx < small.length){
+      var j = small[idx++];
+      try{
+        var res = await fetch(j.url, {cache:"reload", headers:{"x-lt-check":"1"}});
+        var targets = j.targets || [{c:j.c, k:j.k}];
+        if(res.status === 200){ for(var t = 0; t < targets.length; t++) await targets[t].c.put(targets[t].k, res.clone()); out.updated++; }
+        else if(res.status === 404){ for(var u = 0; u < targets.length; u++) await targets[u].c.delete(targets[u].k); out.updated++; }
+        else out.failed++;
+      }catch(e){ out.failed++; }
+      done++; if(onProgress) onProgress(done, total, j);
+    }
+  }
+  await Promise.all([worker(), worker(), worker(), worker()]);
+  for(var i = 0; i < vids.length; i++){
+    var x = vids[i];
+    if(onProgress) onProgress(done, total, x);
+    var r = await vsFetch(x.v, new AbortController().signal, null);
+    if(r && r.size){
+      var st = vsState(); st.rec = st.rec || {};
+      st.rec[x.v.file] = {ok:Date.now(), ver:x.v.ver, size:r.size, fails:0, next:0, last:{t:Date.now(), r:"ok"}};
+      vsWrite(st); out.updated++;
+    }else out.failed++;
+    done++; if(onProgress) onProgress(done, total, x);
+  }
+  return out;
+}
+
+window.LT.savedUpdates = {check:suCheck, apply:suApply};
 
 /* ---------------------------------------------------------------
    Keep pictures / PDFs (switches on the Storage page)

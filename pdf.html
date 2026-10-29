@@ -4644,7 +4644,7 @@ body.reading-mode #readingModeFloat{
 <div id="kokoroUninstallConfirm" class="hidden">
 <div id="kokoroUninstallCard">
 <h3>Uninstall Neural Voice?</h3>
-<p>This removes the downloaded voice model (~24MB) from this device. You can install it again anytime.</p>
+<p>This removes the saved voice model (~24MB) from this browser. You can add it again anytime.</p>
 <div class="readAloudChoiceButtons">
 <button id="kokoroUninstallConfirmBtn" class="bookmarkDangerPrimaryBtn">Uninstall</button>
 </div>
@@ -4808,7 +4808,7 @@ body.reading-mode #readingModeFloat{
 <div class="bookmarkSettingRow readAloudNeuralVoiceRow">
 <div>
 <div class="bookmarkSettingLabel">Neural voice (Beta)</div>
-<div class="bookmarkSettingDesc" id="readAloudNeuralVoiceDesc">A higher-quality AI voice that runs on your device. Downloads once (~24MB), then works offline.</div>
+<div class="bookmarkSettingDesc" id="readAloudNeuralVoiceDesc">A higher-quality AI voice that runs on your device. Loads once (~24MB) and is saved in this browser, then works offline.</div>
 </div>
 <button id="readAloudNeuralVoiceInstallBtn" class="readAloudInstallBtn">Install</button>
 <button id="readAloudNeuralVoiceToggle" class="toggleSwitch hidden" role="switch" aria-checked="false"><span class="toggleKnob"></span></button>
@@ -9216,7 +9216,7 @@ function updateNeuralVoiceStatusUI(){
     return;
   }
 
-  readAloudNeuralVoiceDesc.textContent = "A higher-quality AI voice that runs on your device. Downloads once (~24MB), then works offline.";
+  readAloudNeuralVoiceDesc.textContent = "A higher-quality AI voice that runs on your device. Loads once (~24MB) and is saved in this browser, then works offline.";
 }
 
 // Requests that the browser treat this app's storage (which now
