@@ -140,5 +140,35 @@ html{
 
 </section>
 
+
+<a href="#" class="top-button" id="topButton">
+    <span style="position:relative; top:-3px;">▲</span>
+</a>
+
+<script>
+
+const topButton = document.getElementById("topButton");
+
+function updateTopButton(){
+    if(window.scrollY > 10){
+        topButton.style.display = "flex";
+    }else{
+        topButton.style.display = "none";
+    }
+}
+
+topButton.addEventListener("click", function(e){
+    e.preventDefault();
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+});
+
+window.addEventListener("scroll", updateTopButton);
+window.addEventListener("load", updateTopButton);
+
+</script>
+
 </body>
 </html>

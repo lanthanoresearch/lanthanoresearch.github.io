@@ -424,7 +424,16 @@ p{
 
 }
 
-    </style>
+    
+/* ---- Shared page header: icon badge + icon tiles (same on every page) ---- */
+.hero{display:flex;justify-content:center;margin:0 0 22px}
+.hero .hero-badge{width:84px;height:84px;border:8px solid #1d1d1d;box-sizing:content-box;border-radius:50%;background:#262626;display:flex;align-items:center;justify-content:center;color:#ddd}
+.hero .hero-badge svg{width:46px;height:46px}
+.pv-ico{flex:0 0 auto;width:40px;height:40px;border-radius:11px;background:#2a2a2a;color:#ddd;display:flex;align-items:center;justify-content:center}
+.pv-ico svg{width:22px;height:22px}
+.card h2.hd{display:flex;align-items:center;gap:12px;margin-top:0}
+.download-section h2.hd{justify-content:center}
+</style>
 
 </head>
 
@@ -494,7 +503,9 @@ p{
     </a>
 
 
-    <h1>Download Lanthano Research</h1>
+    <div class="hero"><div class="hero-badge pv-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="M7.5 11 12 15.5 16.5 11"/><path d="M5 19.5h14"/></svg></div></div>
+
+    <h1 style="margin-bottom:30px">Download Lanthano Research</h1>
 
 
     <!-- =================================================
@@ -503,7 +514,7 @@ p{
 
     <div class="card">
 
-        <h2>Preserve the Research</h2>
+        <h2 class="hd"><span class="pv-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.8l7.5 2.7v5.6c0 4.7-3.1 8.4-7.5 10.1-4.4-1.7-7.5-5.4-7.5-10.1V5.5z"/><path d="M9 12l2.2 2.2L15.2 10"/></svg></span>Preserve the Research</h2>
 
         <p>
             Lanthano Research exists to document, investigate,
@@ -532,7 +543,7 @@ p{
 
     <div class="card download-section">
 
-        <h2>Download Entire Archive</h2>
+        <h2 class="hd"><span class="pv-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="M7.5 11 12 15.5 16.5 11"/><path d="M5 19.5h14"/></svg></span>Download Entire Archive</h2>
 
         <p>
             Create an offline copy of the available Lanthano

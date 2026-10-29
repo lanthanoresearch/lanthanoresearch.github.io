@@ -176,7 +176,18 @@ html{
     background:#2a2a2a;
 }
 
-    </style>
+    
+.hero{display:flex;justify-content:center;margin:0 0 22px}
+.hero .hero-badge{width:84px;height:84px;border:8px solid #1d1d1d;box-sizing:content-box;border-radius:50%;background:#262626;display:flex;align-items:center;justify-content:center;color:#ddd}
+.hero .hero-badge svg{width:46px;height:46px}
+.pv-ico{flex:0 0 auto;width:40px;height:40px;border-radius:11px;background:#2a2a2a;color:#ddd;display:flex;align-items:center;justify-content:center}
+.pv-ico svg{width:22px;height:22px}
+.card h2.hd{display:flex;align-items:center;gap:12px;margin-top:0}
+.check-list{list-style:none;padding:0;margin:18px 0 4px}
+.check-list li{display:flex;align-items:center;gap:14px;padding:12px 0;border-top:1px solid #2c2c2c;font-size:1.05em}
+.check-list li:first-child{border-top:0}
+.pv-tick{margin-left:auto;width:20px;height:20px;color:#8d8d98;flex:0 0 auto}
+</style>
 </head>
 
 <body>
@@ -185,10 +196,12 @@ html{
 
     <a class="back" href="index.html"><svg class="back-arrow" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:1em;height:1em;vertical-align:-.12em;margin-right:.35em;flex-shrink:0"><path d="M18 4.5v15L5.5 12z"/></svg> Home</a>
 
-    <h1>About Lanthano Research</h1>
+    <div class="hero"><div class="hero-badge pv-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.2"/><circle cx="12" cy="7.8" r=".6" fill="currentColor"/></svg></div></div>
+
+    <h1 style="margin-bottom:30px">About Lanthano Research</h1>
 
     <div class="card">
-        <h2>Who Are We?</h2>
+        <h2 class="hd"><span class="pv-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-1.5a4.5 4.5 0 0 0-4.5-4.5h-7A4.5 4.5 0 0 0 4 19.5V21"/><circle cx="12" cy="8" r="3.8"/></svg></span>Who Are We?</h2>
 
         <p>
             That is not important, or disclosed.
@@ -200,7 +213,7 @@ html{
     </div>
 
     <div class="card">
-        <h2>What Do We Do?</h2>
+        <h2 class="hd"><span class="pv-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg></span>What Do We Do?</h2>
 
         <p>
             We investigate, document, and analyze theories, historical claims, biblical topics, unexplained events, and controversial ideas.
@@ -220,7 +233,7 @@ html{
     </div>
 
     <div class="card">
-        <h2>Our Purpose</h2>
+        <h2 class="hd"><span class="pv-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M15.8 8.2l-2 5.6-5.6 2 2-5.6z"/></svg></span>Our Purpose</h2>
 
         <p>
             Lanthano exists to explore what others overlook, and to find out truth.
