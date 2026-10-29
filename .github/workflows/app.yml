@@ -69,6 +69,7 @@ jobs:
       - name: Bundle the whole website into the app
         run: |
           node build-site-manifest.js --copy desktop-app/site
+          node prepare-app-bundle.js desktop-app/site
           mkdir -p desktop-app/build
           cp file_000000000c40722f92b1fe6758cb4855.png desktop-app/build/icon.png
 
@@ -121,6 +122,9 @@ jobs:
         with:
           node-version: 20
 
+      - name: Build transcripts.json (video transcripts for search)
+        run: node build-transcripts.js
+
       - name: Build site-files.json
         env:
           GH_TOKEN: ${{ github.token }}
@@ -135,4 +139,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add site-files.json
-          git diff --staged --quiet || (git commit -m "Update site-files.json" && git pull --rebase && git push)
+          for f in transcripts.json transcripts-list.json; do [ -f "$f" ] && git add "$f"; done
+          git diff --staged --quiet || (git commit -m "Update site-files.json and transcripts" && git pull --rebase && git push)

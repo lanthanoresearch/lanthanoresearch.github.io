@@ -50,6 +50,8 @@ jobs:
         run: |
           mkdir -p android-app
           node build-site-manifest.js --copy android-app/www
+          # Download, Storage and Install only belong on the website, not inside the app.
+          node prepare-app-bundle.js android-app/www
 
       - name: Create the Android project
         working-directory: android-app
