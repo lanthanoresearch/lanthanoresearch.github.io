@@ -256,7 +256,7 @@ html{scroll-behavior:smooth}
 .tile span{display:block;margin-top:3px;font-size:12px;color:#999}
 @media (max-width:560px){.tiles{grid-template-columns:repeat(2,1fr)}}
 .sumLine{margin:10px 2px 8px;color:#bbb;font-size:13.5px}
-.listState{display:flex;align-items:center;gap:8px;color:#888;font-size:13.5px;padding:10px 16px}
+.listState{display:flex;align-items:center;gap:8px;color:#888;font-size:13.5px;padding:0 16px;min-height:46px;box-sizing:border-box;margin-top:8px}
 .listState:empty{display:none}
 .listState.loading::before,.spin{content:"";width:14px;height:14px;border-radius:50%;border:2px solid #444;border-top-color:#2f7cff;animation:stSpin .8s linear infinite;flex:0 0 auto;display:inline-block}
 @keyframes stSpin{to{transform:rotate(360deg)}}
@@ -273,13 +273,18 @@ html{scroll-behavior:smooth}
 .activeNext{font-size:12.5px;color:#9aa4bd;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .card + .card{margin-top:16px}
 .card .note + .note{margin-top:6px}
-.row{transition:background .15s}
+.row{transition:background .15s;min-height:46px;box-sizing:border-box}
+.card .rows .row{height:46px}
 
 .offlineLine{margin:12px 0 0;padding:10px 14px;border-radius:10px;background:#2a2a2a;color:#bbb;font-size:13.5px}
 .offlineLine:empty{display:none}
 .offlineLine.ready{background:#1f3226;color:#9fe0b4}
-.seeBtn{display:block;width:100%;margin-top:8px;padding:10px;background:transparent;border:1px solid #3a3a3a;border-radius:9px;color:#ddd;font:inherit;font-size:14px;cursor:pointer}
-.seeBtn:hover{background:#2a2a2a}
+.seeBtn{display:flex;align-items:center;gap:10px;width:100%;box-sizing:border-box;height:46px;margin-top:8px;padding:0 14px 0 16px;background:#2a2a2a;border:1px solid #363636;border-radius:10px;color:#eee;font:inherit;font-size:14px;cursor:pointer;text-align:left}
+.seeBtn[hidden]{display:none}
+.seeLabel{flex:1;min-width:0;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seeMeta{color:#999;font-size:13px;white-space:nowrap}
+.seeChev{color:#999;font-size:22px;line-height:1;margin-top:-2px}
+.seeBtn:hover{background:#333;border-color:#444}
 .row button.small.danger,.small.danger{color:#ff8080;border-color:#5a2c2c;background:transparent}
 .row button.small:disabled{opacity:.5;cursor:default}
 .allWin{position:fixed;inset:0;z-index:9000;background:#141414;color:#eee;display:flex;flex-direction:column;font-family:inherit}
@@ -334,81 +339,11 @@ html{scroll-behavior:smooth}
         <p class="note" id="usedText">Checking&hellip;</p>
         <p class="offlineLine" id="offlineLine"></p>
         <div class="tiles">
+            <div class="tile"><b id="tPage">&hellip;</b><span>Pages</span></div>
+            <div class="tile"><b id="tPdf">&hellip;</b><span>PDFs</span></div>
             <div class="tile"><b id="tVid">&hellip;</b><span>Videos</span></div>
             <div class="tile"><b id="tImg">&hellip;</b><span>Pictures</span></div>
-            <div class="tile"><b id="tPdf">&hellip;</b><span>PDFs</span></div>
-            <div class="tile"><b id="tPage">&hellip;</b><span>Pages</span></div>
         </div>
-    </div>
-
-    <div class="card">
-        <h2 class="hd"><span class="pv-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10.5 9.5v5l4-2.5z"/></svg></span>Videos</h2>
-        <div class="rows">
-            <div class="row">
-                <span>Keep videos I watch</span>
-                <button type="button" class="toggleSwitch" id="saveToggle" role="switch" aria-checked="true" aria-label="Keep videos I watch"><span class="toggleKnob"></span></button>
-            </div>
-        </div>
-        <p class="note" id="keepNote"></p>
-
-        <div class="rows">
-            <div class="row">
-                <span>Keep all videos saved</span>
-                <span style="display:flex;align-items:center;gap:10px">
-                    <button type="button" class="small" id="preStop" hidden>Stop</button>
-                    <button type="button" class="toggleSwitch" id="preToggle" role="switch" aria-checked="false" aria-label="Keep all videos saved"><span class="toggleKnob"></span></button>
-                </span>
-            </div>
-        </div>
-        <div class="rows" style="margin-top:6px">
-            <div class="row">
-                <span>Save all videos now</span>
-                <button type="button" class="small" id="preNow">Save all now</button>
-            </div>
-        </div>
-        <div class="bar" id="preBar" hidden><i id="preFill"></i></div>
-        <p class="note" id="preNote"></p>
-
-        <div class="active" id="activeSave" hidden>
-            <div class="activeTop"><span class="spin"></span><div class="txt"><div class="activeLabel">Saving now</div><div class="activeTitle" id="activeTitle"></div></div><span class="activePct" id="activePct"></span></div>
-            <div class="bar"><i id="activeFill"></i></div>
-            <div class="activeNext" id="activeNext"></div>
-        </div>
-
-        <p class="sumLine" id="vidSum"></p>
-        <div class="listState loading" id="vidState">Loading&hellip;</div>
-        <div class="list" id="vidList"></div>
-        <button type="button" class="seeBtn" id="vidSee" hidden>See all</button>
-    </div>
-
-    <div class="card">
-        <h2 class="hd"><span class="pv-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="M4 17l5-4.5 3.5 3 3-2.5L20 16"/></svg></span>Pictures</h2>
-        <div class="rows">
-            <div class="row">
-                <span>Keep pictures I view</span>
-                <button type="button" class="toggleSwitch" id="imgToggle" role="switch" aria-checked="true" aria-label="Keep pictures I view"><span class="toggleKnob"></span></button>
-            </div>
-        </div>
-        <p class="note" id="imgNote"></p>
-        <p class="sumLine" id="imgSum"></p>
-        <div class="listState loading" id="imgState">Loading&hellip;</div>
-        <div class="list" id="imgList"></div>
-        <button type="button" class="seeBtn" id="imgSee" hidden>See all</button>
-    </div>
-
-    <div class="card">
-        <h2 class="hd"><span class="pv-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/><path d="M10 13h6M10 17h6"/></svg></span>PDFs</h2>
-        <div class="rows">
-            <div class="row">
-                <span>Keep PDFs I open</span>
-                <button type="button" class="toggleSwitch" id="pdfToggle" role="switch" aria-checked="true" aria-label="Keep PDFs I open"><span class="toggleKnob"></span></button>
-            </div>
-        </div>
-        <p class="note" id="pdfNote"></p>
-        <p class="sumLine" id="pdfSum"></p>
-        <div class="listState loading" id="pdfState">Loading&hellip;</div>
-        <div class="list" id="pdfList"></div>
-        <button type="button" class="seeBtn" id="pdfSee" hidden>See all</button>
     </div>
 
     <div class="card">
@@ -419,15 +354,53 @@ html{scroll-behavior:smooth}
                 <button type="button" class="toggleSwitch" id="pageToggle" role="switch" aria-checked="true" aria-label="Keep pages I visit"><span class="toggleKnob"></span></button>
             </div>
         </div>
-        <p class="note" id="pageNote"></p>
+        <p class="note">Every page you visit is kept on this device along with the files it needs, so it opens fast and works offline. Turning this off only stops new pages from being kept; saved ones stay until you remove them.</p>
         <p class="sumLine" id="pageSum"></p>
         <div class="listState loading" id="pageState">Loading&hellip;</div>
-        <div class="list" id="pageList"></div>
-        <button type="button" class="seeBtn" id="pageSee" hidden>See all</button>
+        <button type="button" class="seeBtn" id="pageSee" hidden><span class="seeLabel" id="pageSeeLabel"></span><span class="seeMeta" id="pageSeeMeta"></span><span class="seeChev" aria-hidden="true">&rsaquo;</span></button>
+    </div>
+    <div class="card">
+        <h2 class="hd"><span class="pv-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/><path d="M10 13h6M10 17h6"/></svg></span>PDFs</h2>
+        <div class="rows">
+            <div class="row">
+                <span>Keep PDFs I open</span>
+                <button type="button" class="toggleSwitch" id="pdfToggle" role="switch" aria-checked="true" aria-label="Keep PDFs I open"><span class="toggleKnob"></span></button>
+            </div>
+        </div>
+        <p class="note">Every PDF you open is kept on this device, so it opens faster and works offline. Turning this off only stops new PDFs from being kept; saved ones stay until you remove them.</p>
+
+        <div class="listState loading" id="pdfState">Loading&hellip;</div>
+        <button type="button" class="seeBtn" id="pdfSee" hidden><span class="seeLabel" id="pdfSeeLabel"></span><span class="seeMeta" id="pdfSeeMeta"></span><span class="seeChev" aria-hidden="true">&rsaquo;</span></button>
+    </div>
+    <div class="card">
+        <h2 class="hd"><span class="pv-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10.5 9.5v5l4-2.5z"/></svg></span>Videos</h2>
+        <div class="rows">
+            <div class="row">
+                <span>Keep videos I watch</span>
+                <button type="button" class="toggleSwitch" id="saveToggle" role="switch" aria-checked="true" aria-label="Keep videos I watch"><span class="toggleKnob"></span></button>
+            </div>
+        </div>
+        <p class="note">Every video you watch is kept on this device, so it replays faster and works offline. Turning this off only stops new videos from being kept; saved ones stay until you remove them.</p>
+        <p class="sumLine" id="vidSum"></p>
+        <div class="listState loading" id="vidState">Loading&hellip;</div>
+        <button type="button" class="seeBtn" id="vidSee" hidden><span class="seeLabel" id="vidSeeLabel"></span><span class="seeMeta" id="vidSeeMeta"></span><span class="seeChev" aria-hidden="true">&rsaquo;</span></button>
+    </div>
+    <div class="card">
+        <h2 class="hd"><span class="pv-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="M4 17l5-4.5 3.5 3 3-2.5L20 16"/></svg></span>Pictures</h2>
+        <div class="rows">
+            <div class="row">
+                <span>Keep pictures I view</span>
+                <button type="button" class="toggleSwitch" id="imgToggle" role="switch" aria-checked="true" aria-label="Keep pictures I view"><span class="toggleKnob"></span></button>
+            </div>
+        </div>
+        <p class="note">Every picture you view is kept on this device, so it shows faster and works offline. Turning this off only stops new pictures from being kept; saved ones stay until you remove them.</p>
+
+        <div class="listState loading" id="imgState">Loading&hellip;</div>
+        <button type="button" class="seeBtn" id="imgSee" hidden><span class="seeLabel" id="imgSeeLabel"></span><span class="seeMeta" id="imgSeeMeta"></span><span class="seeChev" aria-hidden="true">&rsaquo;</span></button>
     </div>
 
     <div class="card">
-        <h2 class="hd"><span class="pv-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 0 1 14-5.2L20 9"/><path d="M20 4v5h-5"/><path d="M12 8v5l3 2"/></svg></span>Backup &amp; restore</h2>
+        <h2 class="hd"><span class="pv-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="5" rx="1.6"/><path d="M5 9v8a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3V9"/><path d="M12 12v4"/><path d="M10 14.5l2 2 2-2"/></svg></span>Backup &amp; restore</h2>
         <p class="note">A backup is a snapshot of everything this site has saved in this browser, taken at the moment you tap the button: your favorites, bookmarks, theme, colors and text size, display and search settings, saved places and every other preference. Save it to a file to keep it safe or to move to another phone or computer, then restore it there.</p>
         <p class="note">Saved videos, pictures, PDFs and pages are not part of a backup. They download again when needed.</p>
         <ul class="sumList" id="bkList"></ul>
@@ -458,7 +431,7 @@ function paintToggle(){
 saveToggle.addEventListener("click", function(){
   try{ if(keeping()) localStorage.setItem("savedVideosOff", "1"); else localStorage.removeItem("savedVideosOff"); }catch(e){}
   paintToggle();
-  paintKeepNote();
+  paintOffline();
   videos(true);
 });
 
@@ -489,11 +462,6 @@ function backupSummary(){
   var last = ""; try{ last = localStorage.getItem("lt_last_backup") || ""; }catch(e){}
   $("bkLast").textContent = last ? "Last backup from this browser: " + new Date(last).toLocaleString() + "." : "No backup has been made from this browser yet.";
 }
-function paintKeepNote(){
-  $("keepNote").innerHTML = keeping()
-    ? 'On: a video is kept on this device the first time you watch it, so it replays faster.'
-    : 'Off: nothing new is kept. Videos already kept stay until you remove them (See all).';
-}
 /* Sizes in the same units the home page uses (1 GB = 1000 MB). */
 function mb(n){
   if(n >= 1e9) return (n / 1e9).toFixed(2) + " GB";
@@ -506,17 +474,17 @@ function plural(n, one, many){ return n + " " + (n === 1 ? one : many); }
 
 var IMG_RE = /\.(png|jpe?g|gif|webp|avif|bmp|ico|svg)$/i, PDF_RE = /\.pdf$/i;
 var sizeTable = {}, pdfTitles = {};
-var SHOW = 3;
+var catalog = [];
 
 /* This page needs the newer site-tools.js; say so instead of failing quietly. */
-var ENGINE = !!(window.LT && LT.keepVideos && LT.filePrefs && LT.confirmStep);
+var ENGINE = !!(window.LT && LT.filePrefs && LT.confirmStep);
 if(!ENGINE){
   var warn = document.createElement("p");
   warn.className = "note";
   warn.style.cssText = "color:#f0a93a;margin:0 0 14px";
   warn.textContent = "Some site files are out of date, so saving is paused here. Upload the newest site-tools.js and reload.";
   $("usedText").parentNode.insertBefore(warn, $("usedText"));
-  ["saveToggle","preToggle","preNow","imgToggle","pdfToggle","pageToggle"].forEach(function(id){ var e = $(id); if(e) e.disabled = true; });
+  ["saveToggle","imgToggle","pdfToggle","pageToggle"].forEach(function(id){ var e = $(id); if(e) e.disabled = true; });
   window.LT = window.LT || {};
   LT.filePrefs = LT.filePrefs || {on: function(){ return true; }, set: function(){ return Promise.resolve(); }};
   LT.confirmDelete = LT.confirmDelete || function(){ return Promise.resolve(false); };
@@ -535,7 +503,17 @@ async function loadMeta(){
   }catch(e){}
   try{
     var d = await (await fetch("/descriptions.json", {cache: "no-cache"})).json();
-    Object.keys(d).forEach(function(k){ if(d[k] && d[k].url) pdfTitles[d[k].url] = d[k].title || k; });
+    var seen = {};
+    Object.keys(d).forEach(function(k){
+      if(d[k] && d[k].url) pdfTitles[d[k].url] = d[k].title || k;
+      ((d[k] && d[k].videos) || []).forEach(function(v){
+        if(!v || typeof v.file !== "string") return;
+        var f = v.file.trim();
+        if(!f || f.indexOf("#$") === 0 || seen[f]) return;
+        seen[f] = 1;
+        catalog.push({file: f, title: v.title || f.split("/").pop().replace(/\.[a-z0-9]+$/i, ""), site: v.source === "site", size: Number(v.size) || 0});
+      });
+    });
   }catch(e){}
 }
 function vidSize(v){ return v.size || sizeTable[v.file] || 0; }
@@ -573,17 +551,18 @@ function rowFor(item, label, href, onRemove, removeTitle, removeText){
   return row;
 }
 
-/* kind: "vid" | "img" | "pdf" | "page". The first rows appear as soon as they are read. */
+/* kind: "vid" | "img" | "pdf" | "page". Reads what is saved. Nothing is listed on
+   the page itself; the "View all" button opens the full list. */
+var NOUN = {vid: ["video", "videos"], img: ["picture", "pictures"], pdf: ["PDF", "PDFs"], page: ["page or file", "pages and files"]};
 async function fillList(kind, cacheName, test, mk, quiet, emptyText, sorter){
   var tok = tokens[kind] = (tokens[kind] || 0) + 1;
-  var box = $(kind + "List"), state = $(kind + "State");
+  var state = $(kind + "State"), see = $(kind + "See");
   if(!quiet){
-    box.innerHTML = "";
     state.className = "listState loading";
-    state.textContent = "Loading…";
-    $(kind + "See").hidden = true;
+    state.textContent = "Loading\u2026";
+    see.hidden = true;
   }
-  var items = [], shown = 0;
+  var items = [];
   try{
     if("caches" in window && await caches.has(cacheName)){
       var c = await caches.open(cacheName);
@@ -593,22 +572,21 @@ async function fillList(kind, cacheName, test, mk, quiet, emptyText, sorter){
         var res = await c.match(keys[i]);
         var len = res ? parseInt(res.headers.get("content-length") || "0", 10) : 0;
         if(!len && res && cacheName !== VIDEO_CACHE){ try{ len = (await res.clone().blob()).size; }catch(e){} }
-        var item = {req: keys[i], size: len || 0};
-        items.push(item);
-        if(!quiet && shown < SHOW){ box.appendChild(mk(item, false)); shown++; }
+        items.push({req: keys[i], size: len || 0});
       }
     }
   }catch(e){}
   if(tok !== tokens[kind]) return null;
   items.sort(sorter || function(a, b){ return b.size - a.size; });
-  box.innerHTML = "";
-  items.slice(0, SHOW).forEach(function(x){ box.appendChild(mk(x, false)); });
+  data[kind] = items;
   state.className = "listState";
   state.textContent = items.length ? "" : emptyText;
-  var see = $(kind + "See");
-  see.hidden = items.length <= SHOW;
-  see.textContent = "See all " + items.length;
-  data[kind] = items;
+  see.hidden = !items.length;
+  if(items.length){
+    var bytes = items.reduce(function(n, x){ return n + x.size; }, 0);
+    $(kind + "SeeLabel").textContent = "View all saved " + (kind === "page" ? "pages" : NOUN[kind][1]);
+    $(kind + "SeeMeta").textContent = items.length + " \u00b7 " + mb(bytes);
+  }
   return items;
 }
 
@@ -670,11 +648,7 @@ async function removedOne(row){
 }
 
 /* ---------- Videos ---------- */
-var catalog = [];
 var savedFiles = {};
-var running = null;
-
-function keepOn(){ return ENGINE && LT.keepVideos.on(); }
 
 function videoRow(item, removable){
   var file = nameOf(item.req);
@@ -688,13 +662,11 @@ function videoRow(item, removable){
     try{
       var s = JSON.parse(localStorage.getItem(STATE_KEY) || "{}") || {};
       if(s.rec && s.rec[file]) delete s.rec[file];
-      if(keepOn()){ s.rec = s.rec || {}; s.rec[file] = {kt: Date.now()}; }
       localStorage.setItem(STATE_KEY, JSON.stringify(s));
     }catch(e){}
     removedOne(row);
   } : null, "Remove this video?",
-  "“" + title + "” will be removed from this device. " + (keepOn() ? "“Keep all videos saved” will save it again tomorrow unless you turn that off. " : "") +
-  (keeping() ? "It downloads again if you watch it." : "It will not be saved again while keeping videos is turned off."));
+  "“" + title + "” will be removed from this device. " + (keeping() ? "It downloads again if you watch it." : "It will not be saved again while keeping videos is turned off."));
 }
 
 function paintVideoSummary(items){
@@ -707,136 +679,14 @@ function paintVideoSummary(items){
     ? plural(have, "video", "videos") + " saved (" + mb(bytes) + ") of " + n + " on the site, about " + mb(total) + " in all."
     : plural(have, "video", "videos") + " saved (" + mb(bytes) + ").";
   tile("tVid", bytes, have);
-  paintPre();
 }
 
 async function videos(quiet){
   var items = await fillList("vid", VIDEO_CACHE, function(p){ return p.indexOf("/__video/") === 0; }, videoRow, quiet,
-    keeping() ? "No videos saved yet. A video is saved the first time you watch it, or all of them with “Keep all videos saved” above."
-              : "No videos saved. Keeping videos is turned off above.");
+    keeping() ? "No videos saved yet. A video is saved the first time you watch it."
+              : "No videos saved. Keeping videos is turned off.");
   if(items) paintVideoSummary(items);
 }
-
-/* ---------- Keep all videos saved (switch) and Save all now ----------
-   The work is done by LT.keepVideos (site-tools.js). With the switch on, each
-   missing video is tried at most once a day, never more than 40 starts a day,
-   one at a time; "limit reached" or a full disk pauses it for 6 hours.
-   "Save all now" is a one-time run that tries everything missing right away. */
-function paintPre(why){
-  var tg = $("preToggle"), note = $("preNote"), now = $("preNow");
-  var on = keepOn();
-  tg.classList.toggle("active", on);
-  tg.setAttribute("aria-checked", on ? "true" : "false");
-  if(!("caches" in window)){ tg.hidden = true; now.hidden = true; note.textContent = "This browser can’t keep videos on the device."; return; }
-  var have = catalog.filter(function(v){ return savedFiles[v.file]; }).length;
-  now.disabled = !ENGINE || !!running || !catalog.length || have >= catalog.length;
-  now.textContent = have >= catalog.length && catalog.length ? "All saved" : "Save all now";
-  if(running) return;
-  var base;
-  if(!on){
-    base = have >= catalog.length && catalog.length
-      ? "Off. All " + catalog.length + " videos are saved on this device right now."
-      : "Off. Turn on to keep every video saved on this device, or tap Save all now to save the missing ones once.";
-  }else if(catalog.length && have >= catalog.length){
-    base = "On. All " + catalog.length + " videos are saved on this device.";
-  }else{
-    base = "On. " + have + " of " + catalog.length + " videos are saved. Missing ones are tried again at most once a day each, never on mobile data or data saver, and it pauses if the video server or your storage says no.";
-  }
-  note.textContent = base + (why ? " " + why : "");
-}
-
-var WHY = {
-  limit: "The video server said the limit was reached, so it will wait a few hours.",
-  space: "There isn’t enough free space for the rest, so it will wait a few hours.",
-  paused: "Paused for now; it will try again later.",
-  connection: "Waiting for a better connection.",
-  stopped: "Stopped."
-};
-
-function activeShow(on){ $("activeSave").hidden = !on; }
-
-async function preRun(manual){
-  if(running || !ENGINE) return;
-  if(!manual && !keepOn()) return;
-  var info = await LT.keepVideos.todo(!!manual);
-  if(!info.todo.length){ paintPre(info.missing ? "The rest were tried recently and will be tried again tomorrow." : ""); return; }
-  var ctl = new AbortController();
-  running = {ctl: ctl};
-  paintPre();
-  var bar = $("preBar"), fill = $("preFill"), note = $("preNote"), stop = $("preStop");
-  stop.hidden = false;
-  bar.hidden = false;
-  fill.style.width = "0";
-  var res = await LT.keepVideos.run({
-    manual: !!manual,
-    signal: ctl.signal,
-    onItem: function(i, n, v, list){
-      note.textContent = "Saving " + (i + 1) + " of " + n + ".";
-      activeShow(true);
-      $("activeTitle").textContent = v.title;
-      $("activePct").textContent = "Starting…";
-      $("activeFill").style.width = "0";
-      var nx = list && list[i + 1];
-      $("activeNext").textContent = nx ? "Next: " + nx.title : "This is the last one.";
-    },
-    onBytes: function(i, n, f){
-      fill.style.width = ((i + f) / n * 100) + "%";
-      $("activeFill").style.width = (f * 100) + "%";
-      $("activePct").textContent = f ? Math.round(f * 100) + "%" : "";
-    },
-    onSaved: async function(){
-      $("activePct").textContent = "Saved";
-      $("activeFill").style.width = "100%";
-      await videos(true);
-      usage();
-    }
-  });
-  running = null;
-  stop.hidden = true;
-  bar.hidden = true;
-  activeShow(false);
-  await refresh(true);
-  var msg = plural(res.saved, "video", "videos") + " saved" + (res.failed ? ", " + res.failed + " couldn’t be saved" + (manual ? "" : " (will retry tomorrow)") : "") + ".";
-  if(res.saved || res.failed){ try{ LT.toast(msg); }catch(e){} }
-  if(res.why === "busy") paintPre("Another tab is already saving videos.");
-  else paintPre((res.saved || res.failed ? msg + " " : "") + (WHY[res.why] || ""));
-}
-
-$("preStop").addEventListener("click", function(){ if(running){ running.ctl.abort(); $("preNote").textContent = "Stopping…"; } });
-
-async function confirmSaveAll(manual){
-  var info = await LT.keepVideos.todo(!!manual);
-  var known = info.todo.reduce(function(n, v){ return n + vidSize(v); }, 0);
-  var c = navigator.connection;
-  var metered = c && (c.saveData || c.type === "cellular");
-  if(!info.todo.length) return true;
-  return LT.confirmStep(
-    manual ? "Save all videos now?" : "Keep all videos saved?",
-    "This downloads " + (info.todo.length === 1 ? "1 video" : info.todo.length + " videos") + " to this device now" + (known ? " (about " + mb(known) + " in all)" : "") + ", and some are large. " +
-      (manual ? "" : "After that it only fills in what is missing, trying each video at most once a day. ") +
-      "Keep this page open while it works; you can stop it any time." +
-      (metered ? " You appear to be on mobile data or data saver, so Wi-Fi is better." : ""),
-    manual ? "Save videos" : "Turn on", false);
-}
-
-$("preToggle").addEventListener("click", async function(){
-  if(!ENGINE) return;
-  if(keepOn()){
-    LT.keepVideos.set(false);
-    if(running) running.ctl.abort();
-    paintPre(); paintOffline();
-    return;
-  }
-  if(!(await confirmSaveAll(false))) return;
-  LT.keepVideos.set(true);
-  paintPre(); paintOffline();
-  preRun(false);
-});
-$("preNow").addEventListener("click", async function(){
-  if(!ENGINE || running) return;
-  if(!(await confirmSaveAll(true))) return;
-  preRun(true);
-});
 
 /* ---------- Pictures, PDFs and pages ---------- */
 function bytesOf(items){ return items.reduce(function(n, x){ return n + x.size; }, 0); }
@@ -879,21 +729,19 @@ function pageRow(item, removable){
 
 async function pictures(quiet){
   var items = await fillList("img", SITE_CACHE, function(p){ return IMG_RE.test(p); }, imageRow, quiet,
-    LT.filePrefs.on("images") ? "No pictures saved yet. A picture is saved the first time you view it." : "No pictures saved. Keeping pictures is turned off above.");
+    LT.filePrefs.on("images") ? "No pictures saved yet. A picture is saved the first time you view it." : "No pictures saved. Keeping pictures is turned off.");
   if(!items) return;
-  $("imgSum").textContent = items.length ? plural(items.length, "picture", "pictures") + " saved (" + mb(bytesOf(items)) + ")." : "";
   tile("tImg", bytesOf(items), items.length);
 }
 async function pdfs(quiet){
   var items = await fillList("pdf", SITE_CACHE, function(p){ return PDF_RE.test(p); }, pdfRow, quiet,
-    LT.filePrefs.on("pdfs") ? "No PDFs saved yet. A PDF is saved the first time you open it." : "No PDFs saved. Keeping PDFs is turned off above.");
+    LT.filePrefs.on("pdfs") ? "No PDFs saved yet. A PDF is saved the first time you open it." : "No PDFs saved. Keeping PDFs is turned off.");
   if(!items) return;
-  $("pdfSum").textContent = items.length ? plural(items.length, "PDF", "PDFs") + " saved (" + mb(bytesOf(items)) + ")." : "";
   tile("tPdf", bytesOf(items), items.length);
 }
 async function pages(quiet){
   var items = await fillList("page", SITE_CACHE, function(p){ return !IMG_RE.test(p) && !PDF_RE.test(p); }, pageRow, quiet,
-    LT.filePrefs.on("pages") ? "No pages saved yet. A page is saved, with everything it needs, when you visit it." : "No pages saved. Keeping pages is turned off above.",
+    LT.filePrefs.on("pages") ? "No pages saved yet. A page is saved, with everything it needs, when you visit it." : "No pages saved. Keeping pages is turned off.",
     function(a, b){
       var ap = HTML_RE.test(pathOf(a.req)) || /\/$/.test(pathOf(a.req)), bp = HTML_RE.test(pathOf(b.req)) || /\/$/.test(pathOf(b.req));
       if(ap !== bp) return ap ? -1 : 1;
@@ -907,10 +755,8 @@ async function pages(quiet){
 
 var CFG = {
   vid: {title: "Saved videos", mk: videoRow, clearTitle: "Remove all saved videos?",
-    clearText: function(){ return "Every video saved on this device will be removed" + (keepOn() ? ", and “Keep all videos saved” will be turned off" : "") + ". " + (keeping() ? "They download again if you watch them." : "They will not be saved again while keeping videos is turned off."); },
+    clearText: function(){ return "Every video saved on this device will be removed. " + (keeping() ? "They download again if you watch them." : "They will not be saved again while keeping videos is turned off."); },
     clearAll: async function(){
-      LT.keepVideos.set(false);
-      if(running){ running.ctl.abort(); }
       await caches.delete(VIDEO_CACHE);
       try{ localStorage.removeItem(STATE_KEY); }catch(e){}
     }},
@@ -927,13 +773,12 @@ var CFG = {
 ["vid", "img", "pdf", "page"].forEach(function(k){ $(k + "See").addEventListener("click", function(){ openAll(k); }); });
 
 /* The switches for pictures, PDFs and pages. */
-function bindFileToggle(kind, id, noteId, onText, offText, reload){
+function bindFileToggle(kind, id, reload){
   var tg = $(id);
   function paint(){
     var on = ENGINE && LT.filePrefs.on(kind);
     tg.classList.toggle("active", on);
     tg.setAttribute("aria-checked", on ? "true" : "false");
-    $(noteId).textContent = on ? onText : offText;
   }
   tg.addEventListener("click", async function(){
     if(!ENGINE) return;
@@ -943,23 +788,17 @@ function bindFileToggle(kind, id, noteId, onText, offText, reload){
   });
   return paint;
 }
-var paintImgToggle = bindFileToggle("images", "imgToggle", "imgNote",
-  "On: a picture is kept on this device the first time you view it, so it shows faster and works offline.",
-  "Off: no new pictures are kept. Pictures already kept stay until you remove them (See all).", pictures);
-var paintPdfToggle = bindFileToggle("pdfs", "pdfToggle", "pdfNote",
-  "On: a PDF is kept on this device the first time you open it, so it opens faster and works offline.",
-  "Off: no new PDFs are kept. PDFs already kept stay until you remove them (See all).", pdfs);
-var paintPageToggle = bindFileToggle("pages", "pageToggle", "pageNote",
-  "On: every page you visit is kept on this device along with the files it needs (styles, scripts, data and pictures on it), so it opens fast and works offline.",
-  "Off: no new pages are kept. Pages already kept stay until you remove them (See all).", pages);
+var paintImgToggle = bindFileToggle("images", "imgToggle", pictures);
+var paintPdfToggle = bindFileToggle("pdfs", "pdfToggle", pdfs);
+var paintPageToggle = bindFileToggle("pages", "pageToggle", pages);
 
 /* One line that says whether everything you visit is being saved. */
 function paintOffline(){
-  var all = ENGINE && keeping() && keepOn() && LT.filePrefs.on("images") && LT.filePrefs.on("pdfs") && LT.filePrefs.on("pages");
+  var all = ENGINE && keeping() && LT.filePrefs.on("images") && LT.filePrefs.on("pdfs") && LT.filePrefs.on("pages");
   var el = $("offlineLine");
   el.className = "offlineLine" + (all ? " ready" : "");
   el.textContent = !ENGINE ? "" : all
-    ? "Offline mode is on: everything you visit is saved on this device, and every video is kept."
+    ? "Offline mode is on: everything you visit is saved on this device."
     : "Turn on every switch below and everything you visit is saved for offline use.";
 }
 
@@ -967,7 +806,6 @@ async function refresh(quiet){
   paintToggle();
   if(ENGINE){ paintImgToggle(); paintPdfToggle(); paintPageToggle(); }
   backupSummary();
-  paintKeepNote();
   paintOffline();
   usage();
   await Promise.all([videos(quiet), pictures(quiet), pdfs(quiet), pages(quiet)]);
@@ -978,7 +816,7 @@ async function refresh(quiet){
 $("bkExport").addEventListener("click", function(){ window.LT && LT.exportBackup(); setTimeout(backupSummary, 200); });
 $("bkImport").addEventListener("click", function(){ window.LT && LT.importBackup(); });
 
-loadMeta().then(async function(){ if(ENGINE) catalog = await LT.keepVideos.catalog(); await refresh(); if(keepOn()) preRun(false); });
+loadMeta().then(function(){ return refresh(); });
 window.addEventListener("pageshow", function(e){ if(e.persisted) refresh(); });
 })();
 </script>
