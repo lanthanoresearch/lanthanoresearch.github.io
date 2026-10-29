@@ -1,6 +1,6 @@
 {
  "count": 306,
- "totalBytes": 283534025,
+ "totalBytes": 283533478,
  "files": [
   {
    "path": "1 Thessalonians Original Text.png",
@@ -644,8 +644,8 @@
   },
   {
    "path": "gallery.html",
-   "size": 88004,
-   "hash": "9cf56229e040e029"
+   "size": 87231,
+   "hash": "ad8ea2d26d5ee4c7"
   },
   {
    "path": "Genetic Degradation.pdf",
@@ -1129,8 +1129,8 @@
   },
   {
    "path": "site-tools.js",
-   "size": 73357,
-   "hash": "fe666f177cbfc4f2"
+   "size": 73583,
+   "hash": "9fcd2a3a293be4cb"
   },
   {
    "path": "Star of David.png",
