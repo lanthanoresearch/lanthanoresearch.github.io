@@ -1492,7 +1492,7 @@ async function kaRun(opts){
       if(st.kday.length >= KA.PER_DAY){ out.why = "paused"; break; }
       st.kday.push(Date.now());
       kaWrite(st); beat();
-      if(opts.onItem) opts.onItem(i, todo.length, v);
+      if(opts.onItem) opts.onItem(i, todo.length, v, todo);
       var r = await kaFetch(v, signal, function(f){ beat(); if(opts.onBytes) opts.onBytes(i, todo.length, f); });
       if(r === "abort"){ out.why = "stopped"; break; }
       st = kaState(); st.rec = st.rec || {};
@@ -1531,8 +1531,44 @@ window.LT = window.LT || {};
 window.LT.keepVideos = {on:kaOn, set:kaSet, run:kaRun, todo:kaTodo, catalog:kaCatalog, isRunning:function(){ return KA.running; }, key:kaKey};
 kaAutoStart();
 
+/* ---------------------------------------------------------------
+   Keep pictures / PDFs (switches on the Storage page)
+   The service worker keeps pictures and PDFs as they are opened. These
+   switches tell it whether to keep new ones. A worker can't read
+   localStorage, so every page leaves a small marker in the cache for it.
+--------------------------------------------------------------- */
+var FP = {images:"keepImagesOff", pdfs:"keepPdfsOff"};
+function fpOn(kind){ try{ return localStorage.getItem(FP[kind]) !== "1"; }catch(e){ return true; } }
+function fpMirror(kind){
+  if(!window.caches) return Promise.resolve();
+  return caches.open("lanthano-prefs").then(function(c){
+    var key = "/__pref/" + kind + "-off";
+    return fpOn(kind) ? c.delete(key) : c.put(key, new Response("1"));
+  }).catch(function(){});
+}
+function fpSet(kind, on){
+  try{ if(on) localStorage.removeItem(FP[kind]); else localStorage.setItem(FP[kind], "1"); }catch(e){}
+  return fpMirror(kind);
+}
+fpMirror("images"); fpMirror("pdfs");
+/* Make sure a whole PDF is kept: the viewer reads PDFs in pieces, which the
+   service worker can't keep, so (once the PDF has opened) it is fetched whole
+   from the site once. Already-kept PDFs are skipped. */
+function keepPdf(url){
+  try{
+    if(!fpOn("pdfs") || !window.caches || !url) return;
+    var u = new URL(url, location.href);
+    if(u.origin !== location.origin || !/\.pdf$/i.test(u.pathname)) return;
+    caches.match(u.href).then(function(hit){
+      if(hit) return;
+      return fetch(u.href).then(function(r){ if(r.body && r.status !== 200){ try{ r.body.cancel(); }catch(e){} } });
+    }).catch(function(){});
+  }catch(e){}
+}
 window.LT = window.LT || {};
 window.LT.cite = cite;
+window.LT.filePrefs = {on:fpOn, set:fpSet};
+window.LT.keepPdf = keepPdf;
 window.LT.report = report;
 window.LT.sources = sources;
 window.LT.zipImages = zipImages;

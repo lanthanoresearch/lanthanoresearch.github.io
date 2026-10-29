@@ -17803,6 +17803,8 @@ try{
 
   pdfDoc = await loadingTask.promise;
 
+  try{ if(window.LT && LT.keepPdf) setTimeout(function(){ LT.keepPdf(file); }, 2500); }catch(e){}
+
   document.getElementById("pageCount").textContent = `of ${pdfDoc.numPages}`;
 
   // Fetch the outline (table of contents) up front. A document

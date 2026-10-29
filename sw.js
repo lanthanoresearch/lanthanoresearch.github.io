@@ -14,6 +14,28 @@ const SITE_CACHE = "lanthano-site-files";
 const VIDEO_CACHE = "lanthano-saved-videos";
 const VIDEO_PREFIX = "/__video/";
 
+// Small on/off switches set from the Storage page ("keep pictures", "keep
+// PDFs"). A worker can't read localStorage, so the page leaves a marker here.
+// It is never deleted on activate.
+const PREFS_CACHE = "lanthano-prefs";
+
+async function prefOff(name) {
+  try {
+    const c = await caches.open(PREFS_CACHE);
+    return !!(await c.match("/__pref/" + name + "-off"));
+  } catch (e) {
+    return false;
+  }
+}
+
+// Which switch (if any) decides whether this kind of file is kept.
+function prefFor(url) {
+  const ext = extOf(url);
+  if (/^(png|jpe?g|gif|webp|avif|bmp|ico|svg)$/.test(ext)) return "images";
+  if (ext === "pdf") return "pdfs";
+  return "";
+}
+
 // The offline / not-found fallback page.
 const OFFLINE_URL = "/404.html";
 
@@ -48,7 +70,7 @@ self.addEventListener("activate", event => {
     caches.keys().then(keys =>
       Promise.all(
         keys
-          .filter(key => ![CACHE_NAME, OFFLINE_CACHE, SITE_CACHE, VIDEO_CACHE].includes(key))
+          .filter(key => ![CACHE_NAME, OFFLINE_CACHE, SITE_CACHE, VIDEO_CACHE, PREFS_CACHE].includes(key))
           .map(key => caches.delete(key))
       )
     )
@@ -206,8 +228,13 @@ function looksRight(res, url) {
 
 // Save a copy in the site cache (pages without their ?query), and refresh the
 // "Offline App" copy too when one exists so it can't go stale.
-async function store(url, response) {
+async function store(url, response, replacing) {
   try {
+    // A new picture / PDF is only kept while its switch is on. A copy that is
+    // already saved is still refreshed when the file changes.
+    const pref = prefFor(url);
+    if (!replacing && pref && await prefOff(pref)) return;
+
     const u = new URL(url);
     if (/\.html?$/i.test(u.pathname) || u.pathname.endsWith("/")) u.search = "";
     const key = u.href;
@@ -280,7 +307,7 @@ async function revalidate(url, cached) {
     if (res.status === 304) return;
 
     if (looksRight(res, url)) {
-      await store(url, res);
+      await store(url, res, true);
     }
   } catch (e) {
     // Offline or a bad moment: keep the saved copy, try again later.
