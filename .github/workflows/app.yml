@@ -69,7 +69,7 @@ jobs:
       - name: Bundle the whole website into the app
         run: |
           node build-site-manifest.js --copy desktop-app/site
-          node prepare-app-bundle.js desktop-app/site
+          node prepare-app-bundle.js desktop-app/site --local-only --no-back
           mkdir -p desktop-app/build
           cp file_000000000c40722f92b1fe6758cb4855.png desktop-app/build/icon.png
 

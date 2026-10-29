@@ -75,7 +75,7 @@ jobs:
           cat > capacitor.config.json <<'EOF'
           {
             "appId": "com.lanthanoresearch.app",
-            "appName": "Lanthano Research",
+            "appName": "Lanthano Research Offline",
             "webDir": "www",
             "server": {
               "hostname": "lanthanoresearch.com",
@@ -96,6 +96,10 @@ jobs:
           RES=android/app/src/main/res
           ICON="$GITHUB_WORKSPACE/file_000000000c40722f92b1fe6758cb4855.png"
           BG="#111111"
+          if [ ! -f "$ICON" ]; then
+            echo "::error::Icon picture not found at $ICON"
+            exit 1
+          fi
           IM=convert; command -v magick >/dev/null 2>&1 && IM=magick
           # adaptive icon layers (108dp): picture takes about 60% of the square
           for pair in mdpi:108 hdpi:162 xhdpi:216 xxhdpi:324 xxxhdpi:432; do
@@ -115,6 +119,27 @@ jobs:
               <color name="ic_launcher_background">#111111</color>
           </resources>
           EOF
+          # Make sure newer phones use the layers above, whatever the template had.
+          mkdir -p "$RES/mipmap-anydpi-v26"
+          for name in ic_launcher ic_launcher_round; do
+            cat > "$RES/mipmap-anydpi-v26/$name.xml" <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+              <background android:drawable="@color/ic_launcher_background"/>
+              <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
+          </adaptive-icon>
+          EOF
+          done
+          # Remove template leftovers that could win over the new layers.
+          rm -f "$RES/drawable-v24/ic_launcher_foreground.xml" "$RES/drawable/ic_launcher_background.xml"
+          ls -l "$RES"/mipmap-xxxhdpi "$RES/mipmap-anydpi-v26"
+
+      - name: Name the app
+        working-directory: android-app
+        run: |
+          STR=android/app/src/main/res/values/strings.xml
+          sed -i 's#<string name="app_name">[^<]*</string>#<string name="app_name">Lanthano Research Offline</string>#; s#<string name="title_activity_main">[^<]*</string>#<string name="title_activity_main">Lanthano Research Offline</string>#' "$STR"
+          cat "$STR"
 
       - name: Number this version
         working-directory: android-app/android/app
