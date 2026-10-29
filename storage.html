@@ -382,6 +382,8 @@ html{scroll-behavior:smooth}
         </div>
         <p class="note">Every video you watch is kept on this device, so it replays faster and works offline. Turning this off only stops new videos from being kept; saved ones stay until you remove them.</p>
         <p class="sumLine" id="vidSum"></p>
+        <p class="sumLine" id="vidSaving" hidden></p>
+        <p class="note" id="vidIssue" hidden></p>
         <div class="listState loading" id="vidState">Loading&hellip;</div>
         <button type="button" class="seeBtn" id="vidSee" hidden><span class="seeLabel" id="vidSeeLabel"></span><span class="seeMeta" id="vidSeeMeta"></span><span class="seeChev" aria-hidden="true">&rsaquo;</span></button>
     </div>
@@ -445,7 +447,7 @@ function backupSummary(){
     ["Search and display settings", /^(searchSettings|viewMode|paperSort|showFileNames|qrRatio|featuredVideoRatio|readingLevel|videoCaptions|galleryMode|videosDefaultOpen|imagesDefaultOpen|savedVideosOff|keepAllVideos|keepImagesOff|keepPdfsOff|searchHistoryOn)$|readAloud|setting/i, 0],
     ["Other saved data", /./, 0]
   ];
-  var skip = /^(savedVideoLog|keepAllLast|keepAllLock|archiveStatsCache|archiveFileSizes|lt_seen|lt_hit|lt_last_backup)/;
+  var skip = /^(savedVideoLog|videoSaveLock|videosWatched|keepAllLast|keepAllLock|archiveStatsCache|archiveFileSizes|lt_seen|lt_hit|lt_last_backup)/;
   var total = 0;
   try{
     for(var i = 0; i < localStorage.length; i++){
@@ -477,7 +479,7 @@ var sizeTable = {}, pdfTitles = {};
 var catalog = [];
 
 /* This page needs the newer site-tools.js; say so instead of failing quietly. */
-var ENGINE = !!(window.LT && LT.filePrefs && LT.confirmStep);
+var ENGINE = !!(window.LT && LT.filePrefs && LT.confirmStep && LT.videoSaver);
 if(!ENGINE){
   var warn = document.createElement("p");
   warn.className = "note";
@@ -816,7 +818,32 @@ async function refresh(quiet){
 $("bkExport").addEventListener("click", function(){ window.LT && LT.exportBackup(); setTimeout(backupSummary, 200); });
 $("bkImport").addEventListener("click", function(){ window.LT && LT.importBackup(); });
 
-loadMeta().then(function(){ return refresh(); });
+/* Videos you watched that are not saved yet are finished here (progress shows on this page). */
+async function paintIssues(){
+  var box = $("vidIssue");
+  try{
+    var plan = await LT.videoSaver.plan();
+    var wait = plan.blocked.map(function(b){ return "\u201c" + b.v.title + "\u201d (" + b.why + ")"; });
+    var st = LT.videoSaver.state();
+    var paused = st.pauseUntil && Date.now() < st.pauseUntil ? (st.pauseWhy === "space" ? "Not enough free space on this device, so saving is paused for a few hours. " : "The video server asked for a pause, so saving waits for about an hour. ") : "";
+    var queued = plan.todo.length ? plural(plan.todo.length, "video is", "videos are") + " waiting to be saved. " : "";
+    box.textContent = paused + queued + (wait.length ? "Will try again: " + wait.join(", ") + "." : "");
+    box.hidden = !box.textContent;
+  }catch(e){ box.hidden = true; }
+}
+async function runSaver(){
+  if(!ENGINE || !keeping() || LT.videoSaver.isRunning()){ paintIssues(); return; }
+  var line = $("vidSaving");
+  var res = await LT.videoSaver.run({
+    onItem: function(i, n, v){ line.hidden = false; line.textContent = "Saving " + (i + 1) + " of " + n + ": " + v.title; },
+    onBytes: function(i, n, f){ if(f) line.textContent = line.textContent.replace(/ \u00b7 \d+%$/, "") + " \u00b7 " + Math.round(f * 100) + "%"; },
+    onSaved: async function(){ await videos(true); usage(); }
+  });
+  line.hidden = true;
+  if(res.saved) await refresh(true);
+  paintIssues();
+}
+loadMeta().then(function(){ return refresh(); }).then(runSaver);
 window.addEventListener("pageshow", function(e){ if(e.persisted) refresh(); });
 })();
 </script>

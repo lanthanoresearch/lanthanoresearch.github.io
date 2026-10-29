@@ -1005,7 +1005,7 @@ function report(item){
 /* ---------------------------------------------------------------
    Backup / restore (favorites, bookmarks, settings)
 --------------------------------------------------------------- */
-var SKIP = /^(savedVideoLog|keepAllLast|keepAllLock|archiveStatsCache|archiveFileSizes|lt_seen|lt_hit|lt_last_backup)/;
+var SKIP = /^(savedVideoLog|videoSaveLock|videosWatched|keepAllLast|keepAllLock|archiveStatsCache|archiveFileSizes|lt_seen|lt_hit|lt_last_backup)/;
 function exportBackup(){
   var data = {};
   try{
@@ -1342,6 +1342,207 @@ document.addEventListener("click", function(e){
   }
   if(a === "cite") cite(item); else if(a === "report") report(item); else sources(item);
 }, true);
+
+/* ---------------------------------------------------------------
+   Saving videos you watch (shared by the video page, Storage and every page)
+   A watched video is kept on this device, plus the other videos from the same
+   paper. The download carries on from whichever page is open, so leaving the
+   video page early doesn't lose it: the next page picks it up.
+   How often it tries (nothing limits how MANY videos get saved):
+   - one video at a time, the watched one first;
+   - a video that fails is tried again after 5 minutes, then after 1 hour; after
+     a third failure it rests for 3 days. Other videos carry on meanwhile;
+   - "limit reached" from the video server pauses everything for an hour;
+     a full disk pauses for 6 hours;
+   - related videos are not fetched on mobile data or data saver.
+--------------------------------------------------------------- */
+var VS = {
+  CACHE: "lanthano-saved-videos", STATE: "savedVideoLog2", WATCH: "videosWatched", OFF: "savedVideosOff",
+  LOCK: "videoSaveLock", API: "https://videos.lanthanoresearch.com",
+  HEADROOM: 300 * 1024 * 1024, MAXBYTES: 3 * 1024 * 1024 * 1024, RETRY: [5 * 60000, 60 * 60000], REST: 3 * 86400000,
+  catalog: null, running: false
+};
+function vsOff(){ try{ return localStorage.getItem(VS.OFF) === "1"; }catch(e){ return false; } }
+function vsKey(file){ return new URL("/__video/" + encodeURIComponent(file), location.origin).href; }
+function vsState(){ try{ return JSON.parse(localStorage.getItem(VS.STATE) || "{}") || {}; }catch(e){ return {}; } }
+function vsWrite(s){ try{ localStorage.setItem(VS.STATE, JSON.stringify(s)); }catch(e){} }
+function vsWatched(){ try{ return JSON.parse(localStorage.getItem(VS.WATCH) || "{}") || {}; }catch(e){ return {}; } }
+function vsOnline(){ return navigator.onLine !== false; }
+function vsMetered(){
+  var c = navigator.connection;
+  return !!(c && (c.saveData || /^(slow-2g|2g)$/.test(c.effectiveType || "") || c.type === "cellular"));
+}
+function vsCatalog(){
+  if(VS.catalog) return Promise.resolve(VS.catalog);
+  return fetch("/descriptions.json", {cache:"no-cache"}).then(function(r){ return r.json(); }).then(function(d){
+    var list = [], seen = {};
+    Object.keys(d).forEach(function(k){
+      ((d[k] && d[k].videos) || []).forEach(function(v){
+        if(!v || typeof v.file !== "string") return;
+        var f = v.file.trim();
+        if(!f || f.indexOf("#$") === 0 || seen[f]) return;
+        seen[f] = 1;
+        list.push({file:f, paper:k, group:v.group || "", title:v.title || f.split("/").pop().replace(/\.[a-z0-9]+$/i, ""), site:v.source === "site", ver:String(v.v === undefined ? "" : v.v), size:Number(v.size) || 0});
+      });
+    });
+    VS.catalog = list;
+    return list;
+  }).catch(function(){ return []; });
+}
+/* One video into storage: {size} | "quota" | "stop" | "fail" | "abort" */
+async function vsFetch(v, signal, onBytes){
+  try{
+    var res;
+    if(v.site){
+      res = await fetch(new URL(v.file.split("/").map(encodeURIComponent).join("/"), location.origin + "/").href, {cache:"no-store", signal:signal});
+    }else{
+      var tk = await fetch(VS.API + "/ticket?f=" + encodeURIComponent(v.file), {cache:"no-store", signal:signal});
+      if(tk.status === 429 || tk.status === 503) return "stop";
+      if(!tk.ok) return "fail";
+      var t = (await tk.json()).t;
+      res = await fetch(VS.API + "/play?t=" + encodeURIComponent(t), {signal:signal});
+      if(res.status === 429 || res.status === 503){ try{ res.body && res.body.cancel(); }catch(e){} return "stop"; }
+    }
+    var drop = function(){ try{ res.body && res.body.cancel(); }catch(e){} };
+    if(res.status !== 200){ drop(); return "fail"; }
+    var type = (res.headers.get("content-type") || "").toLowerCase();
+    var len = Number(res.headers.get("content-length")) || 0;
+    if(type && type.indexOf("video/") !== 0 && type.indexOf("octet-stream") < 0){ drop(); return "fail"; }
+    if(len > VS.MAXBYTES){ drop(); return "fail"; }
+    try{
+      var est = await navigator.storage.estimate();
+      if(est && est.quota && est.quota - (est.usage || 0) < len + VS.HEADROOM){ drop(); return "quota"; }
+    }catch(e){}
+    var out = res;
+    if(res.body && res.body.getReader){
+      var reader = res.body.getReader(), done = 0;
+      out = new Response(new ReadableStream({
+        pull: async function(ctrl){
+          var r = await reader.read();
+          if(r.done){ ctrl.close(); return; }
+          done += r.value.length;
+          try{ localStorage.setItem(VS.LOCK, String(Date.now())); }catch(e){}
+          if(onBytes) onBytes(len ? Math.min(1, done / len) : 0);
+          ctrl.enqueue(r.value);
+        },
+        cancel: function(reason){ return reader.cancel(reason); }
+      }), {status:200, headers:res.headers});
+    }
+    var cache = await caches.open(VS.CACHE);
+    try{
+      await cache.delete(vsKey(v.file));
+      await cache.put(vsKey(v.file), out);
+    }catch(e){
+      try{ await cache.delete(vsKey(v.file)); }catch(x){}
+      if(signal.aborted) return "abort";
+      return (e && e.name === "QuotaExceededError") ? "quota" : "fail";
+    }
+    var stored = await cache.match(vsKey(v.file));
+    var blob = stored ? await stored.blob() : null;
+    if(!blob || blob.size < 1024 || (len && blob.size !== len)){ await cache.delete(vsKey(v.file)); return "fail"; }
+    return {size:blob.size};
+  }catch(e){
+    return signal && signal.aborted ? "abort" : "fail";
+  }
+}
+/* Which videos should be saved right now, in order: the ones watched (a
+   given one first), then the others from the same paper and group. Each entry
+   carries why it is skipped, if it is. */
+async function vsPlan(focus){
+  var cat = await vsCatalog();
+  if(!cat.length || !("caches" in window)) return {todo:[], blocked:[]};
+  var cache = await caches.open(VS.CACHE), st = vsState(), now = Date.now(), w = vsWatched();
+  st.rec = st.rec || {};
+  var by = {}; cat.forEach(function(v){ by[v.file] = v; });
+  var order = [], seen = {};
+  function add(v){ if(v && !seen[v.file]){ seen[v.file] = 1; order.push(v); } }
+  var watchedFiles = Object.keys(w).filter(function(f){ return by[f]; }).sort(function(a, b){
+    if(a === focus) return -1; if(b === focus) return 1;
+    return ((w[b] && w[b].t) || 0) - ((w[a] && w[a].t) || 0);
+  });
+  var related = [];
+  watchedFiles.forEach(function(f){
+    add(by[f]);
+    cat.forEach(function(v){ if(v.file !== f && v.paper === by[f].paper && v.group === by[f].group) related.push(v); });
+  });
+  related.forEach(add);
+  var todo = [], blocked = [], metered = vsMetered();
+  for(var i = 0; i < order.length; i++){
+    var v = order[i], rec = st.rec[v.file] || {};
+    var have = await cache.match(vsKey(v.file));
+    if(have && (rec.ver === undefined || rec.ver === v.ver)) continue;
+    var isWatched = !!w[v.file];
+    if(!isWatched && metered){ blocked.push({v:v, why:"waiting for Wi-Fi"}); continue; }
+    if(rec.next && now < rec.next){ blocked.push({v:v, why:"will try again " + (rec.next - now < 3600000 ? "soon" : "later"), next:rec.next}); continue; }
+    todo.push(v);
+  }
+  return {todo:todo, blocked:blocked};
+}
+/* opts: {focus, signal, auto, onStart(n), onItem(i,n,v,list), onBytes(i,n,f), onSaved(v)}
+   Resolves {saved, failed, why: ""|"limit"|"space"|"paused"|"busy"|"stopped"|"off"|"offline"} */
+async function vsRun(opts){
+  opts = opts || {};
+  var out = {saved:0, failed:0, why:""};
+  if(vsOff()){ out.why = "off"; return out; }
+  if(!vsOnline()){ out.why = "offline"; return out; }
+  if(VS.running){ out.why = "busy"; return out; }
+  try{ var lock = Number(localStorage.getItem(VS.LOCK)) || 0; if(Date.now() - lock < 60000){ out.why = "busy"; return out; } }catch(e){}
+  if(!("caches" in window) || !navigator.storage){ return out; }
+  var st = vsState();
+  if(st.pauseUntil && Date.now() < st.pauseUntil){ out.why = (st.pauseWhy === "space") ? "space" : "limit"; return out; }
+  VS.running = true;
+  var signal = opts.signal || new AbortController().signal;
+  var beat = function(){ try{ localStorage.setItem(VS.LOCK, String(Date.now())); }catch(e){} };
+  try{
+    beat();
+    var plan = await vsPlan(opts.focus);
+    var todo = plan.todo;
+    if(opts.onStart) opts.onStart(todo.length);
+    if(todo.length){ try{ if(navigator.storage.persist) navigator.storage.persist(); }catch(e){} }
+    for(var i = 0; i < todo.length; i++){
+      if(signal.aborted){ out.why = "stopped"; break; }
+      if(vsOff()){ out.why = "off"; break; }
+      var v = todo[i];
+      if(opts.onItem) opts.onItem(i, todo.length, v, todo);
+      var r = await vsFetch(v, signal, function(f){ if(opts.onBytes) opts.onBytes(i, todo.length, f); });
+      if(r === "abort"){ out.why = "stopped"; break; }
+      st = vsState(); st.rec = st.rec || {};
+      var rec = st.rec[v.file] || (st.rec[v.file] = {}), now = Date.now();
+      if(r === "quota"){ rec.last = {t:now, r:"space"}; st.pauseUntil = now + 6 * 3600000; st.pauseWhy = "space"; vsWrite(st); out.why = "space"; break; }
+      if(r === "stop"){ rec.last = {t:now, r:"limit"}; st.pauseUntil = now + 3600000; st.pauseWhy = "limit"; vsWrite(st); out.why = "limit"; break; }
+      if(r === "fail"){
+        rec.fails = (rec.fails || 0) + 1;
+        rec.last = {t:now, r:"fail"};
+        if(rec.fails >= 3){ rec.next = now + VS.REST; rec.fails = 0; }
+        else rec.next = now + VS.RETRY[rec.fails - 1];
+        vsWrite(st); out.failed++;
+        continue;   // other videos carry on
+      }
+      st.rec[v.file] = {ok:now, ver:v.ver, size:r.size, fails:0, next:0, last:{t:now, r:"ok"}};
+      vsWrite(st);
+      out.saved++;
+      if(opts.onSaved) opts.onSaved(v);
+      await new Promise(function(res){ setTimeout(res, 300); });
+    }
+  }catch(e){
+  }finally{
+    VS.running = false;
+    try{ localStorage.removeItem(VS.LOCK); }catch(e){}
+  }
+  return out;
+}
+/* Other pages pick up anything that is still waiting (a video left early, a
+   failed one that is due again), a few seconds after they open. */
+function vsAutoStart(){
+  if(/\/video\.html$/i.test(location.pathname) || /\/storage\.html$/i.test(location.pathname)) return;
+  setTimeout(function(){
+    if(vsOff() || VS.running || !Object.keys(vsWatched()).length) return;
+    vsRun({auto:true});
+  }, 8000);
+}
+window.LT = window.LT || {};
+window.LT.videoSaver = {run:vsRun, plan:vsPlan, catalog:vsCatalog, state:vsState, watched:vsWatched, off:vsOff, key:vsKey, isRunning:function(){ return VS.running; }};
+vsAutoStart();
 
 /* ---------------------------------------------------------------
    Keep pictures / PDFs (switches on the Storage page)
