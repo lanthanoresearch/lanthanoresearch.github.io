@@ -356,8 +356,13 @@ function accentCss(){
     ".share-button,.top-button,.quiz-stage button{background:" + btn + " !important;color:" + txt + " !important;box-shadow:inset 0 0 0 1px " + edge + "}" +
     ".share-button:hover,.top-button:hover,.quiz-stage button:hover{background:" + btnH + " !important}" +
     ".progress-fill{background:" + main + " !important}" +
+    ".pv-ico,.pv-tick{color:" + main + " !important}.pv-ico{background:" + soft + " !important}" +
+    ".download-button{background:" + btn + " !important;color:" + txt + " !important;box-shadow:inset 0 0 0 1px " + edge + "}" +
+    ".download-button:hover{background:" + btnH + " !important}" +
+    ".progress-percent.finished,.progress-text.finished,.status.finished,.download-warning.finished strong{color:" + main + " !important}" +
+    ".download-warning.finished{background:" + soft + " !important;border-color:" + edge + " !important}" +
     ".paper-link{color:" + main + " !important}" +
-    (/^(about|contact|support)\.html$/.test(path) ? ".card h2{color:" + main + " !important}.card{box-shadow:inset 0 0 0 1px " + edge + "}" : "") +
+    (/^(about|contact|download|privacy)\.html$/.test(path) ? ".card h2{color:" + main + " !important}.card{box-shadow:inset 0 0 0 1px " + edge + "}" : "") +
     ":focus-visible{outline-color:" + main + " !important}" +
     ".paper-dl.open,.paper-break-dl.open{color:" + main + " !important}";
   if(!old){ old = document.createElement("style"); old.id = "ltAccentCss"; }

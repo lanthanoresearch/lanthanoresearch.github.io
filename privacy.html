@@ -12,34 +12,133 @@
 <meta property="og:title" content="Privacy | Lanthano Research">
 <meta property="og:description" content="Everything stays on your device. No trackers, no ads, nothing collected.">
 <meta property="og:url" content="https://lanthanoresearch.com/privacy.html">
+<meta property="og:image" content="https://lanthanoresearch.com/file_000000000c40722f92b1fe6758cb4855.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Privacy | Lanthano Research">
+<meta name="twitter:description" content="Everything stays on your device. No trackers, no ads, nothing collected.">
+<meta name="twitter:image" content="https://lanthanoresearch.com/file_000000000c40722f92b1fe6758cb4855.png">
+
+
 <style>
-body{margin:0;background:#111;color:#eee;font-family:Arial,sans-serif;min-height:100vh}
-.wrap{max-width:640px;margin:0 auto;padding:24px 20px 60px}
-.back{color:white;text-decoration:none;display:inline-block;margin-bottom:20px}
-.back:hover{text-decoration:underline}
-h1{margin:10px 0 18px;font-size:30px}
-.card{background:#1b1b1b;border:1px solid #333;border-radius:12px;padding:22px 20px;margin:16px 0}
-.card p{margin:0;line-height:1.6;font-size:17px}
-ul{list-style:none;padding:0;margin:14px 0 0}
-li{padding:10px 0;border-top:1px solid #2c2c2c;font-size:16px}
-li:first-child{border-top:0}
-.big{font-size:22px;font-weight:bold;margin:26px 0 0;text-align:center}
+
+body{
+    margin:0;
+    background:#111;
+    color:#eee;
+    font-family:Arial,sans-serif;
+}
+
+section{
+    max-width:900px;
+    margin:auto;
+    padding:40px 20px 100px;
+}
+
+.update-note{
+    text-align:center;
+    color:#777;
+    font-size:0.9em;
+    margin-top:40px;
+}
+
+h1{
+    text-align:center;
+    margin-top:0;
+    margin-bottom:40px;
+}
+
+.card{
+    background:#1d1d1d;
+    padding:25px;
+    margin:20px 0;
+    border-radius:10px;
+}
+
+.back{
+    color:white;
+    text-decoration:none;
+    display:inline-block;
+    margin-bottom:20px;
+}
+
+p{
+    line-height:1.7;
+}
+
+html{
+    scroll-behavior:smooth;
+}
+
+.top-button{
+    position:fixed;
+    bottom:20px;
+    left:50%;
+    transform:translateX(-50%);
+    width:50px;
+    height:50px;
+    background:#2a2a2a;
+    color:white;
+    text-decoration:none;
+    border-radius:50%;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    font-size:24px;
+    z-index:1000;
+    opacity:.6;
+}
+
+.top-button:hover{
+    opacity:.6;
+    background:#2a2a2a;
+}
+
+    
+.check-list{list-style:none;padding:0;margin:18px 0 4px}
+.check-list li{padding:12px 0;border-top:1px solid #2c2c2c;font-size:1.05em}
+.check-list li:first-child{border-top:0}
+.final{text-align:center;font-size:1.25em;font-weight:bold;margin:34px 0 0}
+
+.hero{display:flex;justify-content:center;margin:0 0 22px}
+.hero .hero-badge{width:84px;height:84px;border:8px solid #1d1d1d;box-sizing:content-box;border-radius:50%;background:#262626;display:flex;align-items:center;justify-content:center;color:#ddd}
+.hero .hero-badge svg{width:46px;height:46px}
+.check-list li{display:flex;align-items:center;gap:14px}
+.pv-ico{flex:0 0 auto;width:40px;height:40px;border-radius:11px;background:#2a2a2a;color:#ddd;display:flex;align-items:center;justify-content:center}
+.pv-ico svg{width:22px;height:22px}
+.pv-tick{margin-left:auto;width:20px;height:20px;color:#8d8d98;flex:0 0 auto}
+.final{display:flex;align-items:center;justify-content:center;gap:10px}
+.final svg.pv-tick{width:26px;height:26px;margin:0;color:#ddd}
 </style>
 </head>
+
 <body>
-<div class="wrap">
-<a class="back" href="index.html"><svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:1em;height:1em;vertical-align:-.12em;margin-right:.35em"><path d="M18 4.5v15L5.5 12z"/></svg> Home</a>
-<h1>Privacy</h1>
-<div class="card">
-<p>Everything happens 100% on your device. There is nothing to worry about.</p>
-<ul>
-<li>No trackers</li>
-<li>No ads</li>
-<li>No accounts</li>
-<li>Nothing collected, nothing sent</li>
-</ul>
-</div>
-<p class="big">You are good. And that's all.</p>
-</div>
+
+<section>
+
+    <a class="back" href="index.html"><svg class="back-arrow" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:1em;height:1em;vertical-align:-.12em;margin-right:.35em;flex-shrink:0"><path d="M18 4.5v15L5.5 12z"/></svg> Home</a>
+
+    <div class="hero"><div class="hero-badge pv-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.8l7.5 2.7v5.6c0 4.7-3.1 8.4-7.5 10.1-4.4-1.7-7.5-5.4-7.5-10.1V5.5z"/><rect x="8.6" y="10.6" width="6.8" height="5" rx="1.2"/><path d="M10 10.6V9a2 2 0 0 1 4 0v1.6"/></svg></div></div>
+
+    <h1 style="margin-bottom:30px">Privacy</h1>
+
+    <div class="card">
+        <h2>Everything Stays on Your Device</h2>
+
+        <p>
+            Everything here is 100% on your device. There is nothing to worry about.
+        </p>
+
+        <ul class="check-list">
+            <li><span class="pv-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.8"/><path d="M4 4l16 16"/></svg></span><span>No trackers</span><svg class="pv-tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></li>
+            <li><span class="pv-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M8 15l2.2-6 2.2 6M8.8 13h2.8M15.5 9v6"/><path d="M4 4l16 16"/></svg></span><span>No ads</span><svg class="pv-tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></li>
+            <li><span class="pv-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M5 20c.8-3.8 3.6-5.6 7-5.6s6.2 1.8 7 5.6"/><path d="M4 4l16 16"/></svg></span><span>No accounts</span><svg class="pv-tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></li>
+            <li><span class="pv-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 18.5h9.8a4 4 0 0 0 .6-7.95A5.6 5.6 0 0 0 6.6 9.6 4.5 4.5 0 0 0 7 18.5z"/><path d="M4 4l16 16"/></svg></span><span>Nothing collected, nothing sent</span><svg class="pv-tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></li>
+            </ul>
+    </div>
+
+    <p class="final pv-ico-line"><svg class="pv-tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>You are good. And that's all.</p>
+
+</section>
+
 </body>
 </html>

@@ -1007,6 +1007,52 @@ font-size:1em;
 color:#fff;
 }
 
+.footer-links .footer-nav{
+display:flex;
+flex-wrap:wrap;
+justify-content:center;
+max-width:600px;
+margin:0 auto 26px;
+padding:6px 0;
+border-top:1px solid #2c2c2c;
+border-bottom:1px solid #2c2c2c;
+}
+
+.footer-links .footer-nav a{
+position:relative;
+margin:0;
+padding:12px 18px;
+font-size:.95em;
+white-space:nowrap;
+}
+
+.footer-links .footer-nav a:not(:last-child)::after{
+content:"";
+position:absolute;
+right:0;
+top:50%;
+height:16px;
+width:1px;
+margin-top:-8px;
+background:#3a3a3a;
+}
+
+@media (max-width: 640px){
+.footer-links .footer-nav{max-width:420px;padding:0}
+.footer-links .footer-nav a{
+    flex:0 0 33.3333%;
+    box-sizing:border-box;
+    margin:0;
+    padding:13px 4px;
+    text-align:center;
+    font-size:.9rem;
+}
+.footer-links .footer-nav a:nth-child(3n)::after{display:none}
+.footer-links .footer-nav a:nth-child(n+4){border-top:1px solid #2c2c2c}
+}
+
+
+
 .search-empty{
 padding:18px 16px;
 color:#888;
@@ -1860,6 +1906,7 @@ user-select:none !important;
     font-size:.85rem;
     white-space:nowrap;
 }
+
     
     /* tighten overall section spacing on phones */
     section{
@@ -2775,17 +2822,14 @@ tag();
 
 <div class="footer-links">
 
+<nav class="footer-nav" aria-label="Site links">
 <a href="about.html">About</a>
-
 <a href="contact.html">Contact</a>
-
-    <a href="download.html">Download the App</a>
-
+<a href="download.html">Download</a>
 <a href="storage.html">Storage</a>
-
 <a href="settings.html">Settings</a>
-
 <a href="privacy.html">Privacy</a>
+</nav>
 
 <button class="share-button" onclick="shareSite()">
 Share Site
