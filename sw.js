@@ -1,6 +1,6 @@
 const CACHE_NAME = "lanthano-research-v6";
 
-// Filled by the "Offline App" option on support.html (offline-app.js).
+// Filled by the "Offline App" option on download.html (offline-app.js).
 // It is NOT deleted on activate, so the saved copy survives updates.
 const OFFLINE_CACHE = "lanthano-offline-app";
 
@@ -222,6 +222,12 @@ async function store(url, response) {
 async function fastFile(event) {
   const request = event.request;
   const url = request.url;
+
+  // The page asked for a fresh copy on purpose (saving a video to the device
+  // itself): hand it straight through, and don't keep a second copy here.
+  if (request.cache === "no-store" || request.cache === "reload") {
+    try { return await fetch(request); } catch (error) { return Response.error(); }
+  }
   const ranged = request.headers.has("range");
 
   let cached = await caches.match(url);

@@ -4259,6 +4259,16 @@ const isR2 =
     !!src &&
     params.get("source") === "r2";
 
+/* A video hosted on this site itself (like the featured one) is kept on the
+   device the same way as the bucket videos - it is just fetched from the
+   site instead of through the video server. It must be listed in
+   descriptions.json with "source": "site" (checked before anything is saved). */
+const isSiteVid =
+    !!src && !isR2 && !embed &&
+    !/^[a-z][a-z0-9+.-]*:/i.test(src) &&
+    (!params.get("source") || params.get("source") === "site") &&
+    /\.(mp4|webm|m4v|mov)$/i.test(src);
+
 const R2_GUARD_KEY = "r2VideoGuard";
 
 /* Generous on purpose: an ordinary visitor should never reach these. They
@@ -4505,7 +4515,7 @@ function saveConnectionOk(){
 
 // Fetches one whole video into storage. Returns "ok", "skip", "fail",
 // "quota" (out of room) or "stop" (the server said no / limit).
-async function saveOne(file, state, rec){
+async function saveOne(file, state, rec, site){
 
     const now = Date.now();
 
@@ -4516,10 +4526,10 @@ async function saveOne(file, state, rec){
     if(t.length >= SAVE_LIMITS.perFilePerDay) return "skip";
 
     state.day = (state.day || []).filter(n => now - n < DAY_MS);
-    if(state.day.length >= SAVE_LIMITS.perDay) return "stop";
+    if(!site && state.day.length >= SAVE_LIMITS.perDay) return "stop";
 
     t.push(now);
-    state.day.push(now);
+    if(!site) state.day.push(now);
     saveStateWrite(state);
 
     saveAbort = new AbortController();
@@ -4529,22 +4539,36 @@ async function saveOne(file, state, rec){
 
     try{
 
-        const tk = await fetch(
-            VIDEO_API + "/ticket?f=" + encodeURIComponent(file),
-            { cache: "no-store", signal: saveAbort.signal }
-        );
+        let res;
 
-        if(tk.status === 429 || tk.status === 503) return "stop";
-        if(!tk.ok) return "fail";
+        if(site){
 
-        const ticket = (await tk.json()).t;
+            // On this site: no ticket needed.
+            res = await fetch(
+                new URL(file.split("/").map(encodeURIComponent).join("/"), location.origin + "/").href,
+                { cache: "no-store", signal: saveAbort.signal }
+            );
 
-        const res = await fetch(
-            VIDEO_API + "/play?t=" + encodeURIComponent(ticket),
-            { signal: saveAbort.signal }
-        );
+        }else{
 
-        if(res.status === 429 || res.status === 503){ drop(res); return "stop"; }
+            const tk = await fetch(
+                VIDEO_API + "/ticket?f=" + encodeURIComponent(file),
+                { cache: "no-store", signal: saveAbort.signal }
+            );
+
+            if(tk.status === 429 || tk.status === 503) return "stop";
+            if(!tk.ok) return "fail";
+
+            const ticket = (await tk.json()).t;
+
+            res = await fetch(
+                VIDEO_API + "/play?t=" + encodeURIComponent(ticket),
+                { signal: saveAbort.signal }
+            );
+
+            if(res.status === 429 || res.status === 503){ drop(res); return "stop"; }
+
+        }
         if(res.status !== 200){ drop(res); return "fail"; }
 
         const type = (res.headers.get("content-type") || "").toLowerCase();
@@ -4630,9 +4654,10 @@ async function saveAllVideos(){
         Object.keys(data).forEach(k => {
             const list = (data[k].videos || []).filter(v =>
                 v && typeof v.file === "string" &&
-                !v.file.trim().startsWith("#$") && v.source !== "site"
+                !v.file.trim().startsWith("#$")
             ).map(v => ({
                 file: v.file.trim(),
+                site: v.source === "site",
                 ver: String(v.v === undefined ? "" : v.v),
                 group: v.group || ""
             }));
@@ -4648,6 +4673,7 @@ async function saveAllVideos(){
         });
 
         if(!mine) return;   // not a listed video: leave it alone
+        if(!isR2 && !mine.site) return;
 
         const cache = await caches.open(SAVE_CACHE);
 
@@ -4686,7 +4712,7 @@ async function saveAllVideos(){
             if(rec.gave) return "wait";
             if(rec.next && t0 < rec.next) return "wait";
 
-            const r = await saveOne(e.file, state, rec);
+            const r = await saveOne(e.file, state, rec, e.site);
             const t1 = Date.now();
 
             if(r === "ok"){
@@ -4756,7 +4782,7 @@ async function saveAllVideos(){
 // Begin a while after the video has actually started playing.
 video.addEventListener("playing", function(){
 
-    if(!isR2 || savingOff()) return;
+    if(!(isR2 || isSiteVid) || savingOff()) return;
     if(window.__saveScheduled) return;
     window.__saveScheduled = true;
 
@@ -4779,7 +4805,7 @@ video.addEventListener("playing", function(){
         btn.textContent = "Saving videos: " + (savingOff() ? "Off" : "On");
     };
 
-    if(isR2) btn.style.display = "";
+    if(isR2 || isSiteVid) btn.style.display = "";
     label();
 
     btn.addEventListener("click", async function(){
@@ -4962,8 +4988,11 @@ if(!src){
 
 }else{
 
-    video.src =
-        src;
+    const loadPlain = function(){
+        video.src =
+            src;
+        video.load();
+    };
 
     if(poster){
 
@@ -4975,7 +5004,12 @@ if(!src){
 
     }
 
-    video.load();
+    if(isSiteVid && storageAvailable()){
+        // A copy kept on this device plays first (no download at all).
+        playSaved(0).then(function(ok){ if(!ok) loadPlain(); }, loadPlain);
+    }else{
+        loadPlain();
+    }
 
 }
 
@@ -5571,6 +5605,16 @@ video.addEventListener(
 
             return;
 
+        }
+
+        // A kept copy of a site video that won't play: throw it away and
+        // use the normal file.
+        if(usingSaved && isSiteVid){
+            usingSaved = false;
+            savedDelete(src);
+            video.src = src;
+            video.load();
+            return;
         }
 
         statusText.textContent =
