@@ -50,8 +50,9 @@ jobs:
         run: |
           mkdir -p android-app
           node build-site-manifest.js --copy android-app/www
-          # Download, Storage and Install only belong on the website, not inside the app.
-          node prepare-app-bundle.js android-app/www
+          # Storage and Install only belong on the website, not inside the app. The app also
+          # never goes to the internet for its own pages, and handles the Back button.
+          node prepare-app-bundle.js android-app/www --local-only
 
       - name: Create the Android project
         working-directory: android-app
@@ -63,6 +64,7 @@ jobs:
             "version": "1.0.0",
             "dependencies": {
               "@capacitor/android": "^6.1.2",
+              "@capacitor/app": "^6.0.2",
               "@capacitor/cli": "^6.1.2",
               "@capacitor/core": "^6.1.2"
             }
@@ -89,19 +91,30 @@ jobs:
         continue-on-error: true
         working-directory: android-app
         run: |
+          # A proper Android icon: the picture centred on a dark square with room
+          # around it, so the phone can round it off without cutting anything.
           RES=android/app/src/main/res
           ICON="$GITHUB_WORKSPACE/file_000000000c40722f92b1fe6758cb4855.png"
-          rm -rf "$RES/mipmap-anydpi-v26"
+          BG="#111111"
+          IM=convert; command -v magick >/dev/null 2>&1 && IM=magick
+          # adaptive icon layers (108dp): picture takes about 60% of the square
+          for pair in mdpi:108 hdpi:162 xhdpi:216 xxhdpi:324 xxxhdpi:432; do
+            dir="${pair%%:*}"; px="${pair##*:}"; inner=$(( px * 60 / 100 ))
+            $IM "$ICON" -background none -resize "${inner}x${inner}" -gravity center -extent "${px}x${px}" "$RES/mipmap-$dir/ic_launcher_foreground.png"
+          done
+          # older phones (and the round one): the same picture on the dark square
           for pair in mdpi:48 hdpi:72 xhdpi:96 xxhdpi:144 xxxhdpi:192; do
-            dir="${pair%%:*}"; px="${pair##*:}"
-            for name in ic_launcher ic_launcher_round ic_launcher_foreground; do
-              if command -v magick >/dev/null 2>&1; then
-                magick "$ICON" -resize "${px}x${px}" "$RES/mipmap-$dir/$name.png"
-              else
-                convert "$ICON" -resize "${px}x${px}" "$RES/mipmap-$dir/$name.png"
-              fi
+            dir="${pair%%:*}"; px="${pair##*:}"; inner=$(( px * 78 / 100 ))
+            for name in ic_launcher ic_launcher_round; do
+              $IM "$ICON" -background none -resize "${inner}x${inner}" -gravity center -background "$BG" -extent "${px}x${px}" -flatten "$RES/mipmap-$dir/$name.png"
             done
           done
+          cat > "$RES/values/ic_launcher_background.xml" <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <resources>
+              <color name="ic_launcher_background">#111111</color>
+          </resources>
+          EOF
 
       - name: Number this version
         working-directory: android-app/android/app
