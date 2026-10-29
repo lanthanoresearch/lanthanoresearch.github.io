@@ -275,6 +275,23 @@ html{scroll-behavior:smooth}
 .card .note + .note{margin-top:6px}
 .row{transition:background .15s}
 
+.offlineLine{margin:12px 0 0;padding:10px 14px;border-radius:10px;background:#2a2a2a;color:#bbb;font-size:13.5px}
+.offlineLine:empty{display:none}
+.offlineLine.ready{background:#1f3226;color:#9fe0b4}
+.seeBtn{display:block;width:100%;margin-top:8px;padding:10px;background:transparent;border:1px solid #3a3a3a;border-radius:9px;color:#ddd;font:inherit;font-size:14px;cursor:pointer}
+.seeBtn:hover{background:#2a2a2a}
+.row button.small.danger,.small.danger{color:#ff8080;border-color:#5a2c2c;background:transparent}
+.row button.small:disabled{opacity:.5;cursor:default}
+.allWin{position:fixed;inset:0;z-index:9000;background:#141414;color:#eee;display:flex;flex-direction:column;font-family:inherit}
+.allHead{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid #2a2a2a;background:#1a1a1a;flex:0 0 auto}
+.allTitle{flex:1;min-width:0}
+.allTitle b{display:block;font-size:18px;color:#fff}
+.allTitle span{display:block;font-size:12.5px;color:#999;margin-top:2px}
+.allHead .small{background:transparent;border:1px solid #5a2c2c;color:#ff8080;border-radius:8px;padding:7px 12px;font:inherit;font-size:13px;cursor:pointer}
+.allClose{width:38px;height:38px;border-radius:50%;border:1px solid #383838;background:#262626;color:#eee;font-size:16px;cursor:pointer;flex:0 0 auto}
+.allClose:hover{background:#333}
+.allBody{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 16px 40px;max-width:820px;width:100%;box-sizing:border-box;margin:0 auto}
+.allBody .row{font-size:14px}
 .top-button{
     position:fixed;
     bottom:20px;
@@ -315,6 +332,7 @@ html{scroll-behavior:smooth}
         <p class="note">To load faster, your browser keeps copies of the videos, pictures, PDFs and pages you open. Everything stays on this device, and each kind below has its own switch.</p>
         <div class="bar"><i id="usedBar"></i></div>
         <p class="note" id="usedText">Checking&hellip;</p>
+        <p class="offlineLine" id="offlineLine"></p>
         <div class="tiles">
             <div class="tile"><b id="tVid">&hellip;</b><span>Videos</span></div>
             <div class="tile"><b id="tImg">&hellip;</b><span>Pictures</span></div>
@@ -342,6 +360,12 @@ html{scroll-behavior:smooth}
                 </span>
             </div>
         </div>
+        <div class="rows" style="margin-top:6px">
+            <div class="row">
+                <span>Save all videos now</span>
+                <button type="button" class="small" id="preNow">Save all now</button>
+            </div>
+        </div>
         <div class="bar" id="preBar" hidden><i id="preFill"></i></div>
         <p class="note" id="preNote"></p>
 
@@ -354,10 +378,7 @@ html{scroll-behavior:smooth}
         <p class="sumLine" id="vidSum"></p>
         <div class="listState loading" id="vidState">Loading&hellip;</div>
         <div class="list" id="vidList"></div>
-
-        <div class="actions">
-            <button type="button" class="btn danger" id="clearVideos" hidden>Remove saved videos</button>
-        </div>
+        <button type="button" class="seeBtn" id="vidSee" hidden>See all</button>
     </div>
 
     <div class="card">
@@ -372,9 +393,7 @@ html{scroll-behavior:smooth}
         <p class="sumLine" id="imgSum"></p>
         <div class="listState loading" id="imgState">Loading&hellip;</div>
         <div class="list" id="imgList"></div>
-        <div class="actions">
-            <button type="button" class="btn danger" id="clearImg" hidden>Remove saved pictures</button>
-        </div>
+        <button type="button" class="seeBtn" id="imgSee" hidden>See all</button>
     </div>
 
     <div class="card">
@@ -389,17 +408,22 @@ html{scroll-behavior:smooth}
         <p class="sumLine" id="pdfSum"></p>
         <div class="listState loading" id="pdfState">Loading&hellip;</div>
         <div class="list" id="pdfList"></div>
-        <div class="actions">
-            <button type="button" class="btn danger" id="clearPdf" hidden>Remove saved PDFs</button>
-        </div>
+        <button type="button" class="seeBtn" id="pdfSee" hidden>See all</button>
     </div>
 
     <div class="card">
-        <h2 class="hd"><span class="pv-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span>Pages and other files</h2>
-        <p class="note" id="siteText">Checking&hellip;</p>
-        <div class="actions">
-            <button type="button" class="btn danger" id="clearSite" hidden>Clear saved pages</button>
+        <h2 class="hd"><span class="pv-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span>Pages</h2>
+        <div class="rows">
+            <div class="row">
+                <span>Keep pages I visit</span>
+                <button type="button" class="toggleSwitch" id="pageToggle" role="switch" aria-checked="true" aria-label="Keep pages I visit"><span class="toggleKnob"></span></button>
+            </div>
         </div>
+        <p class="note" id="pageNote"></p>
+        <p class="sumLine" id="pageSum"></p>
+        <div class="listState loading" id="pageState">Loading&hellip;</div>
+        <div class="list" id="pageList"></div>
+        <button type="button" class="seeBtn" id="pageSee" hidden>See all</button>
     </div>
 
     <div class="card">
@@ -468,7 +492,7 @@ function backupSummary(){
 function paintKeepNote(){
   $("keepNote").innerHTML = keeping()
     ? 'On: a video is kept on this device the first time you watch it, so it replays faster.'
-    : 'Off: nothing new is kept. Videos already kept stay until you remove them below.';
+    : 'Off: nothing new is kept. Videos already kept stay until you remove them (See all).';
 }
 /* Sizes in the same units the home page uses (1 GB = 1000 MB). */
 function mb(n){
@@ -479,11 +503,24 @@ function mb(n){
 }
 function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
 function plural(n, one, many){ return n + " " + (n === 1 ? one : many); }
-function wait(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
 
 var IMG_RE = /\.(png|jpe?g|gif|webp|avif|bmp|ico|svg)$/i, PDF_RE = /\.pdf$/i;
 var sizeTable = {}, pdfTitles = {};
-var tileVals = {};
+var SHOW = 3;
+
+/* This page needs the newer site-tools.js; say so instead of failing quietly. */
+var ENGINE = !!(window.LT && LT.keepVideos && LT.filePrefs && LT.confirmStep);
+if(!ENGINE){
+  var warn = document.createElement("p");
+  warn.className = "note";
+  warn.style.cssText = "color:#f0a93a;margin:0 0 14px";
+  warn.textContent = "Some site files are out of date, so saving is paused here. Upload the newest site-tools.js and reload.";
+  $("usedText").parentNode.insertBefore(warn, $("usedText"));
+  ["saveToggle","preToggle","preNow","imgToggle","pdfToggle","pageToggle"].forEach(function(id){ var e = $(id); if(e) e.disabled = true; });
+  window.LT = window.LT || {};
+  LT.filePrefs = LT.filePrefs || {on: function(){ return true; }, set: function(){ return Promise.resolve(); }};
+  LT.confirmDelete = LT.confirmDelete || function(){ return Promise.resolve(false); };
+}
 
 async function loadMeta(){
   /* Video sizes come from the home page's own table (index.html), so there is
@@ -513,41 +550,40 @@ async function usage(){
     $("usedText").textContent = "Your browser does not report how much space is used.";
   }
 }
-function tile(id, bytes, count){
-  $(id).textContent = count ? mb(bytes) : "None";
-}
+function tile(id, bytes, count){ $(id).textContent = count ? mb(bytes) : "None"; }
 
-/* ---------- Lists (loaded one by one, so the first ones show right away) ---------- */
+/* ---------- Lists: the first three, and "See all" ---------- */
 var tokens = {};
-var SHOW = 40;
+var data = {vid: [], img: [], pdf: [], page: []};
 function pathOf(req){ try{ return new URL(req.url).pathname; }catch(e){ return req.url; } }
 function nameOf(req){ try{ return decodeURIComponent(pathOf(req).replace(/^\/(__video\/)?/, "")); }catch(e){ return pathOf(req); } }
 
-function renderRows(box, items, mk, all){
-  var frag = document.createDocumentFragment();
-  var shown = all ? items : items.slice(0, SHOW);
-  shown.forEach(function(x){ frag.appendChild(mk(x)); });
-  if(!all && items.length > SHOW){
-    var more = document.createElement("button");
-    more.type = "button"; more.className = "moreBtn";
-    more.textContent = "Show all " + items.length;
-    more.addEventListener("click", function(){ renderRows(box, items, mk, true); });
-    frag.appendChild(more);
+/* A row. onRemove is only given inside the "See all" window. */
+function rowFor(item, label, href, onRemove, removeTitle, removeText){
+  var row = document.createElement("div");
+  row.className = "row";
+  var nm = href ? '<a href="' + esc(href) + '" title="' + esc(nameOf(item.req)) + '">' + esc(label) + '</a>' : '<span title="' + esc(nameOf(item.req)) + '">' + esc(label) + '</span>';
+  row.innerHTML = '<div class="name">' + nm + '</div><div class="size">' + (item.size ? mb(item.size) : "") + '</div>' + (onRemove ? '<button type="button" class="small">Remove</button>' : "");
+  if(onRemove){
+    row.querySelector("button").addEventListener("click", async function(){
+      if(!(await LT.confirmDelete(removeTitle, removeText, "Remove"))) return;
+      await onRemove(item, row);
+    });
   }
-  box.innerHTML = "";
-  box.appendChild(frag);
+  return row;
 }
 
-/* kind: "vid" | "img" | "pdf". Returns the items, or null if a newer load took over. */
-async function fillList(kind, cacheName, test, mk, quiet, emptyText){
+/* kind: "vid" | "img" | "pdf" | "page". The first rows appear as soon as they are read. */
+async function fillList(kind, cacheName, test, mk, quiet, emptyText, sorter){
   var tok = tokens[kind] = (tokens[kind] || 0) + 1;
   var box = $(kind + "List"), state = $(kind + "State");
   if(!quiet){
     box.innerHTML = "";
     state.className = "listState loading";
     state.textContent = "Loading…";
+    $(kind + "See").hidden = true;
   }
-  var items = [];
+  var items = [], shown = 0;
   try{
     if("caches" in window && await caches.has(cacheName)){
       var c = await caches.open(cacheName);
@@ -559,48 +595,94 @@ async function fillList(kind, cacheName, test, mk, quiet, emptyText){
         if(!len && res && cacheName !== VIDEO_CACHE){ try{ len = (await res.clone().blob()).size; }catch(e){} }
         var item = {req: keys[i], size: len || 0};
         items.push(item);
-        if(!quiet && items.length <= SHOW){
-          if(items.length === 1) state.textContent = "Loading…";
-          box.appendChild(mk(item));
-        }
+        if(!quiet && shown < SHOW){ box.appendChild(mk(item, false)); shown++; }
       }
     }
   }catch(e){}
   if(tok !== tokens[kind]) return null;
-  items.sort(function(a, b){ return b.size - a.size; });
-  renderRows(box, items, mk, false);
+  items.sort(sorter || function(a, b){ return b.size - a.size; });
+  box.innerHTML = "";
+  items.slice(0, SHOW).forEach(function(x){ box.appendChild(mk(x, false)); });
   state.className = "listState";
   state.textContent = items.length ? "" : emptyText;
+  var see = $(kind + "See");
+  see.hidden = items.length <= SHOW;
+  see.textContent = "See all " + items.length;
+  data[kind] = items;
   return items;
 }
 
-function rowFor(item, label, href, targetBlank, onRemove, removeTitle, removeText){
-  var row = document.createElement("div");
-  row.className = "row";
-  row.innerHTML = '<div class="name"><a href="' + esc(href) + '"' + (targetBlank ? ' target="_blank" rel="noopener"' : '') + ' title="' + esc(nameOf(item.req)) + '">' + esc(label) +
-    '</a></div><div class="size">' + (item.size ? mb(item.size) : "") + '</div><button type="button" class="small">Remove</button>';
-  row.querySelector("button").addEventListener("click", async function(){
-    if(!(await LT.confirmDelete(removeTitle, removeText, "Remove"))) return;
-    await onRemove(item);
+/* ---------- The full-screen "See all" window (the only place to remove things) ---------- */
+var allWin = null;
+function closeAll(){
+  if(!allWin) return;
+  document.removeEventListener("keydown", allWin.key);
+  allWin.el.remove();
+  document.documentElement.style.overflow = allWin.prevOverflow;
+  allWin = null;
+}
+function openAll(kind){
+  var cfg = CFG[kind];
+  if(!cfg || allWin) return;
+  var el = document.createElement("div");
+  el.className = "allWin";
+  el.setAttribute("role", "dialog");
+  el.setAttribute("aria-modal", "true");
+  el.setAttribute("aria-label", cfg.title);
+  el.innerHTML =
+    '<div class="allHead"><div class="allTitle"><b>' + esc(cfg.title) + '</b><span id="allCount"></span></div>' +
+    '<button type="button" class="small danger" id="allClear">Remove all</button>' +
+    '<button type="button" class="allClose" aria-label="Close">✕</button></div>' +
+    '<div class="allBody"><div class="list" id="allList"></div></div>';
+  document.body.appendChild(el);
+  var prevOverflow = document.documentElement.style.overflow;
+  document.documentElement.style.overflow = "hidden";
+  var key = function(e){ if(e.key === "Escape"){ var m = document.querySelector(".ltModalBack"); if(!m) closeAll(); } };
+  document.addEventListener("keydown", key);
+  allWin = {el: el, kind: kind, key: key, prevOverflow: prevOverflow};
+  el.querySelector(".allClose").addEventListener("click", closeAll);
+  el.querySelector("#allClear").addEventListener("click", async function(){
+    if(!(await LT.confirmDelete(cfg.clearTitle, cfg.clearText(), "Remove all"))) return;
+    await cfg.clearAll();
+    await refresh(true);
+    renderAll();
   });
-  return row;
+  renderAll();
+  el.querySelector(".allClose").focus();
+}
+function renderAll(){
+  if(!allWin) return;
+  var cfg = CFG[allWin.kind], items = data[allWin.kind] || [];
+  var list = allWin.el.querySelector("#allList");
+  allWin.el.querySelector("#allCount").textContent = plural(items.length, "item", "items") + (items.length ? " · " + mb(items.reduce(function(n, x){ return n + x.size; }, 0)) : "");
+  allWin.el.querySelector("#allClear").hidden = !items.length;
+  list.innerHTML = "";
+  if(!items.length){ list.innerHTML = '<div class="listState">Nothing saved here.</div>'; return; }
+  var frag = document.createDocumentFragment();
+  items.forEach(function(x){ frag.appendChild(cfg.mk(x, true)); });
+  list.appendChild(frag);
+}
+/* Called by a row's Remove in the window: drop the row now, tidy the page behind it. */
+async function removedOne(row){
+  if(row && row.parentNode) row.parentNode.removeChild(row);
+  await refresh(true);
+  renderAll();
 }
 
 /* ---------- Videos ---------- */
 var catalog = [];
 var savedFiles = {};
 var running = null;
-var vidTotals = {count: 0, bytes: 0};
 
-function keepOn(){ return LT.keepVideos.on(); }
+function keepOn(){ return ENGINE && LT.keepVideos.on(); }
 
-function videoRow(item){
+function videoRow(item, removable){
   var file = nameOf(item.req);
   var info = null;
   for(var i = 0; i < catalog.length; i++){ if(catalog[i].file === file){ info = catalog[i]; break; } }
   var title = (info && info.title) || file.split("/").pop().replace(/\.[a-z0-9]+$/i, "");
   var href = "video.html?video=" + encodeURIComponent(file) + (info && info.site ? "" : "&source=r2&title=" + encodeURIComponent(title));
-  return rowFor(item, title, href, false, async function(x){
+  return rowFor(item, title, href, removable ? async function(x, row){
     var c = await caches.open(VIDEO_CACHE);
     await c.delete(x.req);
     try{
@@ -609,8 +691,8 @@ function videoRow(item){
       if(keepOn()){ s.rec = s.rec || {}; s.rec[file] = {kt: Date.now()}; }
       localStorage.setItem(STATE_KEY, JSON.stringify(s));
     }catch(e){}
-    refresh();
-  }, "Remove this video?",
+    removedOne(row);
+  } : null, "Remove this video?",
   "“" + title + "” will be removed from this device. " + (keepOn() ? "“Keep all videos saved” will save it again tomorrow unless you turn that off. " : "") +
   (keeping() ? "It downloads again if you watch it." : "It will not be saved again while keeping videos is turned off."));
 }
@@ -618,14 +700,12 @@ function videoRow(item){
 function paintVideoSummary(items){
   var total = catalog.reduce(function(n, v){ return n + vidSize(v); }, 0);
   var have = items.length, bytes = items.reduce(function(n, x){ return n + x.size; }, 0);
-  vidTotals = {count: have, bytes: bytes};
   savedFiles = {};
   items.forEach(function(x){ savedFiles[nameOf(x.req)] = 1; });
   var n = catalog.length;
   $("vidSum").textContent = n
     ? plural(have, "video", "videos") + " saved (" + mb(bytes) + ") of " + n + " on the site, about " + mb(total) + " in all."
     : plural(have, "video", "videos") + " saved (" + mb(bytes) + ").";
-  $("clearVideos").hidden = !have;
   tile("tVid", bytes, have);
   paintPre();
 }
@@ -637,21 +717,26 @@ async function videos(quiet){
   if(items) paintVideoSummary(items);
 }
 
-/* ---------- Keep all videos saved (switch) ----------
-   The work is done by LT.keepVideos (site-tools.js): each video at most once a
-   day, never more than 40 starts a day, one at a time, and "limit reached" or a
-   full disk pauses it for 6 hours. */
+/* ---------- Keep all videos saved (switch) and Save all now ----------
+   The work is done by LT.keepVideos (site-tools.js). With the switch on, each
+   missing video is tried at most once a day, never more than 40 starts a day,
+   one at a time; "limit reached" or a full disk pauses it for 6 hours.
+   "Save all now" is a one-time run that tries everything missing right away. */
 function paintPre(why){
-  var tg = $("preToggle"), note = $("preNote");
+  var tg = $("preToggle"), note = $("preNote"), now = $("preNow");
   var on = keepOn();
   tg.classList.toggle("active", on);
   tg.setAttribute("aria-checked", on ? "true" : "false");
-  if(!("caches" in window)){ tg.hidden = true; note.textContent = "This browser can’t keep videos on the device."; return; }
-  if(running) return;
+  if(!("caches" in window)){ tg.hidden = true; now.hidden = true; note.textContent = "This browser can’t keep videos on the device."; return; }
   var have = catalog.filter(function(v){ return savedFiles[v.file]; }).length;
+  now.disabled = !ENGINE || !!running || !catalog.length || have >= catalog.length;
+  now.textContent = have >= catalog.length && catalog.length ? "All saved" : "Save all now";
+  if(running) return;
   var base;
   if(!on){
-    base = "Off. Turn on to keep every video on this device, so they all play right away, even offline.";
+    base = have >= catalog.length && catalog.length
+      ? "Off. All " + catalog.length + " videos are saved on this device right now."
+      : "Off. Turn on to keep every video saved on this device, or tap Save all now to save the missing ones once.";
   }else if(catalog.length && have >= catalog.length){
     base = "On. All " + catalog.length + " videos are saved on this device.";
   }else{
@@ -670,17 +755,20 @@ var WHY = {
 
 function activeShow(on){ $("activeSave").hidden = !on; }
 
-async function preRun(){
-  if(running || !keepOn()) return;
-  var info = await LT.keepVideos.todo();
+async function preRun(manual){
+  if(running || !ENGINE) return;
+  if(!manual && !keepOn()) return;
+  var info = await LT.keepVideos.todo(!!manual);
   if(!info.todo.length){ paintPre(info.missing ? "The rest were tried recently and will be tried again tomorrow." : ""); return; }
   var ctl = new AbortController();
   running = {ctl: ctl};
+  paintPre();
   var bar = $("preBar"), fill = $("preFill"), note = $("preNote"), stop = $("preStop");
   stop.hidden = false;
   bar.hidden = false;
   fill.style.width = "0";
   var res = await LT.keepVideos.run({
+    manual: !!manual,
     signal: ctl.signal,
     onItem: function(i, n, v, list){
       note.textContent = "Saving " + (i + 1) + " of " + n + ".";
@@ -708,7 +796,7 @@ async function preRun(){
   bar.hidden = true;
   activeShow(false);
   await refresh(true);
-  var msg = plural(res.saved, "video", "videos") + " saved" + (res.failed ? ", " + res.failed + " couldn’t be saved (will retry tomorrow)" : "") + ".";
+  var msg = plural(res.saved, "video", "videos") + " saved" + (res.failed ? ", " + res.failed + " couldn’t be saved" + (manual ? "" : " (will retry tomorrow)") : "") + ".";
   if(res.saved || res.failed){ try{ LT.toast(msg); }catch(e){} }
   if(res.why === "busy") paintPre("Another tab is already saving videos.");
   else paintPre((res.saved || res.failed ? msg + " " : "") + (WHY[res.why] || ""));
@@ -716,164 +804,181 @@ async function preRun(){
 
 $("preStop").addEventListener("click", function(){ if(running){ running.ctl.abort(); $("preNote").textContent = "Stopping…"; } });
 
-$("preToggle").addEventListener("click", async function(){
-  if(keepOn()){
-    LT.keepVideos.set(false);
-    if(running) running.ctl.abort();
-    paintPre();
-    return;
-  }
-  var info = await LT.keepVideos.todo();
+async function confirmSaveAll(manual){
+  var info = await LT.keepVideos.todo(!!manual);
   var known = info.todo.reduce(function(n, v){ return n + vidSize(v); }, 0);
   var c = navigator.connection;
   var metered = c && (c.saveData || c.type === "cellular");
-  var go = info.todo.length ? await LT.confirmStep(
-    "Keep all videos saved?",
-    "This downloads " + (info.todo.length === 1 ? "1 video" : info.todo.length + " videos") + " to this device now" + (known ? " (about " + mb(known) + " in all)" : "") + ", and some are large. After that it only fills in what is missing, trying each video at most once a day. Keep this page open while it works; you can stop it any time." +
+  if(!info.todo.length) return true;
+  return LT.confirmStep(
+    manual ? "Save all videos now?" : "Keep all videos saved?",
+    "This downloads " + (info.todo.length === 1 ? "1 video" : info.todo.length + " videos") + " to this device now" + (known ? " (about " + mb(known) + " in all)" : "") + ", and some are large. " +
+      (manual ? "" : "After that it only fills in what is missing, trying each video at most once a day. ") +
+      "Keep this page open while it works; you can stop it any time." +
       (metered ? " You appear to be on mobile data or data saver, so Wi-Fi is better." : ""),
-    "Turn on", false) : true;
-  if(!go) return;
+    manual ? "Save videos" : "Turn on", false);
+}
+
+$("preToggle").addEventListener("click", async function(){
+  if(!ENGINE) return;
+  if(keepOn()){
+    LT.keepVideos.set(false);
+    if(running) running.ctl.abort();
+    paintPre(); paintOffline();
+    return;
+  }
+  if(!(await confirmSaveAll(false))) return;
   LT.keepVideos.set(true);
-  paintPre();
-  preRun();
+  paintPre(); paintOffline();
+  preRun(false);
+});
+$("preNow").addEventListener("click", async function(){
+  if(!ENGINE || running) return;
+  if(!(await confirmSaveAll(true))) return;
+  preRun(true);
 });
 
-$("clearVideos").addEventListener("click", async function(){
-  if(!(await LT.confirmDelete("Remove all saved videos?", "Every video saved on this device will be removed" + (keepOn() ? ", and “Keep all videos saved” will be turned off" : "") + ". " + (keeping() ? "They download again if you watch them." : "They will not be saved again while keeping videos is turned off."), "Remove all videos"))) return;
-  LT.keepVideos.set(false);
-  if(running){ running.ctl.abort(); }
-  await caches.delete(VIDEO_CACHE);
-  try{ localStorage.removeItem(STATE_KEY); }catch(e){}
-  refresh();
-});
-
-/* ---------- Pictures and PDFs ---------- */
-function removeFromSite(items, label){ return async function(){
+/* ---------- Pictures, PDFs and pages ---------- */
+function bytesOf(items){ return items.reduce(function(n, x){ return n + x.size; }, 0); }
+async function removeFromSite(items){
   var c = await caches.open(SITE_CACHE);
   for(var i = 0; i < items.length; i++){ await c.delete(items[i].req); }
-  refresh();
-}; }
+}
+async function removeOneSite(x){ await (await caches.open(SITE_CACHE)).delete(x.req); }
 
-var imgItems = [], pdfItems = [];
-
-function imageRow(item){
+function imageRow(item, removable){
   var name = nameOf(item.req);
   var short = name.split("/").pop();
-  return rowFor(item, short, "image.html?image=" + encodeURIComponent(name), false, async function(x){
-    await (await caches.open(SITE_CACHE)).delete(x.req);
-    refresh();
-  }, "Remove this picture?", "“" + short + "” will be removed from this device. " + (LT.filePrefs.on("images") ? "It is saved again when you view it." : "It will not be saved again while keeping pictures is turned off."));
+  return rowFor(item, short, "image.html?image=" + encodeURIComponent(name), removable ? async function(x, row){
+    await removeOneSite(x); removedOne(row);
+  } : null, "Remove this picture?", "“" + short + "” will be removed from this device. " + (LT.filePrefs.on("images") ? "It is saved again when you view it." : "It will not be saved again while keeping pictures is turned off."));
 }
-function pdfRow(item){
+function pdfRow(item, removable){
   var name = nameOf(item.req);
   var title = pdfTitles[name] || name.split("/").pop().replace(/\.pdf$/i, "");
-  return rowFor(item, title, "pdf.html?file=" + encodeURIComponent(name), false, async function(x){
-    await (await caches.open(SITE_CACHE)).delete(x.req);
-    refresh();
-  }, "Remove this PDF?", "“" + title + "” will be removed from this device. " + (LT.filePrefs.on("pdfs") ? "It is saved again when you open it." : "It will not be saved again while keeping PDFs is turned off."));
+  return rowFor(item, title, "pdf.html?file=" + encodeURIComponent(name), removable ? async function(x, row){
+    await removeOneSite(x); removedOne(row);
+  } : null, "Remove this PDF?", "“" + title + "” will be removed from this device. " + (LT.filePrefs.on("pdfs") ? "It is saved again when you open it." : "It will not be saved again while keeping PDFs is turned off."));
+}
+var HTML_RE = /\.html?$/i;
+function pageLabel(name){
+  if(!name || name === "/") return "Home";
+  var base = name.split("/").pop();
+  if(base === "" || /^index\.html?$/i.test(base)) return "Home";
+  if(!HTML_RE.test(base)) return base;
+  return base.replace(HTML_RE, "").replace(/[-_]+/g, " ").replace(/\b\w/g, function(c){ return c.toUpperCase(); });
+}
+function pageRow(item, removable){
+  var name = nameOf(item.req);
+  var isPage = HTML_RE.test(name) || name === "" || /\/$/.test(pathOf(item.req));
+  var label = pageLabel(name);
+  return rowFor(item, label, isPage ? (name === "" ? "index.html" : name) : null, removable ? async function(x, row){
+    await removeOneSite(x); removedOne(row);
+  } : null, "Remove this saved " + (isPage ? "page" : "file") + "?", "“" + label + "” will be removed from this device. " + (LT.filePrefs.on("pages") ? "It is saved again when you visit it." : "It will not be saved again while keeping pages is turned off."));
 }
 
 async function pictures(quiet){
   var items = await fillList("img", SITE_CACHE, function(p){ return IMG_RE.test(p); }, imageRow, quiet,
     LT.filePrefs.on("images") ? "No pictures saved yet. A picture is saved the first time you view it." : "No pictures saved. Keeping pictures is turned off above.");
   if(!items) return;
-  imgItems = items;
-  var bytes = items.reduce(function(n, x){ return n + x.size; }, 0);
-  $("imgSum").textContent = items.length ? plural(items.length, "picture", "pictures") + " saved (" + mb(bytes) + ")." : "";
-  $("clearImg").hidden = !items.length;
-  tile("tImg", bytes, items.length);
+  $("imgSum").textContent = items.length ? plural(items.length, "picture", "pictures") + " saved (" + mb(bytesOf(items)) + ")." : "";
+  tile("tImg", bytesOf(items), items.length);
 }
 async function pdfs(quiet){
   var items = await fillList("pdf", SITE_CACHE, function(p){ return PDF_RE.test(p); }, pdfRow, quiet,
     LT.filePrefs.on("pdfs") ? "No PDFs saved yet. A PDF is saved the first time you open it." : "No PDFs saved. Keeping PDFs is turned off above.");
   if(!items) return;
-  pdfItems = items;
-  var bytes = items.reduce(function(n, x){ return n + x.size; }, 0);
-  $("pdfSum").textContent = items.length ? plural(items.length, "PDF", "PDFs") + " saved (" + mb(bytes) + ")." : "";
-  $("clearPdf").hidden = !items.length;
-  tile("tPdf", bytes, items.length);
+  $("pdfSum").textContent = items.length ? plural(items.length, "PDF", "PDFs") + " saved (" + mb(bytesOf(items)) + ")." : "";
+  tile("tPdf", bytesOf(items), items.length);
+}
+async function pages(quiet){
+  var items = await fillList("page", SITE_CACHE, function(p){ return !IMG_RE.test(p) && !PDF_RE.test(p); }, pageRow, quiet,
+    LT.filePrefs.on("pages") ? "No pages saved yet. A page is saved, with everything it needs, when you visit it." : "No pages saved. Keeping pages is turned off above.",
+    function(a, b){
+      var ap = HTML_RE.test(pathOf(a.req)) || /\/$/.test(pathOf(a.req)), bp = HTML_RE.test(pathOf(b.req)) || /\/$/.test(pathOf(b.req));
+      if(ap !== bp) return ap ? -1 : 1;
+      return ap ? pageLabel(nameOf(a.req)).localeCompare(pageLabel(nameOf(b.req))) : b.size - a.size;
+    });
+  if(!items) return;
+  var n = items.filter(function(x){ return HTML_RE.test(pathOf(x.req)) || /\/$/.test(pathOf(x.req)); }).length;
+  $("pageSum").textContent = items.length ? plural(n, "page", "pages") + " saved, with " + plural(items.length - n, "file", "files") + " they need (" + mb(bytesOf(items)) + " in all)." : "";
+  tile("tPage", bytesOf(items), n);
 }
 
-function bindFileToggle(kind, id, noteId, onText, offText){
+var CFG = {
+  vid: {title: "Saved videos", mk: videoRow, clearTitle: "Remove all saved videos?",
+    clearText: function(){ return "Every video saved on this device will be removed" + (keepOn() ? ", and “Keep all videos saved” will be turned off" : "") + ". " + (keeping() ? "They download again if you watch them." : "They will not be saved again while keeping videos is turned off."); },
+    clearAll: async function(){
+      LT.keepVideos.set(false);
+      if(running){ running.ctl.abort(); }
+      await caches.delete(VIDEO_CACHE);
+      try{ localStorage.removeItem(STATE_KEY); }catch(e){}
+    }},
+  img: {title: "Saved pictures", mk: imageRow, clearTitle: "Remove all saved pictures?",
+    clearText: function(){ return "Every picture saved on this device will be removed. " + (LT.filePrefs.on("images") ? "They are saved again as you view them." : "They will not be saved again while keeping pictures is turned off."); },
+    clearAll: function(){ return removeFromSite(data.img); }},
+  pdf: {title: "Saved PDFs", mk: pdfRow, clearTitle: "Remove all saved PDFs?",
+    clearText: function(){ return "Every PDF saved on this device will be removed. " + (LT.filePrefs.on("pdfs") ? "They are saved again as you open them." : "They will not be saved again while keeping PDFs is turned off."); },
+    clearAll: function(){ return removeFromSite(data.pdf); }},
+  page: {title: "Saved pages", mk: pageRow, clearTitle: "Remove all saved pages?",
+    clearText: function(){ return "Saved pages and the files they need will be removed from this device. " + (LT.filePrefs.on("pages") ? "They are saved again as you visit them." : "They will not be saved again while keeping pages is turned off.") + " Pictures and PDFs are kept separately."; },
+    clearAll: function(){ return removeFromSite(data.page); }}
+};
+["vid", "img", "pdf", "page"].forEach(function(k){ $(k + "See").addEventListener("click", function(){ openAll(k); }); });
+
+/* The switches for pictures, PDFs and pages. */
+function bindFileToggle(kind, id, noteId, onText, offText, reload){
   var tg = $(id);
   function paint(){
-    var on = LT.filePrefs.on(kind);
+    var on = ENGINE && LT.filePrefs.on(kind);
     tg.classList.toggle("active", on);
     tg.setAttribute("aria-checked", on ? "true" : "false");
     $(noteId).textContent = on ? onText : offText;
   }
   tg.addEventListener("click", async function(){
+    if(!ENGINE) return;
     await LT.filePrefs.set(kind, !LT.filePrefs.on(kind));
-    paint();
-    kind === "images" ? pictures(true) : pdfs(true);
+    paint(); paintOffline();
+    reload(true);
   });
   return paint;
 }
 var paintImgToggle = bindFileToggle("images", "imgToggle", "imgNote",
   "On: a picture is kept on this device the first time you view it, so it shows faster and works offline.",
-  "Off: no new pictures are kept. Pictures already kept stay until you remove them below.");
+  "Off: no new pictures are kept. Pictures already kept stay until you remove them (See all).", pictures);
 var paintPdfToggle = bindFileToggle("pdfs", "pdfToggle", "pdfNote",
   "On: a PDF is kept on this device the first time you open it, so it opens faster and works offline.",
-  "Off: no new PDFs are kept. PDFs already kept stay until you remove them below.");
+  "Off: no new PDFs are kept. PDFs already kept stay until you remove them (See all).", pdfs);
+var paintPageToggle = bindFileToggle("pages", "pageToggle", "pageNote",
+  "On: every page you visit is kept on this device along with the files it needs (styles, scripts, data and pictures on it), so it opens fast and works offline.",
+  "Off: no new pages are kept. Pages already kept stay until you remove them (See all).", pages);
 
-$("clearImg").addEventListener("click", async function(){
-  if(!(await LT.confirmDelete("Remove all saved pictures?", "Every picture saved on this device will be removed. " + (LT.filePrefs.on("images") ? "They are saved again as you view them." : "They will not be saved again while keeping pictures is turned off."), "Remove all pictures"))) return;
-  await removeFromSite(imgItems)();
-});
-$("clearPdf").addEventListener("click", async function(){
-  if(!(await LT.confirmDelete("Remove all saved PDFs?", "Every PDF saved on this device will be removed. " + (LT.filePrefs.on("pdfs") ? "They are saved again as you open them." : "They will not be saved again while keeping PDFs is turned off."), "Remove all PDFs"))) return;
-  await removeFromSite(pdfItems)();
-});
-
-/* ---------- Pages and other files ---------- */
-async function site(){
-  var n = 0, bytes = 0;
-  try{
-    if("caches" in window && await caches.has(SITE_CACHE)){
-      var c = await caches.open(SITE_CACHE);
-      var keys = await c.keys();
-      for(var i = 0; i < keys.length; i++){
-        var p = pathOf(keys[i]);
-        if(IMG_RE.test(p) || PDF_RE.test(p)) continue;
-        var res = await c.match(keys[i]);
-        var len = res ? parseInt(res.headers.get("content-length") || "0", 10) : 0;
-        if(!len && res){ try{ len = (await res.clone().blob()).size; }catch(e){} }
-        n++; bytes += len;
-      }
-    }
-  }catch(e){}
-  $("siteText").textContent = n
-    ? plural(n, "page or file", "pages and files") + " saved (" + mb(bytes) + "). They are saved as you look at them and replaced when the site is updated."
-    : "No pages saved yet.";
-  $("clearSite").hidden = !n;
-  tile("tPage", bytes, n);
+/* One line that says whether everything you visit is being saved. */
+function paintOffline(){
+  var all = ENGINE && keeping() && keepOn() && LT.filePrefs.on("images") && LT.filePrefs.on("pdfs") && LT.filePrefs.on("pages");
+  var el = $("offlineLine");
+  el.className = "offlineLine" + (all ? " ready" : "");
+  el.textContent = !ENGINE ? "" : all
+    ? "Offline mode is on: everything you visit is saved on this device, and every video is kept."
+    : "Turn on every switch below and everything you visit is saved for offline use.";
 }
-$("clearSite").addEventListener("click", async function(){
-  if(!(await LT.confirmDelete("Clear saved pages?", "Saved pages, scripts and other site files will be cleared from this device. They are saved again as you open them. Pictures and PDFs are kept separately above.", "Clear saved pages"))) return;
-  var c = await caches.open(SITE_CACHE);
-  var keys = await c.keys();
-  for(var i = 0; i < keys.length; i++){
-    var p = pathOf(keys[i]);
-    if(!IMG_RE.test(p) && !PDF_RE.test(p)) await c.delete(keys[i]);
-  }
-  refresh();
-});
 
 async function refresh(quiet){
   paintToggle();
-  paintImgToggle();
-  paintPdfToggle();
+  if(ENGINE){ paintImgToggle(); paintPdfToggle(); paintPageToggle(); }
   backupSummary();
   paintKeepNote();
+  paintOffline();
   usage();
-  await Promise.all([videos(quiet), pictures(quiet), pdfs(quiet), site()]);
+  await Promise.all([videos(quiet), pictures(quiet), pdfs(quiet), pages(quiet)]);
   usage();
+  renderAll();
 }
 
 $("bkExport").addEventListener("click", function(){ window.LT && LT.exportBackup(); setTimeout(backupSummary, 200); });
 $("bkImport").addEventListener("click", function(){ window.LT && LT.importBackup(); });
 
-loadMeta().then(async function(){ catalog = await LT.keepVideos.catalog(); await refresh(); if(keepOn()) preRun(); });
+loadMeta().then(async function(){ if(ENGINE) catalog = await LT.keepVideos.catalog(); await refresh(); if(keepOn()) preRun(false); });
 window.addEventListener("pageshow", function(e){ if(e.persisted) refresh(); });
 })();
 </script>

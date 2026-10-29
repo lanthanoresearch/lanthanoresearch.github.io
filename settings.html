@@ -451,7 +451,6 @@ buildSearch();
   var b=document.getElementById("updateBtn"), n=document.getElementById("updateNote");
   var box=document.getElementById("verBox"), title=document.getElementById("verTitle"), sub=document.getElementById("verSub");
   if(!b) return;
-  var CHECKED = ["lanthano-site-files","lanthano-offline-app","lanthano-research-v6"];
   var TEXT = /\.(html|js|mjs|css|json)$/i;
   var busy = false;
 
@@ -465,39 +464,56 @@ buildSearch();
   function hex(buf){ return Array.prototype.map.call(new Uint8Array(buf), function(x){ return x.toString(16).padStart(2, "0"); }).join(""); }
   async function sha1(buf){ return hex(await crypto.subtle.digest("SHA-1", buf)); }
 
-  /* The live site publishes a list of every file with a fingerprint
-     (site-files.json). The copies this browser has saved are compared with it. */
+  /* Every page and script this browser has saved is compared with the live
+     one. The server is asked "has it changed?" (a tiny answer when it hasn't);
+     if it sends the file anyway, the two are compared byte for byte. Nothing
+     needs to be published for this to work. */
   async function check(){
-    var m;
-    try{
-      var r = await fetch("site-files.json?" + Date.now(), {cache: "no-store"});
-      if(!r.ok) throw new Error("no list");
-      m = await r.json();
-    }catch(e){ return {state: "error"}; }
-    var files = {}, ids = [];
-    (m.files || []).forEach(function(f){ files[f.path] = f.hash; ids.push(f.path + ":" + f.hash); });
-    var latest = (await sha1(new TextEncoder().encode(ids.join("\n")))).slice(0, 7);
-    var changed = [], looked = 0;
+    var jobs = [], seen = {};
     try{
       var names = await caches.keys();
       for(var i = 0; i < names.length; i++){
-        if(CHECKED.indexOf(names[i]) < 0) continue;
+        if(names[i] === "lanthano-saved-videos" || names[i] === "lanthano-prefs") continue;
         var c = await caches.open(names[i]);
         var keys = await c.keys();
-        for(var j = 0; j < keys.length; j++){
-          var path; try{ path = decodeURIComponent(new URL(keys[j].url).pathname.replace(/^\//, "")); }catch(e){ continue; }
-          if(!files[path] || !TEXT.test(path) || changed.indexOf(path) >= 0) continue;
-          var res = await c.match(keys[j]);
-          if(!res) continue;
-          looked++;
-          var h = (await sha1(await res.clone().arrayBuffer())).slice(0, 16);
-          if(h !== files[path]) changed.push(path);
-        }
+        keys.forEach(function(k){
+          var p; try{ p = new URL(k.url).pathname; }catch(e){ return; }
+          if(!(TEXT.test(p) || /\/$/.test(p)) || seen[k.url]) return;
+          seen[k.url] = 1;
+          jobs.push({c: c, k: k});
+        });
       }
     }catch(e){}
-    var waiting = false;
-    try{ var reg = await navigator.serviceWorker.getRegistration(); waiting = !!(reg && reg.waiting); }catch(e){}
-    return {state: (changed.length || waiting) ? "outdated" : "current", changed: changed.length, latest: latest, looked: looked, total: (m.files || []).length};
+    var changed = [], failed = false, idx = 0;
+    async function worker(){
+      while(idx < jobs.length && !failed){
+        var j = jobs[idx++];
+        try{
+          var cached = await j.c.match(j.k);
+          if(!cached) continue;
+          var h = {"x-lt-check": "1"};
+          var et = cached.headers.get("etag"), lm = cached.headers.get("last-modified");
+          if(et) h["If-None-Match"] = et; else if(lm) h["If-Modified-Since"] = lm;
+          var fresh = await fetch(j.k.url, {cache: "no-store", headers: h});
+          if(fresh.status === 304) continue;
+          if(fresh.status === 200){
+            var a = await sha1(await cached.clone().arrayBuffer());
+            var b2 = await sha1(await fresh.arrayBuffer());
+            if(a !== b2){
+              /* A page the server rewrites differently on every request can never
+                 be "the same"; ask once more and ignore it if it keeps changing. */
+              var again = await fetch(j.k.url, {cache: "no-store", headers: {"x-lt-check": "1"}});
+              var b3 = again.status === 200 ? await sha1(await again.arrayBuffer()) : b2;
+              if(b3 === b2) changed.push(new URL(j.k.url).pathname);
+            }
+          }else if(fresh.status >= 500){ failed = true; }
+        }catch(e){ failed = true; }
+      }
+    }
+    await Promise.all([worker(), worker(), worker(), worker()]);
+    if(failed) return {state: "error"};
+    try{ var reg = await navigator.serviceWorker.getRegistration(); if(reg) await reg.update(); }catch(e){}
+    return {state: changed.length ? "outdated" : "current", changed: changed.length, checked: jobs.length};
   }
 
   async function run(justUpdated){
@@ -506,12 +522,13 @@ buildSearch();
     show("checking", "Checking your version…", "", "Checking…");
     var r = await check();
     busy = false;
+    var when = new Date().toLocaleTimeString([], {hour: "numeric", minute: "2-digit"});
     if(r.state === "error"){
       show("error", "Couldn’t check the version", "Check your connection and try again.", "Try again");
     }else if(r.state === "current"){
-      show("current", justUpdated ? "Updated. You have the most current version." : "You have the most current version.", "Version " + r.latest + " · checked " + new Date().toLocaleTimeString([], {hour: "numeric", minute: "2-digit"}), "Check again");
+      show("current", justUpdated ? "Updated. You have the most current version." : "You have the most current version.", "Checked " + r.checked + (r.checked === 1 ? " saved file" : " saved files") + " at " + when + ".", "Check again");
     }else{
-      show("outdated", "A newer version is available", (r.changed ? r.changed + (r.changed === 1 ? " file is" : " files are") + " out of date. " : "") + "Latest version " + r.latest + ". Your favorites, bookmarks and settings are kept.", "Update", true);
+      show("outdated", "A newer version is available", r.changed + (r.changed === 1 ? " file is" : " files are") + " out of date. Your favorites, bookmarks and settings are kept.", "Update", true);
     }
   }
 

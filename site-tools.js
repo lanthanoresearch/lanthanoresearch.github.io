@@ -1447,7 +1447,7 @@ async function kaFetch(v, signal, onBytes){
 }
 /* Which videos still need saving right now (missing, or a new version), minus
    the ones already tried today. */
-async function kaTodo(){
+async function kaTodo(manual){
   var cat = await kaCatalog();
   if(!cat.length || !("caches" in window)) return {all:cat, todo:[], missing:cat.length};
   var cache = await caches.open(KA.CACHE), st = kaState(), now = Date.now(), todo = [], missing = 0;
@@ -1457,13 +1457,13 @@ async function kaTodo(){
     var have = await cache.match(kaKey(cat[i].file));
     if(have && (rec.ver === undefined || rec.ver === cat[i].ver)) continue;
     missing++;
-    if(rec.kt && now - rec.kt < KA.DAY) continue;
+    if(!manual && rec.kt && now - rec.kt < KA.DAY) continue;
     todo.push(cat[i]);
   }
   todo.sort(function(x, y){ return (y.site ? 1 : 0) - (x.site ? 1 : 0); });   // this site's own videos first: they never wait on the video server
   return {all:cat, todo:todo, missing:missing};
 }
-/* opts: {auto, signal, onStart(n), onItem(i,n,v), onBytes(i,n,f), onSaved(v)}
+/* opts: {auto, manual (a person pressed "save all now": ignores the once-a-day wait), signal, onStart(n), onItem(i,n,v), onBytes(i,n,f), onSaved(v)}
    Resolves {saved, failed, why: ""|"limit"|"space"|"paused"|"busy"|"connection"|"stopped"} */
 async function kaRun(opts){
   opts = opts || {};
@@ -1473,13 +1473,16 @@ async function kaRun(opts){
   if(!("caches" in window) || !navigator.storage){ return out; }
   if(opts.auto && !kaOkConnection()){ out.why = "connection"; return out; }
   var st = kaState();
-  if(st.pauseUntil && Date.now() < st.pauseUntil){ out.why = "paused"; return out; }
+  if(st.pauseUntil && Date.now() < st.pauseUntil){
+    if(!opts.manual){ out.why = "paused"; return out; }
+    st.pauseUntil = 0; kaWrite(st);   // a person asked: try again now
+  }
   KA.running = true;
   var ctl = opts.signal ? {signal:opts.signal} : new AbortController();
   var signal = ctl.signal;
   var beat = function(){ try{ localStorage.setItem(KA.LOCK, String(Date.now())); }catch(e){} };
   try{
-    var info = await kaTodo();
+    var info = await kaTodo(!!opts.manual);
     var todo = info.todo;
     if(opts.onStart) opts.onStart(todo.length);
     try{ if(navigator.storage.persist) navigator.storage.persist(); }catch(e){}
@@ -1489,7 +1492,7 @@ async function kaRun(opts){
       var v = todo[i];
       st = kaState(); st.rec = st.rec || {};
       st.kday = (st.kday || []).filter(function(n){ return Date.now() - n < KA.DAY; });
-      if(st.kday.length >= KA.PER_DAY){ out.why = "paused"; break; }
+      if(!opts.manual && st.kday.length >= KA.PER_DAY){ out.why = "paused"; break; }
       st.kday.push(Date.now());
       kaWrite(st); beat();
       if(opts.onItem) opts.onItem(i, todo.length, v, todo);
@@ -1537,7 +1540,7 @@ kaAutoStart();
    switches tell it whether to keep new ones. A worker can't read
    localStorage, so every page leaves a small marker in the cache for it.
 --------------------------------------------------------------- */
-var FP = {images:"keepImagesOff", pdfs:"keepPdfsOff"};
+var FP = {images:"keepImagesOff", pdfs:"keepPdfsOff", pages:"keepPagesOff"};
 function fpOn(kind){ try{ return localStorage.getItem(FP[kind]) !== "1"; }catch(e){ return true; } }
 function fpMirror(kind){
   if(!window.caches) return Promise.resolve();
@@ -1550,7 +1553,55 @@ function fpSet(kind, on){
   try{ if(on) localStorage.removeItem(FP[kind]); else localStorage.setItem(FP[kind], "1"); }catch(e){}
   return fpMirror(kind);
 }
-fpMirror("images"); fpMirror("pdfs");
+fpMirror("images"); fpMirror("pdfs"); fpMirror("pages");
+
+/* Offline saving: every page also keeps what it is made of. The service worker
+   already keeps whatever a page loads; this adds the pictures, styles and
+   scripts the page points to but hasn't loaded yet (pictures further down,
+   for instance). It only asks for same-site files that are not saved yet, a
+   few at a time, a few seconds after the page opens. */
+function sweepOffline(){
+  try{
+    if(!window.caches || !navigator.serviceWorker || !navigator.serviceWorker.controller) return;
+    if(navigator.onLine === false) return;
+    var c = navigator.connection; if(c && c.saveData) return;
+    if(!fpOn("pages") && !fpOn("images")) return;
+    var found = {};
+    function add(u){
+      if(!u) return;
+      try{
+        var x = new URL(u, location.href);
+        if(x.origin !== location.origin || /^(mp4|webm|m4v|mov|3gp)$/i.test((x.pathname.split(".").pop() || ""))) return;
+        if(/\/__video\//.test(x.pathname)) return;
+        found[x.href] = 1;
+      }catch(e){}
+    }
+    [].forEach.call(document.querySelectorAll("img[src],img[data-src],source[src],script[src],video[poster]"), function(n){
+      add(n.getAttribute("src")); add(n.getAttribute("data-src")); add(n.getAttribute("poster"));
+    });
+    [].forEach.call(document.querySelectorAll("link[href]"), function(n){
+      if(/stylesheet|icon|manifest|preload/i.test(n.getAttribute("rel") || "")) add(n.getAttribute("href"));
+    });
+    var urls = Object.keys(found).slice(0, 80), i = 0;
+    function next(){
+      if(i >= urls.length) return;
+      var u = urls[i++];
+      caches.match(u).then(function(hit){
+        if(hit) return;
+        return fetch(u).then(function(r){ try{ if(r.body && r.status !== 200) r.body.cancel(); }catch(e){} });
+      }).catch(function(){}).then(function(){ setTimeout(next, 120); });
+    }
+    next(); next();
+  }catch(e){}
+}
+window.addEventListener("load", function(){ setTimeout(sweepOffline, 4000); });
+/* Ask the browser not to throw saved things away on its own. */
+function keepPersistent(){
+  try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
+}
+window.addEventListener("load", function(){
+  setTimeout(function(){ if(fpOn("images") || fpOn("pdfs") || fpOn("pages") || kaOn()) keepPersistent(); }, 6000);
+});
 /* Make sure a whole PDF is kept: the viewer reads PDFs in pieces, which the
    service worker can't keep, so (once the PDF has opened) it is fetched whole
    from the site once. Already-kept PDFs are skipped. */
@@ -1681,20 +1732,35 @@ function checkForUpdate(force){
   }).catch(function(){ return false; });
 }
 function updateApp(){
-  /* Clear the saved copies of pages and scripts (not videos), then reload so
-     everything is fetched fresh. Used by Settings > Check for updates. */
+  /* Replace every saved page, script, style and data file with the live
+     version (in place, so offline copies are never lost), then reload.
+     Videos, pictures and PDFs are not touched. Used by Settings > Update. */
+  var TEXT = /\.(html|js|mjs|css|json)$/i;
   var clear = (window.caches && caches.keys) ? caches.keys().then(function(names){
-    return Promise.all(names.filter(function(n){ return n !== "lanthano-saved-videos"; }).map(function(n){
+    var jobs = [];
+    return Promise.all(names.filter(function(n){ return n !== "lanthano-saved-videos" && n !== "lanthano-prefs"; }).map(function(n){
       return caches.open(n).then(function(c){
         return c.keys().then(function(keys){
-          return Promise.all(keys.filter(function(r){
-            return /\.(html|js|css|json)(\?|$)/i.test(r.url) || /\/$/.test(r.url);
-          }).map(function(r){ return c.delete(r); }));
+          keys.forEach(function(r){
+            var p = new URL(r.url).pathname;
+            if(TEXT.test(p) || /\/$/.test(p)) jobs.push({c:c, r:r});
+          });
         });
       });
-    }));
+    })).then(function(){
+      var i = 0, failed = false;
+      function worker(){
+        if(i >= jobs.length || failed) return Promise.resolve();
+        var j = jobs[i++];
+        return fetch(j.r.url, {cache:"reload", headers:{"x-lt-check":"1"}}).then(function(res){
+          if(res.status === 200) return j.c.put(j.r, res);
+          if(res.status === 404) return j.c.delete(j.r);
+        }).catch(function(e){ failed = true; throw e; }).then(worker);
+      }
+      return Promise.all([worker(), worker(), worker(), worker()]);
+    });
   }) : Promise.resolve();
-  return clear.catch(function(){}).then(function(){
+  return clear.then(function(){
     return checkForUpdate(true);
   }).then(function(){
     return navigator.serviceWorker && navigator.serviceWorker.getRegistration();

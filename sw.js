@@ -33,7 +33,9 @@ function prefFor(url) {
   const ext = extOf(url);
   if (/^(png|jpe?g|gif|webp|avif|bmp|ico|svg)$/.test(ext)) return "images";
   if (ext === "pdf") return "pdfs";
-  return "";
+  if (/^(mp4|webm|m4v|mov)$/.test(ext)) return "";
+  // Pages, scripts, styles, data and everything else a page needs.
+  return "pages";
 }
 
 // The offline / not-found fallback page.
@@ -338,6 +340,11 @@ self.addEventListener("fetch", event => {
 
   // Ignore requests outside this site.
   if (url.origin !== self.location.origin) return;
+
+  // The Settings "check for updates" and the update button ask the server
+  // directly (with their own headers); they must not be answered from, or
+  // saved into, the saved copies.
+  if (event.request.headers.has("x-lt-check")) return;
 
   // Whole videos saved by video.html (played from the device).
   if (url.pathname.startsWith(VIDEO_PREFIX)) {
