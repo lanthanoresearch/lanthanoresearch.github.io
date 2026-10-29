@@ -1,6 +1,6 @@
 {
  "count": 309,
- "totalBytes": 283601278,
+ "totalBytes": 283624012,
  "files": [
   {
    "path": "1 Thessalonians Original Text.png",
@@ -904,8 +904,8 @@
   },
   {
    "path": "pdf.html",
-   "size": 550325,
-   "hash": "1976aaa935fcaa28"
+   "size": 550424,
+   "hash": "771e9bae01e5d895"
   },
   {
    "path": "pdfjs/build/pdf.mjs",
@@ -1099,8 +1099,8 @@
   },
   {
    "path": "settings.html",
-   "size": 15450,
-   "hash": "825f134406748040"
+   "size": 20753,
+   "hash": "eafaaabd281d8607"
   },
   {
    "path": "Shadows Point.png",
@@ -1139,8 +1139,8 @@
   },
   {
    "path": "site-tools.js",
-   "size": 87896,
-   "hash": "0cd1f51e5e03253f"
+   "size": 89640,
+   "hash": "c7ea3efe736fe9bb"
   },
   {
    "path": "sitemap.xml",
@@ -1159,8 +1159,8 @@
   },
   {
    "path": "storage.html",
-   "size": 22227,
-   "hash": "67eae1d3e9759281"
+   "size": 36893,
+   "hash": "b0fe2facf8ac53a0"
   },
   {
    "path": "Strange Shadows.png",
@@ -1179,8 +1179,8 @@
   },
   {
    "path": "sw.js",
-   "size": 11274,
-   "hash": "1592102ca02628ac"
+   "size": 12196,
+   "hash": "8afdcb8880c72dde"
   },
   {
    "path": "Symbolism.pdf",
