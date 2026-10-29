@@ -1299,6 +1299,47 @@ window.LT.zipVideos = zipVideos;
 window.LT.install = function(){ if(!deferredInstall) return false; deferredInstall.prompt(); deferredInstall = null; return true; };
 window.LT.canInstall = function(){ return !!deferredInstall; };
 
+/* ---------- Locked until the item has loaded ----------
+   In the PDF, video and image viewers the tools that act on the content (zoom,
+   search, reading aloud, the video controls...) stay switched off while the
+   loading screen is up. Things that do not touch the content - Back, the
+   three-line menu (download, new tab, fullscreen, share, reference, report),
+   reading mode and Sources - keep working. */
+var LOCK_SELECTORS = {
+  "pdf.html":   "#toolbar > *:not(#sourcesButton), #tocButton, #readAloudFloat",
+  "video.html": "#toolbar > *:not(#sourcesButton), #videoProgressRow, #videoControlsMain > *:not(#videoFullscreenBtn)",
+  "image.html": "#toolbar > *:not(#sourcesButton)"
+};
+function initLoadLock(){
+  var sel = LOCK_SELECTORS[path], ov = document.getElementById("loadingOverlay");
+  if(!sel || !ov) return;
+  function shown(){
+    if(!ov.isConnected) return false;
+    try{ return getComputedStyle(ov).display !== "none"; }catch(e){ return false; }
+  }
+  if(!shown()) return;
+  var st = el("style"); st.textContent = ".ltLocked{opacity:.4 !important;pointer-events:none !important;cursor:default !important}";
+  document.head.appendChild(st);
+  var locked = [];
+  function lockNew(){
+    Array.prototype.forEach.call(document.querySelectorAll(sel), function(n){
+      if(n.classList.contains("ltLocked")) return;
+      n.classList.add("ltLocked"); n.setAttribute("inert", ""); locked.push(n);
+    });
+  }
+  function unlock(){
+    clearInterval(timer); if(mo) mo.disconnect();
+    locked.forEach(function(n){ n.classList.remove("ltLocked"); n.removeAttribute("inert"); });
+    locked = [];
+    if(st.parentNode) st.remove();
+  }
+  function check(){ if(!shown()) unlock(); else lockNew(); }
+  lockNew();
+  var mo = window.MutationObserver ? new MutationObserver(check) : null;
+  if(mo) mo.observe(ov, {attributes:true, attributeFilter:["style", "class"]});
+  var timer = setInterval(check, 400);
+}
+
 /* ---------- App updates ----------
    Keeps the installed app (PWA) current. The service worker (sw.js) fetches
    fresh copies; here we just ask it to look for a new version when the app is
@@ -1376,6 +1417,7 @@ function collapseMore(){
 }
 var SUBS = {cite:"Copy a citation (APA, MLA and more)", report:"Tell us about a mistake"};
 function ready(){
+  try{ initLoadLock(); }catch(e){}
   var mb = document.getElementById("moreBtn"), ml = document.getElementById("moreList"), menuEl = document.getElementById("menu");
   // markup that spreads an item's text over several lines would leave a gap after its icon
   if(menuEl) [].forEach.call(menuEl.querySelectorAll(":scope > button, :scope > a"), function(it){

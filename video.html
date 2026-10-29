@@ -2183,7 +2183,7 @@ body.embed-api #downloadBtn{
 
   min-width:220px;
 
-  z-index:7000;
+  z-index:8200; /* above the loading screen so the whole menu is visible */
 }
 
 #menu button{
@@ -3090,6 +3090,36 @@ body.video-fullscreen.fs-rotate #videoStage{
   </div>
 
 </div>
+<script>
+/* Runs as soon as the header, toolbar and title bar exist, so the layout is right from the
+   first paint (even before this page's main script has loaded): the loading screen stops at
+   the real bottom of the toolbar and above the title bar, and the file name shows right away. */
+(function(){
+  var d = document, h = d.querySelector("header"), tb = d.getElementById("toolbar"),
+      ov = d.getElementById("loadingOverlay"), bar = d.getElementById("titleBar"), ti = d.getElementById("title");
+  function sync(){
+    var b = d.body.classList;
+    if(b.contains("reading-mode") || b.contains("video-fullscreen")){ if(ov) ov.style.bottom = ""; return; }
+    if(h && tb){
+      var t = Math.ceil(h.getBoundingClientRect().height + tb.getBoundingClientRect().height);
+      d.documentElement.style.setProperty("--viewer-top", t + "px");
+      if(ov) ov.style.top = t + "px";
+    }
+    if(ov && bar) ov.style.bottom = Math.ceil(bar.getBoundingClientRect().height) + "px";
+  }
+  sync();
+  window.addEventListener("resize", sync);
+  if(window.ResizeObserver){ var ro = new ResizeObserver(sync); [h, tb, bar].forEach(function(e){ if(e) ro.observe(e); }); }
+  try{
+    var p = new URLSearchParams(location.search), name = "";
+    name = (p.get("source") !== "site" && p.get("title")) || decodeURIComponent((p.get("video") || "").split("/").pop()).replace(/\.[^/.]+$/, "").replace(/[-_]+/g, " ").replace(/\b\w/g, function(c){ return c.toUpperCase(); });
+    if(name && ti && /^\s*Loading/.test(ti.textContent)){
+      var s = d.createElement("span"); s.className = "title-text"; s.textContent = name;
+      ti.textContent = ""; ti.appendChild(s);
+    }
+  }catch(e){}
+})();
+</script>
 
 <!-- ==========================================================
      MENU
@@ -4119,7 +4149,7 @@ function syncContentBottom(){
 
         document.documentElement.style.setProperty(
             "--content-bottom",
-            `${Math.ceil(titleBar.getBoundingClientRect().height)}px`
+            `${Math.max(window.__abReserve || 0, Math.ceil(titleBar.getBoundingClientRect().height))}px`
         );
 
         return;
@@ -4134,9 +4164,10 @@ function syncContentBottom(){
         barRect.top +
         16;
 
+    /* while the A-B loop sheets are open the picture is kept above them */
     document.documentElement.style.setProperty(
         "--content-bottom",
-        `${Math.ceil(spaceFromBottom)}px`
+        `${Math.max(Math.ceil(spaceFromBottom), window.__abReserve || 0)}px`
     );
 
 }
@@ -9616,23 +9647,31 @@ video.playbackRate =
 ============================================================ */
 (function(){
 
-  /* ---- A-B loop: a bottom sheet with two draggable handles, a zoomed strip for
-          fine tuning, and the same transport buttons as the player ---- */
+  /* ---- A-B loop ----
+     Three small sheets instead of one big one, so most of the video stays visible:
+       1. the loop menu   - whole track, Start / End times, play controls, Loop / Stop
+       2. the Start editor and 3. the End editor (one sheet, reused) - a zoomed strip you
+          swipe to scroll, with a line handle you drag, plus the same play controls.
+     Nothing resets when you close and reopen; Stop clears it. */
   const abToolBtn = document.getElementById("abToolBtn");
   const stage = document.getElementById("videoStage");
   const barWrap = document.getElementById("videoProgressBarWrap");
 
-  let A = null, B = null, enabled = false, sel = "A", raf = 0, panel = null, dragging = null;
-  let previewing = false, zoomIdx = 1, fineDrag = null, winStart = 0;
+  let A = null, B = null, enabled = false, raf = 0, panel = null, edit = null;
+  let editing = null;                 /* "A" | "B" while the editor is open */
+  let previewing = false;             /* playing the section on repeat from the loop menu */
+  let ctxPlay = null;                 /* editor: short play around the handle {to, back} */
+  let zoomIdx = 3, winStart = 0;      /* fine strip: which zoom level and where it starts */
   const MIN_GAP = 0.1;
-  const ZOOMS = [20, 8, 4, 2, 1];   /* seconds shown in the fine-tune strip */
+  const ZOOMS = [120, 60, 30, 10, 4, 2, 1, 0.5];   /* seconds shown across the fine strip */
+  const ZOOM_DEFAULT = 3;
+  const CTX_SPAN = 3;                 /* seconds the editor's Play shows around a handle */
 
   const dur = () => (Number.isFinite(video.duration) && video.duration > 0) ? video.duration : 0;
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
   const frameLen = () => (typeof estimatedFrameDuration === "number" && estimatedFrameDuration > 0) ? estimatedFrameDuration : 1 / 30;
   const pad2 = n => String(n).padStart(2, "0");
-  const cur = () => sel === "A" ? A : B;
-  /* how many seconds the fine strip shows (never more than the video itself) */
+  const val = h => h === "A" ? A : B;
   const winLen = () => Math.max(MIN_GAP, Math.min(ZOOMS[zoomIdx], dur() || ZOOMS[zoomIdx]));
 
   /* 0:05.43 (hundredths, so a single frame step is visible) */
@@ -9644,75 +9683,91 @@ video.playbackRate =
   }
   function fmtShort(t){ try{ return formatTimestamp(t); }catch(e){ return fmt(t); } }
   const fmtLen = t => { t = Math.max(0, t); return t < 60 ? t.toFixed(1) + " s" : fmtShort(t); };
+  function fmtTick(t, step){
+    t = Math.max(0, t);
+    const m = Math.floor(t / 60), s = t - m * 60;
+    if(step >= 1) return m + ":" + pad2(Math.round(s));
+    return m + ":" + (s < 10 ? "0" : "") + s.toFixed(step >= 0.1 ? 1 : 2);
+  }
+  const zoomLabel = W => (W >= 60 ? (W / 60) + " min" : +W.toFixed(2) + " s") + " view";
 
   const css = document.createElement("style");
   css.textContent =
     "#abToolBtn.on{background:#2f7cff;color:#fff}" +
     "#abRegion{position:absolute;top:50%;transform:translateY(-50%);height:8px;border-radius:3px;display:none;" +
       "background:rgba(255,193,7,.55);border-left:2px solid #ffc107;border-right:2px solid #ffc107;box-sizing:border-box;pointer-events:none;z-index:1}" +
-    "#abPanel{position:fixed;left:0;right:0;bottom:0;z-index:6800;box-sizing:border-box;max-height:78vh;overflow:auto;margin:0 auto;max-width:560px;" +
-      "padding:12px 16px 16px;background:#222;color:#eee;border:1px solid #333;border-bottom:0;border-radius:14px 14px 0 0;" +
+    ".abSheet{position:fixed;left:0;right:0;bottom:0;z-index:6800;box-sizing:border-box;max-height:70vh;overflow:auto;margin:0 auto;max-width:560px;" +
+      "padding:10px 14px 12px;background:#222;color:#eee;border:1px solid #333;border-bottom:0;border-radius:14px 14px 0 0;" +
       "box-shadow:0 -10px 30px rgba(0,0,0,.5);font:14px Arial,sans-serif;-webkit-overflow-scrolling:touch}" +
-    "#abPanel.hidden{display:none}" +
-    "#abPanel .abHead{display:flex;align-items:center;gap:10px;margin:0 0 4px}" +
-    "#abPanel .abHead h4{margin:0;flex:1;font-size:16px;font-weight:600;color:#fff}" +
-    "#abPanel .abLen{color:#aaa;font-size:12.5px;font-variant-numeric:tabular-nums}" +
-    "#abPanel .abX{width:32px;height:32px;border:0;border-radius:8px;background:transparent;color:#aaa;font-size:16px;cursor:pointer}" +
-    "#abPanel .abX:hover{background:#383838;color:#fff}" +
-    "#abPanel .abHint{margin:0 0 4px;color:#9a9a9a;font-size:12.5px;line-height:1.4}" +
-    /* overview track */
-    "#abTrack{position:relative;height:50px;margin:0;touch-action:none;user-select:none;-webkit-user-select:none;cursor:pointer}" +
-    "#abTrack .abRail{position:absolute;left:14px;right:14px;top:23px;height:4px;border-radius:2px;background:#3a3a3a}" +
-    "#abTrack .abSpan{position:absolute;top:21px;height:8px;border-radius:3px;background:#ffc107;opacity:.9}" +
-    "#abTrack .abPlayhead{position:absolute;top:15px;width:2px;height:20px;margin-left:-1px;background:#fff;opacity:.8;border-radius:1px;pointer-events:none}" +
-    "#abTrack .abDot{position:absolute;top:10px;width:28px;height:28px;margin-left:-26px;padding:0;border-radius:50%;border:2px solid #ffc107;" +
-      "background:#222;color:#ffc107;font:700 13px Arial,sans-serif;cursor:grab;display:flex;align-items:center;justify-content:center;touch-action:none;z-index:2}" +
-    "#abTrack #abDotB{margin-left:-2px}" +
-    "#abTrack .abDot.sel{background:#ffc107;color:#1b1b1b;box-shadow:0 0 0 4px rgba(255,193,7,.28)}" +
-    "#abTrack .abDot:active{cursor:grabbing}" +
-    "#abPanel .abEnds{display:flex;justify-content:space-between;margin:-6px 14px 8px;color:#777;font-size:11px;font-variant-numeric:tabular-nums}" +
-    /* start / end cards */
-    "#abPanel .abCols{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 10px}" +
-    "#abPanel .abCol{display:flex;align-items:center;gap:8px;background:#1d1d1d;border:1px solid #333;border-radius:10px;padding:8px 8px 8px 10px;cursor:pointer}" +
-    "#abPanel .abCol.sel{border-color:#ffc107;box-shadow:0 0 0 1px #ffc107 inset}" +
-    "#abPanel .abCol b{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#ffc107;color:#1b1b1b;font-size:12px}" +
-    "#abPanel .abCol .abT{flex:1;min-width:0}" +
-    "#abPanel .abCol .abT small{display:block;color:#999;font-size:11px;line-height:1.2}" +
-    "#abPanel .abCol .abT em{display:block;font-style:normal;font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;color:#fff;line-height:1.3;white-space:nowrap}" +
-    "#abPanel .abNow{flex:0 0 auto;padding:7px 9px;background:#2e2e2e;border:0;border-radius:7px;color:#eee;font:12px Arial,sans-serif;cursor:pointer}" +
-    "#abPanel .abNow:hover{background:#383838}" +
-    /* fine-tune strip */
-    "#abPanel .abFineHead{display:flex;align-items:center;gap:8px;margin:0 0 4px;color:#aaa;font-size:12px}" +
-    "#abPanel .abFineHead span{flex:1}" +
-    "#abPanel .abFineHead button{width:26px;height:26px;padding:0;border:0;border-radius:6px;background:#2e2e2e;color:#eee;font:600 15px Arial,sans-serif;cursor:pointer}" +
-    "#abPanel .abFineHead button:hover{background:#383838}" +
-    "#abPanel .abFineHead button:disabled{opacity:.35;cursor:default}" +
-    "#abFine{position:relative;height:46px;border-radius:8px;background:#1b1b1b;border:1px solid #333;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;cursor:ew-resize}" +
+    ".abSheet.hidden{display:none}" +
+    ".abSheet .abHead{display:flex;align-items:center;gap:10px;margin:0 0 6px;min-height:30px}" +
+    ".abSheet .abHead h4{margin:0;flex:1;font-size:15px;font-weight:600;color:#fff}" +
+    ".abSheet .abLen{color:#aaa;font-size:12.5px;font-variant-numeric:tabular-nums}" +
+    ".abSheet .abBig{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;color:#fff}" +
+    ".abSheet .abX{width:30px;height:30px;border:0;border-radius:8px;background:transparent;color:#aaa;font-size:15px;cursor:pointer}" +
+    ".abSheet .abX:hover{background:#383838;color:#fff}" +
+    ".abSheet .abTag{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 6px;border-radius:5px;background:#ffc107;color:#1b1b1b;font:700 11px Arial,sans-serif;letter-spacing:.04em}" +
+    /* handles: a bar with a rounded tab, like a phone's trim handles */
+    ".abH{position:absolute;top:0;bottom:0;width:0;pointer-events:none}" +
+    ".abH .abBar{position:absolute;top:0;bottom:0;left:-2px;width:4px;border-radius:2px;background:#ffc107}" +
+    ".abH .abTab{position:absolute;top:50%;width:11px;height:26px;margin-top:-13px;background:#ffc107;display:flex;align-items:center;justify-content:center;gap:2px}" +
+    ".abH .abTab u{display:block;width:1px;height:12px;background:rgba(0,0,0,.45)}" +
+    ".abH.start .abTab{right:2px;border-radius:6px 0 0 6px}" +
+    ".abH.end .abTab{left:2px;border-radius:0 6px 6px 0}" +
+    ".abH.dim .abBar{width:2px;left:-1px;opacity:.55}" +
+    ".abH.dim .abTab{opacity:.45}" +
+    /* overview */
+    "#abOv{position:relative;height:42px;margin:0 12px;touch-action:none;user-select:none;-webkit-user-select:none;cursor:pointer}" +
+    "#abOv .abRail{position:absolute;left:0;right:0;top:17px;height:8px;border-radius:4px;background:#3a3a3a}" +
+    "#abOv .abSpan{position:absolute;top:17px;height:8px;background:rgba(255,193,7,.55)}" +
+    "#abOv .abH{top:6px;bottom:6px}" +
+    "#abOv .abPh{position:absolute;top:10px;width:2px;height:22px;margin-left:-1px;background:#fff;border-radius:1px;pointer-events:none;opacity:.9}" +
+    ".abSheet .abEnds{display:flex;justify-content:space-between;margin:-4px 12px 8px;color:#888;font-size:11px;font-variant-numeric:tabular-nums}" +
+    /* start / end buttons */
+    ".abSheet .abTimes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 10px}" +
+    ".abSheet .abTime{display:flex;align-items:center;gap:8px;text-align:left;padding:8px 12px;background:#1d1d1d;border:1px solid #3a3a3a;border-radius:10px;color:#eee;font:inherit;cursor:pointer}" +
+    ".abSheet .abTime:hover{background:#262626;border-color:#ffc107}" +
+    ".abSheet .abTime span{flex:1;min-width:0}" +
+    ".abSheet .abTime small{display:block;color:#ffc107;font:700 10.5px Arial,sans-serif;letter-spacing:.08em}" +
+    ".abSheet .abTime em{display:block;font-style:normal;font-size:17px;font-weight:600;font-variant-numeric:tabular-nums;color:#fff;margin-top:1px}" +
+    ".abSheet .abTime svg{flex:0 0 auto;opacity:.6}" +
+    /* fine strip */
+    "#abFine{position:relative;height:72px;border-radius:8px;background:#1b1b1b;border:1px solid #333;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}" +
+    "#abFine.drag{cursor:grabbing}" +
     "#abFine .abTicks{position:absolute;inset:0;pointer-events:none}" +
-    "#abFine .abKeep{position:absolute;top:0;bottom:0;background:rgba(255,193,7,.16);pointer-events:none}" +
-    "#abFine .abMark{position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:#ffc107;pointer-events:none}" +
-    "#abFine .abMark.sel{width:3px;margin-left:-1.5px;box-shadow:0 0 0 3px rgba(255,193,7,.25)}" +
-    "#abFine .abMark i{position:absolute;top:2px;left:4px;font:700 11px Arial,sans-serif;font-style:normal;color:#ffc107}" +
-    "#abFine .abMark.isB i{left:auto;right:4px}" +
+    "#abFine .abTk{position:absolute;bottom:18px;width:1px;height:10px;background:#555}" +
+    "#abFine .abTk.M{height:22px;background:#999}" +
+    "#abFine .abTk b{position:absolute;top:100%;left:0;transform:translateX(-50%);margin-top:3px;font:10.5px Arial,sans-serif;font-weight:400;color:#999;white-space:nowrap;font-variant-numeric:tabular-nums}" +
+    "#abFine .abKeep{position:absolute;top:0;bottom:0;background:rgba(255,193,7,.14);pointer-events:none}" +
     "#abFine .abPh{position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:#fff;opacity:.85;pointer-events:none}" +
-    "#abFine .abWin{position:absolute;bottom:1px;font-size:10px;color:#777;pointer-events:none;font-variant-numeric:tabular-nums}" +
-    /* transport: same buttons as the player */
-    "#abPanel .abTransport{display:flex;flex-direction:column;align-items:center;gap:6px;margin:12px 0 0}" +
-    "#abPanel .abTransport .videoNavGroup{align-self:center}" +
-    "#abPanel .abTransport .videoNavGroup #abPlay{width:34px;height:34px;background:#2f7cff;color:#fff;border-radius:7px;font-size:17px}" +
-    "#abPanel .abTransport .videoNavGroup #abPlay:hover{background:#4a8dff}" +
-    "#abPanel .abTransport .abMoves{color:#9a9a9a;font-size:12px}" +
-    "#abPanel .abTransport .abMoves b{color:#ffc107}" +
-    "#abPanel .abFoot{display:flex;gap:10px;margin-top:12px}" +
-    "#abPanel .abFoot button{flex:1;padding:12px 10px;border-radius:9px;border:0;font:14px Arial,sans-serif;cursor:pointer}" +
-    "#abPanel .abGhost{background:#2e2e2e;color:#eee}" +
-    "#abPanel .abGhost:hover{background:#383838}" +
-    "#abPanel .abGo{background:#2f7cff;color:#fff;flex:1.6 !important}" +
-    "#abPanel .abGo:hover{background:#4a8dff}" +
+    "#abFine .abOff{position:absolute;top:6px;font:600 11px Arial,sans-serif;color:#ffc107;background:rgba(0,0,0,.5);padding:2px 6px;border-radius:5px;pointer-events:none}" +
+    ".abSheet .abZoom{display:flex;align-items:center;gap:8px;margin:8px 0 2px}" +
+    ".abSheet .abZoom button{height:30px;min-width:34px;padding:0 10px;border:0;border-radius:7px;background:#2e2e2e;color:#eee;font:600 15px Arial,sans-serif;cursor:pointer}" +
+    ".abSheet .abZoom button:hover{background:#383838}" +
+    ".abSheet .abZoom button:disabled{opacity:.35;cursor:default}" +
+    ".abSheet .abZoom .abZr{font:600 12.5px Arial,sans-serif}" +
+    ".abSheet .abZoom .abZl{flex:1;text-align:right;color:#aaa;font-size:12.5px;font-variant-numeric:tabular-nums}" +
+    /* transport: the player's own buttons */
+    ".abSheet .abTransport{display:flex;justify-content:center;margin:8px 0 0}" +
+    ".abSheet .abTransport .videoNavGroup .abPlay{width:34px;height:34px;background:#2f7cff;color:#fff;border-radius:7px;font-size:17px}" +
+    ".abSheet .abTransport .videoNavGroup .abPlay:hover{background:#4a8dff}" +
+    ".abSheet .abCap{margin:5px 0 0;text-align:center;color:#9a9a9a;font-size:12px;line-height:1.35}" +
+    ".abSheet .abCap b{color:#ffc107;font-weight:600}" +
+    ".abSheet .abNow{display:block;width:100%;margin:8px 0 0;padding:9px 10px;border:0;border-radius:9px;background:#2e2e2e;color:#eee;font:13.5px Arial,sans-serif;cursor:pointer}" +
+    ".abSheet .abNow:hover{background:#383838}" +
+    ".abSheet .abNow b{font-weight:600;font-variant-numeric:tabular-nums;margin-left:4px;color:#fff}" +
+    ".abSheet .abFoot{display:flex;gap:10px;margin-top:10px}" +
+    ".abSheet .abFoot button{flex:1;padding:11px 10px;border-radius:9px;border:0;font:14px Arial,sans-serif;cursor:pointer}" +
+    ".abSheet .abGhost{background:#2e2e2e;color:#eee}" +
+    ".abSheet .abGhost:hover{background:#383838}" +
+    ".abSheet .abStop{background:transparent !important;border:1px solid #5a2c2c !important;color:#ff8a80}" +
+    ".abSheet .abStop:hover{background:#301a1a !important}" +
+    ".abSheet .abGo{background:#2f7cff;color:#fff;flex:1.6 !important}" +
+    ".abSheet .abGo:hover{background:#4a8dff}" +
     "body.abOpen #readingModeFloat{display:none !important}" +
-    "body.video-fullscreen #abPanel{bottom:0}" +
-    "@media (max-width:420px){#abPanel{padding:10px 12px 14px}#abPanel .abNow{padding:7px 7px}}" +
-    "@media (max-height:640px){#abPanel .abHint{display:none}}";
+    "body.video-fullscreen .abSheet{bottom:0}" +
+    "@media (max-width:420px){.abSheet{padding:8px 10px 10px}}" +
+    "@media (max-height:700px){.abSheet #abFine{height:60px}.abSheet .abTransport{margin-top:6px}}";
   document.head.appendChild(css);
 
   /* the highlighted section on the main seek bar */
@@ -9738,160 +9793,307 @@ video.playbackRate =
     abToolBtn.title = (enabled && valid()) ? "Looping " + fmtShort(A) + " to " + fmtShort(B) : "A to B loop";
   }
 
-  /* ----- the panel ----- */
-  function build(){
+  /* ----- shared pieces ----- */
+  const handleHtml = kind => '<div class="abH ' + kind + '"><i class="abBar"></i><i class="abTab"><u></u><u></u></i></div>';
+  function navHtml(){
     const g = id => { const e = document.getElementById(id); return e ? e.innerHTML : ""; };
-    panel = document.createElement("div");
-    panel.id = "abPanel";
-    panel.className = "hidden";
-    panel.setAttribute("role", "dialog");
-    panel.setAttribute("aria-label", "A to B loop");
-    panel.innerHTML =
-      '<div class="abHead"><h4>A–B Loop</h4><span class="abLen" id="abLen"></span><button type="button" class="abX" id="abClose" aria-label="Close">✕</button></div>' +
-      '<div id="abTrack"><div class="abRail"></div><div class="abSpan" id="abSpan"></div><div class="abPlayhead" id="abPlayhead"></div>' +
-        '<button type="button" class="abDot" id="abDotA" data-h="A" aria-label="Loop start">A</button>' +
-        '<button type="button" class="abDot" id="abDotB" data-h="B" aria-label="Loop end">B</button></div>' +
-      '<div class="abEnds"><span>0:00</span><span id="abEndT"></span></div>' +
-      '<div class="abCols">' +
-        '<div class="abCol" data-col="A" role="button" tabindex="0"><b>A</b><div class="abT"><small>Start</small><em id="abTA">0:00.00</em></div><button type="button" class="abNow" data-now="A" title="Set A to the current time">Set to now</button></div>' +
-        '<div class="abCol" data-col="B" role="button" tabindex="0"><b>B</b><div class="abT"><small>End</small><em id="abTB">0:00.00</em></div><button type="button" class="abNow" data-now="B" title="Set B to the current time">Set to now</button></div>' +
-      '</div>' +
-      '<div class="abFineHead"><span id="abFineLbl"></span><button type="button" id="abZoomOut" aria-label="Zoom out" title="Zoom out">−</button><button type="button" id="abZoomIn" aria-label="Zoom in" title="Zoom in">+</button></div>' +
-      '<div id="abFine"><div class="abTicks" id="abTicks"></div><div class="abKeep" id="abKeep"></div>' +
-        '<div class="abMark" id="abMarkA"><i>A</i></div><div class="abMark isB" id="abMarkB"><i>B</i></div><div class="abPh" id="abPh"></div>' +
-        '<span class="abWin" id="abWinL" style="left:4px"></span><span class="abWin" id="abWinR" style="right:4px"></span></div>' +
-      '<div class="abTransport"><div class="videoNavGroup">' +
-        '<button type="button" id="abSkipB" class="videoCtrlBtn" data-n="-10" title="Back 10 seconds" aria-label="Back 10 seconds"><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor">' + g("skipBackBtn").replace(/^<svg[^>]*>|<\/svg>$/g, "") + '</svg></button>' +
-        '<button type="button" id="abFrB" class="videoCtrlBtn" data-n="-f" title="Back 1 frame" aria-label="Back 1 frame">' + g("frameBackBtn") + '</button>' +
-        '<button type="button" id="abPlay" class="videoCtrlBtn" title="Play the loop" aria-label="Play the loop"></button>' +
-        '<button type="button" id="abFrF" class="videoCtrlBtn" data-n="+f" title="Forward 1 frame" aria-label="Forward 1 frame">' + g("frameForwardBtn") + '</button>' +
-        '<button type="button" id="abSkipF" class="videoCtrlBtn" data-n="10" title="Forward 10 seconds" aria-label="Forward 10 seconds"><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor">' + g("skipForwardBtn").replace(/^<svg[^>]*>|<\/svg>$/g, "") + '</svg></button>' +
-      '</div><div class="abMoves" id="abMoves"></div></div>' +
-      '<div class="abFoot"><button type="button" class="abGhost" id="abOff">Turn off</button><button type="button" class="abGo" id="abGo">Loop this section</button></div>';
-    stage.appendChild(panel);
-
-    panel.querySelector("#abClose").addEventListener("click", closePanel);
-    panel.querySelector("#abGo").addEventListener("click", go);
-    panel.querySelector("#abOff").addEventListener("click", turnOff);
-    panel.addEventListener("click", e => e.stopPropagation());
-    panel.querySelectorAll("[data-col]").forEach(c => {
-      c.addEventListener("click", e => { if(e.target.closest("[data-now]")) return; select(c.dataset.col, true); });
-      c.addEventListener("keydown", e => { if(e.key === "Enter" || e.key === " "){ e.preventDefault(); select(c.dataset.col, true); } });
-    });
-    panel.querySelectorAll("[data-now]").forEach(b => b.addEventListener("click", () => {
-      select(b.dataset.now, false);
-      setHandle(b.dataset.now, video.currentTime || 0, false);
-    }));
-
-    /* transport: skip / frame move the chosen handle (and the picture follows),
-       a tap moves one step, holding repeats - exactly like the player's own buttons */
-    panel.querySelectorAll("[data-n]").forEach(b => {
+    const strip = s => s.replace(/^<svg[^>]*>|<\/svg>$/g, "");
+    return '<div class="abTransport"><div class="videoNavGroup">' +
+      '<button type="button" class="videoCtrlBtn" data-k="sb" title="Back 10 seconds" aria-label="Back 10 seconds"><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor">' + strip(g("skipBackBtn")) + '</svg></button>' +
+      '<button type="button" class="videoCtrlBtn" data-k="fb" title="Back 1 frame" aria-label="Back 1 frame">' + g("frameBackBtn") + '</button>' +
+      '<button type="button" class="videoCtrlBtn abPlay" data-k="pp"></button>' +
+      '<button type="button" class="videoCtrlBtn" data-k="ff" title="Forward 1 frame" aria-label="Forward 1 frame">' + g("frameForwardBtn") + '</button>' +
+      '<button type="button" class="videoCtrlBtn" data-k="sf" title="Forward 10 seconds" aria-label="Forward 10 seconds"><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor">' + strip(g("skipForwardBtn")) + '</svg></button>' +
+      '</div></div>';
+  }
+  /* tap = one step, hold = repeats; play is a plain click */
+  function bindNav(root, onStep, onPlay){
+    root.querySelectorAll("[data-k]").forEach(b => {
+      const k = b.dataset.k;
+      if(k === "pp"){ b.addEventListener("click", onPlay); return; }
       let timer = 0, rep = 0;
-      const step = () => {
-        const k = b.dataset.n;
-        const d = k === "-f" ? -frameLen() : k === "+f" ? frameLen() : Number(k);
-        stopPreview();
-        setHandle(sel, cur() + d, true);
-      };
+      const step = () => onStep(k);
       const stop = () => { clearTimeout(timer); clearInterval(rep); timer = 0; rep = 0; };
       b.addEventListener("pointerdown", e => {
         e.preventDefault();
         stop(); step();
-        timer = setTimeout(() => { rep = setInterval(step, k10(b) ? 220 : 85); }, 420);
+        timer = setTimeout(() => { rep = setInterval(step, (k === "sb" || k === "sf") ? 220 : 85); }, 420);
       });
       ["pointerup", "pointerleave", "pointercancel"].forEach(ev => b.addEventListener(ev, stop));
       b.addEventListener("keydown", e => { if(e.key === "Enter" || e.key === " "){ e.preventDefault(); step(); } });
     });
-    function k10(b){ return Math.abs(Number(b.dataset.n)) === 10; }
+  }
+  const stepOf = k => k === "sb" ? -10 : k === "sf" ? 10 : k === "fb" ? -frameLen() : frameLen();
+  function setPlayIcon(root, playing){
+    const b = root.querySelector(".abPlay");
+    const html = playing ? ICON_PAUSE : ICON_PLAY;
+    if(b.innerHTML !== html) b.innerHTML = html;
+    const t = playing ? "Pause" : "Play";
+    if(b.title !== t){ b.title = t; b.setAttribute("aria-label", t); }
+  }
 
-    /* the play button plays the section on repeat so you can hear / see it */
-    panel.querySelector("#abPlay").addEventListener("click", togglePreview);
+  /* ----- 1. the loop menu ----- */
+  function build(){
+    panel = document.createElement("div");
+    panel.id = "abPanel";
+    panel.className = "abSheet hidden";
+    panel.setAttribute("role", "dialog");
+    panel.setAttribute("aria-label", "A to B loop");
+    const pen = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"></path></svg>';
+    panel.innerHTML =
+      '<div class="abHead"><h4>A–B Loop</h4><span class="abLen" id="abLen"></span><button type="button" class="abX" id="abClose" aria-label="Close">✕</button></div>' +
+      '<div id="abOv"><div class="abRail"></div><div class="abSpan" id="abSpan"></div>' + handleHtml("start").replace('class="abH', 'id="abHA" class="abH') + handleHtml("end").replace('class="abH', 'id="abHB" class="abH') + '<div class="abPh" id="abPhO"></div></div>' +
+      '<div class="abEnds"><span>0:00</span><span id="abEndT"></span></div>' +
+      '<div class="abTimes">' +
+        '<button type="button" class="abTime" data-edit="A"><span><small>START</small><em id="abTA">0:00.00</em></span>' + pen + '</button>' +
+        '<button type="button" class="abTime" data-edit="B"><span><small>END</small><em id="abTB">0:00.00</em></span>' + pen + '</button>' +
+      '</div>' +
+      navHtml() +
+      '<p class="abCap" id="abCap"></p>' +
+      '<div class="abFoot"><button type="button" class="abStop" id="abStop">Stop</button><button type="button" class="abGo" id="abGo">Loop this section</button></div>';
+    stage.appendChild(panel);
 
-    /* overview: drag a dot, or tap the track to move the nearest dot */
-    const track = panel.querySelector("#abTrack");
-    let grab = 0;   /* where inside the dot you grabbed it, so it does not jump */
-    function frac(clientX){
-      const r = track.getBoundingClientRect();
-      return clamp((clientX - grab - r.left - 14) / Math.max(1, r.width - 28), 0, 1);
-    }
-    track.addEventListener("pointerdown", e => {
+    panel.querySelector("#abClose").addEventListener("click", closeAll);
+    panel.querySelector("#abGo").addEventListener("click", go);
+    panel.querySelector("#abStop").addEventListener("click", stopAll);
+    panel.addEventListener("click", e => e.stopPropagation());
+    panel.querySelectorAll("[data-edit]").forEach(b => b.addEventListener("click", () => openEditor(b.dataset.edit)));
+
+    /* the play controls here move what you are WATCHING (the video position) */
+    bindNav(panel, k => {
       const d = dur(); if(!d) return;
-      e.preventDefault();
-      stopPreview();
-      const dot = e.target.closest && e.target.closest(".abDot");
-      grab = 0;
-      let h;
-      if(dot){
-        h = dot.dataset.h;
-        const r = track.getBoundingClientRect();
-        const anchor = r.left + 14 + (r.width - 28) * clamp((h === "A" ? A : B) / d, 0, 1);
-        grab = e.clientX - anchor;
-      }else{
-        const f = frac(e.clientX);
-        h = Math.abs(f * d - A) <= Math.abs(f * d - B) ? "A" : "B";
-      }
-      const f = frac(e.clientX);
-      dragging = h;
-      try{ track.setPointerCapture(e.pointerId); }catch(err){}
-      select(h, false);
-      if(!dot) setHandle(h, f * d, true);
-    });
-    track.addEventListener("pointermove", e => {
-      if(!dragging) return;
-      setHandle(dragging, frac(e.clientX) * dur(), true);
-    });
-    const endDrag = () => { dragging = null; };
-    track.addEventListener("pointerup", endDrag);
-    track.addEventListener("pointercancel", endDrag);
-    track.addEventListener("lostpointercapture", endDrag);
+      if(k === "fb" || k === "ff"){ stopPlayback(); }
+      try{ video.currentTime = clamp((video.currentTime || 0) + stepOf(k), 0, d); }catch(e){}
+    }, () => { if(video.paused) startPreview(); else stopPlayback(); });
 
-    /* fine strip: the window is fixed while you drag, then re-centres on the handle */
-    const fine = panel.querySelector("#abFine");
-    const fineT = e => {
-      const r = fine.getBoundingClientRect();
-      return winStart + clamp((e.clientX - r.left) / Math.max(1, r.width), 0, 1) * winLen();
-    };
+    /* overview: tap or drag to move the video position */
+    const ov = panel.querySelector("#abOv");
+    let scrubbing = false;
+    const ovFrac = e => { const r = ov.getBoundingClientRect(); return clamp((e.clientX - r.left) / Math.max(1, r.width), 0, 1); };
+    ov.addEventListener("pointerdown", e => {
+      if(!dur()) return;
+      e.preventDefault(); scrubbing = true;
+      try{ ov.setPointerCapture(e.pointerId); }catch(err){}
+      try{ video.currentTime = ovFrac(e) * dur(); }catch(err){}
+    });
+    ov.addEventListener("pointermove", e => { if(scrubbing){ try{ video.currentTime = ovFrac(e) * dur(); }catch(err){} } });
+    ["pointerup", "pointercancel", "lostpointercapture"].forEach(ev => ov.addEventListener(ev, () => { scrubbing = false; }));
+  }
+
+  /* ----- 2 & 3. the Start / End editor ----- */
+  function buildEditor(){
+    edit = document.createElement("div");
+    edit.id = "abEdit";
+    edit.className = "abSheet hidden";
+    edit.setAttribute("role", "dialog");
+    edit.innerHTML =
+      '<div class="abHead"><span class="abTag" id="abETag">A</span><h4 id="abETitle">Set start</h4><span class="abBig" id="abETime"></span></div>' +
+      '<div id="abFine"><div class="abTicks" id="abTicks"></div><div class="abKeep" id="abKeep"></div>' +
+        '<div id="abOther"></div><div class="abPh" id="abPhF"></div><div id="abMark"></div>' +
+        '<span class="abOff" id="abOffL" style="left:6px;display:none"></span><span class="abOff" id="abOffR" style="right:6px;display:none"></span></div>' +
+      '<div class="abZoom"><button type="button" id="abZm" aria-label="Zoom out" title="Zoom out">−</button>' +
+        '<button type="button" id="abZr" class="abZr" title="Reset zoom">Reset</button>' +
+        '<button type="button" id="abZp" aria-label="Zoom in" title="Zoom in">+</button><span class="abZl" id="abZl"></span></div>' +
+      navHtml() +
+      '<p class="abCap" id="abECap"></p>' +
+      '<button type="button" class="abNow" id="abNow">Use current video time<b id="abNowT"></b></button>' +
+      '<div class="abFoot"><button type="button" class="abGo" id="abDone">Done</button></div>';
+    stage.appendChild(edit);
+    edit.addEventListener("click", e => e.stopPropagation());
+    edit.querySelector("#abDone").addEventListener("click", closeEditor);
+    edit.querySelector("#abNow").addEventListener("click", () => {
+      stopPlayback();
+      setHandle(editing, video.currentTime || 0, true);
+    });
+    edit.querySelector("#abZp").addEventListener("click", () => { zoomIdx = Math.min(ZOOMS.length - 1, zoomIdx + 1); keepInView(true); paintEdit(); });
+    edit.querySelector("#abZm").addEventListener("click", () => { zoomIdx = Math.max(0, zoomIdx - 1); keepInView(true); paintEdit(); });
+    edit.querySelector("#abZr").addEventListener("click", () => { zoomIdx = ZOOM_DEFAULT; keepInView(true); paintEdit(); });
+
+    /* the editor's play controls move the START or END you are editing */
+    bindNav(edit, k => {
+      stopPlayback();
+      setHandle(editing, val(editing) + stepOf(k), true);
+    }, () => { if(ctxPlay) stopPlayback(); else startContextPlay(); });
+
+    /* fine strip: swipe anywhere to scroll the view; grab the handle to move it */
+    const fine = edit.querySelector("#abFine");
+    let mode = null, grab = 0, startX = 0, startWin = 0, lastX = 0, edgeRaf = 0, edgeT = 0;
+    const timeAt = x => winStart + x / Math.max(1, fine.clientWidth) * winLen();
+    const clampWin = w => clamp(w, 0, Math.max(0, dur() - winLen()));
+    function edgeTick(now){
+      edgeRaf = 0;
+      if(mode !== "handle") return;
+      const r = fine.getBoundingClientRect(), x = lastX - r.left, dt = Math.min(50, now - (edgeT || now)); edgeT = now;
+      const zone = 32;
+      let dir = 0;
+      if(x < zone) dir = -(1 - Math.max(0, x) / zone);
+      else if(x > r.width - zone) dir = 1 - Math.max(0, r.width - x) / zone;
+      if(dir){
+        winStart = clampWin(winStart + dir * winLen() * 0.7 * dt / 1000);
+        setHandle(editing, timeAt(x - grab), true, true);
+        edgeRaf = requestAnimationFrame(edgeTick);
+      }else edgeT = 0;
+    }
     fine.addEventListener("pointerdown", e => {
       if(!dur()) return;
       e.preventDefault();
-      stopPreview();
-      fineDrag = true;
+      stopPlayback();
+      const r = fine.getBoundingClientRect(), x = e.clientX - r.left;
+      const hx = (val(editing) - winStart) / winLen() * r.width;
+      if(hx >= -10 && hx <= r.width + 10 && Math.abs(x - hx) <= 26){ mode = "handle"; grab = x - hx; }
+      else{ mode = "pan"; }
+      startX = e.clientX; startWin = winStart; lastX = e.clientX;
+      fine.classList.add("drag");
       try{ fine.setPointerCapture(e.pointerId); }catch(err){}
-      setHandle(sel, fineT(e), true, true);
     });
-    fine.addEventListener("pointermove", e => { if(fineDrag) setHandle(sel, fineT(e), true, true); });
-    const endFine = () => { if(!fineDrag) return; fineDrag = null; recenter(); paintPanel(); };
-    fine.addEventListener("pointerup", endFine);
-    fine.addEventListener("pointercancel", endFine);
-    fine.addEventListener("lostpointercapture", endFine);
-
-    panel.querySelector("#abZoomIn").addEventListener("click", () => { zoomIdx = Math.min(ZOOMS.length - 1, zoomIdx + 1); recenter(); paintPanel(); });
-    panel.querySelector("#abZoomOut").addEventListener("click", () => { zoomIdx = Math.max(0, zoomIdx - 1); recenter(); paintPanel(); });
-
-    /* keyboard on a focused dot */
-    panel.querySelectorAll(".abDot").forEach(dot => dot.addEventListener("keydown", e => {
-      const h = dot.dataset.h;
-      const base = e.shiftKey ? 1 : frameLen();
-      if(e.key === "ArrowLeft" || e.key === "ArrowDown"){ e.preventDefault(); stopPreview(); select(h, false); setHandle(h, (h === "A" ? A : B) - base, true); }
-      if(e.key === "ArrowRight" || e.key === "ArrowUp"){ e.preventDefault(); stopPreview(); select(h, false); setHandle(h, (h === "A" ? A : B) + base, true); }
-    }));
+    fine.addEventListener("pointermove", e => {
+      if(!mode) return;
+      const r = fine.getBoundingClientRect(), x = e.clientX - r.left;
+      lastX = e.clientX;
+      if(mode === "pan"){
+        winStart = clampWin(startWin - (e.clientX - startX) / Math.max(1, r.width) * winLen());
+        paintFine();
+      }else{
+        setHandle(editing, timeAt(x - grab), true, true);
+        if(!edgeRaf){ edgeT = 0; edgeRaf = requestAnimationFrame(edgeTick); }
+      }
+    });
+    const end = () => { if(!mode) return; mode = null; fine.classList.remove("drag"); paintEdit(); };
+    ["pointerup", "pointercancel", "lostpointercapture"].forEach(ev => fine.addEventListener(ev, end));
+    /* trackpad / mouse wheel: sideways scrolls, Ctrl+wheel zooms */
+    fine.addEventListener("wheel", e => {
+      e.preventDefault();
+      if(e.ctrlKey){ zoomIdx = clamp(zoomIdx + (e.deltaY < 0 ? 1 : -1), 0, ZOOMS.length - 1); keepInView(false); }
+      else winStart = clampWin(winStart + (Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY) / Math.max(1, fine.clientWidth) * winLen());
+      paintEdit();
+    }, {passive:false});
   }
 
-  function recenter(){
+  /* put the window where the handle is (or just make sure it is on screen) */
+  function keepInView(center){
     const d = dur(), W = winLen();
-    const c = cur() === null ? 0 : cur();
-    winStart = clamp(c - W / 2, 0, Math.max(0, d - W));
+    const t = editing ? val(editing) : 0;
+    if(center || t < winStart + W * 0.06 || t > winStart + W * 0.94) winStart = t - W / 2;
+    winStart = clamp(winStart, 0, Math.max(0, d - W));
   }
 
-  function select(h, seek){
-    sel = h;
-    stopPreview();
-    recenter();
-    paintPanel();
-    if(seek) showFrame(cur());
+  /* ticks, handles, region and playhead of the fine strip */
+  function paintFine(){
+    if(!edit) return;
+    const d = dur(), W = winLen();
+    winStart = clamp(winStart, 0, Math.max(0, d - W));
+    const fine = edit.querySelector("#abFine"), w = fine.clientWidth || 300;
+    const pct = t => ((t - winStart) / W * 100);
+    const majors = [0.1, 0.2, 0.5, 1, 2, 5, 10, 15, 30, 60, 120, 300, 600, 1800];
+    let major = majors[majors.length - 1];
+    for(const m of majors){ if(w * m / W >= 64){ major = m; break; } }
+    const fl = frameLen();
+    let minor = 0;
+    if(w * fl / W >= 6) minor = fl;
+    else for(const dv of [10, 5, 4, 2]){ const m = major / dv; if(w * m / W >= 6){ minor = m; break; } }
+    let html = "";
+    if(minor){
+      const n0 = Math.ceil(winStart / minor), n1 = Math.floor((winStart + W) / minor);
+      for(let n = n0; n <= n1 && n - n0 < 400; n++){
+        const t = n * minor;
+        if(Math.abs(t / major - Math.round(t / major)) < 1e-6) continue;
+        html += '<i class="abTk" style="left:' + pct(t) + '%"></i>';
+      }
+    }
+    const m0 = Math.ceil(winStart / major - 1e-9), m1 = Math.floor((winStart + W) / major + 1e-9);
+    for(let n = m0; n <= m1 && n - m0 < 60; n++){
+      const t = n * major;
+      const pp = pct(t);
+      html += '<i class="abTk M" style="left:' + pp + '%">' + (pp > 6 && pp < 94 ? '<b>' + fmtTick(t, major) + '</b>' : '') + '</i>';
+    }
+    edit.querySelector("#abTicks").innerHTML = html;
+
+    const k0 = clamp(pct(A || 0), 0, 100), k1 = clamp(pct(B === null ? d : B), 0, 100);
+    const keep = edit.querySelector("#abKeep");
+    keep.style.left = k0 + "%"; keep.style.width = Math.max(0, k1 - k0) + "%";
+
+    const other = editing === "A" ? "B" : "A";
+    const place = (host, h, kind, dim) => {
+      const t = val(h), inWin = t >= winStart - 1e-6 && t <= winStart + W + 1e-6;
+      host.innerHTML = inWin ? handleHtml(kind).replace('class="abH ' + kind, 'class="abH ' + kind + (dim ? " dim" : "")).replace('<div ', '<div style="left:' + pct(t) + '%" ') : "";
+    };
+    place(edit.querySelector("#abMark"), editing, editing === "A" ? "start" : "end", false);
+    place(edit.querySelector("#abOther"), other, other === "A" ? "start" : "end", true);
+
+    const oT = val(other), oL = edit.querySelector("#abOffL"), oR = edit.querySelector("#abOffR");
+    const name = other === "A" ? "Start" : "End";
+    oL.style.display = oT < winStart ? "" : "none"; oL.textContent = "‹ " + name;
+    oR.style.display = oT > winStart + W ? "" : "none"; oR.textContent = name + " ›";
+
+    const lab = "Showing " + fmt(winStart) + " – " + fmt(Math.min(d, winStart + W));
+    edit.querySelector("#abZl").textContent = zoomLabel(W);
+    edit.querySelector("#abZl").title = lab;
+    edit.querySelector("#abZp").disabled = zoomIdx >= ZOOMS.length - 1;
+    edit.querySelector("#abZm").disabled = zoomIdx <= 0;
+    edit.querySelector("#abZr").disabled = zoomIdx === ZOOM_DEFAULT;
+    paintPhF();
+  }
+  function paintPhF(){
+    if(!edit || edit.classList.contains("hidden")) return;
+    const W = winLen(), t = video.currentTime || 0;
+    const ph = edit.querySelector("#abPhF");
+    ph.style.display = (t >= winStart && t <= winStart + W) ? "" : "none";
+    ph.style.left = ((t - winStart) / W * 100) + "%";
+    edit.querySelector("#abNowT").textContent = fmt(t);
+  }
+  function paintEdit(){
+    if(!edit || !editing) return;
+    const isA = editing === "A";
+    edit.querySelector("#abETag").textContent = isA ? "A" : "B";
+    edit.querySelector("#abETitle").textContent = isA ? "Set start" : "Set end";
+    edit.querySelector("#abETime").textContent = fmt(val(editing));
+    edit.querySelector("#abECap").innerHTML = "Controls move the <b>" + (isA ? "start (A)" : "end (B)") + "</b> · Play shows " + CTX_SPAN + " s " + (isA ? "from the start" : "up to the end");
+    setPlayIcon(edit, !!ctxPlay);
+    paintFine();
   }
 
-  /* show the frame at a time without playing */
+  /* ----- the loop menu: painting ----- */
+  function paintPanel(){
+    if(!panel) return;
+    const d = dur();
+    const f = t => d ? clamp(t / d, 0, 1) : 0;
+    const a = f(A || 0), b = f(B === null ? d : B);
+    const hA = panel.querySelector("#abHA"), hB = panel.querySelector("#abHB");
+    hA.style.left = (a * 100) + "%"; hB.style.left = (b * 100) + "%";
+    const span = panel.querySelector("#abSpan");
+    span.style.left = (a * 100) + "%"; span.style.width = Math.max(0, (b - a) * 100) + "%";
+    panel.querySelector("#abTA").textContent = fmt(A || 0);
+    panel.querySelector("#abTB").textContent = fmt(B === null ? d : B);
+    panel.querySelector("#abEndT").textContent = d ? fmtShort(d) : "";
+    panel.querySelector("#abLen").textContent = valid() ? "Length " + fmtLen(B - A) : "";
+    panel.querySelector("#abCap").innerHTML = "Controls move the <b>video</b> · Play repeats the section";
+    panel.querySelector("#abGo").textContent = enabled ? "Done" : "Loop this section";
+    setPlayIcon(panel, !video.paused);
+    paintPlayhead();
+  }
+  function paintPlayhead(){
+    if(panel && !panel.classList.contains("hidden")){
+      const d = dur();
+      panel.querySelector("#abPhO").style.left = (d ? clamp((video.currentTime || 0) / d, 0, 1) * 100 : 0) + "%";
+    }
+    paintPhF();
+  }
+  video.addEventListener("timeupdate", paintPlayhead);
+  video.addEventListener("seeked", paintPlayhead);
+  video.addEventListener("loadedmetadata", () => { paintRegion(); paintPanel(); });
+  video.addEventListener("durationchange", () => { paintRegion(); });
+  /* the play buttons always match what the video is really doing */
+  function syncPlayIcons(){
+    if(panel) setPlayIcon(panel, !video.paused);
+    if(edit) setPlayIcon(edit, !!ctxPlay && !video.paused);
+  }
+  video.addEventListener("play", syncPlayIcons);
+  video.addEventListener("pause", () => {
+    if(!video.seeking){ previewing = false; ctxPlay = null; }
+    syncPlayIcons();
+  });
+
+  /* ----- changing A and B ----- */
   let seekRaf = 0, seekTo = 0;
   function showFrame(t){
     seekTo = t;
@@ -9902,150 +10104,119 @@ video.playbackRate =
       try{ video.currentTime = seekTo; }catch(e){}
     });
   }
-
   function setHandle(h, t, seek, keepWindow){
     const d = dur(); if(!d) return;
     t = clamp(t, 0, d);
     if(h === "A") A = Math.min(t, (B === null ? d : B) - MIN_GAP);
     else B = Math.max(t, (A === null ? 0 : A) + MIN_GAP);
     A = clamp(A, 0, d); B = clamp(B, 0, d);
-    if(!keepWindow && !fineDrag) recenter();
-    if(seek) showFrame(h === "A" ? A : B);
-    paintPanel(); paintRegion(); paintTool();
+    if(!keepWindow) keepInView(false);
+    if(seek) showFrame(val(h));
+    paintPanel(); paintEdit(); paintRegion(); paintTool();
   }
 
-  /* ----- preview: play the section on repeat ----- */
+  /* ----- playing from the sheets ----- */
+  function stopPlayback(){
+    previewing = false; ctxPlay = null;
+    try{ video.pause(); }catch(e){}
+    syncPlayIcons();
+  }
   function startPreview(){
     if(!valid()) return;
     previewing = true;
     const t = video.currentTime || 0;
     if(t < A - 0.05 || t >= B - 0.05){ try{ video.currentTime = A; }catch(e){} }
     try{ const p = video.play(); if(p && p.catch) p.catch(() => {}); }catch(e){}
-    start(); paintPanel();
+    start();
   }
-  function stopPreview(){
-    if(!previewing) return;
+  function startContextPlay(){
+    const d = dur(); if(!d || !editing) return;
+    const t = val(editing);
+    const from = editing === "A" ? t : Math.max(0, t - CTX_SPAN);
+    const to = editing === "A" ? Math.min(d, t + CTX_SPAN) : t;
     previewing = false;
-    try{ video.pause(); }catch(e){}
-    paintPanel();
-  }
-  function togglePreview(){
-    if(previewing) stopPreview(); else startPreview();
-  }
-
-  function setLeft(elm, f){ elm.style.left = "calc(14px + (100% - 28px) * " + f + ")"; }
-
-  /* ticks for the fine strip: one per frame when they fit, otherwise tenths / seconds */
-  function paintFine(){
-    const d = dur(), W = winLen();
-    const fine = panel.querySelector("#abFine");
-    const w = fine.clientWidth || 300;
-    const pos = t => ((t - winStart) / W * 100);
-    const fl = frameLen();
-    const steps = [fl, 0.1, 0.5, 1];
-    let step = steps[steps.length - 1];
-    for(const s of steps){ if(w * s / W >= 5){ step = s; break; } }
-    const px = w * step / W;
-    const first = Math.ceil(winStart / step) * step;
-    const off = (first - winStart) / W * w;
-    const major = Math.max(step, 1);
-    const ticks = panel.querySelector("#abTicks");
-    ticks.style.background =
-      "repeating-linear-gradient(90deg,#555 0,#555 1px,transparent 1px," + "transparent " + px + "px) " + off + "px 24px/100% 22px no-repeat" +
-      ", repeating-linear-gradient(90deg,#888 0,#888 1px,transparent 1px,transparent " + (w * major / W) + "px) " +
-      ((Math.ceil(winStart / major) * major - winStart) / W * w) + "px 16px/100% 30px no-repeat";
-    const aIn = A !== null && A >= winStart && A <= winStart + W;
-    const bIn = B !== null && B >= winStart && B <= winStart + W;
-    const mA = panel.querySelector("#abMarkA"), mB = panel.querySelector("#abMarkB");
-    mA.style.display = aIn ? "" : "none"; mA.style.left = pos(A || 0) + "%";
-    mB.style.display = bIn ? "" : "none"; mB.style.left = pos(B === null ? d : B) + "%";
-    mA.classList.toggle("sel", sel === "A"); mB.classList.toggle("sel", sel === "B");
-    const keep = panel.querySelector("#abKeep");
-    const k0 = clamp(pos(A || 0), 0, 100), k1 = clamp(pos(B === null ? d : B), 0, 100);
-    keep.style.left = k0 + "%"; keep.style.width = Math.max(0, k1 - k0) + "%";
-    panel.querySelector("#abWinL").textContent = fmt(winStart);
-    panel.querySelector("#abWinR").textContent = fmt(Math.min(d, winStart + W));
-    panel.querySelector("#abFineLbl").textContent = "Fine tune " + sel + " · " + (+W.toFixed(1)) + " s view";
-    panel.querySelector("#abZoomIn").disabled = zoomIdx >= ZOOMS.length - 1;
-    panel.querySelector("#abZoomOut").disabled = zoomIdx <= 0;
-    paintPh();
-  }
-  function paintPh(){
-    if(!panel || panel.classList.contains("hidden")) return;
-    const W = winLen(), t = video.currentTime || 0;
-    const ph = panel.querySelector("#abPh");
-    ph.style.display = (t >= winStart && t <= winStart + W) ? "" : "none";
-    ph.style.left = ((t - winStart) / W * 100) + "%";
+    ctxPlay = {from, to, back: t};
+    try{ video.currentTime = from; }catch(e){}
+    try{ const p = video.play(); if(p && p.catch) p.catch(() => {}); }catch(e){}
+    start(); syncPlayIcons();
   }
 
-  function paintPanel(){
-    if(!panel) return;
-    const d = dur();
-    const f = t => d ? clamp(t / d, 0, 1) : 0;
-    setLeft(panel.querySelector("#abDotA"), f(A || 0));
-    setLeft(panel.querySelector("#abDotB"), f(B === null ? d : B));
-    const span = panel.querySelector("#abSpan");
-    span.style.left = "calc(14px + (100% - 28px) * " + f(A || 0) + ")";
-    span.style.width = "calc((100% - 28px) * " + (f(B === null ? d : B) - f(A || 0)) + ")";
-    panel.querySelector("#abDotA").classList.toggle("sel", sel === "A");
-    panel.querySelector("#abDotB").classList.toggle("sel", sel === "B");
-    panel.querySelectorAll(".abCol").forEach(c => c.classList.toggle("sel", c.dataset.col === sel));
-    panel.querySelector("#abTA").textContent = fmt(A || 0);
-    panel.querySelector("#abTB").textContent = fmt(B === null ? d : B);
-    panel.querySelector("#abEndT").textContent = d ? fmtShort(d) : "";
-    panel.querySelector("#abLen").textContent = valid() ? "Length " + fmtLen(B - A) : "";
-    panel.querySelector("#abMoves").innerHTML = "Buttons move <b>" + (sel === "A" ? "A (start)" : "B (end)") + "</b> · Play previews the loop";
-    const play = panel.querySelector("#abPlay");
-    const html = previewing ? ICON_PAUSE : ICON_PLAY;
-    if(play.innerHTML !== html) play.innerHTML = html;
-    play.title = previewing ? "Pause" : "Play the loop";
-    play.setAttribute("aria-label", play.title);
-    panel.querySelector("#abGo").textContent = enabled ? "Done" : "Loop this section";
-    panel.querySelector("#abOff").style.display = enabled ? "" : "none";
-    paintFine();
-    paintPlayhead();
+  /* ----- opening and closing ----- */
+  let reserve = 0;
+  function visibleSheet(){
+    if(edit && !edit.classList.contains("hidden")) return edit;
+    if(panel && !panel.classList.contains("hidden")) return panel;
+    return null;
   }
-  function paintPlayhead(){
-    if(!panel || panel.classList.contains("hidden")) return;
-    const d = dur();
-    setLeft(panel.querySelector("#abPlayhead"), d ? clamp((video.currentTime || 0) / d, 0, 1) : 0);
-    paintPh();
+  /* shrink the video area so the picture sits above the sheet instead of behind it */
+  function fitVideo(){
+    const s = visibleSheet();
+    const h = s ? Math.ceil(s.getBoundingClientRect().height) : 0;
+    if(h === reserve) return;
+    reserve = h;
+    window.__abReserve = h;
+    try{ syncContentBottom(); }catch(e){}
   }
-  video.addEventListener("timeupdate", paintPlayhead);
-  video.addEventListener("seeked", paintPlayhead);
-  video.addEventListener("loadedmetadata", () => { paintRegion(); paintPanel(); });
-  video.addEventListener("durationchange", () => { paintRegion(); });
-  /* if something else pauses the video, the preview button goes back to Play */
-  video.addEventListener("pause", () => { if(previewing && !video.seeking){ previewing = false; paintPanel(); } });
+  let ro = null;
+  function watchSize(){
+    if(ro || !window.ResizeObserver) return;
+    ro = new ResizeObserver(fitVideo);
+    if(panel) ro.observe(panel);
+    if(edit) ro.observe(edit);
+    window.addEventListener("resize", fitVideo);
+  }
 
   function openPanel(){
     if(!dur()){ try{ showToast("The video is still loading"); }catch(e){} return; }
     if(!panel) build();
     const d = dur();
-    if(!enabled || A === null || B === null || B > d){
-      /* A starts where you are; B a little ahead, far enough to grab and drag */
+    if(A === null || B === null || B > d){
+      /* first time: A where you are, B a little ahead (far enough to see and grab) */
       const now = clamp(video.currentTime || 0, 0, d);
       const gap = Math.min(d, Math.max(3, Math.min(30, d * 0.05)));
       A = now;
       B = Math.min(d, A + gap);
       if(B - A < Math.min(gap * 0.6, 1.5)){ B = d; A = Math.max(0, d - gap); }
     }
-    try{ video.pause(); }catch(e){}
-    previewing = false;
+    if(edit) edit.classList.add("hidden");
+    editing = null;
     panel.classList.remove("hidden");
     document.body.classList.add("abOpen");
     abToolBtn && abToolBtn.setAttribute("aria-expanded", "true");
-    sel = "A";
-    recenter();
     paintPanel();
+    watchSize(); fitVideo();
   }
-  function closePanel(){
-    if(!panel) return;
-    if(previewing){ previewing = false; if(!enabled){ try{ video.pause(); }catch(e){} } }
+  function openEditor(h){
+    if(!edit){ buildEditor(); watchSize(); }
+    stopPlayback();
+    editing = h;
+    zoomIdx = ZOOM_DEFAULT;
+    keepInView(true);
     panel.classList.add("hidden");
+    edit.classList.remove("hidden");
+    paintEdit();
+    fitVideo();
+    requestAnimationFrame(() => { paintEdit(); fitVideo(); });
+  }
+  /* Done: back to the loop menu, with the video where the handle is */
+  function closeEditor(){
+    if(!edit) return;
+    stopPlayback();
+    edit.classList.add("hidden");
+    editing = null;
+    panel.classList.remove("hidden");
+    paintPanel();
+    fitVideo();
+  }
+  function closeAll(){
+    if(previewing && !enabled){ previewing = false; try{ video.pause(); }catch(e){} }
+    ctxPlay = null;
+    if(panel) panel.classList.add("hidden");
+    if(edit) edit.classList.add("hidden");
+    editing = null;
     document.body.classList.remove("abOpen");
-    dragging = null; fineDrag = null;
     abToolBtn && abToolBtn.setAttribute("aria-expanded", "false");
+    fitVideo();
     paintRegion(); paintTool();
   }
   /* "Loop this section" / "Done": close, jump to the start and play, looping A to B */
@@ -10053,44 +10224,57 @@ video.playbackRate =
     if(!valid()) return;
     enabled = true;
     previewing = false;
-    closePanel();
+    closeAll();
     try{ video.currentTime = A; }catch(e){}
     try{ const p = video.play(); if(p && p.catch) p.catch(() => {}); }catch(e){}
     start();
     paintRegion(); paintTool();
   }
-  function turnOff(){
-    enabled = false;
-    stopPreview();
-    paintPanel(); paintRegion(); paintTool();
-    try{ showToast("A–B loop turned off"); }catch(e){}
+  /* Stop: cancel everything - the loop is off and the points are cleared */
+  function stopAll(){
+    const was = enabled;
+    enabled = false; previewing = false; ctxPlay = null;
+    A = null; B = null;
+    try{ video.pause(); }catch(e){}
+    closeAll();
+    paintRegion(); paintTool();
+    try{ showToast(was ? "A–B loop stopped" : "A–B loop cancelled"); }catch(e){}
   }
 
   if(abToolBtn){
     abToolBtn.addEventListener("click", e => {
       e.stopPropagation();
-      if(panel && !panel.classList.contains("hidden")) closePanel(); else openPanel();
+      if(visibleSheet()) closeAll(); else openPanel();
     });
   }
   document.addEventListener("keydown", e => {
-    if(!panel || panel.classList.contains("hidden")) return;
-    if(e.key === "Escape"){ e.stopPropagation(); closePanel(); }
+    if(e.key !== "Escape") return;
+    if(edit && !edit.classList.contains("hidden")){ e.stopPropagation(); closeEditor(); }
+    else if(panel && !panel.classList.contains("hidden")){ e.stopPropagation(); closeAll(); }
   }, true);
 
-  /* ----- the loop itself (the saved loop, or the panel's preview) ----- */
+  /* ----- the loop itself (the saved loop, the menu's preview, the editor's short play) ----- */
   function tick(){
     raf = 0;
-    if(!looping()) return;
+    const loop = looping();
+    if(!loop && !ctxPlay) return;
     if(!video.paused){
       const t = video.currentTime;
-      if(t >= B - 0.02 || t < A - 0.6){
+      if(ctxPlay){
+        if(t >= ctxPlay.to - 0.02){
+          const back = ctxPlay.back;
+          ctxPlay = null;
+          try{ video.pause(); video.currentTime = back; }catch(e){}
+          syncPlayIcons();
+        }
+      }else if(t >= B - 0.02 || t < A - 0.6){
         try{ video.currentTime = A; }catch(e){}
       }
     }
     raf = requestAnimationFrame(tick);
   }
   function start(){
-    if(!raf && looping()) raf = requestAnimationFrame(tick);
+    if(!raf && (looping() || ctxPlay)) raf = requestAnimationFrame(tick);
   }
   video.addEventListener("play", start);
   video.addEventListener("ended", () => {

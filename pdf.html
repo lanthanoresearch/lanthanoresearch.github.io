@@ -647,7 +647,7 @@ input:focus-visible{
 
   min-width:220px;
 
-  z-index:7000;
+  z-index:8200; /* above the loading screen so the whole menu is visible */
 }
 
 #menu button{
@@ -4695,6 +4695,36 @@ body.reading-mode #readingModeFloat{
 <div id="titleBar">
 <div id="title">Loading PDF...</div>
 </div>
+<script>
+/* Runs as soon as the header, toolbar and title bar exist, so the layout is right from the
+   first paint (even before this page's main script has loaded): the loading screen stops at
+   the real bottom of the toolbar and above the title bar, and the file name shows right away. */
+(function(){
+  var d = document, h = d.querySelector("header"), tb = d.getElementById("toolbar"),
+      ov = d.getElementById("loadingOverlay"), bar = d.getElementById("titleBar"), ti = d.getElementById("title");
+  function sync(){
+    var b = d.body.classList;
+    if(b.contains("reading-mode") || b.contains("video-fullscreen")){ if(ov) ov.style.bottom = ""; return; }
+    if(h && tb){
+      var t = Math.ceil(h.getBoundingClientRect().height + tb.getBoundingClientRect().height);
+      d.documentElement.style.setProperty("--viewer-top", t + "px");
+      if(ov) ov.style.top = t + "px";
+    }
+    if(ov && bar) ov.style.bottom = Math.ceil(bar.getBoundingClientRect().height) + "px";
+  }
+  sync();
+  window.addEventListener("resize", sync);
+  if(window.ResizeObserver){ var ro = new ResizeObserver(sync); [h, tb, bar].forEach(function(e){ if(e) ro.observe(e); }); }
+  try{
+    var p = new URLSearchParams(location.search), name = "";
+    name = decodeURIComponent(p.get("paper") || "");
+    if(name && ti && /^\s*Loading/.test(ti.textContent)){
+      var s = d.createElement("span"); s.className = "title-text"; s.textContent = name;
+      ti.textContent = ""; ti.appendChild(s);
+    }
+  }catch(e){}
+})();
+</script>
 <!-- ==========================================================
      MENU
 ========================================================== -->
@@ -17916,8 +17946,13 @@ window.LT.context = () => ({
    CLEANUP
 ============================================================ */
 
-window.addEventListener("beforeunload", () => {
+/* This runs when the page is really being left (pagehide), not on beforeunload:
+   opening a mail app from "Report a correction" fires beforeunload but the page
+   stays put, and tearing the canvases down then left every page black. */
+let pdfTornDown = false;
+window.addEventListener("pagehide", () => {
 
+  pdfTornDown = true;
   renderGeneration++;
   searchGeneration++;
 
@@ -17974,6 +18009,13 @@ window.addEventListener("pageshow", event => {
   if(event.persisted){
     location.reload();
   }
+});
+
+/* Safety net: if the page ever comes back visible after it was torn down
+   (some browsers fire pagehide without unloading), start fresh instead of
+   showing black pages. */
+document.addEventListener("visibilitychange", () => {
+  if(document.visibilityState === "visible" && pdfTornDown) location.reload();
 });
 
 </script>

@@ -434,7 +434,7 @@ input:focus-visible{
 
   min-width:220px;
 
-  z-index:7000;
+  z-index:8200; /* above the loading screen so the whole menu is visible */
 }
 
 #menu button{
@@ -1014,6 +1014,36 @@ body.reading-mode #readingModeFloat{
   </div>
 
 </div>
+<script>
+/* Runs as soon as the header, toolbar and title bar exist, so the layout is right from the
+   first paint (even before this page's main script has loaded): the loading screen stops at
+   the real bottom of the toolbar and above the title bar, and the file name shows right away. */
+(function(){
+  var d = document, h = d.querySelector("header"), tb = d.getElementById("toolbar"),
+      ov = d.getElementById("loadingOverlay"), bar = d.getElementById("titleBar"), ti = d.getElementById("title");
+  function sync(){
+    var b = d.body.classList;
+    if(b.contains("reading-mode") || b.contains("video-fullscreen")){ if(ov) ov.style.bottom = ""; return; }
+    if(h && tb){
+      var t = Math.ceil(h.getBoundingClientRect().height + tb.getBoundingClientRect().height);
+      d.documentElement.style.setProperty("--viewer-top", t + "px");
+      if(ov) ov.style.top = t + "px";
+    }
+    if(ov && bar) ov.style.bottom = Math.ceil(bar.getBoundingClientRect().height) + "px";
+  }
+  sync();
+  window.addEventListener("resize", sync);
+  if(window.ResizeObserver){ var ro = new ResizeObserver(sync); [h, tb, bar].forEach(function(e){ if(e) ro.observe(e); }); }
+  try{
+    var p = new URLSearchParams(location.search), name = "";
+    name = decodeURIComponent((p.get("image") || "").split("/").pop()).replace(/\.[^/.]+$/, "").replace(/[-_]+/g, " ").replace(/\b\w/g, function(c){ return c.toUpperCase(); });
+    if(name && ti && /^\s*Loading/.test(ti.textContent)){
+      var s = d.createElement("span"); s.className = "title-text"; s.textContent = name;
+      ti.textContent = ""; ti.appendChild(s);
+    }
+  }catch(e){}
+})();
+</script>
 
 <!-- ==========================================================
      MENU
