@@ -9616,18 +9616,24 @@ video.playbackRate =
 ============================================================ */
 (function(){
 
-  /* ---- A-B loop: a panel with two draggable dots ---- */
+  /* ---- A-B loop: a bottom sheet with two draggable handles, a zoomed strip for
+          fine tuning, and the same transport buttons as the player ---- */
   const abToolBtn = document.getElementById("abToolBtn");
   const stage = document.getElementById("videoStage");
   const barWrap = document.getElementById("videoProgressBarWrap");
 
   let A = null, B = null, enabled = false, sel = "A", raf = 0, panel = null, dragging = null;
+  let previewing = false, zoomIdx = 1, fineDrag = null, winStart = 0;
   const MIN_GAP = 0.1;
+  const ZOOMS = [20, 8, 4, 2, 1];   /* seconds shown in the fine-tune strip */
 
   const dur = () => (Number.isFinite(video.duration) && video.duration > 0) ? video.duration : 0;
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
   const frameLen = () => (typeof estimatedFrameDuration === "number" && estimatedFrameDuration > 0) ? estimatedFrameDuration : 1 / 30;
   const pad2 = n => String(n).padStart(2, "0");
+  const cur = () => sel === "A" ? A : B;
+  /* how many seconds the fine strip shows (never more than the video itself) */
+  const winLen = () => Math.max(MIN_GAP, Math.min(ZOOMS[zoomIdx], dur() || ZOOMS[zoomIdx]));
 
   /* 0:05.43 (hundredths, so a single frame step is visible) */
   function fmt(t){
@@ -9637,43 +9643,66 @@ video.playbackRate =
     return h ? `${h}:${pad2(m)}:${sec}` : `${m}:${sec}`;
   }
   function fmtShort(t){ try{ return formatTimestamp(t); }catch(e){ return fmt(t); } }
+  const fmtLen = t => { t = Math.max(0, t); return t < 60 ? t.toFixed(1) + " s" : fmtShort(t); };
 
   const css = document.createElement("style");
   css.textContent =
     "#abToolBtn.on{background:#2f7cff;color:#fff}" +
     "#abRegion{position:absolute;top:50%;transform:translateY(-50%);height:8px;border-radius:3px;display:none;" +
       "background:rgba(255,193,7,.55);border-left:2px solid #ffc107;border-right:2px solid #ffc107;box-sizing:border-box;pointer-events:none;z-index:1}" +
-    "#abPanel{position:fixed;left:0;right:0;bottom:0;z-index:6800;box-sizing:border-box;max-height:72vh;overflow:auto;margin:0 auto;max-width:560px;" +
-      "padding:14px 16px 16px;background:#222;color:#eee;border:1px solid #333;border-bottom:0;border-radius:14px 14px 0 0;" +
+    "#abPanel{position:fixed;left:0;right:0;bottom:0;z-index:6800;box-sizing:border-box;max-height:78vh;overflow:auto;margin:0 auto;max-width:560px;" +
+      "padding:12px 16px 16px;background:#222;color:#eee;border:1px solid #333;border-bottom:0;border-radius:14px 14px 0 0;" +
       "box-shadow:0 -10px 30px rgba(0,0,0,.5);font:14px Arial,sans-serif;-webkit-overflow-scrolling:touch}" +
     "#abPanel.hidden{display:none}" +
-    "#abPanel .abHead{display:flex;align-items:center;gap:10px;margin:0 0 6px}" +
+    "#abPanel .abHead{display:flex;align-items:center;gap:10px;margin:0 0 4px}" +
     "#abPanel .abHead h4{margin:0;flex:1;font-size:16px;font-weight:600;color:#fff}" +
-    "#abPanel .abLen{color:#999;font-size:12.5px}" +
+    "#abPanel .abLen{color:#aaa;font-size:12.5px;font-variant-numeric:tabular-nums}" +
     "#abPanel .abX{width:32px;height:32px;border:0;border-radius:8px;background:transparent;color:#aaa;font-size:16px;cursor:pointer}" +
     "#abPanel .abX:hover{background:#383838;color:#fff}" +
-    "#abPanel .abHint{margin:0 0 6px;color:#9a9a9a;font-size:12.5px;line-height:1.4}" +
-    "#abTrack{position:relative;height:56px;margin:0 0 4px;touch-action:none;user-select:none;-webkit-user-select:none;cursor:pointer}" +
-    "#abTrack .abRail{position:absolute;left:14px;right:14px;top:27px;height:4px;border-radius:2px;background:#3a3a3a}" +
-    "#abTrack .abSpan{position:absolute;top:25px;height:8px;border-radius:3px;background:#ffc107;opacity:.9}" +
-    "#abTrack .abPlayhead{position:absolute;top:19px;width:2px;height:20px;margin-left:-1px;background:#fff;opacity:.75;border-radius:1px;pointer-events:none}" +
-    "#abTrack .abDot{position:absolute;top:14px;width:28px;height:28px;margin-left:-14px;padding:0;border-radius:50%;border:2px solid #ffc107;" +
+    "#abPanel .abHint{margin:0 0 4px;color:#9a9a9a;font-size:12.5px;line-height:1.4}" +
+    /* overview track */
+    "#abTrack{position:relative;height:50px;margin:0;touch-action:none;user-select:none;-webkit-user-select:none;cursor:pointer}" +
+    "#abTrack .abRail{position:absolute;left:14px;right:14px;top:23px;height:4px;border-radius:2px;background:#3a3a3a}" +
+    "#abTrack .abSpan{position:absolute;top:21px;height:8px;border-radius:3px;background:#ffc107;opacity:.9}" +
+    "#abTrack .abPlayhead{position:absolute;top:15px;width:2px;height:20px;margin-left:-1px;background:#fff;opacity:.8;border-radius:1px;pointer-events:none}" +
+    "#abTrack .abDot{position:absolute;top:10px;width:28px;height:28px;margin-left:-26px;padding:0;border-radius:50%;border:2px solid #ffc107;" +
       "background:#222;color:#ffc107;font:700 13px Arial,sans-serif;cursor:grab;display:flex;align-items:center;justify-content:center;touch-action:none;z-index:2}" +
+    "#abTrack #abDotB{margin-left:-2px}" +
     "#abTrack .abDot.sel{background:#ffc107;color:#1b1b1b;box-shadow:0 0 0 4px rgba(255,193,7,.28)}" +
     "#abTrack .abDot:active{cursor:grabbing}" +
-    "#abPanel .abCols{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:2px 0 10px}" +
-    "#abPanel .abCol{background:#1d1d1d;border:1px solid #333;border-radius:10px;padding:10px}" +
-    "#abPanel .abCol.sel{border-color:#ffc107}" +
-    "#abPanel .abPick{display:flex;align-items:baseline;gap:8px;width:100%;padding:0;margin:0 0 8px;background:none;border:0;color:#eee;font:inherit;cursor:pointer;text-align:left}" +
-    "#abPanel .abPick b{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#ffc107;color:#1b1b1b;font-size:12px}" +
-    "#abPanel .abPick span{color:#999;font-size:12px}" +
-    "#abPanel .abPick em{margin-left:auto;font-style:normal;font-size:16px;font-weight:600;font-variant-numeric:tabular-nums;color:#fff}" +
-    "#abPanel .abNow{width:100%;padding:8px 6px;background:#2e2e2e;border:0;border-radius:8px;color:#eee;font:12.5px Arial,sans-serif;cursor:pointer}" +
+    "#abPanel .abEnds{display:flex;justify-content:space-between;margin:-6px 14px 8px;color:#777;font-size:11px;font-variant-numeric:tabular-nums}" +
+    /* start / end cards */
+    "#abPanel .abCols{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 10px}" +
+    "#abPanel .abCol{display:flex;align-items:center;gap:8px;background:#1d1d1d;border:1px solid #333;border-radius:10px;padding:8px 8px 8px 10px;cursor:pointer}" +
+    "#abPanel .abCol.sel{border-color:#ffc107;box-shadow:0 0 0 1px #ffc107 inset}" +
+    "#abPanel .abCol b{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#ffc107;color:#1b1b1b;font-size:12px}" +
+    "#abPanel .abCol .abT{flex:1;min-width:0}" +
+    "#abPanel .abCol .abT small{display:block;color:#999;font-size:11px;line-height:1.2}" +
+    "#abPanel .abCol .abT em{display:block;font-style:normal;font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;color:#fff;line-height:1.3;white-space:nowrap}" +
+    "#abPanel .abNow{flex:0 0 auto;padding:7px 9px;background:#2e2e2e;border:0;border-radius:7px;color:#eee;font:12px Arial,sans-serif;cursor:pointer}" +
     "#abPanel .abNow:hover{background:#383838}" +
-    "#abPanel .abNudge{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:0 0 6px}" +
-    "#abPanel .abNudge button{padding:11px 4px;background:#2e2e2e;border:0;border-radius:8px;color:#eee;font:13.5px Arial,sans-serif;cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-select:none}" +
-    "#abPanel .abNudge button:hover{background:#383838}" +
-    "#abPanel .abNudge button:active{background:#444}" +
+    /* fine-tune strip */
+    "#abPanel .abFineHead{display:flex;align-items:center;gap:8px;margin:0 0 4px;color:#aaa;font-size:12px}" +
+    "#abPanel .abFineHead span{flex:1}" +
+    "#abPanel .abFineHead button{width:26px;height:26px;padding:0;border:0;border-radius:6px;background:#2e2e2e;color:#eee;font:600 15px Arial,sans-serif;cursor:pointer}" +
+    "#abPanel .abFineHead button:hover{background:#383838}" +
+    "#abPanel .abFineHead button:disabled{opacity:.35;cursor:default}" +
+    "#abFine{position:relative;height:46px;border-radius:8px;background:#1b1b1b;border:1px solid #333;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;cursor:ew-resize}" +
+    "#abFine .abTicks{position:absolute;inset:0;pointer-events:none}" +
+    "#abFine .abKeep{position:absolute;top:0;bottom:0;background:rgba(255,193,7,.16);pointer-events:none}" +
+    "#abFine .abMark{position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:#ffc107;pointer-events:none}" +
+    "#abFine .abMark.sel{width:3px;margin-left:-1.5px;box-shadow:0 0 0 3px rgba(255,193,7,.25)}" +
+    "#abFine .abMark i{position:absolute;top:2px;left:4px;font:700 11px Arial,sans-serif;font-style:normal;color:#ffc107}" +
+    "#abFine .abMark.isB i{left:auto;right:4px}" +
+    "#abFine .abPh{position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:#fff;opacity:.85;pointer-events:none}" +
+    "#abFine .abWin{position:absolute;bottom:1px;font-size:10px;color:#777;pointer-events:none;font-variant-numeric:tabular-nums}" +
+    /* transport: same buttons as the player */
+    "#abPanel .abTransport{display:flex;flex-direction:column;align-items:center;gap:6px;margin:12px 0 0}" +
+    "#abPanel .abTransport .videoNavGroup{align-self:center}" +
+    "#abPanel .abTransport .videoNavGroup #abPlay{width:34px;height:34px;background:#2f7cff;color:#fff;border-radius:7px;font-size:17px}" +
+    "#abPanel .abTransport .videoNavGroup #abPlay:hover{background:#4a8dff}" +
+    "#abPanel .abTransport .abMoves{color:#9a9a9a;font-size:12px}" +
+    "#abPanel .abTransport .abMoves b{color:#ffc107}" +
     "#abPanel .abFoot{display:flex;gap:10px;margin-top:12px}" +
     "#abPanel .abFoot button{flex:1;padding:12px 10px;border-radius:9px;border:0;font:14px Arial,sans-serif;cursor:pointer}" +
     "#abPanel .abGhost{background:#2e2e2e;color:#eee}" +
@@ -9682,7 +9711,8 @@ video.playbackRate =
     "#abPanel .abGo:hover{background:#4a8dff}" +
     "body.abOpen #readingModeFloat{display:none !important}" +
     "body.video-fullscreen #abPanel{bottom:0}" +
-    "@media (max-width:420px){#abPanel .abNudge button{font-size:12.5px;padding:11px 2px}}";
+    "@media (max-width:420px){#abPanel{padding:10px 12px 14px}#abPanel .abNow{padding:7px 7px}}" +
+    "@media (max-height:640px){#abPanel .abHint{display:none}}";
   document.head.appendChild(css);
 
   /* the highlighted section on the main seek bar */
@@ -9692,6 +9722,7 @@ video.playbackRate =
   if(barWrap) barWrap.insertBefore(region, barWrap.querySelector("#videoSeekBar"));
 
   function valid(){ return A !== null && B !== null && B - A >= MIN_GAP && dur() > 0; }
+  const looping = () => (enabled || previewing) && valid();
 
   function paintRegion(){
     const d = dur();
@@ -9709,6 +9740,7 @@ video.playbackRate =
 
   /* ----- the panel ----- */
   function build(){
+    const g = id => { const e = document.getElementById(id); return e ? e.innerHTML : ""; };
     panel = document.createElement("div");
     panel.id = "abPanel";
     panel.className = "hidden";
@@ -9716,16 +9748,25 @@ video.playbackRate =
     panel.setAttribute("aria-label", "A to B loop");
     panel.innerHTML =
       '<div class="abHead"><h4>A–B Loop</h4><span class="abLen" id="abLen"></span><button type="button" class="abX" id="abClose" aria-label="Close">✕</button></div>' +
-      '<p class="abHint" id="abHint"></p>' +
       '<div id="abTrack"><div class="abRail"></div><div class="abSpan" id="abSpan"></div><div class="abPlayhead" id="abPlayhead"></div>' +
         '<button type="button" class="abDot" id="abDotA" data-h="A" aria-label="Loop start">A</button>' +
         '<button type="button" class="abDot" id="abDotB" data-h="B" aria-label="Loop end">B</button></div>' +
+      '<div class="abEnds"><span>0:00</span><span id="abEndT"></span></div>' +
       '<div class="abCols">' +
-        '<div class="abCol" data-col="A"><button type="button" class="abPick" data-pick="A"><b>A</b><span>Start</span><em id="abTA">0:00.0</em></button><button type="button" class="abNow" data-now="A">Use current time</button></div>' +
-        '<div class="abCol" data-col="B"><button type="button" class="abPick" data-pick="B"><b>B</b><span>End</span><em id="abTB">0:00.0</em></button><button type="button" class="abNow" data-now="B">Use current time</button></div>' +
+        '<div class="abCol" data-col="A" role="button" tabindex="0"><b>A</b><div class="abT"><small>Start</small><em id="abTA">0:00.00</em></div><button type="button" class="abNow" data-now="A" title="Set A to the current time">Set to now</button></div>' +
+        '<div class="abCol" data-col="B" role="button" tabindex="0"><b>B</b><div class="abT"><small>End</small><em id="abTB">0:00.00</em></div><button type="button" class="abNow" data-now="B" title="Set B to the current time">Set to now</button></div>' +
       '</div>' +
-      '<div class="abNudge"><button type="button" data-n="-1">−1 s</button><button type="button" data-n="-f">‹ Frame</button>' +
-        '<button type="button" data-n="+f">Frame ›</button><button type="button" data-n="1">+1 s</button></div>' +
+      '<div class="abFineHead"><span id="abFineLbl"></span><button type="button" id="abZoomOut" aria-label="Zoom out" title="Zoom out">−</button><button type="button" id="abZoomIn" aria-label="Zoom in" title="Zoom in">+</button></div>' +
+      '<div id="abFine"><div class="abTicks" id="abTicks"></div><div class="abKeep" id="abKeep"></div>' +
+        '<div class="abMark" id="abMarkA"><i>A</i></div><div class="abMark isB" id="abMarkB"><i>B</i></div><div class="abPh" id="abPh"></div>' +
+        '<span class="abWin" id="abWinL" style="left:4px"></span><span class="abWin" id="abWinR" style="right:4px"></span></div>' +
+      '<div class="abTransport"><div class="videoNavGroup">' +
+        '<button type="button" id="abSkipB" class="videoCtrlBtn" data-n="-10" title="Back 10 seconds" aria-label="Back 10 seconds"><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor">' + g("skipBackBtn").replace(/^<svg[^>]*>|<\/svg>$/g, "") + '</svg></button>' +
+        '<button type="button" id="abFrB" class="videoCtrlBtn" data-n="-f" title="Back 1 frame" aria-label="Back 1 frame">' + g("frameBackBtn") + '</button>' +
+        '<button type="button" id="abPlay" class="videoCtrlBtn" title="Play the loop" aria-label="Play the loop"></button>' +
+        '<button type="button" id="abFrF" class="videoCtrlBtn" data-n="+f" title="Forward 1 frame" aria-label="Forward 1 frame">' + g("frameForwardBtn") + '</button>' +
+        '<button type="button" id="abSkipF" class="videoCtrlBtn" data-n="10" title="Forward 10 seconds" aria-label="Forward 10 seconds"><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor">' + g("skipForwardBtn").replace(/^<svg[^>]*>|<\/svg>$/g, "") + '</svg></button>' +
+      '</div><div class="abMoves" id="abMoves"></div></div>' +
       '<div class="abFoot"><button type="button" class="abGhost" id="abOff">Turn off</button><button type="button" class="abGo" id="abGo">Loop this section</button></div>';
     stage.appendChild(panel);
 
@@ -9733,43 +9774,63 @@ video.playbackRate =
     panel.querySelector("#abGo").addEventListener("click", go);
     panel.querySelector("#abOff").addEventListener("click", turnOff);
     panel.addEventListener("click", e => e.stopPropagation());
-    panel.querySelectorAll("[data-pick]").forEach(b => b.addEventListener("click", () => select(b.dataset.pick, true)));
+    panel.querySelectorAll("[data-col]").forEach(c => {
+      c.addEventListener("click", e => { if(e.target.closest("[data-now]")) return; select(c.dataset.col, true); });
+      c.addEventListener("keydown", e => { if(e.key === "Enter" || e.key === " "){ e.preventDefault(); select(c.dataset.col, true); } });
+    });
     panel.querySelectorAll("[data-now]").forEach(b => b.addEventListener("click", () => {
       select(b.dataset.now, false);
       setHandle(b.dataset.now, video.currentTime || 0, false);
     }));
 
-    /* nudge buttons: a tap moves one step, holding repeats */
+    /* transport: skip / frame move the chosen handle (and the picture follows),
+       a tap moves one step, holding repeats - exactly like the player's own buttons */
     panel.querySelectorAll("[data-n]").forEach(b => {
       let timer = 0, rep = 0;
       const step = () => {
         const k = b.dataset.n;
         const d = k === "-f" ? -frameLen() : k === "+f" ? frameLen() : Number(k);
-        setHandle(sel, (sel === "A" ? A : B) + d, true);
+        stopPreview();
+        setHandle(sel, cur() + d, true);
       };
       const stop = () => { clearTimeout(timer); clearInterval(rep); timer = 0; rep = 0; };
       b.addEventListener("pointerdown", e => {
         e.preventDefault();
         stop(); step();
-        timer = setTimeout(() => { rep = setInterval(step, 85); }, 420);
+        timer = setTimeout(() => { rep = setInterval(step, k10(b) ? 220 : 85); }, 420);
       });
       ["pointerup", "pointerleave", "pointercancel"].forEach(ev => b.addEventListener(ev, stop));
       b.addEventListener("keydown", e => { if(e.key === "Enter" || e.key === " "){ e.preventDefault(); step(); } });
     });
+    function k10(b){ return Math.abs(Number(b.dataset.n)) === 10; }
 
-    /* dragging a dot (or tapping the track moves the nearest dot) */
+    /* the play button plays the section on repeat so you can hear / see it */
+    panel.querySelector("#abPlay").addEventListener("click", togglePreview);
+
+    /* overview: drag a dot, or tap the track to move the nearest dot */
     const track = panel.querySelector("#abTrack");
+    let grab = 0;   /* where inside the dot you grabbed it, so it does not jump */
     function frac(clientX){
       const r = track.getBoundingClientRect();
-      return clamp((clientX - r.left - 14) / Math.max(1, r.width - 28), 0, 1);
+      return clamp((clientX - grab - r.left - 14) / Math.max(1, r.width - 28), 0, 1);
     }
     track.addEventListener("pointerdown", e => {
       const d = dur(); if(!d) return;
       e.preventDefault();
+      stopPreview();
       const dot = e.target.closest && e.target.closest(".abDot");
+      grab = 0;
+      let h;
+      if(dot){
+        h = dot.dataset.h;
+        const r = track.getBoundingClientRect();
+        const anchor = r.left + 14 + (r.width - 28) * clamp((h === "A" ? A : B) / d, 0, 1);
+        grab = e.clientX - anchor;
+      }else{
+        const f = frac(e.clientX);
+        h = Math.abs(f * d - A) <= Math.abs(f * d - B) ? "A" : "B";
+      }
       const f = frac(e.clientX);
-      let h = dot ? dot.dataset.h : (Math.abs(f * d - A) <= Math.abs(f * d - B) ? "A" : "B");
-      if(dot && A === B) h = f * d >= A ? "B" : "A";
       dragging = h;
       try{ track.setPointerCapture(e.pointerId); }catch(err){}
       select(h, false);
@@ -9784,19 +9845,50 @@ video.playbackRate =
     track.addEventListener("pointercancel", endDrag);
     track.addEventListener("lostpointercapture", endDrag);
 
-    /* keyboard: arrows on a focused dot */
+    /* fine strip: the window is fixed while you drag, then re-centres on the handle */
+    const fine = panel.querySelector("#abFine");
+    const fineT = e => {
+      const r = fine.getBoundingClientRect();
+      return winStart + clamp((e.clientX - r.left) / Math.max(1, r.width), 0, 1) * winLen();
+    };
+    fine.addEventListener("pointerdown", e => {
+      if(!dur()) return;
+      e.preventDefault();
+      stopPreview();
+      fineDrag = true;
+      try{ fine.setPointerCapture(e.pointerId); }catch(err){}
+      setHandle(sel, fineT(e), true, true);
+    });
+    fine.addEventListener("pointermove", e => { if(fineDrag) setHandle(sel, fineT(e), true, true); });
+    const endFine = () => { if(!fineDrag) return; fineDrag = null; recenter(); paintPanel(); };
+    fine.addEventListener("pointerup", endFine);
+    fine.addEventListener("pointercancel", endFine);
+    fine.addEventListener("lostpointercapture", endFine);
+
+    panel.querySelector("#abZoomIn").addEventListener("click", () => { zoomIdx = Math.min(ZOOMS.length - 1, zoomIdx + 1); recenter(); paintPanel(); });
+    panel.querySelector("#abZoomOut").addEventListener("click", () => { zoomIdx = Math.max(0, zoomIdx - 1); recenter(); paintPanel(); });
+
+    /* keyboard on a focused dot */
     panel.querySelectorAll(".abDot").forEach(dot => dot.addEventListener("keydown", e => {
       const h = dot.dataset.h;
       const base = e.shiftKey ? 1 : frameLen();
-      if(e.key === "ArrowLeft" || e.key === "ArrowDown"){ e.preventDefault(); select(h, false); setHandle(h, (h === "A" ? A : B) - base, true); }
-      if(e.key === "ArrowRight" || e.key === "ArrowUp"){ e.preventDefault(); select(h, false); setHandle(h, (h === "A" ? A : B) + base, true); }
+      if(e.key === "ArrowLeft" || e.key === "ArrowDown"){ e.preventDefault(); stopPreview(); select(h, false); setHandle(h, (h === "A" ? A : B) - base, true); }
+      if(e.key === "ArrowRight" || e.key === "ArrowUp"){ e.preventDefault(); stopPreview(); select(h, false); setHandle(h, (h === "A" ? A : B) + base, true); }
     }));
+  }
+
+  function recenter(){
+    const d = dur(), W = winLen();
+    const c = cur() === null ? 0 : cur();
+    winStart = clamp(c - W / 2, 0, Math.max(0, d - W));
   }
 
   function select(h, seek){
     sel = h;
+    stopPreview();
+    recenter();
     paintPanel();
-    if(seek) showFrame(h === "A" ? A : B);
+    if(seek) showFrame(cur());
   }
 
   /* show the frame at a time without playing */
@@ -9811,17 +9903,81 @@ video.playbackRate =
     });
   }
 
-  function setHandle(h, t, seek){
+  function setHandle(h, t, seek, keepWindow){
     const d = dur(); if(!d) return;
     t = clamp(t, 0, d);
     if(h === "A") A = Math.min(t, (B === null ? d : B) - MIN_GAP);
     else B = Math.max(t, (A === null ? 0 : A) + MIN_GAP);
     A = clamp(A, 0, d); B = clamp(B, 0, d);
+    if(!keepWindow && !fineDrag) recenter();
     if(seek) showFrame(h === "A" ? A : B);
     paintPanel(); paintRegion(); paintTool();
   }
 
+  /* ----- preview: play the section on repeat ----- */
+  function startPreview(){
+    if(!valid()) return;
+    previewing = true;
+    const t = video.currentTime || 0;
+    if(t < A - 0.05 || t >= B - 0.05){ try{ video.currentTime = A; }catch(e){} }
+    try{ const p = video.play(); if(p && p.catch) p.catch(() => {}); }catch(e){}
+    start(); paintPanel();
+  }
+  function stopPreview(){
+    if(!previewing) return;
+    previewing = false;
+    try{ video.pause(); }catch(e){}
+    paintPanel();
+  }
+  function togglePreview(){
+    if(previewing) stopPreview(); else startPreview();
+  }
+
   function setLeft(elm, f){ elm.style.left = "calc(14px + (100% - 28px) * " + f + ")"; }
+
+  /* ticks for the fine strip: one per frame when they fit, otherwise tenths / seconds */
+  function paintFine(){
+    const d = dur(), W = winLen();
+    const fine = panel.querySelector("#abFine");
+    const w = fine.clientWidth || 300;
+    const pos = t => ((t - winStart) / W * 100);
+    const fl = frameLen();
+    const steps = [fl, 0.1, 0.5, 1];
+    let step = steps[steps.length - 1];
+    for(const s of steps){ if(w * s / W >= 5){ step = s; break; } }
+    const px = w * step / W;
+    const first = Math.ceil(winStart / step) * step;
+    const off = (first - winStart) / W * w;
+    const major = Math.max(step, 1);
+    const ticks = panel.querySelector("#abTicks");
+    ticks.style.background =
+      "repeating-linear-gradient(90deg,#555 0,#555 1px,transparent 1px," + "transparent " + px + "px) " + off + "px 24px/100% 22px no-repeat" +
+      ", repeating-linear-gradient(90deg,#888 0,#888 1px,transparent 1px,transparent " + (w * major / W) + "px) " +
+      ((Math.ceil(winStart / major) * major - winStart) / W * w) + "px 16px/100% 30px no-repeat";
+    const aIn = A !== null && A >= winStart && A <= winStart + W;
+    const bIn = B !== null && B >= winStart && B <= winStart + W;
+    const mA = panel.querySelector("#abMarkA"), mB = panel.querySelector("#abMarkB");
+    mA.style.display = aIn ? "" : "none"; mA.style.left = pos(A || 0) + "%";
+    mB.style.display = bIn ? "" : "none"; mB.style.left = pos(B === null ? d : B) + "%";
+    mA.classList.toggle("sel", sel === "A"); mB.classList.toggle("sel", sel === "B");
+    const keep = panel.querySelector("#abKeep");
+    const k0 = clamp(pos(A || 0), 0, 100), k1 = clamp(pos(B === null ? d : B), 0, 100);
+    keep.style.left = k0 + "%"; keep.style.width = Math.max(0, k1 - k0) + "%";
+    panel.querySelector("#abWinL").textContent = fmt(winStart);
+    panel.querySelector("#abWinR").textContent = fmt(Math.min(d, winStart + W));
+    panel.querySelector("#abFineLbl").textContent = "Fine tune " + sel + " · " + (+W.toFixed(1)) + " s view";
+    panel.querySelector("#abZoomIn").disabled = zoomIdx >= ZOOMS.length - 1;
+    panel.querySelector("#abZoomOut").disabled = zoomIdx <= 0;
+    paintPh();
+  }
+  function paintPh(){
+    if(!panel || panel.classList.contains("hidden")) return;
+    const W = winLen(), t = video.currentTime || 0;
+    const ph = panel.querySelector("#abPh");
+    ph.style.display = (t >= winStart && t <= winStart + W) ? "" : "none";
+    ph.style.left = ((t - winStart) / W * 100) + "%";
+  }
+
   function paintPanel(){
     if(!panel) return;
     const d = dur();
@@ -9836,44 +9992,59 @@ video.playbackRate =
     panel.querySelectorAll(".abCol").forEach(c => c.classList.toggle("sel", c.dataset.col === sel));
     panel.querySelector("#abTA").textContent = fmt(A || 0);
     panel.querySelector("#abTB").textContent = fmt(B === null ? d : B);
-    panel.querySelector("#abLen").textContent = valid() ? "Length " + fmt(B - A) : "";
-    panel.querySelector("#abHint").textContent =
-      "Drag the dots or use the buttons. The buttons move " + (sel === "A" ? "the start (A)." : "the end (B).");
+    panel.querySelector("#abEndT").textContent = d ? fmtShort(d) : "";
+    panel.querySelector("#abLen").textContent = valid() ? "Length " + fmtLen(B - A) : "";
+    panel.querySelector("#abMoves").innerHTML = "Buttons move <b>" + (sel === "A" ? "A (start)" : "B (end)") + "</b> · Play previews the loop";
+    const play = panel.querySelector("#abPlay");
+    const html = previewing ? ICON_PAUSE : ICON_PLAY;
+    if(play.innerHTML !== html) play.innerHTML = html;
+    play.title = previewing ? "Pause" : "Play the loop";
+    play.setAttribute("aria-label", play.title);
     panel.querySelector("#abGo").textContent = enabled ? "Done" : "Loop this section";
     panel.querySelector("#abOff").style.display = enabled ? "" : "none";
+    paintFine();
     paintPlayhead();
   }
   function paintPlayhead(){
     if(!panel || panel.classList.contains("hidden")) return;
     const d = dur();
     setLeft(panel.querySelector("#abPlayhead"), d ? clamp((video.currentTime || 0) / d, 0, 1) : 0);
+    paintPh();
   }
   video.addEventListener("timeupdate", paintPlayhead);
   video.addEventListener("seeked", paintPlayhead);
   video.addEventListener("loadedmetadata", () => { paintRegion(); paintPanel(); });
   video.addEventListener("durationchange", () => { paintRegion(); });
+  /* if something else pauses the video, the preview button goes back to Play */
+  video.addEventListener("pause", () => { if(previewing && !video.seeking){ previewing = false; paintPanel(); } });
 
   function openPanel(){
     if(!dur()){ try{ showToast("The video is still loading"); }catch(e){} return; }
     if(!panel) build();
     const d = dur();
-    if(A === null || B === null || B > d){
+    if(!enabled || A === null || B === null || B > d){
+      /* A starts where you are; B a little ahead, far enough to grab and drag */
       const now = clamp(video.currentTime || 0, 0, d);
-      A = now >= d - 1 ? Math.max(0, d - Math.min(5, d)) : now;
-      B = Math.min(d, A + Math.max(3, Math.min(10, d * 0.1)));
+      const gap = Math.min(d, Math.max(3, Math.min(30, d * 0.05)));
+      A = now;
+      B = Math.min(d, A + gap);
+      if(B - A < Math.min(gap * 0.6, 1.5)){ B = d; A = Math.max(0, d - gap); }
     }
     try{ video.pause(); }catch(e){}
+    previewing = false;
     panel.classList.remove("hidden");
     document.body.classList.add("abOpen");
     abToolBtn && abToolBtn.setAttribute("aria-expanded", "true");
     sel = "A";
+    recenter();
     paintPanel();
   }
   function closePanel(){
     if(!panel) return;
+    if(previewing){ previewing = false; if(!enabled){ try{ video.pause(); }catch(e){} } }
     panel.classList.add("hidden");
     document.body.classList.remove("abOpen");
-    dragging = null;
+    dragging = null; fineDrag = null;
     abToolBtn && abToolBtn.setAttribute("aria-expanded", "false");
     paintRegion(); paintTool();
   }
@@ -9881,6 +10052,7 @@ video.playbackRate =
   function go(){
     if(!valid()) return;
     enabled = true;
+    previewing = false;
     closePanel();
     try{ video.currentTime = A; }catch(e){}
     try{ const p = video.play(); if(p && p.catch) p.catch(() => {}); }catch(e){}
@@ -9889,6 +10061,7 @@ video.playbackRate =
   }
   function turnOff(){
     enabled = false;
+    stopPreview();
     paintPanel(); paintRegion(); paintTool();
     try{ showToast("A–B loop turned off"); }catch(e){}
   }
@@ -9900,13 +10073,14 @@ video.playbackRate =
     });
   }
   document.addEventListener("keydown", e => {
-    if(e.key === "Escape" && panel && !panel.classList.contains("hidden")){ e.stopPropagation(); closePanel(); }
+    if(!panel || panel.classList.contains("hidden")) return;
+    if(e.key === "Escape"){ e.stopPropagation(); closePanel(); }
   }, true);
 
-  /* ----- the loop itself ----- */
+  /* ----- the loop itself (the saved loop, or the panel's preview) ----- */
   function tick(){
     raf = 0;
-    if(!enabled || !valid()) return;
+    if(!looping()) return;
     if(!video.paused){
       const t = video.currentTime;
       if(t >= B - 0.02 || t < A - 0.6){
@@ -9916,11 +10090,11 @@ video.playbackRate =
     raf = requestAnimationFrame(tick);
   }
   function start(){
-    if(!raf && enabled && valid()) raf = requestAnimationFrame(tick);
+    if(!raf && looping()) raf = requestAnimationFrame(tick);
   }
   video.addEventListener("play", start);
   video.addEventListener("ended", () => {
-    if(enabled && valid()){
+    if(looping()){
       try{ video.currentTime = A; }catch(e){}
       try{ video.play(); }catch(e){}
     }

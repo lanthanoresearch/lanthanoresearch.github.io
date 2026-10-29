@@ -178,7 +178,7 @@ function applyProps(st, props, sel, rec){
   if(!TE.active || (/knob/i.test(sel) && /active|\.on\b|checked/i.test(sel))){
     props.forEach(function(p){
       if(st.getPropertyValue(p[0]) !== p[1]) st.setProperty(p[0], p[1], p[2]);
-      if(rec) rec[p[0]] = {o:p[1], m:p[1]};
+      if(rec) rec[p[0]] = {o:p[1], m:st.getPropertyValue(p[0])};
     });
     return;
   }
@@ -196,7 +196,9 @@ function applyProps(st, props, sel, rec){
     var cx = {shadow:/shadow/.test(p[0]), keepText: bgKept && (p[0] === "color" || p[0] === "-webkit-text-fill-color"), text: p[0] === "color" || p[0] === "--btn-text" || (T.light && p[0].indexOf("--") === 0), kept:false};
     var nv = mapAny(p[0], p[1], cx);
     if(st.getPropertyValue(p[0]) !== nv) st.setProperty(p[0], nv, p[2]);
-    if(rec) rec[p[0]] = {o:p[1], m:nv};
+    /* remember the value as the browser stores it (it re-formats colors), so the
+       next pass recognises its own write instead of mapping it a second time */
+    if(rec) rec[p[0]] = {o:p[1], m:st.getPropertyValue(p[0])};
   });
 }
 
@@ -835,7 +837,9 @@ function cite(item){
   findPaper(item.type, item.name).then(function(paper){
     var list = buildCitations(item, paper);
     var opts = list.map(function(x){ return {value:x.name, label:x.name}; });
-    var cur = list[0].name;
+    /* remember the format you used last, for every paper, picture and video */
+    var cur = list[0].name, saved = get("lt_cite_format");
+    if(saved && list.some(function(x){ return x.name === saved; })) cur = saved;
     var box = modal('<h3>' + (item.type === "paper" ? "Reference PDF" : item.type === "image" ? "Reference image" : "Reference video") + '</h3>',
       '<p class="ltSub">' + esc(item.title) + '</p>' +
       '<button type="button" class="ltPickRow" id="ltFmt">' + pickerRowHtml("Format") + '</button>' +
@@ -850,7 +854,7 @@ function cite(item){
       out.innerHTML = c.html;
       out.classList.toggle("ltMono", !!c.mono);
     }
-    bindPicker(box.querySelector("#ltFmt"), opts, function(){ return cur; }, function(v){ cur = v; show(); });
+    bindPicker(box.querySelector("#ltFmt"), opts, function(){ return cur; }, function(v){ cur = v; set("lt_cite_format", v); show(); });
     show();
     box.addEventListener("click", function(e){
       var b = e.target.closest("[data-act]"); if(!b) return;
@@ -925,7 +929,7 @@ function report(item){
 /* ---------------------------------------------------------------
    Backup / restore (favorites, bookmarks, settings)
 --------------------------------------------------------------- */
-var SKIP = /^(savedVideoLog|archiveStatsCache|archiveFileSizes|lt_seen|lt_hit)/;
+var SKIP = /^(savedVideoLog|archiveStatsCache|archiveFileSizes|lt_seen|lt_hit|lt_last_backup)/;
 function exportBackup(){
   var data = {};
   try{
@@ -939,6 +943,7 @@ function exportBackup(){
   var a = el("a", {href:URL.createObjectURL(blob), download:"lanthano-backup-" + new Date().toISOString().slice(0,10) + ".json"});
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(function(){ URL.revokeObjectURL(a.href); }, 5000);
+  set("lt_last_backup", new Date().toISOString());
   toast("Backup saved - " + Object.keys(data).length + " items");
 }
 function importBackup(){
