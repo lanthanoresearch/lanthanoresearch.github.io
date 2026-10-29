@@ -1168,6 +1168,12 @@ a.gallery-image .video-duration,
 .favorite-star{width:32px;height:32px;top:9px;right:13px}
 .view-comfy .favorite-star{width:26px;height:26px;top:6px;right:9px}
 .view-compact .favorite-star{width:24px;height:24px;top:5px;right:9px}
+
+/* ---- Shared page header badge (same on every page) ---- */
+.hero{display:flex;justify-content:center;margin:0 0 22px}
+.hero .hero-badge{width:84px;height:84px;border:8px solid #1d1d1d;box-sizing:content-box;border-radius:50%;background:#262626;display:flex;align-items:center;justify-content:center;color:#ddd}
+.hero .hero-badge svg{width:46px;height:46px}
+.pv-ico{flex:0 0 auto;display:flex;align-items:center;justify-content:center}
 </style>
 <style id="paperDlCss">
 /* Download chip: same round chip as the star, sitting just left of it. */
@@ -1504,6 +1510,7 @@ filter:drop-shadow(0 0 4px rgba(255,215,0,.6));
 
 </div>
 
+    <div class="hero" id="pageHero"><div class="hero-badge pv-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3.5h7.5L20 7v10.5a1.5 1.5 0 0 1-1.5 1.5H9a1.5 1.5 0 0 1-1.5-1.5V5A1.5 1.5 0 0 1 9 3.5z"/><path d="M16 3.5V7.2h4"/><path d="M5 7.5V19a2 2 0 0 0 2 2h9"/><path d="M10.5 12h6M10.5 15.5h4"/></svg></div></div>
     <h1 id="pageTitle">Loading...</h1>
 
 <div class="info-bar">
@@ -2174,6 +2181,7 @@ if(!returning){
 }
     
 
+const HERO_ICONS = {"biblical": "<svg class=\"cat-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 5.5C4 4.7 4.7 4 5.5 4H11v16H5.5C4.7 20 4 19.3 4 18.5z\"/><path d=\"M20 5.5c0-.8-.7-1.5-1.5-1.5H13v16h5.5c.8 0 1.5-.7 1.5-1.5z\"/></svg>", "historical": "<svg class=\"cat-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M3 9.5 12 4l9 5.5\"/><line x1=\"5.5\" y1=\"9.5\" x2=\"5.5\" y2=\"17.5\"/><line x1=\"10\" y1=\"9.5\" x2=\"10\" y2=\"17.5\"/><line x1=\"14\" y1=\"9.5\" x2=\"14\" y2=\"17.5\"/><line x1=\"18.5\" y1=\"9.5\" x2=\"18.5\" y2=\"17.5\"/><line x1=\"3.5\" y1=\"20\" x2=\"20.5\" y2=\"20\"/></svg>", "political": "<svg class=\"cat-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><line x1=\"5\" y1=\"21\" x2=\"5\" y2=\"3.5\"/><path d=\"M5 4.5h12l-2.5 4 2.5 4H5\"/></svg>", "scientific": "<svg class=\"cat-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M9.5 3.5h5\"/><path d=\"M10.5 3.5v6L5 19a1.5 1.5 0 0 0 1.3 2.2h11.4A1.5 1.5 0 0 0 19 19l-5.5-9.5v-6\"/><line x1=\"7.8\" y1=\"15\" x2=\"16.2\" y2=\"15\"/></svg>", "medical": "<svg class=\"cat-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"3.5\" y=\"3.5\" width=\"17\" height=\"17\" rx=\"3.5\"/><line x1=\"12\" y1=\"8\" x2=\"12\" y2=\"16\"/><line x1=\"8\" y1=\"12\" x2=\"16\" y2=\"12\"/></svg>", "astronomy": "<svg class=\"cat-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"5\"/><path d=\"M3.5 15.5C2 13.2 6.5 9.6 12 8.2s9.8-.2 8.5 2.8\"/><path d=\"M20.5 8.5c1.5 2.3-3 5.9-8.5 7.3S2.2 16 3.5 13\"/></svg>", "technology": "<svg class=\"cat-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"7\" y=\"7\" width=\"10\" height=\"10\" rx=\"1.5\"/><line x1=\"10\" y1=\"3.5\" x2=\"10\" y2=\"7\"/><line x1=\"14\" y1=\"3.5\" x2=\"14\" y2=\"7\"/><line x1=\"10\" y1=\"17\" x2=\"10\" y2=\"20.5\"/><line x1=\"14\" y1=\"17\" x2=\"14\" y2=\"20.5\"/><line x1=\"3.5\" y1=\"10\" x2=\"7\" y2=\"10\"/><line x1=\"3.5\" y1=\"14\" x2=\"7\" y2=\"14\"/><line x1=\"17\" y1=\"10\" x2=\"20.5\" y2=\"10\"/><line x1=\"17\" y1=\"14\" x2=\"20.5\" y2=\"14\"/></svg>", "philosophy": "<svg class=\"cat-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M9 18h6\"/><path d=\"M10 21h4\"/><path d=\"M12 3.5a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2V17h5.2v-.7c0-.8.4-1.5 1-2A6 6 0 0 0 12 3.5z\"/></svg>", "all": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M9 3.5h7.5L20 7v10.5a1.5 1.5 0 0 1-1.5 1.5H9a1.5 1.5 0 0 1-1.5-1.5V5A1.5 1.5 0 0 1 9 3.5z\"/><path d=\"M16 3.5V7.2h4\"/><path d=\"M5 7.5V19a2 2 0 0 0 2 2h9\"/><path d=\"M10.5 12h6M10.5 15.5h4\"/></svg>", "favorites": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.9 6.8 19.7l1-5.9L3.5 9.7l5.9-.8z\"/></svg>"};
 let pageTitle = "";
 
 if(currentCategory === "all"){
@@ -2194,6 +2202,16 @@ if(currentCategory === "all"){
 
 document.querySelector("h1").textContent = pageTitle;
 document.title = `Lanthano Research - ${pageTitle}`;
+
+(function(){
+    try{
+        const key = currentCategory.toLowerCase();
+        const icon = HERO_ICONS[key] || HERO_ICONS.all;
+        const b = document.querySelector("#pageHero .hero-badge");
+        if(b) b.innerHTML = icon;
+    }catch(e){}
+})();
+
 
 
     

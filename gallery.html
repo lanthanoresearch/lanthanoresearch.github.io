@@ -1130,6 +1130,12 @@ h1{
     .gallery-image .fav-heart{top:5px;right:5px;width:26px;height:26px}
     .gallery-image .fav-heart svg{width:15px;height:15px}
 }
+
+/* ---- Shared page header badge (same on every page) ---- */
+.hero{display:flex;justify-content:center;margin:0 0 22px}
+.hero .hero-badge{width:84px;height:84px;border:8px solid #1d1d1d;box-sizing:content-box;border-radius:50%;background:#262626;display:flex;align-items:center;justify-content:center;color:#ddd}
+.hero .hero-badge svg{width:46px;height:46px}
+.pv-ico{flex:0 0 auto;display:flex;align-items:center;justify-content:center}
 </style>
 <style id="favMediaCss">
 /* ---------- Favorite media (heart) ----------
@@ -1407,6 +1413,7 @@ filter:drop-shadow(0 0 4px rgba(255,215,0,.6));
 
 </div>
 
+<div class="hero" id="pageHero"><div class="hero-badge pv-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="9" cy="10" r="1.7"/><path d="M4 17l5-4.5 4 3.5 3-2.5 4 3.5"/></svg></div></div>
 <h1 id="pageHeading">Gallery</h1>
 
 <script>

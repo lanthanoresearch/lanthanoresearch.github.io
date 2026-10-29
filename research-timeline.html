@@ -1253,6 +1253,12 @@ filter:drop-shadow(0 0 4px rgba(255,215,0,.6));
   }
 }
 
+
+/* ---- Shared page header badge (same on every page) ---- */
+.hero{display:flex;justify-content:center;margin:0 0 22px}
+.hero .hero-badge{width:84px;height:84px;border:8px solid #1d1d1d;box-sizing:content-box;border-radius:50%;background:#262626;display:flex;align-items:center;justify-content:center;color:#ddd}
+.hero .hero-badge svg{width:46px;height:46px}
+.pv-ico{flex:0 0 auto;display:flex;align-items:center;justify-content:center}
 </style>
 </head>
 
@@ -1264,7 +1270,8 @@ filter:drop-shadow(0 0 4px rgba(255,215,0,.6));
   <a class="home-button" href="index.html"><svg class="back-arrow" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:1em;height:1em;vertical-align:-.12em;margin-right:.35em;flex-shrink:0"><path d="M18 4.5v15L5.5 12z"/></svg> Home</a>
 </div>
 
-<h1>Research Timeline</h1>
+<div class="hero"><div class="hero-badge pv-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 7v3M12 14v3"/><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/><path d="M14 5h6M10 12H4M14 19h6"/></svg></div></div>
+<h1 style="margin-bottom:20px">Research Timeline</h1>
 
 <p class="subtitle">
   A chronologically timeline of the research archive. Hover over a paper to read its description.

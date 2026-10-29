@@ -347,6 +347,7 @@ function accentCss(){
     ".button:not(.danger):not(.secondary):hover,.btn:not(.danger):not(.secondary):hover,.small:hover{background:" + btnH + " !important}" +
     ".mode-pill{background:" + btn + " !important;box-shadow:inset 0 0 0 1px " + edge + " !important}" +
     ".back,.back-arrow{color:" + main + " !important}" +
+    ".email a svg{color:" + main + " !important}.email a:hover{border-color:" + edge + " !important}" +
     ".paper-option.active,.sort-option.active,.ltOpt.active{background:" + btn + " !important;color:" + txt + " !important}" +
     ".ltOpt .ltOptCheck,.ltPickCaret{color:" + main + "}" +
     ".ltPickCaret{border-top-color:" + main + "}" +

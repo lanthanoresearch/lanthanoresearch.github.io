@@ -218,6 +218,31 @@ a.inl{color:#9ab8ff}
 .pv-ico{flex:0 0 auto;width:40px;height:40px;border-radius:11px;background:#2a2a2a;color:#ddd;display:flex;align-items:center;justify-content:center}
 .pv-ico svg{width:22px;height:22px}
 .card h2.hd{display:flex;align-items:center;gap:12px;margin-top:0}
+
+html{scroll-behavior:smooth}
+.top-button{
+    position:fixed;
+    bottom:20px;
+    left:50%;
+    transform:translateX(-50%);
+    width:50px;
+    height:50px;
+    background:#2a2a2a;
+    color:white;
+    text-decoration:none;
+    border-radius:50%;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    font-size:24px;
+    z-index:1000;
+    opacity:.6;
+}
+
+.top-button:hover{
+    opacity:.6;
+    background:#2a2a2a;
+}
 </style>
 </head>
 <body>
@@ -368,5 +393,35 @@ buildSearch();
   });
 })();
 </script>
+
+<a href="#" class="top-button" id="topButton">
+    <span style="position:relative; top:-3px;">▲</span>
+</a>
+
+<script>
+
+const topButton = document.getElementById("topButton");
+
+function updateTopButton(){
+    if(window.scrollY > 10){
+        topButton.style.display = "flex";
+    }else{
+        topButton.style.display = "none";
+    }
+}
+
+topButton.addEventListener("click", function(e){
+    e.preventDefault();
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+});
+
+window.addEventListener("scroll", updateTopButton);
+window.addEventListener("load", updateTopButton);
+
+</script>
+
 </body>
 </html>
