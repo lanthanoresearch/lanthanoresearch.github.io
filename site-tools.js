@@ -364,6 +364,27 @@ function boostCss(main, edge, soft, A, L){
            ".gallery-image{box-shadow:0 0 0 1px " + edge + "}" +
            ".paper-break-dl{box-shadow:" + ring + "}";
   }
+  var home = path === "index.html" || path === "";
+  if(home){
+    css += ".archive-stats,.featured-card,.featured-video-card,.card:not(.all-research),.sx-gear,.video-credit-button{box-shadow:" + ring + "}.card.all-research{border-color:" + edge + " !important}" +
+           ".card{color:" + main + " !important}" +
+           ".featured-title,.featured-video-title,.featured-read,.archive-stat-number{color:" + main + " !important}" +
+           ".featured-label,.featured-video-label,.featured-category,.category-note,.archive-stat-label,.featured-video-meta{color:" + muted + " !important}" +
+           "#searchBox{box-shadow:" + ring + "}" +
+           ".footer-links .footer-nav{border-color:" + edge + " !important}";
+  }
+  if(path === "discover.html"){
+    css += ".quiz-card,.result-card,.result-why,.quiz-option-tag,.quiz-option{box-shadow:" + ring + "}" +
+           ".result-title,.quiz-question{color:" + main + " !important}" +
+           ".discover-header p,.result-category{color:" + muted + " !important}" +
+           ".result-why b{color:" + main + " !important}";
+  }
+  if(path === "research-timeline.html"){
+    css += ".paper-card,.category-btn{box-shadow:" + ring + "}.legend{box-shadow:inset 0 1px 0 " + edge + "}" +
+           ".paper-description{box-shadow:0 12px 30px rgba(0,0,0,.65)," + ring + "}" +
+           ".paper-title,.description-label{color:" + main + " !important}" +
+           ".subtitle,.timeline-meta,.paper-count,.list-year,.paper-category{color:" + muted + " !important}";
+  }
   if(view){
     css += "#toolbar{box-shadow:inset 0 -1px 0 " + edge + "}" +
            "#titleBar{box-shadow:inset 0 1px 0 " + edge + "}" +
