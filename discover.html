@@ -620,8 +620,37 @@ font-size:1.05em;
 .hero .hero-badge svg{width:46px;height:46px}
 .pv-ico{flex:0 0 auto;display:flex;align-items:center;justify-content:center}
 
-.discover-header .hero{margin-bottom:16px}
-.discover-header.compact .hero{display:none}
+/* ---- Fit on one screen: keep the icon, tighten everything else ---- */
+.discover-header .hero{margin-bottom:12px}
+.discover-header .hero-badge{width:min(84px,10.5vh);height:min(84px,10.5vh)}
+.discover-header .hero-badge svg{width:55%;height:55%}
+.discover-header h1{font-size:clamp(1.35em,6.2vw,2em);margin-bottom:4px}
+.discover-header p{font-size:.88em;line-height:1.35}
+.progress-track{margin:8px 0}
+.quiz-card{padding:12px 14px}
+.quiz-question{font-size:1.05em;margin-bottom:10px}
+.quiz-options{gap:6px}
+.quiz-option{padding:8px 12px;font-size:.93em;line-height:1.25;border-radius:12px}
+.quiz-option-group{gap:8px}
+.quiz-option-tag{width:32px;height:32px}
+.quiz-option-tag .cat-icon{width:17px;height:17px}
+.quiz-icon{margin-bottom:4px}
+.quiz-icon .cat-icon{width:28px;height:28px}
+.result-media{height:84px}
+.result-icon-frame{width:62px;height:62px}
+.result-icon-frame .cat-icon{width:30px;height:30px}
+.result-body{padding:10px 14px 12px}
+.result-title{font-size:1.18rem;margin-bottom:4px}
+.result-description{font-size:.92em;line-height:1.35;margin-bottom:8px;-webkit-line-clamp:3}
+.result-why{padding:6px 10px;font-size:.8em;line-height:1.35;margin-bottom:8px}
+.result-read{padding:10px}
+.result-actions{margin-top:8px}
+.result-secondary{padding:6px 12px}
+@media (max-height:700px){
+.discover-header p{display:none}
+.top-nav{padding-top:28px}
+.back-link{margin-bottom:12px}
+}
 </style>
 </head>
 <body>
