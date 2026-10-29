@@ -1,6 +1,6 @@
 {
  "count": 309,
- "totalBytes": 283620093,
+ "totalBytes": 283632374,
  "files": [
   {
    "path": "1 Thessalonians Original Text.png",
@@ -1139,8 +1139,8 @@
   },
   {
    "path": "site-tools.js",
-   "size": 83197,
-   "hash": "7214a42cf629c75b"
+   "size": 93601,
+   "hash": "5e6e1b8707d57d44"
   },
   {
    "path": "sitemap.xml",
@@ -1159,8 +1159,8 @@
   },
   {
    "path": "storage.html",
-   "size": 38299,
-   "hash": "ef0b46d537956a29"
+   "size": 39951,
+   "hash": "21c83af07de512da"
   },
   {
    "path": "Strange Shadows.png",
@@ -1494,8 +1494,8 @@
   },
   {
    "path": "video.html",
-   "size": 283239,
-   "hash": "b74d9d2c59099420"
+   "size": 283464,
+   "hash": "507f3ddfdcf7a2ad"
   },
   {
    "path": "What is Everything.pdf",
