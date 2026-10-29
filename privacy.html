@@ -150,7 +150,8 @@ html{
 const topButton = document.getElementById("topButton");
 
 function updateTopButton(){
-    if(window.scrollY > 10){
+    const y = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+    if(y > 10){
         topButton.style.display = "flex";
     }else{
         topButton.style.display = "none";
@@ -165,7 +166,11 @@ topButton.addEventListener("click", function(e){
     });
 });
 
-window.addEventListener("scroll", updateTopButton);
+window.addEventListener("scroll", updateTopButton, {passive:true});
+document.addEventListener("scroll", updateTopButton, {passive:true});
+window.addEventListener("resize", updateTopButton);
+window.addEventListener("pageshow", updateTopButton);
+updateTopButton();
 window.addEventListener("load", updateTopButton);
 
 </script>

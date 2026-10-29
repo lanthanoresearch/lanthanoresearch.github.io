@@ -1423,6 +1423,7 @@ filter:drop-shadow(0 0 4px rgba(255,215,0,.6));
     try{
         if(new URLSearchParams(location.search).get("favorites") === "1"){
             document.getElementById("pageHeading").textContent = "Favorite Media";
+            try{ document.querySelector("#pageHero .hero-badge").innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.4a4.3 4.3 0 0 1 7.5 2.4C19.5 15.4 12 20 12 20z"/></svg>'; }catch(e){}
             document.title = "Favorite Media";
         }
     }catch(e){}
@@ -2768,6 +2769,7 @@ modeSwitch.querySelectorAll("button").forEach(btn => {
 // Opened only from the home page's Media button, like the Papers favorites
 // page: it is its own page, with no toggle to switch it on or off here.
 document.getElementById("pageHeading").textContent = favoritesOnly ? "Favorite Media" : "Gallery";
+try{ if(favoritesOnly) document.querySelector("#pageHero .hero-badge").innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.4a4.3 4.3 0 0 1 7.5 2.4C19.5 15.4 12 20 12 20z"/></svg>'; }catch(e){}
 document.title = favoritesOnly ? "Favorite Media" : "Gallery";
 
 // Same wording and look as the empty Favorite Papers page.
