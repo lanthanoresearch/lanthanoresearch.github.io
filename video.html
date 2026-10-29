@@ -3734,7 +3734,7 @@ const returnPage =
     optional and specific to whatever video gets fed to this player
     via the URL, not something this page can assume exists.
 */
-const poster =
+let poster =
     params.get("poster") || "";
 
 
@@ -4970,6 +4970,43 @@ function r2MediaError(){
     r2Stop("The video couldn't be loaded. Please try again in a few minutes.");
 
 }
+
+/* The cover picture. When the link did not bring one, use the video's own
+   thumbnail (the same picture the lists show: the "thumbnail" in
+   descriptions.json, otherwise thumbnails/<video name>.jpg). It is used as
+   the poster, behind the loading spinner, and as the end-of-video cover, so
+   the browser never shows its own placeholder. */
+function useThumbnailAsPoster(){
+    if(poster || !src || embed || isLink){ return; }
+    fetch("descriptions.json").then(function(r){ return r.json(); }).then(function(d){
+        var entry = null;
+        Object.keys(d).forEach(function(k){
+            ((d[k] && d[k].videos) || []).forEach(function(v){
+                if(!entry && v && typeof v.file === "string" && v.file.trim() === src){ entry = v; }
+            });
+        });
+        var base = src.split("/").pop().replace(/\.[^/.]+$/, "");
+        var path = (entry && entry.thumbnail && String(entry.thumbnail).trim()) || ("thumbnails/" + base + ".jpg");
+        var url = path.split("/").map(encodeURIComponent).join("/");
+        return new Promise(function(ok, no){
+            var img = new Image();
+            img.onload = function(){ ok(url); };
+            img.onerror = no;
+            img.src = url;
+        });
+    }).then(function(url){
+        if(poster){ return; }
+        poster = url;
+        video.poster = url;
+        coverImage.src = url;
+        loadingOverlay.style.backgroundImage =
+            "linear-gradient(rgba(17,17,17,.62), rgba(17,17,17,.62)), url(\"" + url + "\")";
+        loadingOverlay.style.backgroundSize = "contain";
+        loadingOverlay.style.backgroundPosition = "center";
+        loadingOverlay.style.backgroundRepeat = "no-repeat";
+    }).catch(function(){});
+}
+useThumbnailAsPoster();
 
 if(!src){
 

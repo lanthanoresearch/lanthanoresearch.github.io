@@ -123,12 +123,80 @@ function sizeText(n){
     return n >= 1e9 ? (n / 1e9).toFixed(2) + " GB" : n >= 1e6 ? Math.round(n / 1e6) + " MB" : Math.round(n / 1e3) + " KB";
 }
 
-function startDownload(device, forThisDevice){
-    var item = found[device], file = INSTALLERS[device].file;
-    if(!item){ return; }
+/* Like the Download page: once Install is pressed there is a short stretch
+   where everything is put together, and it can be cancelled. Nothing is
+   downloaded or remembered until that stretch finishes. */
+var prep = null;   // the install being prepared, if any
+
+function setPrep(pct, text){
+    $("prepFill").style.width = pct + "%";
+    $("prepPct").textContent = Math.round(pct) + "%";
+    if(text){ $("prepText").textContent = text; }
+}
+
+function wait(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+
+async function startDownload(device, forThisDevice){
+    if(prep){ return; }
+    var job = { cancelled: false };
+    prep = job;
+    var btn = $("appButton");
+    $("appStatus").textContent = "";
+    $("appPrep").hidden = false;
+    btn.disabled = true;
+    var rows = document.querySelectorAll("#otherList button");
+    rows.forEach(function(b){ b.disabled = true; });
+    setPrep(0, "Putting everything together\u2026");
+
+    function stopped(){
+        if(!job.cancelled){ return false; }
+        $("appPrep").hidden = true;
+        btn.disabled = false;
+        rows.forEach(function(b){ b.disabled = false; });
+        $("appStatus").textContent = "Cancelled. Nothing was installed.";
+        prep = null;
+        return true;
+    }
+    $("prepCancel").onclick = function(){ job.cancelled = true; stopped(); };
+
+    // 1. find the newest version
+    setPrep(10, "Finding the newest version\u2026");
+    var data = await loadSiteData();
+    if(job.cancelled){ return; }
+    if(device === "android"){
+        var apk = await findAndroid(data && data.desktop && data.desktop.base);
+        if(apk){ found.android = apk; }
+    }else if(data && data.desktop && data.desktop.base){
+        found[device] = { url: data.desktop.base + INSTALLERS[device].file, size: (found[device] && found[device].size) || 0 };
+    }
+    if(job.cancelled){ return; }
+
+    // 2. a few steps so there is time to change your mind
+    var steps = [
+        [35, "Putting everything together\u2026"],
+        [60, "Getting the " + INSTALLERS[device].label + " app ready\u2026"],
+        [85, "Almost done\u2026"],
+        [100, "Starting the download\u2026"]
+    ];
+    for(var i = 0; i < steps.length; i++){
+        setPrep(steps[i][0], steps[i][1]);
+        await wait(900);
+        if(job.cancelled){ return; }
+    }
+
+    // 3. hand the file to the browser
+    var item = found[device];
+    $("appPrep").hidden = true;
+    btn.disabled = false;
+    rows.forEach(function(b){ b.disabled = false; });
+    prep = null;
+    if(!item){
+        $("appStatus").textContent = "The " + INSTALLERS[device].label + " app is not available right now. Try again soon.";
+        return;
+    }
     var a = document.createElement("a");
     a.href = item.url;
-    a.download = file;
+    a.download = INSTALLERS[device].file;
     a.rel = "noopener";
     document.body.appendChild(a);
     a.click();
@@ -207,11 +275,13 @@ async function setup(){
         }
     }else{
         title.textContent = "Install the app";
-        desc.textContent = "There is no app for this device. Apps are available for Windows, Mac, Linux and Android.";
+        desc.textContent = "This device could not be recognised. Choose the app for your device below. Apps are available for Windows, Mac, Linux and Android.";
         how.textContent = "";
         btn.hidden = true;
     }
-    paintOthers(me);
+    // The device is worked out automatically. The list of other devices is only
+    // for the rare case where it cannot be.
+    if(!me){ paintOthers(me); }
 }
 
 setup();
