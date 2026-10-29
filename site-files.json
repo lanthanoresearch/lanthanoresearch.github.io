@@ -1,6 +1,6 @@
 {
  "count": 309,
- "totalBytes": 283541614,
+ "totalBytes": 283547767,
  "files": [
   {
    "path": "1 Thessalonians Original Text.png",
@@ -505,7 +505,7 @@
   {
    "path": "download.html",
    "size": 61270,
-   "hash": "662fc418dd4c6e6e"
+   "hash": "f6c726a4173ee48b"
   },
   {
    "path": "Dragon.png",
@@ -749,8 +749,8 @@
   },
   {
    "path": "index.html",
-   "size": 154699,
-   "hash": "e26953149f2339a9"
+   "size": 155603,
+   "hash": "069bf4ce27f8495d"
   },
   {
    "path": "index.js",
@@ -964,8 +964,8 @@
   },
   {
    "path": "privacy.html",
-   "size": 2078,
-   "hash": "81b9131aab07ab08"
+   "size": 6774,
+   "hash": "f188786f7c630cfb"
   },
   {
    "path": "Privacy.pdf",
@@ -1139,8 +1139,8 @@
   },
   {
    "path": "site-tools.js",
-   "size": 73681,
-   "hash": "b9afca2263ecb663"
+   "size": 74234,
+   "hash": "3c7962524f423ded"
   },
   {
    "path": "sitemap.xml",
