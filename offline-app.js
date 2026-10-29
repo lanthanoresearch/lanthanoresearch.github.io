@@ -3,22 +3,26 @@
 LANTHANO RESEARCH: INSTALL THE APP
 ==========================================================
 
-The logic for install.html. Install turns the whole website into a real app:
+The logic for install.html. Install turns the whole website into a real app
+that has every file inside it and works with no internet at all:
 
   Windows   Lanthano-Research-Setup.exe   (built by the GitHub Action)
   Mac       Lanthano-Research.dmg
   Linux     Lanthano-Research.AppImage
   Android   Lanthano-Research.apk         (built by android-app.yml)
-  iPhone / iPad: not offered. The page and its links are hidden there.
+  iPhone / iPad   Apple does not allow apps to be made this way, so this
+                  page shows how to add the website to the Home Screen.
+
+The page never tries to work out whether it is already running inside an app.
+It always shows what can be installed for the device it is opened on.
 
 Installers are published as GitHub releases. site-files.json says where the
 computer installers are (desktop.base). The Android app sits in the
 "android-latest" release of the same repository.
 
-This is different from the other two things on the site:
-  Download   zips of files and media (download.html and the viewers)
-  Save       copies the browser keeps so things open without loading
-             again (storage.html)
+Like the archive on the Download page, the page remembers that you installed
+the app on this device and says so next time, while still letting you install
+it again to get the newest version.
 ==========================================================
 */
 
@@ -33,6 +37,7 @@ var INSTALLERS = {
     android: { file: "Lanthano-Research.apk",       label: "Android" }
 };
 var ORDER = ["windows", "mac", "linux", "android"];
+var REMEMBER_KEY = "lanthanoAppInstalled";
 
 function $(id){ return document.getElementById(id); }
 
@@ -41,26 +46,25 @@ if(!$("appCard")){ return; }
 
 /* ---------- Which device is this? ---------- */
 
-function isIOS(){
-    return /iphone|ipad|ipod/i.test(navigator.userAgent) ||
-        (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-}
-function isElectronApp(){ return /electron/i.test(navigator.userAgent); }
-function isAppWindow(){
-    return isElectronApp() ||
-        window.matchMedia("(display-mode: standalone)").matches ||
-        window.matchMedia("(display-mode: window-controls-overlay)").matches ||
-        window.navigator.standalone === true;
-}
 function thisDevice(){
     var ua = navigator.userAgent || "";
-    if(isIOS()){ return "ios"; }
+    if(/iphone|ipad|ipod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)){ return "ios"; }
     if(/android/i.test(ua)){ return "android"; }
     if(/cros/i.test(ua)){ return ""; }
     if(/windows/i.test(ua)){ return "windows"; }
     if(/macintosh|mac os x/i.test(ua)){ return "mac"; }
     if(/linux|x11/i.test(ua)){ return "linux"; }
     return "";
+}
+
+
+/* ---------- Remembering that it was installed here ---------- */
+
+function recall(){
+    try{ return JSON.parse(localStorage.getItem(REMEMBER_KEY) || "null"); }catch(e){ return null; }
+}
+function remember(device){
+    try{ localStorage.setItem(REMEMBER_KEY, JSON.stringify({ device: device, date: new Date().toISOString() })); }catch(e){}
 }
 
 
@@ -111,7 +115,7 @@ var HOWTO = {
     windows: "Open the file when it finishes downloading. Windows may show a SmartScreen notice because the app is not code signed. Choose “More info”, then “Run anyway”.",
     mac: "Open the file and drag the app into Applications. The first time, right-click the app and choose “Open”.",
     linux: "Make the file executable (right-click, Properties, Permissions), then run it.",
-    android: "Open the file when it finishes downloading. Android asks you to allow installs from this browser. Allow it, then tap Install. Google Play Protect may show a notice because the app is not from the Play Store."
+    android: "Open the file when it finishes downloading. Android asks you to allow installs from this browser. Allow it, then tap Install. Google Play Protect may show a notice because the app is not from the Play Store. To update later, delete the app and install the newest version from here."
 };
 
 function sizeText(n){
@@ -119,7 +123,7 @@ function sizeText(n){
     return n >= 1e9 ? (n / 1e9).toFixed(2) + " GB" : n >= 1e6 ? Math.round(n / 1e6) + " MB" : Math.round(n / 1e3) + " KB";
 }
 
-function startDownload(device){
+function startDownload(device, forThisDevice){
     var item = found[device], file = INSTALLERS[device].file;
     if(!item){ return; }
     var a = document.createElement("a");
@@ -130,6 +134,21 @@ function startDownload(device){
     a.click();
     a.remove();
     $("appStatus").textContent = "The " + INSTALLERS[device].label + " app is on its way. " + HOWTO[device];
+    if(forThisDevice){
+        remember(device);
+        paintAlready(device);
+    }
+}
+
+/* "ALREADY INSTALLED", the same idea as "ALREADY DOWNLOADED" on the Download page. */
+function paintAlready(me){
+    var box = $("appAlready"), rec = recall();
+    if(!rec || rec.device !== me){ box.hidden = true; return; }
+    var when = rec.date ? new Date(rec.date).toLocaleDateString() : "";
+    $("appAlreadyText").textContent = "You installed the app on this device" + (when ? " on " + when : "") +
+        ". You can install it again to get the latest version.";
+    box.hidden = false;
+    $("appButton").textContent = "Install Again";
 }
 
 function paintOthers(me){
@@ -149,7 +168,7 @@ function paintOthers(me){
         b.type = "button";
         b.className = "small";
         b.textContent = "Get";
-        b.addEventListener("click", function(){ startDownload(d); });
+        b.addEventListener("click", function(){ startDownload(d, false); });
         row.appendChild(b);
         list.appendChild(row);
     });
@@ -160,22 +179,8 @@ async function setup(){
     var me = thisDevice();
 
     if(me === "ios"){
-        $("pageBody").hidden = true;
-        $("iosNote").hidden = false;
-        return;
-    }
-    if(isElectronApp()){
-        title.textContent = "You are using the app";
-        desc.textContent = "This app carries the whole website, so it works without internet. When you are online it checks for new research and updates itself.";
-        btn.hidden = true;
-        $("otherCard").hidden = true;
-        return;
-    }
-    if(isAppWindow()){
-        title.textContent = "You are using the app";
-        desc.textContent = "This is already running as an app, so there is nothing more to install here.";
-        btn.hidden = true;
-        $("otherCard").hidden = true;
+        $("appCard").hidden = true;
+        $("iosCard").hidden = false;
         return;
     }
 
@@ -188,14 +193,15 @@ async function setup(){
         title.textContent = "Install on " + label;
         if(found[me]){
             desc.textContent = "Installs the Lanthano Research app on your " + (me === "android" ? "phone" : "computer") +
-                ". The whole website (every paper, image and video) is inside the app, so it works without internet. " +
-                (me === "android" ? "To update, install the newest version from this page." : "When you are online it updates itself.");
+                ". The whole website (every paper, image and video it holds) is inside the app, so it works with no internet at all. " +
+                (me === "android" ? "To update, delete the app and install the newest version." : "When you are online it updates itself.");
             how.textContent = HOWTO[me];
             btn.textContent = "Install for " + label + (found[me].size ? " (" + sizeText(found[me].size) + ")" : "");
             btn.disabled = false;
-            btn.onclick = function(){ startDownload(me); };
+            btn.onclick = function(){ startDownload(me, true); };
+            paintAlready(me);
         }else{
-            desc.textContent = "The " + label + " app has not been published yet. It is built automatically by the site, so check back soon.";
+            desc.textContent = "The " + label + " app has not been published yet. It is built automatically, so check back soon.";
             how.textContent = "";
             btn.hidden = true;
         }

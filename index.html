@@ -2822,17 +2822,10 @@ tag();
 <a href="contact.html">Contact</a>
 <a href="download.html">Download</a>
 <a href="storage.html">Storage</a>
-<a href="install.html" id="installLink">Install</a>
+<a href="install.html">Install</a>
 <a href="privacy.html">Privacy</a>
 <a href="settings.html">Settings</a>
 </nav>
-<script>
-/* The app is not offered on iPhone and iPad, so the link is hidden there. */
-(function(){
-  var ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-  if(ios){ var a = document.getElementById("installLink"); if(a) a.remove(); }
-})();
-</script>
 
 <button class="share-button" onclick="shareSite()">
 Share Site

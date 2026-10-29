@@ -521,7 +521,7 @@ function backupSummary(){
     ["Search and display settings", /^(searchSettings|viewMode|paperSort|showFileNames|qrRatio|featuredVideoRatio|readingLevel|videoCaptions|galleryMode|videosDefaultOpen|imagesDefaultOpen|savedVideosOff|keepAllVideos|keepImagesOff|keepPdfsOff|searchHistoryOn)$|readAloud|setting/i, 0],
     ["Other saved data", /./, 0]
   ];
-  var skip = /^(savedVideoLog|videoSaveLock|videosWatched|keepAllLast|keepAllLock|archiveStatsCache|archiveFileSizes|lt_seen|lt_hit|lt_last_backup)/;
+  var skip = /^(savedVideoLog|lanthanoAppInstalled|lt_pageScan|lt_sizeCache|videoSaveLock|videosWatched|keepAllLast|keepAllLock|archiveStatsCache|archiveFileSizes|lt_seen|lt_hit|lt_last_backup)/;
   var total = 0;
   try{
     for(var i = 0; i < localStorage.length; i++){

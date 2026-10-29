@@ -528,7 +528,8 @@ var ICON_PATHS = {
   flag:       '<path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/>',
   image:      '<rect x="3.5" y="4.5" width="17" height="15" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M4 18l5-5 4 4 3-3 4.5 4.5"/>',
   video:      '<rect x="3" y="5.5" width="14" height="13" rx="2"/><path d="M17 10.5l4-2.5v8l-4-2.5"/>',
-  media:      '<rect x="3.5" y="6.5" width="14" height="12" rx="2"/><path d="M7 3.5h13a1 1 0 0 1 1 1V15"/><path d="M8 15l3-3 2 2 2-2 2.5 3"/>'
+  media:      '<rect x="3.5" y="6.5" width="14" height="12" rx="2"/><path d="M7 3.5h13a1 1 0 0 1 1 1V15"/><path d="M8 15l3-3 2 2 2-2 2.5 3"/>',
+  package:    '<path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5z"/><path d="M3.5 7.5 12 12l8.5-4.5"/><path d="M12 12v9"/>'
 };
 function iconCss(){
   function url(n){
@@ -539,7 +540,7 @@ function iconCss(){
     ["#menu #downloadBtn", "download"], ["#menu #newTabBtn", "newtab"], ["#menu #shareBtn,#menu #copyLinkBtn", "share"],
     ["#menu #fullscreenBtn", "fullscreen"], ["#menu #linkOpenBtn", "link"], ["#menu #pdfButton", "doc"], ["#menu #moreBtn", "more"],
     ["#menu .moreOpt[data-lt=\"cite\"]", "quote"], ["#menu .moreOpt[data-lt=\"report\"]", "flag"],
-    [".ltOpt[data-ico=\"pdf\"]", "doc"], [".ltOpt[data-ico=\"images\"]", "image"], [".ltOpt[data-ico=\"videos\"]", "video"], [".ltOpt[data-ico=\"media\"]", "media"]
+    [".ltOpt[data-ico=\"pdf\"]", "doc"], [".ltOpt[data-ico=\"images\"]", "image"], [".ltOpt[data-ico=\"videos\"]", "video"], [".ltOpt[data-ico=\"media\"]", "media"], [".ltOpt[data-ico=\"package\"]", "package"]
   ];
   var out = "";
   map.forEach(function(m){
@@ -1005,7 +1006,7 @@ function report(item){
 /* ---------------------------------------------------------------
    Backup / restore (favorites, bookmarks, settings)
 --------------------------------------------------------------- */
-var SKIP = /^(savedVideoLog|videoSaveLock|videosWatched|keepAllLast|keepAllLock|archiveStatsCache|archiveFileSizes|lt_seen|lt_hit|lt_last_backup)/;
+var SKIP = /^(savedVideoLog|lanthanoAppInstalled|lt_pageScan|lt_sizeCache|videoSaveLock|videosWatched|keepAllLast|keepAllLock|archiveStatsCache|archiveFileSizes|lt_seen|lt_hit|lt_last_backup)/;
 function exportBackup(){
   var data = {};
   try{
@@ -1187,17 +1188,20 @@ function downloadPdf(paper){
 /* paper: {title, url, images:[], videos:[{file, source}]} */
 function downloadMenu(anchor, paper){
   var imgs = realList(paper.images).length, vids = realList(paper.videos).length;
-  var items = [{label:"PDF", note:".pdf", icon:"pdf", onClick:function(){ downloadPdf(paper); }}];
+  var items = [];
+  if(imgs || vids) items.push({label:"Everything as a package", note:".zip", icon:"package", onClick:function(){ zipPackage(paper); }});
+  items.push({label:"PDF", note:".pdf", icon:"pdf", onClick:function(){ downloadPdf(paper); }});
   if(imgs) items.push({label:"All images (" + imgs + ")", note:".zip", icon:"images", onClick:function(){ zipImages(paper); }});
   if(vids) items.push({label:"All videos (" + vids + ")", note:".zip", icon:"videos", onClick:function(){ zipVideos(paper); }});
   menu(anchor, items);
 }
 
 /* A section of a gallery: one entry, named for what the section holds. */
-function mediaMenu(anchor, title, images, videos){
+function mediaMenu(anchor, title, images, videos, hasPaper){
   var ni = realList(images).length, nv = realList(videos).length;
   if(!ni && !nv){ toast("Nothing to download here"); return; }
   var items = [];
+  if(ni && nv) items.push({label:"Images and videos", note:".zip", icon:"package", onClick:function(){ zipSection(title, images, videos, hasPaper !== false); }});
   if(ni) items.push({label: nv ? "Images (" + ni + ")" : "Download images (" + ni + ")", note:".zip", icon:"images", onClick:function(){ zipAssets(title, images, []); }});
   if(nv) items.push({label: ni ? "Videos (" + nv + ")" : "Download videos (" + nv + ")", note:".zip", icon:"videos", onClick:function(){ zipAssets(title, [], videos); }});
   menu(anchor, items);
@@ -1268,17 +1272,10 @@ function fetchVideo(v){
   }).then(function(j){ return fetch(API + "/play?t=" + encodeURIComponent(j.t)); });
 }
 
-/* images: [path]  videos: [{file, source}]  -> one .zip */
-function zipAssets(title, images, videos){
+/* Builds one .zip from a list of tasks: {folder, name, kind, get()}. */
+function runZip(title, tasks, label){
   if(zipBusy){ toast("A download is already in progress"); return; }
-  images = realList(images); videos = realList(videos);
-  var total = images.length + videos.length;
-  if(!total){ toast("Nothing to download here"); return; }
-  var both = images.length && videos.length;
-  var tasks = [];
-  images.forEach(function(p){ tasks.push({folder: both ? "Images/" : "", name: baseName(p), kind:"image", get: function(){ return fetch(encPath(p)); }}); });
-  videos.forEach(function(v){ tasks.push({folder: both ? "Videos/" : "", name: baseName(v.file), kind:"video", get: function(){ return fetchVideo(v); }}); });
-
+  var total = tasks.length;
   zipBusy = true;
   var note = el("div", {"class":"ltToast"}, "Preparing… 0 of " + total);
   document.body.appendChild(note);
@@ -1289,7 +1286,7 @@ function zipAssets(title, images, videos){
     var t = tasks[i];
     return t.get().then(function(r){
       var type = r.headers.get("content-type") || "";
-      if(!r.ok || (t.kind === "image" && /text\/html/i.test(type))) throw new Error("missing");
+      if(!r.ok || ((t.kind === "image" || t.kind === "pdf") && /text\/html/i.test(type))) throw new Error("missing");
       var len = parseInt(r.headers.get("content-length") || "0", 10);
       if(len && bytes + len > ZIP_LIMIT){ tooBig++; return null; }
       return r.arrayBuffer();
@@ -1310,11 +1307,52 @@ function zipAssets(title, images, videos){
   return next(0).then(function(){
     note.remove();
     if(!files.length){ toast(tooBig ? "These files are too large to put in one zip" : "Could not load anything to download"); return; }
-    saveBlob(makeZip(files), safeName(title) + " - " + (both ? "media" : images.length ? "images" : "videos") + ".zip");
+    saveBlob(makeZip(files), safeName(title) + " - " + label + ".zip");
     var missed = failed + tooBig;
-    toast(missed ? "Saved " + files.length + " of " + total + (tooBig ? " (" + tooBig + " too large for one zip)" : " (" + failed + " could not be loaded)")
-                 : "Saved " + files.length + " file" + (files.length === 1 ? "" : "s") + " in a zip");
+    toast(missed ? "Downloaded " + files.length + " of " + total + (tooBig ? " (" + tooBig + " too large for one zip)" : " (" + failed + " could not be loaded)")
+                 : "Downloaded " + files.length + " file" + (files.length === 1 ? "" : "s") + " in a zip");
   }).then(function(){ zipBusy = false; }, function(){ zipBusy = false; note.remove(); });
+}
+
+/* images: [path]  videos: [{file, source}]  -> one .zip */
+function zipAssets(title, images, videos){
+  if(zipBusy){ toast("A download is already in progress"); return; }
+  images = realList(images); videos = realList(videos);
+  var total = images.length + videos.length;
+  if(!total){ toast("Nothing to download here"); return; }
+  var both = images.length && videos.length;
+  var tasks = [];
+  images.forEach(function(p){ tasks.push({folder: both ? "Images/" : "", name: baseName(p), kind:"image", get: function(){ return fetch(encPath(p)); }}); });
+  videos.forEach(function(v){ tasks.push({folder: both ? "Videos/" : "", name: baseName(v.file), kind:"video", get: function(){ return fetchVideo(v); }}); });
+  return runZip(title, tasks, both ? "media" : images.length ? "images" : "videos");
+}
+
+/* A gallery section's images and videos as one .zip. A section that belongs to a
+   paper unzips to a folder named for it, holding an Images folder and a Videos
+   folder. A section with no paper (like Predictive Programming) puts those two
+   folders straight into the zip with nothing around them. */
+function zipSection(title, images, videos, wrap){
+  if(zipBusy){ toast("A download is already in progress"); return; }
+  images = realList(images); videos = realList(videos);
+  var top = wrap ? safeName(title) + "/" : "", tasks = [];
+  images.forEach(function(p){ tasks.push({folder: top + "Images/", name: baseName(p), kind:"image", get: function(){ return fetch(encPath(p)); }}); });
+  videos.forEach(function(v){ tasks.push({folder: top + "Videos/", name: baseName(v.file), kind:"video", get: function(){ return fetchVideo(v); }}); });
+  if(!tasks.length){ toast("Nothing to download here"); return; }
+  return runZip(title, tasks, "images and videos");
+}
+
+/* The whole paper as one .zip: the PDF at the top, then an Images folder and
+   a Videos folder (only the ones the paper has). */
+function zipPackage(paper){
+  if(zipBusy){ toast("A download is already in progress"); return; }
+  var images = realList(paper && paper.images), videos = realList(paper && paper.videos), tasks = [];
+  if(paper && paper.url){
+    tasks.push({folder: "", name: baseName(paper.url), kind:"pdf", get: function(){ return fetch(encPath(paper.url)); }});
+  }
+  images.forEach(function(p){ tasks.push({folder: "Images/", name: baseName(p), kind:"image", get: function(){ return fetch(encPath(p)); }}); });
+  videos.forEach(function(v){ tasks.push({folder: "Videos/", name: baseName(v.file), kind:"video", get: function(){ return fetchVideo(v); }}); });
+  if(!tasks.length){ toast("Nothing to download here"); return; }
+  return runZip(paper && paper.title, tasks, "package");
 }
 function zipImages(paper){ return zipAssets(paper && paper.title, paper && paper.images, []); }
 function zipVideos(paper){ return zipAssets(paper && paper.title, [], paper && paper.videos); }
@@ -1557,8 +1595,11 @@ function suHash(buf){ return crypto.subtle.digest("SHA-1", buf).then(suHex); }
 function suSiteUrl(file){ return new URL(file.split("/").map(encodeURIComponent).join("/"), location.origin + "/").href; }
 
 /* Resolves {changed:[{kind,title,...}], checked, error} */
-async function suCheck(onProgress){
-  var out = {changed:[], checked:0, error:false};
+/* opts.deep: also compare every saved picture, PDF and video with the live one.
+   Without it only pages and scripts are checked, which takes a moment. */
+async function suCheck(onProgress, opts){
+  var deep = !!(opts && opts.deep);
+  var out = {changed:[], checked:0, error:false, deep:deep};
   if(!window.caches) return out;
   var jobs = [], seen = {};
   try{
@@ -1569,7 +1610,7 @@ async function suCheck(onProgress){
       (await c.keys()).forEach(function(k){
         var p; try{ p = new URL(k.url).pathname; }catch(e){ return; }
         var kind = suKind(decodeURIComponent(p));
-        if(!kind) return;
+        if(!kind || (!deep && kind !== "page")) return;
         if(seen[k.url]){ seen[k.url].targets.push({c:c, k:k}); return; }   // same file saved in more than one place
         seen[k.url] = {kind:kind, c:c, k:k, url:k.url, targets:[{c:c, k:k}]};
         jobs.push(seen[k.url]);
@@ -1585,7 +1626,7 @@ async function suCheck(onProgress){
       var rec = (st.rec && st.rec[file]) || {};
       if(v.site){
         if(rec.ver !== undefined && rec.ver !== v.ver){ out.checked++; out.changed.push({kind:"video", title:v.title, v:v, version:true}); }
-        else jobs.push({kind:"video", c:vc, k:k, url:suSiteUrl(file), v:v});
+        else if(deep) jobs.push({kind:"video", c:vc, k:k, url:suSiteUrl(file), v:v});
         return;
       }
       out.checked++;
@@ -1789,6 +1830,8 @@ window.LT.confirmDelete = confirmDelete;
 window.LT.downloadMenu = downloadMenu;
 window.LT.downloadPdf = downloadPdf;
 window.LT.zipAssets = zipAssets;
+window.LT.zipPackage = zipPackage;
+window.LT.zipSection = zipSection;
 window.LT.zipVideos = zipVideos;
 window.LT.install = function(){ if(!deferredInstall) return false; deferredInstall.prompt(); deferredInstall = null; return true; };
 window.LT.canInstall = function(){ return !!deferredInstall; };

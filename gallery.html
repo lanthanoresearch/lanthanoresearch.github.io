@@ -2549,7 +2549,7 @@ function render(){
                 else{
                     items.forEach(it => { if(it.kind === "video") vids.push(it.v); else if(it.src) imgs.push(it.src); });
                 }
-                LT.mediaMenu(dl, paper.label || paper.title, imgs, vids);
+                LT.mediaMenu(dl, paper.label || paper.title, imgs, vids, !!paper.url);
             });
             brk.appendChild(dl);
             fragment.appendChild(brk);

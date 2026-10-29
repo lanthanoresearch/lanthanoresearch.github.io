@@ -332,6 +332,11 @@ html{scroll-behavior:smooth}
 .statusNote{color:#9fe0b4;font-size:13.5px;margin-top:12px}
 .statusNote:empty{display:none}
 .card[hidden]{display:none}
+.alreadyBox{margin-top:14px;padding:12px 14px;background:#16213a;border:1px solid #2a4d99;border-radius:8px;color:#ccc;font-size:0.9em;line-height:1.45}
+.alreadyBox[hidden]{display:none}
+.alreadyBox strong{color:#7fa2ff}
+.alreadyBox p{margin:6px 0 0}
+.steps{margin:12px 0 0;padding-left:22px;color:#ccc;line-height:1.7;font-size:14.5px}
 .row{height:auto;min-height:46px}
 </style></head>
 <body>
@@ -343,9 +348,15 @@ html{scroll-behavior:smooth}
 
     <h1 style="margin-bottom:30px">Install</h1>
 
-    <div id="iosNote" class="card" hidden>
-        <h2 class="hd"><span class="pv-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2.8" width="10" height="18.4" rx="2.4"/><path d="M11 18h2"/><path d="M12 7v6"/><path d="M9.5 10.8 12 13.3l2.5-2.5"/></svg></span>Not available here</h2>
-        <p class="note">The app is not offered for iPhone and iPad. You can keep using the website in your browser.</p>
+    <div id="iosCard" class="card" hidden>
+        <h2 class="hd"><span class="pv-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2.8" width="10" height="18.4" rx="2.4"/><path d="M11 18h2"/><path d="M12 7v6"/><path d="M9.5 10.8 12 13.3l2.5-2.5"/></svg></span>Add to Home Screen</h2>
+        <p class="note">Apple does not allow apps to be installed from a website, so on iPhone and iPad the site is added to your Home Screen instead. It opens like an app.</p>
+        <ol class="steps">
+            <li>Open this site in <b>Safari</b>.</li>
+            <li>Tap the <b>Share</b> button.</li>
+            <li>Choose <b>Add to Home Screen</b>.</li>
+            <li>Tap <b>Add</b>.</li>
+        </ol>
     </div>
 
     <div id="pageBody">
@@ -359,6 +370,7 @@ html{scroll-behavior:smooth}
         <h2 class="hd"><span class="pv-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2.8" width="10" height="18.4" rx="2.4"/><path d="M11 18h2"/><path d="M12 7v6"/><path d="M9.5 10.8 12 13.3l2.5-2.5"/></svg></span><span id="appTitle">Install the app</span></h2>
         <p class="note" id="appDesc">Checking what is available for this device&hellip;</p>
         <button type="button" class="btn primary installBtn" id="appButton" disabled>Checking&hellip;</button>
+        <div class="alreadyBox" id="appAlready" hidden><strong>ALREADY INSTALLED</strong><p id="appAlreadyText"></p></div>
         <p class="howTo" id="appHowTo"></p>
         <p class="statusNote" id="appStatus"></p>
     </div>

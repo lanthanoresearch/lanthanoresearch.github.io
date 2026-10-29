@@ -300,7 +300,8 @@ html{scroll-behavior:smooth}
             <div class="verTxt"><b id="verTitle">Checking your version&hellip;</b><span id="verSub"></span></div>
         </div>
         <div class="verBarWrap" id="verBarWrap" hidden><i id="verBar"></i></div>
-        <div class="actions"><button type="button" class="btn" id="updateBtn" disabled>Checking&hellip;</button></div>
+        <div class="actions"><button type="button" class="btn" id="updateBtn" disabled>Checking&hellip;</button><button type="button" class="btn" id="deepBtn" disabled>Deep check</button></div>
+        <p class="note">The quick check above looks at pages and scripts and takes a moment. Deep check also compares every saved picture, PDF and video with the live site, which can take a while.</p>
         <p class="note" id="updateNote"></p>
     </div>
 
@@ -454,9 +455,9 @@ buildSearch();
 (function(){
   var b=document.getElementById("updateBtn"), n=document.getElementById("updateNote");
   var box=document.getElementById("verBox"), title=document.getElementById("verTitle"), sub=document.getElementById("verSub");
-  var barWrap=document.getElementById("verBarWrap"), bar=document.getElementById("verBar");
+  var barWrap=document.getElementById("verBarWrap"), bar=document.getElementById("verBar"), deepBtn=document.getElementById("deepBtn");
   if(!b) return;
-  var busy = false, found = [];
+  var busy = false, found = [], lastDeep = false;
   var NAMES = {page: ["page or file", "pages and files"], picture: ["picture", "pictures"], pdf: ["PDF", "PDFs"], video: ["video", "videos"]};
 
   function show(state, t, s, btn, primary){
@@ -465,6 +466,7 @@ buildSearch();
     b.textContent = btn; b.disabled = (state === "checking" || state === "updating");
     b.classList.toggle("primary", !!primary);
     b.setAttribute("data-mode", state);
+    deepBtn.disabled = (state === "checking" || state === "updating");
     if(state !== "updating" && state !== "checking") barWrap.hidden = true;
   }
   function progress(done, total){
@@ -478,7 +480,7 @@ buildSearch();
   }
   var READY = !!(window.LT && LT.savedUpdates);
 
-  async function run(justUpdated){
+  async function run(justUpdated, deep){
     if(busy) return; busy = true;
     n.textContent = "";
     if(!READY){
@@ -486,10 +488,11 @@ buildSearch();
       show("error", "Update check unavailable", "Some site files are out of date. Upload the newest site-tools.js and reload.", "Try again");
       return;
     }
-    show("checking", "Checking your version…", "", "Checking…");
+    lastDeep = !!deep;
+    show("checking", deep ? "Checking every saved file…" : "Checking your version…", "", "Checking…");
     progress(0, 1);
     var r;
-    try{ r = await LT.savedUpdates.check(function(d, t){ progress(d, t); sub.textContent = "Checked " + d + " of " + t + " saved files"; }); }
+    try{ r = await LT.savedUpdates.check(function(d, t){ progress(d, t); sub.textContent = "Checked " + d + " of " + t + " saved files"; }, {deep: !!deep}); }
     catch(e){ r = {error: true, changed: [], checked: 0}; }
     busy = false;
     barWrap.hidden = true;
@@ -498,7 +501,7 @@ buildSearch();
     if(r.error && !found.length){
       show("error", "Couldn’t check the version", "Check your connection and try again.", "Try again");
     }else if(!found.length){
-      show("current", justUpdated ? "Updated. You have the most current version." : "You have the most current version.", "Checked " + r.checked + (r.checked === 1 ? " saved file" : " saved files") + " at " + when + ".", "Check again");
+      show("current", justUpdated ? "Updated. You have the most current version." : "You have the most current version.", (deep ? "Deep check: " : "Checked ") + r.checked + (r.checked === 1 ? " saved file" : " saved files") + " at " + when + ".", "Check again");
     }else{
       show("outdated", "A newer version is available", describe(found) + " " + (found.length === 1 ? "is" : "are") + " out of date. Your favorites, bookmarks and settings are kept.", "Update", true);
     }
@@ -533,8 +536,9 @@ buildSearch();
       return;
     }
     busy = false;
-    run(true);
+    run(true, lastDeep);
   });
+  deepBtn.addEventListener("click", function(){ if(!busy) run(false, true); });
 
   var just = false;
   try{ just = sessionStorage.getItem("ltJustUpdated") === "1"; sessionStorage.removeItem("ltJustUpdated"); }catch(e){}
