@@ -342,6 +342,11 @@ html{scroll-behavior:smooth}
 .prepTop span:nth-child(2){flex:1;min-width:0}
 .prepPct{color:#8fb2ff;white-space:nowrap}
 .prep .btn{margin-top:8px;padding:8px 16px;font-size:14px}
+.center{text-align:center}
+.center h2.hd{justify-content:center}
+.center .prep{text-align:center}
+.center .prepTop{justify-content:center}
+.center .alreadyBox{text-align:left}
 .steps{margin:12px 0 0;padding-left:22px;color:#ccc;line-height:1.7;font-size:14.5px}
 .row{height:auto;min-height:46px}
 </style></head>
@@ -372,7 +377,7 @@ html{scroll-behavior:smooth}
         <p class="note"><b>Install</b> turns the whole website into a real app, with every paper, image and video inside it, so it works without internet. The app is installed on your device like any other app.</p>
     </div>
 
-    <div class="card" id="appCard">
+    <div class="card center" id="appCard">
         <h2 class="hd"><span class="pv-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2.8" width="10" height="18.4" rx="2.4"/><path d="M11 18h2"/><path d="M12 7v6"/><path d="M9.5 10.8 12 13.3l2.5-2.5"/></svg></span><span id="appTitle">Install the app</span></h2>
         <p class="note" id="appDesc">Checking what is available for this device&hellip;</p>
         <button type="button" class="btn primary installBtn" id="appButton" disabled>Checking&hellip;</button>

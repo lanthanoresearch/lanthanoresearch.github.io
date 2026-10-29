@@ -433,6 +433,26 @@ p{
 .pv-ico svg{width:22px;height:22px}
 .card h2.hd{display:flex;align-items:center;gap:12px;margin-top:0}
 .download-section h2.hd{justify-content:center}
+
+/* ---- Same look as the Install page ---- */
+.download-section{text-align:center}
+.download-section .note{color:#999;font-size:0.9em}
+.download-button{margin-top:14px;padding:10px 18px;background:#2f7cff;color:#fff;font-family:inherit;font-size:15px;border-radius:7px}
+.download-button:hover{background:#4a8dff}
+.download-button:disabled{opacity:.55;cursor:default}
+.progress{max-width:none;margin:14px 0 0;padding:12px 14px;background:#262d3d;border:1px solid #2f4f8f;border-radius:10px;text-align:center}
+.progress-percent{color:#8fb2ff;font-size:14px;margin-bottom:8px}
+.progress-percent.finished{color:#8fb2ff}
+.progress-bar{height:8px;background:#333;border-radius:6px}
+.progress-fill{background:#2f7cff}
+.progress-text{margin-top:8px;color:#cfd9f2;font-size:14px;text-align:center}
+.progress-text.finished{color:#cfd9f2}
+.cancel-button{margin:14px auto 0;padding:10px 18px;background:transparent;border:1px solid #5a2c2c;color:#ff8080;font-family:inherit;font-size:14px;border-radius:7px}
+.cancel-button:hover{background:#301a1a;border-color:#7a3a3a;color:#ff8080}
+.download-warning{max-width:none;margin:14px 0 0;padding:12px 14px;font-size:0.9em;text-align:left}
+.status{color:#9fe0b4;font-size:13.5px;margin-top:12px}
+.status.finished{color:#9fe0b4}
+.status:empty{display:none}
 </style>
 
 </head>
@@ -545,12 +565,9 @@ p{
 
         <h2 class="hd"><span class="pv-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="M7.5 11 12 15.5 16.5 11"/><path d="M5 19.5h14"/></svg></span>Download Entire Archive</h2>
 
-        <p>
+        <p class="note">
             Create an offline copy of the available Lanthano
             Research papers, supporting images, and video.
-        </p>
-
-        <p style="color:#999;font-size:0.9em">
             This is a download: the files are put on your device.
         </p>
 

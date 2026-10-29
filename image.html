@@ -2557,7 +2557,7 @@ document
         async () => {
 
             const url =
-                window.location.href;
+                (window.LT && LT.siteUrl) ? LT.siteUrl(window.location.href) : window.location.href;
 
 
             menu.style.display =

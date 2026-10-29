@@ -260,9 +260,9 @@ async function setup(){
         var label = INSTALLERS[me].label;
         title.textContent = "Install on " + label;
         if(found[me]){
-            desc.textContent = "Installs the Lanthano Research app on your " + (me === "android" ? "phone" : "computer") +
+            desc.textContent = "Installs Lanthano Research Offline on your " + (me === "android" ? "phone" : "computer") +
                 ". The whole website (every paper, image and video it holds) is inside the app, so it works with no internet at all. " +
-                (me === "android" ? "To update, delete the app and install the newest version." : "When you are online it updates itself.");
+                (me === "android" ? "To update, delete the app and install the newest version." : "To update, install the newest version from here.");
             how.textContent = HOWTO[me];
             btn.textContent = "Install for " + label + (found[me].size ? " (" + sizeText(found[me].size) + ")" : "");
             btn.disabled = false;

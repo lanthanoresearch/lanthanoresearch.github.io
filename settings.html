@@ -380,10 +380,10 @@ $("strongAccentToggle").addEventListener("click", function(){
 paintStrong();
 
 /* Install (only shown when the browser offers it) */
-function showInstall(){ if(window.LT && LT.canInstall()) $("installCard").hidden = false; }
+function showInstall(){ if($("installCard") && window.LT && LT.canInstall()) $("installCard").hidden = false; }
 window.addEventListener("beforeinstallprompt", function(){ setTimeout(showInstall, 0); });
 setTimeout(showInstall, 300);
-$("installBtn").addEventListener("click", function(){ if(LT.install()) $("installCard").hidden = true; });
+if($("installBtn")){ $("installBtn").addEventListener("click", function(){ if(LT.install()) $("installCard").hidden = true; }); }
 
 /* Search settings: the home page reads these from the same place */
 var KEY = "searchSettings";

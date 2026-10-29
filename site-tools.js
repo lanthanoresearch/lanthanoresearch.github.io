@@ -1803,6 +1803,17 @@ window.LT.sources = sources;
 window.LT.zipImages = zipImages;
 window.LT.makeZip = makeZip;
 window.LT.toast = toast;
+
+/* A link to share. Inside the computer app the address is lanthano://app/...,
+   so it is turned back into the real website address. On the website and in the
+   phone app it is already the real address and is left alone. */
+window.LT.siteUrl = function(u){
+  try{
+    var x = new URL(u, location.href);
+    if(x.protocol === "lanthano:"){ return "https://lanthanoresearch.com" + x.pathname + x.search + x.hash; }
+    return x.href;
+  }catch(e){ return u; }
+};
 window.LT.copy = copy;
 window.LT.item = currentItem;
 window.LT.exportBackup = exportBackup;

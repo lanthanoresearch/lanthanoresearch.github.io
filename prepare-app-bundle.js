@@ -2,7 +2,8 @@
 //
 // The Storage and Install pages only make sense on the website itself (they
 // manage the browser's saved copies and hand out the app), so they are taken
-// out of the app, along with every link to them. Download stays.
+// out of the app, along with every link to them. Download stays. Settings stays
+// too, without its "App updates" check (the app is its own offline copy).
 //
 //   node prepare-app-bundle.js <folder holding the copy of the site> [--local-only]
 //
@@ -25,6 +26,7 @@ if (!process.argv[2] || !fs.existsSync(dir)) {
 }
 
 const LOCAL_ONLY = process.argv.includes("--local-only");
+const NO_BACK = process.argv.includes("--no-back");   // the computer app has its own Back handling
 
 // offline-app.js runs the Install page.
 const REMOVE = ["storage.html", "install.html", "offline-app.js", "prepare-app-bundle.js"];
@@ -48,6 +50,21 @@ for (const name of fs.readdirSync(dir)) {
   if (after !== before) {
     fs.writeFileSync(file, after);
     console.log("removed links from " + name);
+  }
+}
+
+// Settings stays, but an app that holds everything itself has nothing to check
+// for updates and nothing to install, so those two cards are taken out.
+const settingsFile = path.join(dir, "settings.html");
+if (fs.existsSync(settingsFile)) {
+  const cardRe = /[ \t]*<div class="card" id="(?:updateCard|installCard)"[^>]*>[\s\S]*?\r?\n    <\/div>[ \t]*\r?\n(?:[ \t]*\r?\n)?/g;
+  const before = fs.readFileSync(settingsFile, "utf8");
+  const after = before.replace(cardRe, "");
+  if (after !== before) {
+    fs.writeFileSync(settingsFile, after);
+    console.log("removed update check from settings.html");
+  } else {
+    console.log("WARNING: could not find the update check in settings.html");
   }
 }
 
@@ -88,7 +105,9 @@ if (LOCAL_ONLY) {
     }
   }
 
-  // 2. Back button. Android's Back goes to the previous page, goes to the home
+  // 2. Back button (Android only).
+  if (!NO_BACK) {
+  // Android's Back goes to the previous page, goes to the home
   //    page when there is nothing earlier, and only leaves the app from home.
   fs.writeFileSync(path.join(dir, "app-back.js"), [
     "(function(){",
@@ -111,6 +130,7 @@ if (LOCAL_ONLY) {
     fs.writeFileSync(file, html.replace(/<\/body>/i, '<script src="app-back.js"></script>\n</body>'));
   }
   console.log("back button handler added");
+  }
 }
 
 // Anything left that still points at a removed page is reported.

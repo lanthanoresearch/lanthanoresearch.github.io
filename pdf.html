@@ -17216,6 +17216,8 @@ document.getElementById("fullscreenBtn").onclick = async () => {
 
 async function shareLink(url){
 
+  if(window.LT && LT.siteUrl){ url = LT.siteUrl(url); }
+
   if(navigator.share){
 
     try{

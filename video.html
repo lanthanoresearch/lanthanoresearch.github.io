@@ -8301,6 +8301,8 @@ function shareTime(sec){
 
 async function shareVideoLink(url){
 
+    if(window.LT && LT.siteUrl){ url = LT.siteUrl(url); }
+
     if(navigator.share && typeof navigator.share === "function"){
 
         try{
