@@ -1,0 +1,3149 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<script>
+/* A refresh starts this page fresh, from the top, like a normal new visit.
+   Only this page's remembered "where I was" is forgotten - saved settings,
+   favorites and other saved data are never touched. (Coming back from a
+   paper/image/video/other page still restores your spot; only a reload
+   resets it.) */
+(function(){
+  try{
+    var keys = [];
+    var prefixes = [];
+
+    function forget(){
+      keys.forEach(function(k){ sessionStorage.removeItem(k); });
+      Object.keys(sessionStorage).forEach(function(k){
+        for(var i = 0; i < prefixes.length; i++){
+          if(k.indexOf(prefixes[i]) === 0){ sessionStorage.removeItem(k); break; }
+        }
+      });
+    }
+
+    // Page restored whole from the browser's back/forward cache: it is
+    // already exactly as it was, so drop any leftover "restore me" notes.
+    window.addEventListener("pageshow", function(e){
+      if(e.persisted){ try{ forget(); }catch(err){} }
+    });
+
+    var nav = performance.getEntriesByType && performance.getEntriesByType("navigation")[0];
+    var isReload = nav ? nav.type === "reload"
+      : (performance.navigation && performance.navigation.type === 1);
+    if(!isReload) return;
+
+    forget();
+
+    if("scrollRestoration" in history) history.scrollRestoration = "manual";
+
+    var top = function(){ window.scrollTo({top:0, behavior:"instant"}); };
+    top();
+    window.addEventListener("load", function(){
+      top();
+      requestAnimationFrame(function(){
+        top();
+        if("scrollRestoration" in history) history.scrollRestoration = "auto";
+      });
+    });
+  }catch(e){}
+})();
+</script>
+<script>
+/* Home / Back links: when the page you came from is the one just before
+   this one in the browser's history, step back through the history (the
+   page comes back exactly as you left it and the phone's own back button
+   stays consistent). Otherwise just open the page. */
+(function(){
+  function norm(p){ return p.replace(/index\.html$/, ""); }
+
+  window.__goHome = function(){
+    var dest = "index.html";
+    var canStep = false;
+    try{
+      if(history.length > 1 && document.referrer){
+        var r = new URL(document.referrer), t = new URL(dest, location.href);
+        canStep = r.origin === t.origin && norm(r.pathname) === norm(t.pathname);
+      }
+    }catch(e){}
+
+    if(!canStep){ location.assign(dest); return; }
+
+    var fallback = setTimeout(function(){ location.assign(dest); }, 1200);
+    window.addEventListener("pagehide", function(){ clearTimeout(fallback); }, {once:true});
+    history.back();
+  };
+
+  document.addEventListener("click", function(e){
+    if(e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    var a = e.target && e.target.closest ? e.target.closest('a[href="index.html"]') : null;
+    if(!a || (a.target && a.target !== "_self")) return;
+    e.preventDefault();
+    window.__goHome();
+  });
+})();
+</script>
+
+
+    <link
+        rel="icon"
+        type="image/png"
+        href="file_000000000c40722f92b1fe6758cb4855.png"
+    >
+
+    <meta charset="UTF-8">
+<script src="site-tools.js"></script>
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Download — Lanthano Research</title>
+
+
+    <meta name="description" content="Download the archive for offline reading, install the app, or keep your own copy.">
+<link rel="canonical" href="https://lanthanoresearch.com/download.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Lanthano Research">
+<meta property="og:title" content="Download | Lanthano Research">
+<meta property="og:description" content="Download the archive for offline reading, install the app, or keep your own copy.">
+<meta property="og:url" content="https://lanthanoresearch.com/download.html">
+<meta property="og:image" content="https://lanthanoresearch.com/file_000000000c40722f92b1fe6758cb4855.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Download | Lanthano Research">
+<meta name="twitter:description" content="Download the archive for offline reading, install the app, or keep your own copy.">
+<meta name="twitter:image" content="https://lanthanoresearch.com/file_000000000c40722f92b1fe6758cb4855.png">
+<style>
+
+body{
+    margin:0;
+    background:#111;
+    color:#eee;
+    font-family:Arial,sans-serif;
+}
+
+html{
+    scroll-behavior:smooth;
+}
+
+section{
+    max-width:850px;
+    margin:auto;
+    padding:40px 20px 100px;
+}
+
+h1{
+    text-align:center;
+    margin:0 0 25px;
+    font-size:32px;
+}
+
+h2{
+    margin-top:0;
+    margin-bottom:12px;
+}
+
+.card{
+    background:#1d1d1d;
+    padding:20px;
+    margin:15px 0;
+    border-radius:10px;
+}
+
+.back{
+    color:white;
+    text-decoration:none;
+    display:inline-block;
+    margin-bottom:20px;
+}
+
+.back:hover{
+    text-decoration:underline;
+}
+
+p{
+    line-height:1.55;
+    margin:8px 0;
+}
+
+.download-section{
+    text-align:center;
+}
+
+.download-button{
+    display:inline-block;
+    margin-top:12px;
+    padding:12px 24px;
+    background:#333;
+    color:#fff;
+    border:none;
+    border-radius:7px;
+    font-size:16px;
+    cursor:pointer;
+}
+
+.download-button:hover{
+    background:#444;
+}
+
+.download-button:disabled{
+    opacity:0.5;
+    cursor:wait;
+}
+
+/*
+   The finished button intentionally stays gray.
+   It does NOT turn green.
+*/
+
+.cancel-button{
+    display:none;
+    margin:14px auto 0;
+    padding:10px 22px;
+    background:#333;
+    color:#bbb;
+    border:1px solid #444;
+    border-radius:7px;
+    font-size:14px;
+    cursor:pointer;
+}
+
+.cancel-button:hover{
+    background:#444;
+    color:#fff;
+}
+
+.progress{
+    display:none;
+    margin:18px auto 0;
+    max-width:650px;
+}
+
+.progress-percent{
+    text-align:center;
+    color:#aaa;
+    font-size:1em;
+    margin-bottom:6px;
+}
+
+.progress-percent.finished{
+    color:#39b54a;
+}
+
+.progress-bar{
+    width:100%;
+    height:8px;
+    background:#333;
+    border-radius:10px;
+    overflow:hidden;
+}
+
+.progress-fill{
+    width:0%;
+    height:100%;
+    background:#aaa;
+    transition:width .2s ease;
+}
+
+.progress-fill.finished{
+    background:#39b54a;
+}
+
+.progress-text{
+    margin-top:8px;
+    color:#aaa;
+    font-size:0.9em;
+    line-height:1.4;
+}
+
+.progress-text.finished{
+    color:#39b54a;
+}
+
+.download-warning{
+    display:none;
+    margin:15px auto 0;
+    padding:12px;
+    background:#211515;
+    border:1px solid #5a2525;
+    border-radius:8px;
+    color:#ccc;
+    font-size:0.85em;
+    line-height:1.45;
+    max-width:600px;
+}
+
+.download-warning strong{
+    color:#ff5555;
+}
+
+.download-warning.finished{
+    background:#142116;
+    border-color:#285c32;
+}
+
+.download-warning.finished strong{
+    color:#39b54a;
+}
+
+.status{
+    margin-top:10px;
+    color:#888;
+    font-size:0.85em;
+    line-height:1.4;
+}
+
+.status.finished{
+    color:#39b54a;
+}
+
+
+/* ======================================================
+   BACK TO TOP BUTTON
+   ====================================================== */
+
+.top-button{
+    position:fixed;
+    bottom:20px;
+    left:50%;
+    transform:translateX(-50%);
+    width:50px;
+    height:50px;
+    background:#2a2a2a;
+    color:white;
+    text-decoration:none;
+    border-radius:50%;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    font-size:24px;
+    z-index:1000;
+    opacity:.6;
+}
+
+.top-button:hover{
+    opacity:.6;
+    background:#2a2a2a;
+}
+
+
+/* ======================================================
+   LEAVE PAGE POPUP
+   ====================================================== */
+
+.leave-popup{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.78);
+    z-index:9999;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+}
+
+.leave-popup-box{
+    width:100%;
+    max-width:450px;
+    background:#1d1d1d;
+    border:1px solid #444;
+    border-radius:10px;
+    padding:22px;
+    box-shadow:0 10px 40px rgba(0,0,0,0.5);
+}
+
+.leave-popup-box h2{
+    margin-top:0;
+    margin-bottom:12px;
+}
+
+.leave-popup-box p{
+    color:#ccc;
+    line-height:1.5;
+}
+
+.leave-popup-warning{
+    color:#ff5555 !important;
+    font-weight:bold;
+}
+
+.leave-popup-buttons{
+    display:flex;
+    gap:10px;
+    margin-top:20px;
+}
+
+.leave-popup-button{
+    flex:1;
+    padding:11px 15px;
+    border:none;
+    border-radius:7px;
+    font-size:15px;
+    cursor:pointer;
+}
+
+.stay-button{
+    background:#fff;
+    color:#111;
+}
+
+.stay-button:hover{
+    background:#ddd;
+}
+
+.leave-button{
+    background:#333;
+    color:#fff;
+}
+
+.leave-button:hover{
+    background:#444;
+}
+
+
+@media(max-width:600px){
+
+    section{
+        padding:40px 15px 100px;
+    }
+
+    h1{
+        font-size:32px;
+        margin-bottom:20px;
+    }
+
+    .card{
+        padding:17px;
+        margin:12px 0;
+    }
+
+    .leave-popup-buttons{
+        flex-direction:column;
+    }
+
+}
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<section>
+
+
+    <!-- =================================================
+         LEAVE PAGE POPUP
+         ================================================= -->
+
+    <div
+        id="leavePopup"
+        class="leave-popup"
+    >
+
+        <div class="leave-popup-box">
+
+            <h2>Archive Still Compiling</h2>
+
+            <p class="leave-popup-warning">
+                Leaving this page will stop the archive
+                from being created.
+            </p>
+
+            <p>
+                The archive has not finished yet. If you
+                leave now, you will need to start again.
+            </p>
+
+            <div class="leave-popup-buttons">
+
+                <button
+                    class="leave-popup-button stay-button"
+                    onclick="stayOnPage()"
+                >
+                    Stay on Page
+                </button>
+
+                <button
+                    class="leave-popup-button leave-button"
+                    onclick="leavePage()"
+                >
+                    Leave Anyway
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =================================================
+         HOME
+         ================================================= -->
+
+    <a
+        class="back"
+        href="index.html"
+        onclick="return handleNavigation(event, 'index.html')"
+    >
+        <svg class="back-arrow" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:1em;height:1em;vertical-align:-.12em;margin-right:.35em;flex-shrink:0"><path d="M18 4.5v15L5.5 12z"/></svg> Home
+    </a>
+
+
+    <h1>Download Lanthano Research</h1>
+
+
+    <!-- =================================================
+         PRESERVE THE RESEARCH
+         ================================================= -->
+
+    <div class="card">
+
+        <h2>Preserve the Research</h2>
+
+        <p>
+            Lanthano Research exists to document, investigate,
+            and preserve information that may otherwise become
+            difficult to find or access.
+        </p>
+
+        <p>
+            Websites are not permanent. Hosting can change,
+            files can disappear, and information can become
+            inaccessible.
+        </p>
+
+        <p>
+            Keeping an offline copy helps ensure that the
+            research continues to exist independently of
+            this website.
+        </p>
+
+    </div>
+
+
+    <!-- =================================================
+         DOWNLOAD ENTIRE ARCHIVE
+         ================================================= -->
+
+    <div class="card download-section">
+
+        <h2>Download Entire Archive</h2>
+
+        <p>
+            Create an offline copy of the available Lanthano
+            Research papers, supporting images, and video.
+        </p>
+
+
+        <button
+            id="downloadButton"
+            class="download-button"
+            onclick="downloadArchive()"
+        >
+            Download Archive
+        </button>
+
+
+        <!-- WARNING -->
+
+        <div
+            id="downloadWarning"
+            class="download-warning"
+        >
+
+            <strong>
+                DO NOT CLOSE OR LEAVE THIS PAGE
+            </strong>
+
+            <br><br>
+
+            The archive is being prepared on your device.
+            Leaving this page may interrupt the process.
+
+        </div>
+
+
+        <!-- PROGRESS -->
+
+        <div
+            id="progress"
+            class="progress"
+        >
+
+            <div
+                id="progressPercent"
+                class="progress-percent"
+            >
+                0%
+            </div>
+
+
+            <div class="progress-bar">
+
+                <div
+                    id="progressFill"
+                    class="progress-fill"
+                ></div>
+
+            </div>
+
+
+            <div
+                id="progressText"
+                class="progress-text"
+            >
+                Preparing: Waiting to begin...
+            </div>
+
+        </div>
+
+
+        <!-- CANCEL -->
+
+        <button
+            id="cancelButton"
+            class="cancel-button"
+            onclick="cancelArchive()"
+        >
+            Cancel
+        </button>
+
+
+        <!-- STATUS -->
+
+        <div
+            id="status"
+            class="status"
+        ></div>
+
+    </div>
+
+
+</section>
+
+
+<a href="#" class="top-button" id="topButton">
+    <span style="position:relative; top:-3px;">▲</span>
+</a>
+
+
+
+
+
+<script>
+
+
+/*
+==========================================================
+MINI ZIP WRITER
+Builds the ZIP without loading every file into memory: the
+finished archive is a list of pieces (small headers plus the
+downloaded files themselves, which the browser keeps on disk
+when they are large). Files are stored as they are - photos
+and videos are already compressed. Needs no outside library
+and switches to ZIP64 on its own for very large archives.
+==========================================================
+*/
+
+const CRC_TABLE = (function(){
+    const t = new Uint32Array(256);
+    for(let n = 0; n < 256; n++){
+        let c = n;
+        for(let k = 0; k < 8; k++){
+            c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+        }
+        t[n] = c >>> 0;
+    }
+    return t;
+})();
+
+function crcUpdate(crc, bytes){
+    let c = crc;
+    for(let i = 0; i < bytes.length; i++){
+        c = CRC_TABLE[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8);
+    }
+    return c;
+}
+
+async function crcOfBlob(blob, onBytes){
+    let c = 0xFFFFFFFF;
+    const CHUNK = 8 * 1024 * 1024;
+    for(let pos = 0; pos < blob.size; pos += CHUNK){
+        checkCancelled();
+        const part = new Uint8Array(
+            await blob.slice(pos, Math.min(blob.size, pos + CHUNK)).arrayBuffer()
+        );
+        c = crcUpdate(c, part);
+        if(onBytes) onBytes(part.length);
+        // let the page breathe between chunks
+        await new Promise(r => setTimeout(r, 0));
+    }
+    return (c ^ 0xFFFFFFFF) >>> 0;
+}
+
+function MiniZip(prefix, store){
+    this.prefix = prefix || "";
+    this.store = store || { entries: [] };
+}
+
+MiniZip.prototype.folder = function(name){
+    return new MiniZip(this.prefix + name + "/", this.store);
+};
+
+MiniZip.prototype.file = function(name, data){
+    const blob = (data instanceof Blob)
+        ? data
+        : new Blob([data], { type: "application/octet-stream" });
+    this.store.entries.push({ name: this.prefix + name, blob: blob });
+    return this;
+};
+
+MiniZip.prototype.generateAsync = async function(options, onProgress){
+
+    const enc = new TextEncoder();
+    const entries = this.store.entries;
+    const LIMIT = window.__ZIP64_LIMIT || 0xFFFFFFFF;   // test hook
+
+    // Pass 1: checksums (reads each file once, a piece at a time).
+    let total = 0;
+    entries.forEach(e => { total += e.blob.size; });
+    let done = 0;
+
+    for(const e of entries){
+        e.crc = await crcOfBlob(e.blob, n => {
+            done += n;
+            if(onProgress) onProgress({ percent: total ? (done / total) * 100 : 100 });
+        });
+    }
+
+    // Pass 2: lay out headers and data.
+    const now = new Date();
+    const dosTime =
+        (now.getHours() << 11) | (now.getMinutes() << 5) | (now.getSeconds() >> 1);
+    const dosDate =
+        ((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate();
+
+    const parts = [];
+    let offset = 0;
+    const central = [];
+    let needZip64 = entries.length >= 0xFFFF;
+
+    for(const e of entries){
+
+        const nameBytes = enc.encode(e.name);
+        const big = e.blob.size >= LIMIT;
+        e.offset = offset;
+        e.nameBytes = nameBytes;
+        e.big = big;
+
+        const extra = big ? 20 : 0;
+        const h = new DataView(new ArrayBuffer(30 + nameBytes.length + extra));
+        h.setUint32(0, 0x04034b50, true);
+        h.setUint16(4, big ? 45 : 20, true);
+        h.setUint16(6, 0x0800, true);            // names are UTF-8
+        h.setUint16(8, 0, true);                 // stored
+        h.setUint16(10, dosTime, true);
+        h.setUint16(12, dosDate, true);
+        h.setUint32(14, e.crc, true);
+        h.setUint32(18, big ? 0xFFFFFFFF : e.blob.size, true);
+        h.setUint32(22, big ? 0xFFFFFFFF : e.blob.size, true);
+        h.setUint16(26, nameBytes.length, true);
+        h.setUint16(28, extra, true);
+        new Uint8Array(h.buffer).set(nameBytes, 30);
+        if(big){
+            const o = 30 + nameBytes.length;
+            h.setUint16(o, 0x0001, true);
+            h.setUint16(o + 2, 16, true);
+            h.setBigUint64(o + 4, BigInt(e.blob.size), true);
+            h.setBigUint64(o + 12, BigInt(e.blob.size), true);
+        }
+
+        parts.push(h.buffer, e.blob);
+        offset += h.byteLength + e.blob.size;
+        if(big || offset >= LIMIT) needZip64 = true;
+    }
+
+    const cdStart = offset;
+
+    for(const e of entries){
+
+        const bigOff = e.offset >= LIMIT;
+        const z64 = e.big || bigOff;
+        const extraLen = z64 ? (4 + (e.big ? 16 : 0) + (bigOff ? 8 : 0)) : 0;
+        const c = new DataView(new ArrayBuffer(46 + e.nameBytes.length + extraLen));
+        c.setUint32(0, 0x02014b50, true);
+        c.setUint16(4, z64 ? 45 : 20, true);
+        c.setUint16(6, z64 ? 45 : 20, true);
+        c.setUint16(8, 0x0800, true);
+        c.setUint16(10, 0, true);
+        c.setUint16(12, dosTime, true);
+        c.setUint16(14, dosDate, true);
+        c.setUint32(16, e.crc, true);
+        c.setUint32(20, e.big ? 0xFFFFFFFF : e.blob.size, true);
+        c.setUint32(24, e.big ? 0xFFFFFFFF : e.blob.size, true);
+        c.setUint16(28, e.nameBytes.length, true);
+        c.setUint16(30, extraLen, true);
+        c.setUint16(32, 0, true);
+        c.setUint16(34, 0, true);
+        c.setUint16(36, 0, true);
+        c.setUint32(38, 0, true);
+        c.setUint32(42, bigOff ? 0xFFFFFFFF : e.offset, true);
+        new Uint8Array(c.buffer).set(e.nameBytes, 46);
+        if(z64){
+            let o = 46 + e.nameBytes.length;
+            c.setUint16(o, 0x0001, true);
+            c.setUint16(o + 2, extraLen - 4, true);
+            o += 4;
+            if(e.big){
+                c.setBigUint64(o, BigInt(e.blob.size), true);
+                c.setBigUint64(o + 8, BigInt(e.blob.size), true);
+                o += 16;
+            }
+            if(bigOff) c.setBigUint64(o, BigInt(e.offset), true);
+        }
+        parts.push(c.buffer);
+        offset += c.byteLength;
+    }
+
+    const cdSize = offset - cdStart;
+    const count = entries.length;
+
+    if(needZip64 || cdStart >= LIMIT){
+        const r = new DataView(new ArrayBuffer(56 + 20));
+        r.setUint32(0, 0x06064b50, true);
+        r.setBigUint64(4, 44n, true);
+        r.setUint16(12, 45, true);
+        r.setUint16(14, 45, true);
+        r.setUint32(16, 0, true);
+        r.setUint32(20, 0, true);
+        r.setBigUint64(24, BigInt(count), true);
+        r.setBigUint64(32, BigInt(count), true);
+        r.setBigUint64(40, BigInt(cdSize), true);
+        r.setBigUint64(48, BigInt(cdStart), true);
+        r.setUint32(56, 0x07064b50, true);
+        r.setUint32(60, 0, true);
+        r.setBigUint64(64, BigInt(cdStart + cdSize), true);
+        r.setUint32(72, 1, true);
+        parts.push(r.buffer);
+    }
+
+    const end = new DataView(new ArrayBuffer(22));
+    end.setUint32(0, 0x06054b50, true);
+    end.setUint16(8, needZip64 ? 0xFFFF : count, true);
+    end.setUint16(10, needZip64 ? 0xFFFF : count, true);
+    end.setUint32(12, needZip64 ? 0xFFFFFFFF : cdSize, true);
+    end.setUint32(16, needZip64 ? 0xFFFFFFFF : cdStart, true);
+    parts.push(end.buffer);
+
+    return new Blob(parts, { type: "application/zip" });
+};
+
+
+
+/*
+==========================================================
+ARCHIVE STATE
+==========================================================
+*/
+
+let archiveCompiling = false;
+
+let pendingNavigation = null;
+
+let allowNavigation = false;
+
+let cancelRequested = false;
+
+
+/*
+==========================================================
+BROWSER STORAGE
+==========================================================
+*/
+
+const ARCHIVE_STORAGE_KEY =
+    "lanthanoArchiveDownloaded";
+
+
+/*
+Images and videos are already compressed files, so squeezing them again
+saves almost nothing and only slows the ZIP step. They are stored as-is.
+(PDFs and text still get compressed.)
+*/
+
+const STORE_ONLY = { compression: "STORE" };
+
+
+/*
+==========================================================
+MANUALLY SPECIFIED VIDEO
+==========================================================
+*/
+
+const VIDEO_FILES = [
+
+    "predictive programming.mp4"
+
+];
+
+
+
+/*
+==========================================================
+GET FILE NAME
+==========================================================
+*/
+
+function getFileName(path){
+
+    try{
+
+        return decodeURIComponent(
+            path.split("?")[0]
+        )
+        .split("/")
+        .pop();
+
+    }catch(error){
+
+        return path
+            .split("/")
+            .pop();
+
+    }
+
+}
+
+
+
+/*
+==========================================================
+CLEAN FOLDER NAME
+==========================================================
+*/
+
+function cleanFolderName(name){
+
+    let cleaned =
+        String(
+            name || "Untitled Paper"
+        );
+
+
+    /*
+    9_11 → 911
+    */
+
+    cleaned =
+        cleaned.replace(
+            /^9_11$/i,
+            "911"
+        );
+
+
+    cleaned =
+        cleaned.replace(
+            /[<>:"/\\|?*\x00-\x1F]/g,
+            "_"
+        );
+
+
+    cleaned =
+        cleaned.replace(
+            /\s+/g,
+            " "
+        );
+
+
+    cleaned =
+        cleaned.trim();
+
+
+    cleaned =
+        cleaned.replace(
+            /\.+$/,
+            ""
+        );
+
+
+    return cleaned;
+
+}
+
+
+
+/*
+==========================================================
+CHECK FOR CANCELLATION
+==========================================================
+*/
+
+function checkCancelled(){
+
+    if(cancelRequested){
+
+        throw new Error(
+            "__ARCHIVE_CANCELLED__"
+        );
+
+    }
+
+}
+
+
+
+/*
+==========================================================
+FETCH FILE
+==========================================================
+*/
+
+async function fetchFile(url){
+
+    checkCancelled();
+
+
+    const response =
+        await fetch(
+            url,
+            {
+                cache:"no-cache"
+            }
+        );
+
+
+    checkCancelled();
+
+
+    if(!response.ok){
+
+        throw new Error(
+            `${url} (${response.status})`
+        );
+
+    }
+
+
+    const blob =
+        await response.blob();
+
+
+    checkCancelled();
+
+
+    return blob;
+
+}
+
+
+
+/*
+==========================================================
+PAPER VIDEOS (private video storage)
+Listed under "videos" in descriptions.json; entries starting with
+#$ are hidden, same as images. Each one needs a short-lived link
+from the video server, then the file is fetched with it.
+==========================================================
+*/
+
+const VIDEO_API =
+    "https://videos.lanthanoresearch.com";
+
+
+function visibleVideos(paper){
+
+    if(
+        !paper ||
+        !Array.isArray(paper.videos)
+    ){
+
+        return [];
+
+    }
+
+    return paper.videos.filter(
+        v =>
+            v &&
+            typeof v.file === "string" &&
+            v.file.trim() &&
+            !v.file.trim().startsWith("#$")
+    );
+
+}
+
+
+/*
+Videos with a "group" (for example "Predictive Programming") are stand-alone
+material with no paper. They are filed in their own folder named after the
+group, never inside a paper's folder.
+*/
+
+function groupFolderName(v){
+
+    return cleanFolderName(
+        v.groupLabel ||
+        v.group
+    );
+
+}
+
+
+function paperOnlyVideos(paper){
+
+    return visibleVideos(paper).filter(
+        v => !v.group
+    );
+
+}
+
+
+function groupedVideos(paper){
+
+    return visibleVideos(paper).filter(
+        v => v.group
+    );
+
+}
+
+
+/*
+Set when the video server says "limit reached / unavailable",
+so the rest of the videos are skipped instead of retried.
+*/
+
+let videoServerStopped =
+    false;
+
+
+async function fetchGatedVideo(file){
+
+    checkCancelled();
+
+    if(videoServerStopped){
+
+        throw new Error(
+            `${file} (video server unavailable)`
+        );
+
+    }
+
+    const ticketResponse =
+        await fetch(
+            VIDEO_API +
+            "/ticket?f=" +
+            encodeURIComponent(file),
+            {
+                cache:"no-store"
+            }
+        );
+
+    checkCancelled();
+
+    if(!ticketResponse.ok){
+
+        if(
+            ticketResponse.status === 429 ||
+            ticketResponse.status === 503
+        ){
+
+            videoServerStopped =
+                true;
+
+        }
+
+        throw new Error(
+            `${file} (video ticket ${ticketResponse.status})`
+        );
+
+    }
+
+    const ticket =
+        (await ticketResponse.json()).t;
+
+    const response =
+        await fetch(
+            VIDEO_API +
+            "/play?t=" +
+            encodeURIComponent(ticket)
+        );
+
+    checkCancelled();
+
+    if(!response.ok){
+
+        if(
+            response.status === 429 ||
+            response.status === 503
+        ){
+
+            videoServerStopped =
+                true;
+
+        }
+
+        throw new Error(
+            `${file} (${response.status})`
+        );
+
+    }
+
+    const blob =
+        await response.blob();
+
+    checkCancelled();
+
+    return blob;
+
+}
+
+
+
+/*
+==========================================================
+SET PROGRESS
+==========================================================
+*/
+
+function setProgress(
+    percent,
+    text
+){
+
+    const safePercent =
+        Math.max(
+            0,
+            Math.min(
+                100,
+                percent
+            )
+        );
+
+
+    document
+        .getElementById("progressFill")
+        .style.width =
+        safePercent + "%";
+
+
+    document
+        .getElementById("progressPercent")
+        .textContent =
+        Math.round(
+            safePercent
+        ) + "%";
+
+
+    document
+        .getElementById("progressText")
+        .textContent =
+        text;
+
+}
+
+
+
+/*
+==========================================================
+SET FINISHED STATE
+==========================================================
+*/
+
+function setFinishedState(
+    returningToPage = false
+){
+
+    const button =
+        document.getElementById(
+            "downloadButton"
+        );
+
+
+    const warning =
+        document.getElementById(
+            "downloadWarning"
+        );
+
+
+    const status =
+        document.getElementById(
+            "status"
+        );
+
+
+    const progress =
+        document.getElementById(
+            "progress"
+        );
+
+
+    const progressFill =
+        document.getElementById(
+            "progressFill"
+        );
+
+
+    const progressPercent =
+        document.getElementById(
+            "progressPercent"
+        );
+
+
+    const progressText =
+        document.getElementById(
+            "progressText"
+        );
+
+
+    /*
+    ------------------------------------------------------
+    PROGRESS
+    ------------------------------------------------------
+    */
+
+    progress.style.display =
+        "block";
+
+
+    progressFill.style.width =
+        "100%";
+
+
+    progressPercent.textContent =
+        "100%";
+
+
+    progressPercent.classList.add(
+        "finished"
+    );
+
+
+    progressFill.classList.add(
+        "finished"
+    );
+
+
+    progressText.classList.add(
+        "finished"
+    );
+
+
+    progressText.textContent =
+        "Done";
+
+
+    /*
+    ------------------------------------------------------
+    BUTTON
+    ------------------------------------------------------
+    */
+
+    button.disabled =
+        false;
+
+
+    /*
+    Keep this gray.
+    */
+
+    button.classList.remove(
+        "finished"
+    );
+
+
+    button.textContent =
+        "Download Again";
+
+
+    /*
+    ------------------------------------------------------
+    WARNING / FINISHED MESSAGE
+    ------------------------------------------------------
+    */
+
+    warning.style.display =
+        "block";
+
+
+    warning.classList.add(
+        "finished"
+    );
+
+
+    if(returningToPage){
+
+        warning.innerHTML =
+
+            "<strong>ALREADY DOWNLOADED</strong>" +
+
+            "<br><br>" +
+
+            "The Lanthano Research archive has already " +
+            "been downloaded on this device." +
+
+            "<br><br>" +
+
+            "You may download it again if needed.";
+
+
+        status.textContent =
+            "Archive already downloaded.";
+
+    }else{
+
+        warning.innerHTML =
+
+            "<strong>DONE</strong>" +
+
+            "<br><br>" +
+
+            "The archive has been created and the " +
+            "download has been sent to your browser." +
+
+            "<br><br>" +
+
+            "You may now leave this page.";
+
+
+        status.textContent =
+            "Download finished.";
+
+    }
+
+
+    status.classList.add(
+        "finished"
+    );
+
+}
+
+
+
+/*
+==========================================================
+REMEMBER DOWNLOAD
+==========================================================
+*/
+
+function rememberDownload(){
+
+    try{
+
+        localStorage.setItem(
+            ARCHIVE_STORAGE_KEY,
+            "true"
+        );
+
+    }catch(error){
+
+        console.warn(
+            "Could not save archive state:",
+            error
+        );
+
+    }
+
+}
+
+
+
+/*
+==========================================================
+CHECK REMEMBERED DOWNLOAD
+==========================================================
+*/
+
+function hasRememberedDownload(){
+
+    try{
+
+        return (
+            localStorage.getItem(
+                ARCHIVE_STORAGE_KEY
+            ) === "true"
+        );
+
+    }catch(error){
+
+        return false;
+
+    }
+
+}
+
+
+
+/*
+==========================================================
+SHOW LEAVE POPUP
+==========================================================
+*/
+
+function showLeavePopup(){
+
+    if(!archiveCompiling){
+
+        return false;
+
+    }
+
+
+    document
+        .getElementById("leavePopup")
+        .style.display =
+        "flex";
+
+
+    return true;
+
+}
+
+
+
+/*
+==========================================================
+STAY ON PAGE
+==========================================================
+*/
+
+function stayOnPage(){
+
+    pendingNavigation =
+        null;
+
+
+    document
+        .getElementById("leavePopup")
+        .style.display =
+        "none";
+
+}
+
+
+
+/*
+==========================================================
+LEAVE PAGE
+==========================================================
+*/
+
+function leavePage(){
+
+    allowNavigation =
+        true;
+
+    archiveCompiling =
+        false;
+
+    cancelRequested =
+        true;
+
+
+    document
+        .getElementById("leavePopup")
+        .style.display =
+        "none";
+
+
+    if(window.__goHome){
+        window.__goHome();
+    }else{
+        window.location.href = "index.html";
+    }
+
+}
+
+
+
+/*
+==========================================================
+PROTECT NORMAL NAVIGATION
+==========================================================
+*/
+
+function handleNavigation(
+    event,
+    destination
+){
+
+    if(!archiveCompiling){
+
+        return true;
+
+    }
+
+
+    event.preventDefault();
+
+    pendingNavigation =
+        destination;
+
+    showLeavePopup();
+
+    return false;
+
+}
+
+
+
+/*
+==========================================================
+BROWSER REFRESH / CLOSE PROTECTION
+==========================================================
+*/
+
+window.addEventListener(
+    "beforeunload",
+    function(event){
+
+        if(
+            archiveCompiling &&
+            !allowNavigation
+        ){
+
+            event.preventDefault();
+
+            event.returnValue = "";
+
+        }
+
+    }
+);
+
+
+
+/*
+==========================================================
+CANCEL ARCHIVE
+==========================================================
+*/
+
+function cancelArchive(){
+
+    if(!archiveCompiling){
+
+        return;
+
+    }
+
+
+    cancelRequested =
+        true;
+
+    archiveCompiling =
+        false;
+
+    allowNavigation =
+        true;
+
+    pendingNavigation =
+        null;
+
+
+    document
+        .getElementById("leavePopup")
+        .style.display =
+        "none";
+
+
+    const button =
+        document.getElementById(
+            "downloadButton"
+        );
+
+
+    const cancelButton =
+        document.getElementById(
+            "cancelButton"
+        );
+
+
+    const warning =
+        document.getElementById(
+            "downloadWarning"
+        );
+
+
+    const status =
+        document.getElementById(
+            "status"
+        );
+
+
+    /*
+    ------------------------------------------------------
+    CANCEL BUTTON
+    ------------------------------------------------------
+    */
+
+    cancelButton.style.display =
+        "none";
+
+
+    button.disabled =
+        false;
+
+
+    /*
+    ------------------------------------------------------
+    IF PREVIOUS DOWNLOAD EXISTS
+    ------------------------------------------------------
+    */
+
+    if(
+        hasRememberedDownload()
+    ){
+
+        setFinishedState(true);
+
+        status.textContent =
+            "Archive already downloaded.";
+
+        return;
+
+    }
+
+
+    /*
+    ------------------------------------------------------
+    NO PREVIOUS DOWNLOAD
+    ------------------------------------------------------
+    */
+
+    button.textContent =
+        "Download Archive";
+
+
+    button.classList.remove(
+        "finished"
+    );
+
+
+    warning.style.display =
+        "none";
+
+
+    warning.classList.remove(
+        "finished"
+    );
+
+
+    status.classList.remove(
+        "finished"
+    );
+
+
+    status.textContent =
+        "Archive creation cancelled.";
+
+
+    document
+        .getElementById("progress")
+        .style.display =
+        "none";
+
+
+    document
+        .getElementById("progressFill")
+        .classList.remove(
+            "finished"
+        );
+
+
+    document
+        .getElementById("progressPercent")
+        .classList.remove(
+            "finished"
+        );
+
+
+    document
+        .getElementById("progressText")
+        .classList.remove(
+            "finished"
+        );
+
+
+    setProgress(
+        0,
+        "Preparing: Cancelled"
+    );
+
+}
+
+
+
+/*
+==========================================================
+CREATE ARCHIVE
+==========================================================
+*/
+
+async function downloadArchive(){
+
+
+    /*
+    ------------------------------------------------------
+    PREVENT DOUBLE START
+    ------------------------------------------------------
+    */
+
+    if(archiveCompiling){
+
+        return;
+
+    }
+
+
+    const button =
+        document.getElementById(
+            "downloadButton"
+        );
+
+
+    const progress =
+        document.getElementById(
+            "progress"
+        );
+
+
+    const status =
+        document.getElementById(
+            "status"
+        );
+
+
+    const warning =
+        document.getElementById(
+            "downloadWarning"
+        );
+
+
+    const cancelButton =
+        document.getElementById(
+            "cancelButton"
+        );
+
+
+    /*
+    ------------------------------------------------------
+    START PROCESS
+    ------------------------------------------------------
+    */
+
+    archiveCompiling =
+        true;
+
+    allowNavigation =
+        false;
+
+    pendingNavigation =
+        null;
+
+    cancelRequested =
+        false;
+
+
+    /*
+    IMPORTANT:
+    Do NOT clear localStorage here.
+
+    If this is a second attempt and the user cancels,
+    the browser should still remember the first successful
+    download.
+    */
+
+
+    button.disabled =
+        true;
+
+
+    button.classList.remove(
+        "finished"
+    );
+
+
+    button.textContent =
+        "Preparing Archive...";
+
+
+    cancelButton.style.display =
+        "inline-block";
+
+
+    progress.style.display =
+        "block";
+
+
+    warning.style.display =
+        "block";
+
+
+    warning.classList.remove(
+        "finished"
+    );
+
+
+    warning.innerHTML =
+
+        "<strong>" +
+        "DO NOT CLOSE OR LEAVE THIS PAGE" +
+        "</strong>" +
+
+        "<br><br>" +
+
+        "The archive is being prepared on your device. " +
+        "Leaving this page may interrupt the process.";
+
+
+    status.classList.remove(
+        "finished"
+    );
+
+
+    status.textContent =
+        "";
+
+
+    document
+        .getElementById("progressFill")
+        .classList.remove(
+            "finished"
+        );
+
+
+    document
+        .getElementById("progressPercent")
+        .classList.remove(
+            "finished"
+        );
+
+
+    document
+        .getElementById("progressText")
+        .classList.remove(
+            "finished"
+        );
+
+
+    setProgress(
+        0,
+        "Preparing: Loading archive information..."
+    );
+
+
+
+    try{
+
+
+        /*
+        ==================================================
+        LOAD DESCRIPTIONS
+        ==================================================
+        */
+
+        const response =
+            await fetch(
+                "descriptions.json",
+                {
+                    cache:"no-cache"
+                }
+            );
+
+
+        checkCancelled();
+
+
+        if(!response.ok){
+
+            throw new Error(
+                "Could not load descriptions.json."
+            );
+
+        }
+
+
+        const descriptions =
+            await response.json();
+
+
+        checkCancelled();
+
+
+        setProgress(
+            2,
+            "Preparing: Counting archive files..."
+        );
+
+
+
+        /*
+        ==================================================
+        CREATE ZIP
+        ==================================================
+        */
+
+        const zip =
+            new MiniZip();
+
+
+        /*
+        Main archive folder.
+        */
+
+        const root =
+            zip.folder(
+                "Lanthano Research"
+            );
+
+
+        /*
+        Loose videos listed above (not found in any paper's list) go
+        into the Predictive Programming folder, created only if needed.
+        */
+
+        const looseVideosFolderName =
+            "Predictive Programming";
+
+
+
+        /*
+        ==================================================
+        README
+        ==================================================
+        */
+
+        root.file(
+            "README.txt",
+
+`LANTHANO RESEARCH
+OFFLINE ARCHIVE
+
+This is an offline preservation copy of material available
+through Lanthano Research.
+
+Website:
+https://lanthanoresearch.com
+
+The purpose of this archive is to help preserve the research
+independently of the continued availability of the website.
+
+The archive contains research papers, supporting images,
+and designated video material.
+
+Created:
+${new Date().toLocaleString()}
+`
+        );
+
+
+
+        /*
+        Videos a paper lists as hosted on this site ("source": "site") are
+        filed with their paper, so drop them from the loose Videos folder
+        list to avoid saving the same file twice.
+        */
+
+        Object.values(descriptions).forEach(
+            paper => {
+
+                visibleVideos(paper).forEach(
+                    v => {
+
+                        if(v.source === "site"){
+
+                            const at =
+                                VIDEO_FILES.indexOf(
+                                    v.file.trim()
+                                );
+
+                            if(at !== -1){
+
+                                VIDEO_FILES.splice(at, 1);
+
+                            }
+
+                        }
+
+                    }
+                );
+
+            }
+        );
+
+
+
+        /*
+        ==================================================
+        GET ARTICLES
+        ==================================================
+        */
+
+        const entries =
+            Object.entries(
+                descriptions
+            );
+
+
+
+        /*
+        ==================================================
+        COUNT FILES
+        ==================================================
+        */
+
+        let totalFiles =
+            0;
+
+
+        entries.forEach(
+            ([key, paper]) => {
+
+                if(
+                    paper.url
+                ){
+
+                    totalFiles++;
+
+                }
+
+
+                if(
+                    Array.isArray(
+                        paper.images
+                    )
+                ){
+
+                    totalFiles +=
+                        paper.images.filter(
+                            image =>
+                                typeof image === "string" &&
+                                !image
+                                    .trim()
+                                    .startsWith("#$")
+                        ).length;
+
+                }
+
+            }
+        );
+
+
+        entries.forEach(
+            ([key, paper]) => {
+
+                totalFiles +=
+                    visibleVideos(paper).length;
+
+            }
+        );
+
+
+        totalFiles +=
+            VIDEO_FILES.length;
+
+
+        let completedFiles =
+            0;
+
+
+        const failedFiles =
+            [];
+
+
+
+        /*
+        ==================================================
+        PROCESS ARTICLES
+        ==================================================
+        */
+
+        for(
+            let i = 0;
+            i < entries.length;
+            i++
+        ){
+
+            checkCancelled();
+
+
+            const [
+                key,
+                paper
+            ] =
+                entries[i];
+
+
+            const title =
+                paper.title ||
+                key ||
+                `Paper ${i + 1}`;
+
+
+            /*
+            Article folder directly inside
+            Lanthano Research.
+            */
+
+            const folderName =
+                cleanFolderName(
+                    title
+                );
+
+
+            const paperFolder =
+                root.folder(
+                    folderName
+                );
+
+
+            /*
+            Photos folder inside article.
+            */
+
+            const photoFolder =
+                paperFolder.folder(
+                    "Photo"
+                );
+
+
+
+            /*
+            =================================================
+            PDF
+            =================================================
+            */
+
+            if(
+                paper.url
+            ){
+
+                checkCancelled();
+
+
+                const pdfName =
+                    getFileName(
+                        paper.url
+                    );
+
+
+                try{
+
+                    setProgress(
+                        (
+                            completedFiles /
+                            totalFiles
+                        ) * 90,
+
+                        `Compiling: ${title} (PDF 1 of 1)`
+                    );
+
+
+                    const pdf =
+                        await fetchFile(
+                            paper.url
+                        );
+
+
+                    checkCancelled();
+
+
+                    /*
+                    PDF directly inside article folder.
+                    */
+
+                    paperFolder.file(
+                        pdfName,
+                        pdf
+                    );
+
+
+                    completedFiles++;
+
+
+                    setProgress(
+                        (
+                            completedFiles /
+                            totalFiles
+                        ) * 90,
+
+                        `Compiling: ${title} (PDF 1 of 1)`
+                    );
+
+
+                }catch(error){
+
+                    if(
+                        error.message ===
+                        "__ARCHIVE_CANCELLED__"
+                    ){
+
+                        throw error;
+
+                    }
+
+
+                    console.error(
+                        error
+                    );
+
+
+                    failedFiles.push(
+                        paper.url
+                    );
+
+
+                    completedFiles++;
+
+                }
+
+            }
+
+
+
+            /*
+            =================================================
+            IMAGES
+            =================================================
+            */
+
+            const images =
+                Array.isArray(
+                    paper.images
+                )
+
+                    ? paper.images.filter(
+                        image =>
+                            typeof image === "string" &&
+                            !image
+                                .trim()
+                                .startsWith("#$")
+                    )
+
+                    : [];
+
+
+            if(
+                images.length
+            ){
+
+                for(
+                    let j = 0;
+                    j < images.length;
+                    j++
+                ){
+
+                    checkCancelled();
+
+
+                    const image =
+                        images[j];
+
+
+                    const imageName =
+                        getFileName(
+                            image
+                        );
+
+
+                    try{
+
+                        setProgress(
+                            (
+                                completedFiles /
+                                totalFiles
+                            ) * 90,
+
+                            `Compiling: ${title} (Image ${j + 1} of ${images.length})`
+                        );
+
+
+                        const imageBlob =
+                            await fetchFile(
+                                image
+                            );
+
+
+                        checkCancelled();
+
+
+                        photoFolder.file(
+                            imageName,
+                            imageBlob,
+                            STORE_ONLY
+                        );
+
+
+                        completedFiles++;
+
+
+                        setProgress(
+                            (
+                                completedFiles /
+                                totalFiles
+                            ) * 90,
+
+                            `Compiling: ${title} (Image ${j + 1} of ${images.length})`
+                        );
+
+
+                    }catch(error){
+
+                        if(
+                            error.message ===
+                            "__ARCHIVE_CANCELLED__"
+                        ){
+
+                            throw error;
+
+                        }
+
+
+                        console.error(
+                            error
+                        );
+
+
+                        failedFiles.push(
+                            image
+                        );
+
+
+                        completedFiles++;
+
+                    }
+
+                }
+
+            }
+
+        }
+
+
+
+        /*
+        ==================================================
+        PAPER VIDEOS
+        Each paper's videos go in a "Videos" folder inside
+        that paper's folder, next to its PDF and Photo folder.
+        ==================================================
+        */
+
+        for(
+            let i = 0;
+            i < entries.length;
+            i++
+        ){
+
+            const [
+                key,
+                paper
+            ] =
+                entries[i];
+
+            const paperVideos =
+                paperOnlyVideos(paper);
+
+            if(
+                !paperVideos.length
+            ){
+
+                continue;
+
+            }
+
+            const title =
+                paper.title ||
+                key ||
+                `Paper ${i + 1}`;
+
+            const paperVideoFolder =
+                root
+                    .folder(
+                        cleanFolderName(
+                            title
+                        )
+                    )
+                    .folder(
+                        "Videos"
+                    );
+
+            const usedNames =
+                new Set();
+
+            for(
+                let j = 0;
+                j < paperVideos.length;
+                j++
+            ){
+
+                checkCancelled();
+
+                const file =
+                    paperVideos[j].file.trim();
+
+                let videoName =
+                    getFileName(
+                        file
+                    );
+
+                if(
+                    usedNames.has(
+                        videoName
+                    )
+                ){
+
+                    videoName =
+                        `${j + 1} - ${videoName}`;
+
+                }
+
+                usedNames.add(
+                    videoName
+                );
+
+                try{
+
+                    setProgress(
+                        (
+                            completedFiles /
+                            totalFiles
+                        ) * 90,
+
+                        `Compiling: ${title} (Video ${j + 1} of ${paperVideos.length})`
+                    );
+
+                    const videoBlob =
+                        paperVideos[j].source === "site"
+                            ? await fetchFile(
+                                file
+                            )
+                            : await fetchGatedVideo(
+                                file
+                            );
+
+                    checkCancelled();
+
+                    paperVideoFolder.file(
+                        videoName,
+                        videoBlob,
+                        STORE_ONLY
+                    );
+
+                }catch(error){
+
+                    if(
+                        error.message ===
+                        "__ARCHIVE_CANCELLED__"
+                    ){
+
+                        throw error;
+
+                    }
+
+                    console.error(
+                        error
+                    );
+
+                    failedFiles.push(
+                        file
+                    );
+
+                }
+
+                completedFiles++;
+
+                setProgress(
+                    (
+                        completedFiles /
+                        totalFiles
+                    ) * 90,
+
+                    `Compiling: ${title} (Video ${j + 1} of ${paperVideos.length})`
+                );
+
+            }
+
+        }
+
+
+
+        /*
+        ==================================================
+        GROUPED VIDEOS (no paper)
+        Each group gets its own folder directly inside
+        Lanthano Research, with just its videos in it.
+        ==================================================
+        */
+
+        const groupUsedNames =
+            {};
+
+        for(
+            let i = 0;
+            i < entries.length;
+            i++
+        ){
+
+            const [
+                key,
+                paper
+            ] =
+                entries[i];
+
+            const vids =
+                groupedVideos(paper);
+
+            for(
+                let j = 0;
+                j < vids.length;
+                j++
+            ){
+
+                checkCancelled();
+
+                const v =
+                    vids[j];
+
+                const file =
+                    v.file.trim();
+
+                const folderName =
+                    groupFolderName(v);
+
+                const used =
+                    groupUsedNames[folderName] ||
+                    (groupUsedNames[folderName] = new Set());
+
+                let videoName =
+                    getFileName(
+                        file
+                    );
+
+                if(
+                    used.has(
+                        videoName
+                    )
+                ){
+
+                    videoName =
+                        `${j + 1} - ${videoName}`;
+
+                }
+
+                used.add(
+                    videoName
+                );
+
+                try{
+
+                    setProgress(
+                        (
+                            completedFiles /
+                            totalFiles
+                        ) * 90,
+
+                        `Compiling: ${folderName} (Video ${j + 1} of ${vids.length})`
+                    );
+
+                    const videoBlob =
+                        v.source === "site"
+                            ? await fetchFile(
+                                file
+                            )
+                            : await fetchGatedVideo(
+                                file
+                            );
+
+                    checkCancelled();
+
+                    root
+                        .folder(folderName)
+                        .file(
+                            videoName,
+                            videoBlob,
+                            STORE_ONLY
+                        );
+
+                }catch(error){
+
+                    if(
+                        error.message ===
+                        "__ARCHIVE_CANCELLED__"
+                    ){
+
+                        throw error;
+
+                    }
+
+                    console.error(
+                        error
+                    );
+
+                    failedFiles.push(
+                        file
+                    );
+
+                }
+
+                completedFiles++;
+
+                setProgress(
+                    (
+                        completedFiles /
+                        totalFiles
+                    ) * 90,
+
+                    `Compiling: ${folderName} (Video ${j + 1} of ${vids.length})`
+                );
+
+            }
+
+        }
+
+
+
+        /*
+        ==================================================
+        VIDEOS
+        ==================================================
+        */
+
+        for(
+            let i = 0;
+            i < VIDEO_FILES.length;
+            i++
+        ){
+
+            checkCancelled();
+
+
+            const video =
+                VIDEO_FILES[i];
+
+
+            const videoName =
+                getFileName(
+                    video
+                );
+
+
+            try{
+
+                setProgress(
+                    (
+                        completedFiles /
+                        totalFiles
+                    ) * 90,
+
+                    `Compiling: ${videoName} (Video ${i + 1} of ${VIDEO_FILES.length})`
+                );
+
+
+                const videoBlob =
+                    await fetchFile(
+                        video
+                    );
+
+
+                checkCancelled();
+
+
+                root
+                    .folder(looseVideosFolderName)
+                    .file(
+                        videoName,
+                        videoBlob,
+                        STORE_ONLY
+                    );
+
+
+                completedFiles++;
+
+
+                setProgress(
+                    (
+                        completedFiles /
+                        totalFiles
+                    ) * 90,
+
+                    `Compiling: ${videoName} (Video ${i + 1} of ${VIDEO_FILES.length})`
+                );
+
+
+            }catch(error){
+
+                if(
+                    error.message ===
+                    "__ARCHIVE_CANCELLED__"
+                ){
+
+                    throw error;
+
+                }
+
+
+                console.error(
+                    error
+                );
+
+
+                failedFiles.push(
+                    video
+                );
+
+
+                completedFiles++;
+
+            }
+
+        }
+
+
+
+        /*
+        ==================================================
+        ERROR REPORT
+        ==================================================
+        */
+
+        checkCancelled();
+
+
+        if(
+            failedFiles.length
+        ){
+
+            root.file(
+                "DOWNLOAD-ERRORS.txt",
+
+`Some files could not be downloaded.
+
+${failedFiles.join("\n")}
+`
+            );
+
+        }
+
+
+
+        /*
+        ==================================================
+        ZIP COMPILATION
+        ==================================================
+        */
+
+        checkCancelled();
+
+
+        setProgress(
+            90,
+            "Compiling: ZIP archive"
+        );
+
+
+        const blob =
+            await zip.generateAsync(
+
+                {},
+
+                metadata => {
+
+                    if(
+                        cancelRequested
+                    ){
+
+                        return;
+
+                    }
+
+
+                    const overallPercent =
+                        90 +
+                        (
+                            metadata.percent *
+                            0.10
+                        );
+
+
+                    setProgress(
+                        overallPercent,
+                        "Compiling: ZIP archive"
+                    );
+
+                }
+
+            );
+
+
+        checkCancelled();
+
+
+
+        /*
+        ==================================================
+        ZIP CREATED
+        ==================================================
+        */
+
+        setProgress(
+            100,
+            "Done"
+        );
+
+
+        button.textContent =
+            "Starting Download...";
+
+
+
+        /*
+        ==================================================
+        START BROWSER DOWNLOAD
+        ==================================================
+        */
+
+        const url =
+            URL.createObjectURL(
+                blob
+            );
+
+
+        const link =
+            document.createElement(
+                "a"
+            );
+
+
+        link.href =
+            url;
+
+
+        link.download =
+            "Lanthano-Research-Archive.zip";
+
+
+        document.body.appendChild(
+            link
+        );
+
+
+        link.click();
+
+
+        link.remove();
+
+
+        setTimeout(
+            () => {
+
+                URL.revokeObjectURL(
+                    url
+                );
+
+            },
+            10000
+        );
+
+
+
+        /*
+        ==================================================
+        REMEMBER SUCCESS
+        ==================================================
+        */
+
+        rememberDownload();
+
+
+
+        /*
+        ==================================================
+        FINISHED
+        ==================================================
+        */
+
+        archiveCompiling =
+            false;
+
+        allowNavigation =
+            true;
+
+        cancelRequested =
+            false;
+
+
+        cancelButton.style.display =
+            "none";
+
+
+        setFinishedState(false);
+
+
+    }catch(error){
+
+
+        /*
+        ==================================================
+        CANCELLATION
+        ==================================================
+        */
+
+        if(
+            error.message ===
+            "__ARCHIVE_CANCELLED__"
+        ){
+
+            return;
+
+        }
+
+
+
+        /*
+        ==================================================
+        ERROR
+        ==================================================
+        */
+
+        console.error(
+            "Archive creation failed:",
+            error
+        );
+
+
+        archiveCompiling =
+            false;
+
+        allowNavigation =
+            true;
+
+        cancelRequested =
+            false;
+
+
+        cancelButton.style.display =
+            "none";
+
+
+        /*
+        If a previous successful download exists,
+        restore the remembered state.
+        */
+
+        if(
+            hasRememberedDownload()
+        ){
+
+            setFinishedState(true);
+
+            status.textContent =
+                "Archive already downloaded.";
+
+            return;
+
+        }
+
+
+        /*
+        Otherwise show the actual failure.
+        */
+
+        setProgress(
+            0,
+            "Preparing: Archive creation failed"
+        );
+
+
+        status.textContent =
+            error.message ||
+            "The archive could not be created.";
+
+
+        warning.classList.remove(
+            "finished"
+        );
+
+
+        warning.innerHTML =
+
+            "<strong>ARCHIVE CREATION FAILED</strong>" +
+
+            "<br><br>" +
+
+            "The archive was not completed. " +
+            "You can try again.";
+
+
+        button.disabled =
+            false;
+
+
+        button.textContent =
+            "Download Archive";
+
+    }
+
+}
+
+
+
+/*
+==========================================================
+RESTORE STATE WHEN PAGE LOADS
+==========================================================
+*/
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function(){
+
+        if(
+            hasRememberedDownload()
+        ){
+
+            setFinishedState(true);
+
+        }
+
+    }
+);
+
+
+/*
+==========================================================
+BACK TO TOP BUTTON
+==========================================================
+*/
+
+const topButton = document.getElementById("topButton");
+
+function updateTopButton(){
+    if(window.scrollY > 10){
+        topButton.style.display = "flex";
+    }else{
+        topButton.style.display = "none";
+    }
+}
+
+topButton.addEventListener("click", function(e){
+    e.preventDefault();
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+});
+
+window.addEventListener("scroll", updateTopButton);
+window.addEventListener("load", updateTopButton);
+
+</script>
+
+
+</body>
+
+</html>

@@ -3,10 +3,10 @@
 LANTHANO RESEARCH: OFFLINE APP
 ==========================================================
 
-All the logic for the "Offline App" option on support.html lives here,
+All the logic for the "Offline App" option on download.html lives here,
 so it can be updated without touching the page.
 
-If this file is missing or fails to load, support.html simply keeps
+If this file is missing or fails to load, download.html simply keeps
 working as it always did (the switcher and app panel stay hidden).
 
 What it does, per device:
@@ -221,7 +221,7 @@ async function getSiteFiles(){
     var set = new Set([
         "index.html", "category.html", "discover.html",
         "research-timeline.html", "about.html", "contact.html",
-        "support.html", "pdf.html", "image.html", "404.html",
+        "download.html", "privacy.html", "pdf.html", "image.html", "video.html", "gallery.html", "404.html",
         "hitorahmusic.html", "manifest.json", "sw.js", "offline-app.js",
         "descriptions.json", "search-index.json", "page-counts.json",
         "fuse.basic.min.mjs", "featured-video.css", "featured-video.js",

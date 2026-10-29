@@ -1121,8 +1121,10 @@ function downloadMenu(anchor, paper){
 function mediaMenu(anchor, title, images, videos){
   var ni = realList(images).length, nv = realList(videos).length;
   if(!ni && !nv){ toast("Nothing to download here"); return; }
-  var label = ni && nv ? "All images and videos (" + (ni + nv) + ")" : ni ? "All images (" + ni + ")" : "All videos (" + nv + ")";
-  menu(anchor, [{label:label, note:".zip", icon: ni && nv ? "media" : ni ? "images" : "videos", onClick:function(){ zipAssets(title, images, videos); }}]);
+  var items = [];
+  if(ni) items.push({label: nv ? "Images (" + ni + ")" : "Download images (" + ni + ")", note:".zip", icon:"images", onClick:function(){ zipAssets(title, images, []); }});
+  if(nv) items.push({label: ni ? "Videos (" + nv + ")" : "Download videos (" + nv + ")", note:".zip", icon:"videos", onClick:function(){ zipAssets(title, [], videos); }});
+  menu(anchor, items);
 }
 
 /* ---------------------------------------------------------------
