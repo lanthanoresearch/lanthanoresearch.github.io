@@ -1,6 +1,6 @@
 {
  "count": 309,
- "totalBytes": 283570929,
+ "totalBytes": 283573424,
  "files": [
   {
    "path": "1 Thessalonians Original Text.png",
@@ -474,8 +474,8 @@
   },
   {
    "path": "discover.html",
-   "size": 57468,
-   "hash": "89e97e78e8921bf1"
+   "size": 56080,
+   "hash": "bc2f14dbcef31633"
   },
   {
    "path": "Distance & Shadows (Illustrated 2).png",
@@ -1014,8 +1014,8 @@
   },
   {
    "path": "research-timeline.html",
-   "size": 62972,
-   "hash": "325c8101dc370541"
+   "size": 66855,
+   "hash": "7f157defb469598f"
   },
   {
    "path": "robots.txt",
