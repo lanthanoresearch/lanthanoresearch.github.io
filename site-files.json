@@ -1,6 +1,6 @@
 {
  "count": 309,
- "totalBytes": 283595096,
+ "totalBytes": 283601278,
  "files": [
   {
    "path": "1 Thessalonians Original Text.png",
@@ -1139,8 +1139,8 @@
   },
   {
    "path": "site-tools.js",
-   "size": 78485,
-   "hash": "aa377fa6b201f72c"
+   "size": 87896,
+   "hash": "0cd1f51e5e03253f"
   },
   {
    "path": "sitemap.xml",
@@ -1159,8 +1159,8 @@
   },
   {
    "path": "storage.html",
-   "size": 25456,
-   "hash": "29b80204399dc20f"
+   "size": 22227,
+   "hash": "67eae1d3e9759281"
   },
   {
    "path": "Strange Shadows.png",
