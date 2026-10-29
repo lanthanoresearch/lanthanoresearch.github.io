@@ -1,6 +1,6 @@
 {
  "count": 306,
- "totalBytes": 283483892,
+ "totalBytes": 283497853,
  "files": [
   {
    "path": "1 Thessalonians Original Text.png",
@@ -59,8 +59,8 @@
   },
   {
    "path": "about.html",
-   "size": 8090,
-   "hash": "2d9fd60add433feb"
+   "size": 9335,
+   "hash": "e59a1bafd7574237"
   },
   {
    "path": "AGC stackup.png",
@@ -284,8 +284,8 @@
   },
   {
    "path": "contact.html",
-   "size": 6387,
-   "hash": "272bb8ea6afc763c"
+   "size": 7454,
+   "hash": "a43cfe434b977051"
   },
   {
    "path": "cover1.png",
@@ -474,8 +474,8 @@
   },
   {
    "path": "discover.html",
-   "size": 53479,
-   "hash": "1377bd8d6200ee9f"
+   "size": 54588,
+   "hash": "c6ec2c96676d54bb"
   },
   {
    "path": "Distance & Shadows (Illustrated 2).png",
@@ -734,8 +734,8 @@
   },
   {
    "path": "image.html",
-   "size": 44645,
-   "hash": "ce9d2ea6a5f13c17"
+   "size": 44652,
+   "hash": "17d4182e77022f8b"
   },
   {
    "path": "Images.html",
@@ -1004,8 +1004,8 @@
   },
   {
    "path": "research-timeline.html",
-   "size": 61013,
-   "hash": "4b7a2eecc955013d"
+   "size": 62108,
+   "hash": "4c968f8f7ebdaccb"
   },
   {
    "path": "robots.txt",
@@ -1089,8 +1089,8 @@
   },
   {
    "path": "settings.html",
-   "size": 9996,
-   "hash": "a9d75c15187e409f"
+   "size": 10814,
+   "hash": "8448a951781cf8bd"
   },
   {
    "path": "Shadows Point.png",
@@ -1129,8 +1129,8 @@
   },
   {
    "path": "site-tools.js",
-   "size": 64022,
-   "hash": "64c2684ab197d715"
+   "size": 70813,
+   "hash": "a11a09b954a39f36"
   },
   {
    "path": "Star of David.png",
@@ -1159,13 +1159,13 @@
   },
   {
    "path": "support.html",
-   "size": 60212,
-   "hash": "5836fde389e4c00e"
+   "size": 61249,
+   "hash": "6f0b602075c64b1c"
   },
   {
    "path": "sw.js",
-   "size": 10171,
-   "hash": "9bf164e93251c922"
+   "size": 10963,
+   "hash": "609ed686498e52d1"
   },
   {
    "path": "Symbolism.pdf",
