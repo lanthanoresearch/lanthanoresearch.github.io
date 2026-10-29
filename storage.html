@@ -301,8 +301,11 @@ html{scroll-behavior:smooth}
 
         <div class="rows">
             <div class="row">
-                <div class="name" id="preName">Save all videos</div>
-                <button type="button" class="small" id="preBtn">Save all</button>
+                <span>Keep all videos saved</span>
+                <span style="display:flex;align-items:center;gap:10px">
+                    <button type="button" class="small" id="preStop" hidden>Stop</button>
+                    <button type="button" class="toggleSwitch" id="preToggle" role="switch" aria-checked="false" aria-label="Keep all videos saved"><span class="toggleKnob"></span></button>
+                </span>
             </div>
         </div>
         <div class="bar" id="preBar" hidden><i id="preFill"></i></div>
@@ -422,183 +425,100 @@ async function usage(){
   }
 }
 
-/* ---------- Save all videos (on request) ----------
-   Fetches every video listed on the site into the same saved-video storage the
-   player uses, one after another. Nothing here talks to anything new: videos on
-   this site come from this site, the others through the video server's usual
-   ticket (and its limits - "limit reached" simply stops the run). */
-var PRE_HEADROOM = 300 * 1024 * 1024;
+/* ---------- Keep all videos saved (switch) ----------
+   The work is done by LT.keepVideos (site-tools.js). While the switch is on
+   it tries to keep every video on this device: a video that couldn't be saved
+   is tried again at most once a day, never more than 40 starts a day, one at a
+   time, and "limit reached" or a full disk pauses it for 6 hours. */
 var savedFiles = {};
 var catalog = null;
 var running = null;
 
 async function loadCatalog(){
   if(catalog) return catalog;
-  var list = [], seen = {};
-  try{
-    var r = await fetch("/descriptions.json", {cache: "no-cache"});
-    var d = await r.json();
-    Object.keys(d).forEach(function(k){
-      ((d[k] && d[k].videos) || []).forEach(function(v){
-        if(!v || typeof v.file !== "string") return;
-        var f = v.file.trim();
-        if(!f || f.indexOf("#$") === 0 || seen[f]) return;
-        seen[f] = 1;
-        list.push({file: f, title: v.title || f.split("/").pop().replace(/\.[a-z0-9]+$/i, ""), site: v.source === "site", ver: String(v.v === undefined ? "" : v.v), size: Number(v.size) || 0});
-      });
-    });
-  }catch(e){ return []; }
-  catalog = list;
-  return list;
+  catalog = await LT.keepVideos.catalog();
+  return catalog;
 }
-function vKey(file){ return new URL("/__video/" + encodeURIComponent(file), location.origin).href; }
-function readState(){ try{ return JSON.parse(localStorage.getItem(STATE_KEY) || "{}") || {}; }catch(e){ return {}; } }
-function writeState(st){ try{ localStorage.setItem(STATE_KEY, JSON.stringify(st)); }catch(e){} }
+function keepOn(){ return LT.keepVideos.on(); }
 
-function paintPre(){
-  var btn = $("preBtn"), note = $("preNote");
-  if(!("caches" in window)){ btn.hidden = true; note.textContent = "This browser can’t keep videos on the device."; return; }
+function paintPre(why){
+  var tg = $("preToggle"), note = $("preNote");
+  var on = keepOn();
+  tg.classList.toggle("active", on);
+  tg.setAttribute("aria-checked", on ? "true" : "false");
+  if(!("caches" in window)){ tg.hidden = true; note.textContent = "This browser can’t keep videos on the device."; return; }
   if(running) return;
-  btn.textContent = "Save all";
   var cat = catalog || [];
   var have = cat.filter(function(v){ return savedFiles[v.file]; }).length;
-  if(!cat.length){ btn.hidden = true; note.textContent = ""; return; }
-  btn.hidden = have >= cat.length;
-  note.textContent = have >= cat.length
-    ? "All " + cat.length + " videos are saved on this device."
-    : have + " of " + cat.length + " videos are saved on this device. Save all downloads the rest so every video plays right away, even offline. Some are large, so Wi-Fi is best.";
+  var base;
+  if(!on){
+    base = "Off. Turn on to keep every video on this device, so they all play right away, even offline.";
+  }else if(cat.length && have >= cat.length){
+    base = "On. All " + cat.length + " videos are saved on this device.";
+  }else{
+    base = "On. " + have + " of " + cat.length + " videos are saved. Missing ones are tried again at most once a day each, never on mobile data or data saver, and it pauses if the video server or your storage says no.";
+  }
+  note.textContent = base + (why ? " " + why : "");
 }
 
-/* One video into storage. Returns ok / quota / stop / fail / abort. */
-async function fetchVideo(v, signal, onBytes){
-  try{
-    var res;
-    if(v.site){
-      res = await fetch(new URL(v.file.split("/").map(encodeURIComponent).join("/"), location.origin + "/").href, {cache: "no-store", signal: signal});
-    }else{
-      var tk = await fetch("https://videos.lanthanoresearch.com/ticket?f=" + encodeURIComponent(v.file), {cache: "no-store", signal: signal});
-      if(tk.status === 429 || tk.status === 503) return "stop";
-      if(!tk.ok) return "fail";
-      var t = (await tk.json()).t;
-      res = await fetch("https://videos.lanthanoresearch.com/play?t=" + encodeURIComponent(t), {signal: signal});
-      if(res.status === 429 || res.status === 503){ try{ res.body && res.body.cancel(); }catch(e){} return "stop"; }
-    }
-    var drop = function(){ try{ res.body && res.body.cancel(); }catch(e){} };
-    if(res.status !== 200){ drop(); return "fail"; }
-    var type = (res.headers.get("content-type") || "").toLowerCase();
-    var len = Number(res.headers.get("content-length")) || 0;
-    if(type && type.indexOf("video/") !== 0 && type.indexOf("octet-stream") < 0){ drop(); return "fail"; }
-    try{
-      var est = await navigator.storage.estimate();
-      if(est && est.quota && est.quota - (est.usage || 0) < len + PRE_HEADROOM){ drop(); return "quota"; }
-    }catch(e){}
+var WHY = {
+  limit: "The video server said the limit was reached, so it will wait a few hours.",
+  space: "There isn’t enough free space for the rest, so it will wait a few hours.",
+  paused: "Paused for now; it will try again later.",
+  connection: "Waiting for a better connection.",
+  stopped: "Stopped."
+};
 
-    var out = res;
-    if(res.body && res.body.getReader){
-      var reader = res.body.getReader(), done = 0;
-      out = new Response(new ReadableStream({
-        pull: async function(ctrl){
-          var r = await reader.read();
-          if(r.done){ ctrl.close(); return; }
-          done += r.value.length;
-          onBytes(len ? Math.min(1, done / len) : 0);
-          ctrl.enqueue(r.value);
-        },
-        cancel: function(reason){ return reader.cancel(reason); }
-      }), {status: 200, headers: res.headers});
-    }
-
-    var cache = await caches.open(VIDEO_CACHE);
-    try{
-      await cache.delete(vKey(v.file));
-      await cache.put(vKey(v.file), out);
-    }catch(e){
-      try{ await cache.delete(vKey(v.file)); }catch(x){}
-      if(signal.aborted) return "abort";
-      return (e && e.name === "QuotaExceededError") ? "quota" : "fail";
-    }
-    var stored = await cache.match(vKey(v.file));
-    var blob = stored ? await stored.blob() : null;
-    if(!blob || blob.size < 1024 || (len && blob.size !== len)){
-      await cache.delete(vKey(v.file));
-      return "fail";
-    }
-    return {size: blob.size};
-  }catch(e){
-    return signal.aborted ? "abort" : "fail";
-  }
-}
-
-async function preStore(){
-  if(running){ running.ctl.abort(); running.stopped = true; $("preNote").textContent = "Stopping…"; return; }
-  var cat = await loadCatalog();
-  if(!cat.length || !("caches" in window)) return;
-  var cache = await caches.open(VIDEO_CACHE);
-  var state = readState();
-  state.rec = state.rec || {};
-  var todo = [];
-  for(var i = 0; i < cat.length; i++){
-    var have = await cache.match(vKey(cat[i].file));
-    var rec = state.rec[cat[i].file] || {};
-    if(have && (rec.ver === undefined || rec.ver === cat[i].ver)) continue;
-    todo.push(cat[i]);
-  }
-  if(!todo.length){ savedFiles = {}; cat.forEach(function(v){ savedFiles[v.file] = 1; }); paintPre(); return; }
-
-  var known = todo.reduce(function(n, v){ return n + v.size; }, 0);
-  var c = navigator.connection;
-  var metered = c && (c.saveData || c.type === "cellular");
-  var go = await LT.confirmStep(
-    "Save " + (todo.length === 1 ? "1 video" : todo.length + " videos") + "?",
-    "They are downloaded to this device one after another" + (known ? " (at least " + mb(known) + " in all)" : "") + ", and some are large. Keep this page open until it finishes; you can stop at any time and videos already saved stay." +
-      (metered ? " You appear to be on mobile data or data saver, so Wi-Fi is better." : ""),
-    "Save videos", false);
-  if(!go) return;
-
-  try{ if(navigator.storage.persist) navigator.storage.persist(); }catch(e){}
-
-  running = {ctl: new AbortController(), stopped: false};
-  var btn = $("preBtn"), bar = $("preBar"), fill = $("preFill"), note = $("preNote");
-  btn.textContent = "Stop";
+async function preRun(){
+  if(running || !keepOn()) return;
+  var info = await LT.keepVideos.todo();
+  if(!info.todo.length){ paintPre(info.missing ? "The rest were tried recently and will be tried again tomorrow." : ""); return; }
+  var ctl = new AbortController();
+  running = {ctl: ctl};
+  var bar = $("preBar"), fill = $("preFill"), note = $("preNote"), stop = $("preStop");
+  stop.hidden = false;
   bar.hidden = false;
   fill.style.width = "0";
-  var saved = 0, failed = 0, why = "";
-
-  for(var j = 0; j < todo.length && !running.stopped; j++){
-    var v = todo[j];
-    note.textContent = "Saving " + (j + 1) + " of " + todo.length + ": " + v.title;
-    var r = await fetchVideo(v, running.ctl.signal, function(f){
-      fill.style.width = ((j + f) / todo.length * 100) + "%";
-    });
-    if(r === "abort") break;
-    if(r === "quota"){ why = "There isn’t enough free space on this device for the rest."; break; }
-    if(r === "stop"){ why = "The video server says the limit has been reached for now. Try again later."; break; }
-    if(r === "fail"){ failed++; continue; }
-    var st = readState();
-    st.rec = st.rec || {};
-    st.rec[v.file] = {ok: Date.now(), ver: v.ver, size: r.size, fails: 0, ev: 0, first: 0, next: 0, gave: false};
-    writeState(st);
-    savedFiles[v.file] = 1;
-    saved++;
-    fill.style.width = ((j + 1) / todo.length * 100) + "%";
-    await videos();
-    await usage();
-    await new Promise(function(res){ setTimeout(res, 400); });
-  }
-
-  var stopped = running.stopped;
+  var res = await LT.keepVideos.run({
+    signal: ctl.signal,
+    onItem: function(i, n, v){ note.textContent = "Saving " + (i + 1) + " of " + n + ": " + v.title; },
+    onBytes: function(i, n, f){ fill.style.width = ((i + f) / n * 100) + "%"; },
+    onSaved: function(){ videos(); usage(); }
+  });
   running = null;
+  stop.hidden = true;
   bar.hidden = true;
   await refresh();
-  var msg = saved + (saved === 1 ? " video" : " videos") + " saved" + (failed ? ", " + failed + " couldn’t be saved" : "") + ".";
-  if(why) msg += " " + why;
-  else if(stopped) msg += " Stopped.";
-  if(window.LT && LT.toast) LT.toast(msg);
-  var rest = (catalog || []).filter(function(x){ return !savedFiles[x.file]; }).length;
-  if(rest) note.textContent = msg + " " + rest + " still to save.";
-  else note.textContent = "All " + (catalog || []).length + " videos are saved on this device.";
+  var msg = res.saved + (res.saved === 1 ? " video" : " videos") + " saved" + (res.failed ? ", " + res.failed + " couldn’t be saved (will retry tomorrow)" : "") + ".";
+  if(res.saved || res.failed){ try{ LT.toast(msg); }catch(e){} }
+  if(res.why === "busy") paintPre("Another tab is already saving videos.");
+  else paintPre((res.saved || res.failed ? msg + " " : "") + (WHY[res.why] || ""));
 }
-$("preBtn").addEventListener("click", preStore);
+
+$("preStop").addEventListener("click", function(){ if(running){ running.ctl.abort(); $("preNote").textContent = "Stopping…"; } });
+
+$("preToggle").addEventListener("click", async function(){
+  if(keepOn()){
+    LT.keepVideos.set(false);
+    if(running) running.ctl.abort();
+    paintPre();
+    return;
+  }
+  var cat = await loadCatalog();
+  var info = await LT.keepVideos.todo();
+  var known = info.todo.reduce(function(n, v){ return n + v.size; }, 0);
+  var c = navigator.connection;
+  var metered = c && (c.saveData || c.type === "cellular");
+  var go = info.todo.length ? await LT.confirmStep(
+    "Keep all videos saved?",
+    "This downloads " + (info.todo.length === 1 ? "1 video" : info.todo.length + " videos") + " to this device now" + (known ? " (at least " + mb(known) + " in all)" : "") + ", and some are large. After that it only fills in what is missing, trying each video at most once a day. Keep this page open while it works; you can stop it any time." +
+      (metered ? " You appear to be on mobile data or data saver, so Wi-Fi is better." : ""),
+    "Turn on", false) : true;
+  if(!go) return;
+  LT.keepVideos.set(true);
+  paintPre();
+  preRun();
+});
 
 async function videos(){
   var list = await entries(VIDEO_CACHE);
@@ -614,7 +534,7 @@ async function videos(){
   box.innerHTML = "";
   if(!list.length){
     box.innerHTML = '<div class="empty">' + (keeping()
-      ? 'No videos saved yet. A video is saved the first time you watch it, or all at once with Save all above.'
+      ? 'No videos saved yet. A video is saved the first time you watch it, or all of them with \u201cKeep all videos saved\u201d above.'
       : 'No videos saved. Keeping videos is turned off above.') + '</div>';
     $("clearVideos").hidden = true;
     return;
@@ -632,12 +552,13 @@ async function videos(){
       '" title="' + esc(file) + '">' + esc(title) + '</a></div><div class="size">' + mb(x.size) +
       '</div><button type="button" class="small">Remove</button>';
     row.querySelector("button").addEventListener("click", async function(){
-      if(!(await LT.confirmDelete("Remove this video?", "\u201c" + title + "\u201d will be removed from this device. " + (keeping() ? "It downloads again if you watch it." : "It will not be saved again while keeping videos is turned off."), "Remove video"))) return;
+      if(!(await LT.confirmDelete("Remove this video?", "\u201c" + title + "\u201d will be removed from this device. " + (keepOn() ? "\u201cKeep all videos saved\u201d will save it again tomorrow unless you turn that off. " : "") + (keeping() ? "It downloads again if you watch it." : "It will not be saved again while keeping videos is turned off."), "Remove video"))) return;
       var c = await caches.open(VIDEO_CACHE);
       await c.delete(x.req);
       try{
         var s = JSON.parse(localStorage.getItem(STATE_KEY) || "{}") || {};
         if(s.rec && s.rec[file]) delete s.rec[file];
+        if(keepOn()){ s.rec = s.rec || {}; s.rec[file] = {kt: Date.now()}; }
         localStorage.setItem(STATE_KEY, JSON.stringify(s));
       }catch(e){}
       refresh();
@@ -661,8 +582,9 @@ async function refresh(){
 }
 
 $("clearVideos").addEventListener("click", async function(){
-  if(!(await LT.confirmDelete("Remove all saved videos?", "Every video saved on this device will be removed. " + (keeping() ? "They download again if you watch them." : "They will not be saved again while keeping videos is turned off."), "Remove all videos"))) return;
-  if(running){ running.stopped = true; running.ctl.abort(); }
+  if(!(await LT.confirmDelete("Remove all saved videos?", "Every video saved on this device will be removed" + (keepOn() ? ", and “Keep all videos saved” will be turned off" : "") + ". " + (keeping() ? "They download again if you watch them." : "They will not be saved again while keeping videos is turned off."), "Remove all videos"))) return;
+  LT.keepVideos.set(false);
+  if(running){ running.ctl.abort(); }
   await caches.delete(VIDEO_CACHE);
   try{ localStorage.removeItem(STATE_KEY); }catch(e){}
   refresh();
@@ -675,7 +597,7 @@ $("clearSite").addEventListener("click", async function(){
 $("bkExport").addEventListener("click", function(){ window.LT && LT.exportBackup(); setTimeout(backupSummary, 200); });
 $("bkImport").addEventListener("click", function(){ window.LT && LT.importBackup(); });
 
-refresh();
+refresh().then(function(){ if(keepOn()) preRun(); });
 window.addEventListener("pageshow", function(e){ if(e.persisted) refresh(); });
 })();
 </script>
