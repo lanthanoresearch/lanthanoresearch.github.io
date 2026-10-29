@@ -436,6 +436,44 @@ window.addEventListener("storage", function(e){
   }
 }
 
+/* One icon set for every menu: each item has its own, drawn from a CSS mask so it follows the text color
+   (and the theme) and survives a page rewriting the item's text. */
+var ICON_PATHS = {
+  download:   '<path d="M12 4v11"/><path d="M7.5 11 12 15.5 16.5 11"/><path d="M5 20h14"/>',
+  newtab:     '<path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
+  share:      '<path d="M12 15V4"/><path d="M8 8l4-4 4 4"/><path d="M5 13v6h14v-6"/>',
+  fullscreen: '<path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M16 3h3a2 2 0 0 1 2 2v3"/><path d="M8 21H5a2 2 0 0 1-2-2v-3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/>',
+  link:       '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
+  doc:        '<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/>',
+  more:       '<circle cx="5.5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="18.5" cy="12" r="1.4"/>',
+  quote:      '<path d="M7 7h4v5c0 2.5-1.5 4.2-4 4.6"/><path d="M14 7h4v5c0 2.5-1.5 4.2-4 4.6"/>',
+  flag:       '<path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/>',
+  image:      '<rect x="3.5" y="4.5" width="17" height="15" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M4 18l5-5 4 4 3-3 4.5 4.5"/>',
+  video:      '<rect x="3" y="5.5" width="14" height="13" rx="2"/><path d="M17 10.5l4-2.5v8l-4-2.5"/>',
+  media:      '<rect x="3.5" y="6.5" width="14" height="12" rx="2"/><path d="M7 3.5h13a1 1 0 0 1 1 1V15"/><path d="M8 15l3-3 2 2 2-2 2.5 3"/>'
+};
+function iconCss(){
+  function url(n){
+    return 'url("data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" ' +
+      'stroke-linecap="round" stroke-linejoin="round">' + ICON_PATHS[n] + '</svg>') + '")';
+  }
+  var map = [
+    ["#menu #downloadBtn", "download"], ["#menu #newTabBtn", "newtab"], ["#menu #shareBtn,#menu #copyLinkBtn", "share"],
+    ["#menu #fullscreenBtn", "fullscreen"], ["#menu #linkOpenBtn", "link"], ["#menu #pdfButton", "doc"], ["#menu #moreBtn", "more"],
+    ["#menu .moreOpt[data-lt=\"cite\"]", "quote"], ["#menu .moreOpt[data-lt=\"report\"]", "flag"],
+    [".ltOpt[data-ico=\"pdf\"]", "doc"], [".ltOpt[data-ico=\"images\"]", "image"], [".ltOpt[data-ico=\"videos\"]", "video"], [".ltOpt[data-ico=\"media\"]", "media"]
+  ];
+  var out = "";
+  map.forEach(function(m){
+    var sels = m[0].split(",").map(function(x){ return x + "::before"; }).join(",");
+    out += sels + "{content:\"\";flex:0 0 auto;display:inline-block;width:18px;height:18px;margin-right:12px;vertical-align:-4px;background:currentColor;opacity:.85;" +
+      "-webkit-mask:" + url(m[1]) + " center/contain no-repeat;mask:" + url(m[1]) + " center/contain no-repeat}";
+  });
+  out += "#menu .moreOpt::before{margin-right:0;vertical-align:baseline}.ltOpt[data-ico]::before{margin-right:2px;vertical-align:baseline}" +
+         ".ltOpt[data-ico]>span:first-of-type{flex:1 1 auto}";
+  return out;
+}
+
 var css = document.createElement("style");
 css.textContent =
   /* Everything below copies the look of the site's own Settings panel,
@@ -483,8 +521,8 @@ css.textContent =
     'background:#2f7cff;color:#fff;font:14px Arial,sans-serif;text-align:center;text-decoration:none;cursor:pointer}' +
   '.ltPrimary:hover{background:#4a8dff}' +
   /* "More" in the viewers' menus: a row that opens a second panel with its own back row */
-  '#menu #moreBtn{display:flex;align-items:center;justify-content:space-between;gap:12px}' +
-  '#menu .moreChev{flex:0 0 auto;width:7px;height:7px;margin:0 3px 0 0;border-top:2px solid currentColor;border-right:2px solid currentColor;' +
+  '#menu #moreBtn{display:flex;align-items:center;justify-content:flex-start}' +
+  '#menu .moreChev{flex:0 0 auto;width:7px;height:7px;margin:0 3px 0 auto;border-top:2px solid currentColor;border-right:2px solid currentColor;' +
     'transform:rotate(45deg);opacity:.65}' +
   '#menu .moreList{display:none;flex-direction:column}' +
   '#menu.ltSub > :not(#moreList){display:none !important}' +
@@ -494,7 +532,6 @@ css.textContent =
   '#menu .moreHead:hover{background:rgba(128,128,128,.16) !important}' +
   '#menu .moreHead .moreChev{transform:rotate(-135deg);margin:0 0 0 3px}' +
   '#menu .moreOpt{display:flex;align-items:center;gap:12px;padding-top:9px !important;padding-bottom:9px !important}' +
-  '#menu .moreOpt svg{flex:0 0 auto;width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;opacity:.85}' +
   '#menu .moreTxt{display:flex;flex-direction:column;gap:2px;min-width:0;line-height:1.25}' +
   '#menu .moreTxt b{font-weight:600;font-size:.95em}' +
   '#menu .moreTxt small{font-size:.78em;opacity:.62;font-weight:400}' +
@@ -514,7 +551,7 @@ css.textContent =
   /* small confirmation message */
   '.ltToast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:9990;max-width:calc(100vw - 32px);' +
     'padding:10px 16px;background:#222;border:1px solid #333;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.5);' +
-    'color:#eee;font:13.5px Arial,sans-serif;text-align:center}';
+    'color:#eee;font:13.5px Arial,sans-serif;text-align:center}' + iconCss();
 (document.head || root).appendChild(css);
 
 /* ---------------------------------------------------------------
@@ -983,7 +1020,7 @@ function menu(anchor, items){
   var pop = el("div", {"class":"ltPopup videoOptionPopup open", role:"menu"});
   pop.style.width = "230px";
   items.forEach(function(it){
-    var b = el("button", {type:"button", "class":"ltOpt", role:"menuitem"},
+    var b = el("button", {type:"button", "class":"ltOpt", role:"menuitem", "data-ico": it.icon || ""},
       '<span>' + esc(it.label) + '</span>' + (it.note ? '<span class="ltOptNote">' + esc(it.note) + '</span>' : ''));
     b.addEventListener("click", function(ev){
       ev.stopPropagation();
@@ -1067,9 +1104,9 @@ function downloadPdf(paper){
 /* paper: {title, url, images:[], videos:[{file, source}]} */
 function downloadMenu(anchor, paper){
   var imgs = realList(paper.images).length, vids = realList(paper.videos).length;
-  var items = [{label:"PDF", note:".pdf", onClick:function(){ downloadPdf(paper); }}];
-  if(imgs) items.push({label:"All images (" + imgs + ")", note:".zip", onClick:function(){ zipImages(paper); }});
-  if(vids) items.push({label:"All videos (" + vids + ")", note:".zip", onClick:function(){ zipVideos(paper); }});
+  var items = [{label:"PDF", note:".pdf", icon:"pdf", onClick:function(){ downloadPdf(paper); }}];
+  if(imgs) items.push({label:"All images (" + imgs + ")", note:".zip", icon:"images", onClick:function(){ zipImages(paper); }});
+  if(vids) items.push({label:"All videos (" + vids + ")", note:".zip", icon:"videos", onClick:function(){ zipVideos(paper); }});
   menu(anchor, items);
 }
 
@@ -1078,7 +1115,7 @@ function mediaMenu(anchor, title, images, videos){
   var ni = realList(images).length, nv = realList(videos).length;
   if(!ni && !nv){ toast("Nothing to download here"); return; }
   var label = ni && nv ? "All images and videos (" + (ni + nv) + ")" : ni ? "All images (" + ni + ")" : "All videos (" + nv + ")";
-  menu(anchor, [{label:label, note:".zip", onClick:function(){ zipAssets(title, images, videos); }}]);
+  menu(anchor, [{label:label, note:".zip", icon: ni && nv ? "media" : ni ? "images" : "videos", onClick:function(){ zipAssets(title, images, videos); }}]);
 }
 
 /* ---------------------------------------------------------------
@@ -1257,6 +1294,73 @@ window.LT.zipVideos = zipVideos;
 window.LT.install = function(){ if(!deferredInstall) return false; deferredInstall.prompt(); deferredInstall = null; return true; };
 window.LT.canInstall = function(){ return !!deferredInstall; };
 
+/* ---------- App updates ----------
+   Keeps the installed app (PWA) current. The service worker (sw.js) fetches
+   fresh copies; here we just ask it to look for a new version when the app is
+   opened or comes back to the front, and offer a one-tap refresh when a new
+   version has landed. Nothing here needs any setup. */
+var hadController = !!(navigator.serviceWorker && navigator.serviceWorker.controller);
+var updateShown = false, lastUpdateCheck = 0;
+function showUpdateBanner(){
+  if(updateShown || !document.body) return;
+  updateShown = true;
+  var b = el("div", {"class":"ltUpdate", role:"status"});
+  b.style.cssText = "position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:99990;display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:999px;background:#1d1d1d;color:#eee;border:1px solid #444;font:14px Arial,sans-serif;box-shadow:0 6px 24px rgba(0,0,0,.45);max-width:calc(100vw - 24px)";
+  b.innerHTML = '<span>A new version is ready</span>';
+  var go = el("button", {type:"button"}, "Refresh");
+  go.style.cssText = "border:0;border-radius:999px;padding:6px 14px;background:#2f7cff;color:#fff;font:inherit;cursor:pointer";
+  var x = el("button", {type:"button", "aria-label":"Dismiss"}, "×");
+  x.style.cssText = "border:0;background:none;color:inherit;font-size:18px;line-height:1;cursor:pointer;padding:0 2px;opacity:.7";
+  go.onclick = function(){ location.reload(); };
+  x.onclick = function(){ b.remove(); };
+  b.appendChild(go); b.appendChild(x);
+  document.body.appendChild(b);
+}
+function checkForUpdate(force){
+  if(!("serviceWorker" in navigator) || location.protocol === "file:") return Promise.resolve(false);
+  var now = Date.now();
+  if(!force && now - lastUpdateCheck < 60000) return Promise.resolve(false);
+  lastUpdateCheck = now;
+  return navigator.serviceWorker.getRegistration().then(function(reg){
+    if(!reg) return false;
+    return reg.update().then(function(){ return !!reg.waiting; }, function(){ return false; });
+  }).catch(function(){ return false; });
+}
+function updateApp(){
+  /* Clear the saved copies of pages and scripts (not videos), then reload so
+     everything is fetched fresh. Used by Settings > Check for updates. */
+  var clear = (window.caches && caches.keys) ? caches.keys().then(function(names){
+    return Promise.all(names.filter(function(n){ return n !== "lanthano-saved-videos"; }).map(function(n){
+      return caches.open(n).then(function(c){
+        return c.keys().then(function(keys){
+          return Promise.all(keys.filter(function(r){
+            return /\.(html|js|css|json)(\?|$)/i.test(r.url) || /\/$/.test(r.url);
+          }).map(function(r){ return c.delete(r); }));
+        });
+      });
+    }));
+  }) : Promise.resolve();
+  return clear.catch(function(){}).then(function(){
+    return checkForUpdate(true);
+  }).then(function(){
+    return navigator.serviceWorker && navigator.serviceWorker.getRegistration();
+  }).then(function(reg){
+    if(reg && reg.waiting) reg.waiting.postMessage({type:"skip-waiting"});
+    setTimeout(function(){ location.reload(); }, 350);
+  });
+}
+if("serviceWorker" in navigator && location.protocol !== "file:"){
+  navigator.serviceWorker.addEventListener("message", function(e){
+    if(e.data && e.data.type === "lt-updated" && hadController) showUpdateBanner();
+  });
+  navigator.serviceWorker.addEventListener("controllerchange", function(){ if(hadController) showUpdateBanner(); });
+  document.addEventListener("visibilitychange", function(){ if(!document.hidden) checkForUpdate(false); });
+  window.addEventListener("online", function(){ checkForUpdate(false); });
+  window.addEventListener("load", function(){ setTimeout(function(){ checkForUpdate(false); }, 1500); });
+}
+window.LT.checkForUpdate = checkForUpdate;
+window.LT.updateApp = updateApp;
+
 function collapseMore(){
   var m = document.getElementById("menu"), b = document.getElementById("moreBtn"), l = document.getElementById("moreList");
   // only touch what is actually changing: even an unchanged write counts as a change to a mutation observer
@@ -1265,20 +1369,20 @@ function collapseMore(){
   if(l && !l.hidden) l.hidden = true;
   if(b && b.getAttribute("aria-expanded") !== "false") b.setAttribute("aria-expanded", "false");
 }
-var ICONS = {
-  cite:   '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h4v5c0 2.5-1.5 4.2-4 4.6"/><path d="M14 7h4v5c0 2.5-1.5 4.2-4 4.6"/></svg>',
-  report: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/></svg>'
-};
 var SUBS = {cite:"Copy a citation (APA, MLA and more)", report:"Tell us about a mistake"};
 function ready(){
   var mb = document.getElementById("moreBtn"), ml = document.getElementById("moreList"), menuEl = document.getElementById("menu");
+  // markup that spreads an item's text over several lines would leave a gap after its icon
+  if(menuEl) [].forEach.call(menuEl.querySelectorAll(":scope > button, :scope > a"), function(it){
+    if(!it.children.length && /^\s|\s$/.test(it.textContent)) it.textContent = it.textContent.trim();
+  });
   if(mb && ml && menuEl){
     mb.innerHTML = '<span>More</span><span class="moreChev" aria-hidden="true"></span>';
     // each option: icon, title and a short line about what it does
     [].forEach.call(ml.querySelectorAll("button[data-lt]"), function(btn){
       var k = btn.getAttribute("data-lt");
       btn.classList.add("moreOpt");
-      btn.innerHTML = (ICONS[k] || "") + '<span class="moreTxt"><b>' + esc(btn.textContent.trim()) + '</b><small>' + esc(SUBS[k] || "") + '</small></span>';
+      btn.innerHTML = '<span class="moreTxt"><b>' + esc(btn.textContent.trim()) + '</b><small>' + esc(SUBS[k] || "") + '</small></span>';
     });
     var back = el("button", {type:"button", "class":"moreHead", "aria-label":"Back to menu"}, '<span class="moreChev" aria-hidden="true"></span><span>More</span>');
     ml.insertBefore(back, ml.firstChild);

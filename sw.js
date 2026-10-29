@@ -1,4 +1,4 @@
-const CACHE_NAME = "lanthano-research-v5";
+const CACHE_NAME = "lanthano-research-v6";
 
 // Filled by the "Offline App" option on support.html (offline-app.js).
 // It is NOT deleted on activate, so the saved copy survives updates.
@@ -54,7 +54,20 @@ self.addEventListener("activate", event => {
     )
   );
 
-  self.clients.claim();
+  // Take over open pages right away, then tell them a newer version is in
+  // (site-tools.js shows a small "Refresh" message).
+  event.waitUntil(
+    self.clients.claim().then(() =>
+      self.clients.matchAll({ type: "window" }).then(list =>
+        list.forEach(c => { try { c.postMessage({ type: "lt-updated" }); } catch (e) {} })
+      )
+    )
+  );
+});
+
+// A page can ask a waiting copy of this worker to take over now.
+self.addEventListener("message", event => {
+  if (event.data && event.data.type === "skip-waiting") self.skipWaiting();
 });
 
 // Look in the saved copy. ignoreSearch lets "category.html?category=x" match
@@ -118,28 +131,32 @@ async function rangeFromCache(request, cached, forcedType) {
 
 // Network first. If there is a saved copy and the network is dead or very
 // slow (weak signal), use the saved copy instead of waiting forever.
+//
+// The request always asks the server whether the file changed ("no-cache"),
+// so the browser's own short-lived cache can never hand back an old page or
+// script after the site was updated. If the saved copy was used because the
+// network was slow, the answer that arrives later still refreshes the saved
+// copy for next time.
 async function networkFirst(request, fallbackToOfflinePage) {
   const cached = await findCached(request);
 
-  try {
-    const network = fetch(request);
+  const fresh = fetch(request, { cache: "no-cache" }).then(response => {
+    if (response && response.status === 200 && !request.headers.has("range") && looksRight(response, request.url)) {
+      store(request.url, response.clone());
+    }
+    return response;
+  });
+  fresh.catch(() => {});
 
-    const response = cached
+  try {
+    return cached
       ? await Promise.race([
-          network,
+          fresh,
           new Promise((_, reject) =>
             setTimeout(() => reject(new Error("slow")), NETWORK_TIMEOUT)
           )
         ])
-      : await network;
-
-    // Remember what came back so the next visit still works offline, and
-    // keep any copy saved earlier fresh.
-    if (response && response.status === 200 && !request.headers.has("range") && looksRight(response, request.url)) {
-      store(request.url, response.clone());
-    }
-
-    return response;
+      : await fresh;
   } catch (error) {
     if (cached) return rangeFromCache(request, cached);
 

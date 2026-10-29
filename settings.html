@@ -243,6 +243,13 @@ a.inl{color:#9ab8ff}
         <div class="actions"><button type="button" class="btn" id="installBtn">Install</button></div>
     </div>
 
+    <div class="card" id="updateCard">
+        <h2>App updates</h2>
+        <p class="note">The site checks for a new version each time you open it. If something looks out of date, update it here. Your favorites, bookmarks and settings are kept.</p>
+        <div class="actions"><button type="button" class="btn" id="updateBtn">Check for updates</button></div>
+        <p class="note" id="updateNote"></p>
+    </div>
+
     <div class="card">
         <h2>Search</h2>
         <p class="note">How results are shown when you search on the home page.</p>
@@ -365,6 +372,16 @@ $("searchReset").addEventListener("click", function(){
   if(window.LT) LT.toast("Search settings reset");
 });
 buildSearch();
+})();
+
+(function(){
+  var b=document.getElementById("updateBtn"), n=document.getElementById("updateNote");
+  if(!b) return;
+  b.addEventListener("click", function(){
+    if(!window.LT || !LT.updateApp) return;
+    b.disabled=true; n.textContent="Updating\u2026";
+    LT.updateApp().catch(function(){ b.disabled=false; n.textContent="Could not update. Check your connection and try again."; });
+  });
 })();
 </script>
 </body>
