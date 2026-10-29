@@ -605,10 +605,10 @@ h1{
     flex:0 0 100%;
     display:flex;
     align-items:center;
-    gap:12px;
-    margin:18px 0 8px;
-    color:#ccc;
-    font-size:14px;
+    gap:14px;
+    margin:32px 0 20px;
+    color:#ddd;
+    font-size:18px;
     font-weight:bold;
     min-width:0;
 }
@@ -624,8 +624,8 @@ h1{
 
 .paper-break-count{
     flex:0 0 auto;
-    color:#777;
-    font-size:12px;
+    color:#808080;
+    font-size:13px;
     font-weight:normal;
 }
 
@@ -644,9 +644,9 @@ h1{
     order:4;
     flex:0 0 auto;
     box-sizing:border-box;
-    width:30px;
-    height:30px;
-    margin:-6px 0;
+    width:34px;
+    height:34px;
+    margin:-8px 0;
     padding:0;
     border:0;
     border-radius:50%;
@@ -1391,11 +1391,6 @@ filter:drop-shadow(0 0 4px rgba(255,215,0,.6));
 
     <div class="settingsScroll">
 
-        <div class="videoPickerRow" id="paperBreaksRow">
-            <span>Group headings</span>
-            <button type="button" class="toggleSwitch" id="paperBreaksToggle" role="switch" aria-checked="false" aria-label="Show group headings"><span class="toggleKnob"></span></button>
-        </div>
-
         <div class="videoPickerRow" id="showNamesRow">
             <span>Show file names</span>
             <button type="button" class="toggleSwitch" id="showNamesToggle" role="switch" aria-checked="false" aria-label="Show file names"><span class="toggleKnob"></span></button>
@@ -1604,13 +1599,12 @@ const SORT_GROUPS = {
 };
 
 function loadModeSettings(m){
-    const o = { sortType: "az", paperBreaks: false, showNames: false };
+    const o = { sortType: "az", paperBreaks: true, showNames: false };   // group headings are always on
     const k = KEYS[m];
 
     try{
         const s = localStorage.getItem(k.sort);
         if(s === "az" || s === "za") o.sortType = s;
-        o.paperBreaks = localStorage.getItem(KEYS.images.breaks) === "true";
         o.showNames = localStorage.getItem(KEYS.images.names) === "true";
     }catch(e){}
 
@@ -1624,7 +1618,7 @@ const settingsBy = {
 };
 
 let sortType = settingsBy[mode].sortType;
-let paperBreaks = settingsBy[mode].paperBreaks;
+const paperBreaks = true;   // group headings are always on
 let showNames = settingsBy[mode].showNames;
 let readingLevel = "average";
 
@@ -1718,7 +1712,6 @@ const settingsPanel = document.getElementById("settingsPanel");
 const sortButton = document.getElementById("sortButton");
 const sortPanel = document.getElementById("sortPanel");
 const sortDropdown = document.getElementById("sortDropdown");
-const paperBreaksToggle = document.getElementById("paperBreaksToggle");
 const showNamesToggle = document.getElementById("showNamesToggle");
 const modeSwitch = document.getElementById("modeSwitch");
 
@@ -1743,9 +1736,6 @@ function applySortUI(){
 }
 
 function applySettingsUI(){
-    paperBreaksToggle.classList.toggle("active", paperBreaks);
-    paperBreaksToggle.setAttribute("aria-checked", paperBreaks ? "true" : "false");
-
     showNamesToggle.classList.toggle("active", showNames);
     showNamesToggle.setAttribute("aria-checked", showNames ? "true" : "false");
 
@@ -1811,14 +1801,6 @@ window.addEventListener("scroll", () => {
     sortDropdown.classList.remove("open");
 }, { passive: true });
 
-
-paperBreaksToggle.addEventListener("click", (e) => {
-    e.stopPropagation();
-    paperBreaks = !paperBreaks;
-    try{ localStorage.setItem(KEYS.images.breaks, paperBreaks); }catch(err){}
-    applySettingsUI();
-    render();
-});
 
 showNamesToggle.addEventListener("click", (e) => {
     e.stopPropagation();
@@ -2686,7 +2668,7 @@ function setMode(next){
 
     // Only the sorting is separate for Images and Videos; the other settings
     // (paper breaks, file names) are shared and stay as they are.
-    settingsBy[mode] = { sortType, paperBreaks, showNames };
+    settingsBy[mode] = { sortType, paperBreaks: true, showNames };
 
     mode = next;
 

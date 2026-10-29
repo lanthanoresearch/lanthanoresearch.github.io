@@ -471,7 +471,7 @@ function iconCss(){
     out += sels + "{content:\"\";flex:0 0 auto;display:inline-block;width:18px;height:18px;margin-right:12px;vertical-align:-4px;background:currentColor;opacity:.85;" +
       "-webkit-mask:" + url(m[1]) + " center/contain no-repeat;mask:" + url(m[1]) + " center/contain no-repeat}";
   });
-  out += "#menu .moreOpt::before{margin-right:0;vertical-align:baseline}.ltOpt[data-ico]::before{margin-right:2px;vertical-align:baseline}" +
+  out += "#menu .moreOpt::before{margin-right:0;vertical-align:baseline}.ltOpt[data-ico]::before{width:16px;height:16px;margin-right:2px;vertical-align:baseline}" +
          ".ltOpt[data-ico]>span:first-of-type{flex:1 1 auto}";
   return out;
 }
@@ -1023,7 +1023,9 @@ function menu(anchor, items){
   closePopup();
   if(was) return;
   var pop = el("div", {"class":"ltPopup videoOptionPopup open", role:"menu"});
-  pop.style.width = "230px";
+  /* same size as the pickers in category: as narrow as the entries allow, never wider than 250px */
+  pop.style.width = "max-content";
+  pop.style.minWidth = "190px";
   items.forEach(function(it){
     var b = el("button", {type:"button", "class":"ltOpt", role:"menuitem", "data-ico": it.icon || ""},
       '<span>' + esc(it.label) + '</span>' + (it.note ? '<span class="ltOptNote">' + esc(it.note) + '</span>' : ''));
@@ -1036,12 +1038,12 @@ function menu(anchor, items){
   });
   pop.addEventListener("click", function(ev){ ev.stopPropagation(); });
   document.body.appendChild(pop);
-  var r = cssRect(anchor), w = Math.min(230, vw() - 24);
-  pop.style.maxWidth = (vw() - 24) + "px";
-  pop.style.left = Math.max(12, Math.min(r.right - w, vw() - w - 12)) + "px";
-  var below = vh() - r.bottom - 8, above = r.top - 8;
-  if(below >= 150 || below >= above){ pop.style.top = (r.bottom + 8) + "px"; }
-  else{ pop.style.bottom = (vh() - r.top + 8) + "px"; }
+  pop.style.maxWidth = Math.min(250, vw() - 28) + "px";
+  var r = cssRect(anchor), w = pop.getBoundingClientRect().width / (zoomF ? zoomF() : 1);
+  pop.style.left = Math.max(14, Math.min(r.right - w, vw() - w - 14)) + "px";
+  var gap = 10, below = vh() - r.bottom - gap, above = r.top - gap;
+  if(below >= 150 || below >= above){ pop.style.top = (r.bottom + gap) + "px"; }
+  else{ pop.style.bottom = (vh() - r.top + gap) + "px"; }
   anchor.classList.add("open");
   anchor.setAttribute("aria-expanded", "true");
   popup = {el:pop, row:anchor};
