@@ -1321,6 +1321,7 @@ function initLoadLock(){
   var st = el("style"); st.textContent = ".ltLocked{opacity:.4 !important;pointer-events:none !important;cursor:default !important}";
   document.head.appendChild(st);
   var locked = [];
+  document.body.classList.add("ltLoadingMedia");
   function lockNew(){
     Array.prototype.forEach.call(document.querySelectorAll(sel), function(n){
       if(n.classList.contains("ltLocked")) return;
@@ -1331,6 +1332,7 @@ function initLoadLock(){
     clearInterval(timer); if(mo) mo.disconnect();
     locked.forEach(function(n){ n.classList.remove("ltLocked"); n.removeAttribute("inert"); });
     locked = [];
+    document.body.classList.remove("ltLoadingMedia");
     if(st.parentNode) st.remove();
   }
   function check(){ if(!shown()) unlock(); else lockNew(); }

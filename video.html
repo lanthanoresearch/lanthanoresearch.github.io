@@ -766,6 +766,12 @@ select:focus-visible{
    - lifts this bar's own stacking context above the reading-mode
    float while its Settings popover is open (see openVideoSettingsMenu
    below). */
+/* While the video is still loading the whole play bar is shown (locked) above the
+   loading screen, so the page never looks like it is missing its controls. */
+body.ltLoadingMedia #videoControls{
+  z-index:8100;
+}
+
 #videoControls.settings-open{
   z-index:9700;
 }
@@ -9661,6 +9667,7 @@ video.playbackRate =
   let editing = null;                 /* "A" | "B" while the editor is open */
   let previewing = false;             /* playing the section on repeat from the loop menu */
   let ctxPlay = null;                 /* editor: short play around the handle {to, back} */
+  let pin = 0;                        /* editor: the video position you had when you opened it - stays put */
   let zoomIdx = 3, winStart = 0;      /* fine strip: which zoom level and where it starts */
   const MIN_GAP = 0.1;
   const ZOOMS = [120, 60, 30, 10, 4, 2, 1, 0.5];   /* seconds shown across the fine strip */
@@ -9725,12 +9732,15 @@ video.playbackRate =
     ".abSheet .abEnds{display:flex;justify-content:space-between;margin:-4px 12px 8px;color:#888;font-size:11px;font-variant-numeric:tabular-nums}" +
     /* start / end buttons */
     ".abSheet .abTimes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 10px}" +
-    ".abSheet .abTime{display:flex;align-items:center;gap:8px;text-align:left;padding:8px 12px;background:#1d1d1d;border:1px solid #3a3a3a;border-radius:10px;color:#eee;font:inherit;cursor:pointer}" +
-    ".abSheet .abTime:hover{background:#262626;border-color:#ffc107}" +
-    ".abSheet .abTime span{flex:1;min-width:0}" +
+    ".abSheet .abTime{display:flex;align-items:center;gap:8px;padding:8px 8px 8px 12px;background:#1d1d1d;border:1px solid #3a3a3a;border-radius:10px;color:#eee}" +
+    ".abSheet .abTime .abTv{flex:1;min-width:0;display:block}" +
     ".abSheet .abTime small{display:block;color:#ffc107;font:700 10.5px Arial,sans-serif;letter-spacing:.08em}" +
-    ".abSheet .abTime em{display:block;font-style:normal;font-size:17px;font-weight:600;font-variant-numeric:tabular-nums;color:#fff;margin-top:1px}" +
-    ".abSheet .abTime svg{flex:0 0 auto;opacity:.6}" +
+    ".abSheet .abNum{display:inline-block;margin:1px 0 0;padding:0;background:none;border:0;border-bottom:1px dashed #777;border-radius:0;color:#fff;font:600 17px Arial,sans-serif;font-variant-numeric:tabular-nums;cursor:text;line-height:1.25}" +
+    ".abSheet .abNum:hover{border-bottom-color:#ffc107}" +
+    ".abSheet .abBig.abNum{font-size:18px;font-weight:700}" +
+    ".abSheet .abPill{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;padding:8px 11px;background:#2f7cff;border:0;border-radius:8px;color:#fff;font:600 13px Arial,sans-serif;cursor:pointer}" +
+    ".abSheet .abPill:hover{background:#4a8dff}" +
+    ".abSheet .abPill:active{background:#2565d6}" +
     /* fine strip */
     "#abFine{position:relative;height:72px;border-radius:8px;background:#1b1b1b;border:1px solid #333;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}" +
     "#abFine.drag{cursor:grabbing}" +
@@ -9739,7 +9749,9 @@ video.playbackRate =
     "#abFine .abTk.M{height:22px;background:#999}" +
     "#abFine .abTk b{position:absolute;top:100%;left:0;transform:translateX(-50%);margin-top:3px;font:10.5px Arial,sans-serif;font-weight:400;color:#999;white-space:nowrap;font-variant-numeric:tabular-nums}" +
     "#abFine .abKeep{position:absolute;top:0;bottom:0;background:rgba(255,193,7,.14);pointer-events:none}" +
-    "#abFine .abPh{position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:#fff;opacity:.85;pointer-events:none}" +
+    "#abFine .abPh{position:absolute;top:0;bottom:0;width:1px;margin-left:-.5px;background:#fff;opacity:.55;pointer-events:none}" +
+    "#abFine .abPin{position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:#fff;pointer-events:none}" +
+    "#abFine .abPin::before{content:'';position:absolute;top:0;left:-5px;border:6px solid transparent;border-top:8px solid #fff;border-bottom:0}" +
     "#abFine .abOff{position:absolute;top:6px;font:600 11px Arial,sans-serif;color:#ffc107;background:rgba(0,0,0,.5);padding:2px 6px;border-radius:5px;pointer-events:none}" +
     ".abSheet .abZoom{display:flex;align-items:center;gap:8px;margin:8px 0 2px}" +
     ".abSheet .abZoom button{height:30px;min-width:34px;padding:0 10px;border:0;border-radius:7px;background:#2e2e2e;color:#eee;font:600 15px Arial,sans-serif;cursor:pointer}" +
@@ -9751,11 +9763,27 @@ video.playbackRate =
     ".abSheet .abTransport{display:flex;justify-content:center;margin:8px 0 0}" +
     ".abSheet .abTransport .videoNavGroup .abPlay{width:34px;height:34px;background:#2f7cff;color:#fff;border-radius:7px;font-size:17px}" +
     ".abSheet .abTransport .videoNavGroup .abPlay:hover{background:#4a8dff}" +
-    ".abSheet .abCap{margin:5px 0 0;text-align:center;color:#9a9a9a;font-size:12px;line-height:1.35}" +
-    ".abSheet .abCap b{color:#ffc107;font-weight:600}" +
-    ".abSheet .abNow{display:block;width:100%;margin:8px 0 0;padding:9px 10px;border:0;border-radius:9px;background:#2e2e2e;color:#eee;font:13.5px Arial,sans-serif;cursor:pointer}" +
+    ".abSheet .abNow{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin:10px 0 0;padding:10px;border:0;border-radius:9px;background:#2e2e2e;color:#eee;font:14px Arial,sans-serif;cursor:pointer}" +
     ".abSheet .abNow:hover{background:#383838}" +
-    ".abSheet .abNow b{font-weight:600;font-variant-numeric:tabular-nums;margin-left:4px;color:#fff}" +
+    ".abSheet .abNow b{font-weight:600;font-variant-numeric:tabular-nums;color:#fff}" +
+    ".abSheet .abNow.same{opacity:.6}" +
+    ".abDlgBack{position:fixed;inset:0;z-index:6900;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center}" +
+    ".abDlgBack.hidden{display:none}" +
+    ".abDlg{box-sizing:border-box;width:100%;max-width:560px;padding:14px 16px 16px;background:#222;border:1px solid #333;border-bottom:0;border-radius:14px 14px 0 0;font:14px Arial,sans-serif;color:#eee}" +
+    ".abDlg h4{margin:0 0 12px;font-size:15px;color:#fff}" +
+    ".abFields{display:flex;align-items:center;justify-content:center;gap:6px}" +
+    ".abFields label{display:flex;flex-direction:column;align-items:center;gap:3px;color:#999;font-size:11px}" +
+    ".abFields input{box-sizing:border-box;width:76px;height:46px;text-align:center;background:#1b1b1b;border:1px solid #444;border-radius:9px;color:#fff;font:600 22px Arial,sans-serif;font-variant-numeric:tabular-nums;outline:none}" +
+    ".abFields input:focus{border-color:#ffc107}" +
+    ".abFields .abSep{font:600 22px Arial,sans-serif;color:#888;padding-bottom:16px}" +
+    ".abDlg .abMsg{min-height:18px;margin:10px 0 0;text-align:center;font-size:12.5px;color:#999}" +
+    ".abDlg .abMsg.err{color:#ff8a80}" +
+    ".abDlg .abFoot{display:flex;gap:10px;margin-top:12px}" +
+    ".abDlg .abFoot button{flex:1;padding:11px 10px;border-radius:9px;border:0;font:14px Arial,sans-serif;cursor:pointer}" +
+    ".abDlg .abGhost{background:#2e2e2e;color:#eee}" +
+    ".abDlg .abGhost:hover{background:#383838}" +
+    ".abDlg .abGo{background:#2f7cff;color:#fff;flex:1.6 !important}" +
+    ".abDlg .abGo:hover{background:#4a8dff}" +
     ".abSheet .abFoot{display:flex;gap:10px;margin-top:10px}" +
     ".abSheet .abFoot button{flex:1;padding:11px 10px;border-radius:9px;border:0;font:14px Arial,sans-serif;cursor:pointer}" +
     ".abSheet .abGhost{background:#2e2e2e;color:#eee}" +
@@ -9845,11 +9873,10 @@ video.playbackRate =
       '<div id="abOv"><div class="abRail"></div><div class="abSpan" id="abSpan"></div>' + handleHtml("start").replace('class="abH', 'id="abHA" class="abH') + handleHtml("end").replace('class="abH', 'id="abHB" class="abH') + '<div class="abPh" id="abPhO"></div></div>' +
       '<div class="abEnds"><span>0:00</span><span id="abEndT"></span></div>' +
       '<div class="abTimes">' +
-        '<button type="button" class="abTime" data-edit="A"><span><small>START</small><em id="abTA">0:00.00</em></span>' + pen + '</button>' +
-        '<button type="button" class="abTime" data-edit="B"><span><small>END</small><em id="abTB">0:00.00</em></span>' + pen + '</button>' +
+        '<div class="abTime"><span class="abTv"><small>START</small><button type="button" class="abNum" data-num="A" id="abTA" title="Type an exact time">0:00.00</button></span><button type="button" class="abPill" data-edit="A" aria-label="Edit start">' + pen + 'Edit</button></div>' +
+        '<div class="abTime"><span class="abTv"><small>END</small><button type="button" class="abNum" data-num="B" id="abTB" title="Type an exact time">0:00.00</button></span><button type="button" class="abPill" data-edit="B" aria-label="Edit end">' + pen + 'Edit</button></div>' +
       '</div>' +
       navHtml() +
-      '<p class="abCap" id="abCap"></p>' +
       '<div class="abFoot"><button type="button" class="abStop" id="abStop">Stop</button><button type="button" class="abGo" id="abGo">Loop this section</button></div>';
     stage.appendChild(panel);
 
@@ -9858,6 +9885,7 @@ video.playbackRate =
     panel.querySelector("#abStop").addEventListener("click", stopAll);
     panel.addEventListener("click", e => e.stopPropagation());
     panel.querySelectorAll("[data-edit]").forEach(b => b.addEventListener("click", () => openEditor(b.dataset.edit)));
+    panel.querySelectorAll("[data-num]").forEach(b => b.addEventListener("click", () => openTimeDialog(b.dataset.num)));
 
     /* the play controls here move what you are WATCHING (the video position) */
     bindNav(panel, k => {
@@ -9866,18 +9894,48 @@ video.playbackRate =
       try{ video.currentTime = clamp((video.currentTime || 0) + stepOf(k), 0, d); }catch(e){}
     }, () => { if(video.paused) startPreview(); else stopPlayback(); });
 
-    /* overview: tap or drag to move the video position */
+    /* overview: slide the start or end handle, slide the whole section, or drag
+       anywhere else to move the video position */
     const ov = panel.querySelector("#abOv");
-    let scrubbing = false;
-    const ovFrac = e => { const r = ov.getBoundingClientRect(); return clamp((e.clientX - r.left) / Math.max(1, r.width), 0, 1); };
+    let ovMode = null, ovHandle = "A", ovGrab = 0, ovLen = 0;
+    const ovT = e => { const r = ov.getBoundingClientRect(); return clamp((e.clientX - r.left) / Math.max(1, r.width), 0, 1) * dur(); };
     ov.addEventListener("pointerdown", e => {
-      if(!dur()) return;
-      e.preventDefault(); scrubbing = true;
+      const d = dur(); if(!d || A === null) return;
+      e.preventDefault();
+      const r = ov.getBoundingClientRect();
+      const x = e.clientX - r.left, xa = A / d * r.width, xb = B / d * r.width;
+      /* grab zone around each handle; on a short section the middle stays free for sliding it */
+      const zone = clamp((xb - xa) / 3, 12, 22);
+      const da = Math.abs(x - xa), db = Math.abs(x - xb);
+      if(da <= zone || db <= zone){
+        ovMode = "handle";
+        ovHandle = (da < db || (da === db && x < xa)) ? "A" : "B";
+        ovGrab = x - (ovHandle === "A" ? xa : xb);
+        stopPlayback();
+      }else if(x > xa && x < xb){
+        ovMode = "slide"; ovGrab = ovT(e) - A; ovLen = B - A;
+        stopPlayback();
+      }else{
+        ovMode = "scrub";
+        try{ video.currentTime = ovT(e); }catch(err){}
+      }
       try{ ov.setPointerCapture(e.pointerId); }catch(err){}
-      try{ video.currentTime = ovFrac(e) * dur(); }catch(err){}
     });
-    ov.addEventListener("pointermove", e => { if(scrubbing){ try{ video.currentTime = ovFrac(e) * dur(); }catch(err){} } });
-    ["pointerup", "pointercancel", "lostpointercapture"].forEach(ev => ov.addEventListener(ev, () => { scrubbing = false; }));
+    ov.addEventListener("pointermove", e => {
+      if(!ovMode) return;
+      const d = dur(), r = ov.getBoundingClientRect();
+      if(ovMode === "scrub"){ try{ video.currentTime = ovT(e); }catch(err){} return; }
+      if(ovMode === "handle"){
+        const x = e.clientX - r.left - ovGrab;
+        setHandle(ovHandle, clamp(x / Math.max(1, r.width), 0, 1) * d, true, true);
+        return;
+      }
+      const a = clamp(ovT(e) - ovGrab, 0, Math.max(0, d - ovLen));
+      A = a; B = a + ovLen;
+      showFrame(A);
+      paintPanel(); paintRegion(); paintTool();
+    });
+    ["pointerup", "pointercancel", "lostpointercapture"].forEach(ev => ov.addEventListener(ev, () => { ovMode = null; }));
   }
 
   /* ----- 2 & 3. the Start / End editor ----- */
@@ -9887,24 +9945,26 @@ video.playbackRate =
     edit.className = "abSheet hidden";
     edit.setAttribute("role", "dialog");
     edit.innerHTML =
-      '<div class="abHead"><span class="abTag" id="abETag">A</span><h4 id="abETitle">Set start</h4><span class="abBig" id="abETime"></span></div>' +
+      '<div class="abHead"><span class="abTag" id="abETag">A</span><h4 id="abETitle">Set start</h4><button type="button" class="abNum abBig" id="abETime" title="Type an exact time"></button></div>' +
       '<div id="abFine"><div class="abTicks" id="abTicks"></div><div class="abKeep" id="abKeep"></div>' +
-        '<div id="abOther"></div><div class="abPh" id="abPhF"></div><div id="abMark"></div>' +
+        '<div id="abOther"></div><div class="abPin" id="abPin"></div><div class="abPh" id="abPhF"></div><div id="abMark"></div>' +
         '<span class="abOff" id="abOffL" style="left:6px;display:none"></span><span class="abOff" id="abOffR" style="right:6px;display:none"></span></div>' +
       '<div class="abZoom"><button type="button" id="abZm" aria-label="Zoom out" title="Zoom out">−</button>' +
         '<button type="button" id="abZr" class="abZr" title="Reset zoom">Reset</button>' +
         '<button type="button" id="abZp" aria-label="Zoom in" title="Zoom in">+</button><span class="abZl" id="abZl"></span></div>' +
       navHtml() +
-      '<p class="abCap" id="abECap"></p>' +
-      '<button type="button" class="abNow" id="abNow">Use current video time<b id="abNowT"></b></button>' +
+      '<button type="button" class="abNow" id="abNow"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg><span>Set to</span><b id="abNowT"></b></button>' +
       '<div class="abFoot"><button type="button" class="abGo" id="abDone">Done</button></div>';
     stage.appendChild(edit);
     edit.addEventListener("click", e => e.stopPropagation());
     edit.querySelector("#abDone").addEventListener("click", closeEditor);
+    /* the marker (white line) is where the video was when you opened this - it never moves
+       while you drag, step or play; this puts the start/end back on it any time */
     edit.querySelector("#abNow").addEventListener("click", () => {
       stopPlayback();
-      setHandle(editing, video.currentTime || 0, true);
+      setHandle(editing, pin, true);
     });
+    edit.querySelector("#abETime").addEventListener("click", () => openTimeDialog(editing));
     edit.querySelector("#abZp").addEventListener("click", () => { zoomIdx = Math.min(ZOOMS.length - 1, zoomIdx + 1); keepInView(true); paintEdit(); });
     edit.querySelector("#abZm").addEventListener("click", () => { zoomIdx = Math.max(0, zoomIdx - 1); keepInView(true); paintEdit(); });
     edit.querySelector("#abZr").addEventListener("click", () => { zoomIdx = ZOOM_DEFAULT; keepInView(true); paintEdit(); });
@@ -9913,7 +9973,15 @@ video.playbackRate =
     bindNav(edit, k => {
       stopPlayback();
       setHandle(editing, val(editing) + stepOf(k), true);
-    }, () => { if(ctxPlay) stopPlayback(); else startContextPlay(); });
+    }, () => {
+      if(ctxPlay){
+        /* pausing mid-play drops the marker where you stopped, so you can set the start/end there */
+        const t = video.currentTime || 0;
+        stopPlayback();
+        pin = clamp(t, 0, dur());
+        paintEdit();
+      }else startContextPlay();
+    });
 
     /* fine strip: swipe anywhere to scroll the view; grab the handle to move it */
     const fine = edit.querySelector("#abFine");
@@ -10035,11 +10103,17 @@ video.playbackRate =
   }
   function paintPhF(){
     if(!edit || edit.classList.contains("hidden")) return;
-    const W = winLen(), t = video.currentTime || 0;
-    const ph = edit.querySelector("#abPhF");
-    ph.style.display = (t >= winStart && t <= winStart + W) ? "" : "none";
-    ph.style.left = ((t - winStart) / W * 100) + "%";
-    edit.querySelector("#abNowT").textContent = fmt(t);
+    const W = winLen();
+    const place = (el, t, show) => {
+      const on = show && t >= winStart && t <= winStart + W;
+      el.style.display = on ? "" : "none";
+      if(on) el.style.left = ((t - winStart) / W * 100) + "%";
+    };
+    place(edit.querySelector("#abPin"), pin, true);
+    place(edit.querySelector("#abPhF"), video.currentTime || 0, !video.paused);   /* live position only while playing */
+    edit.querySelector("#abNowT").textContent = fmt(pin);
+    const same = editing && Math.abs(val(editing) - pin) < 0.0005;
+    edit.querySelector("#abNow").classList.toggle("same", !!same);
   }
   function paintEdit(){
     if(!edit || !editing) return;
@@ -10047,7 +10121,6 @@ video.playbackRate =
     edit.querySelector("#abETag").textContent = isA ? "A" : "B";
     edit.querySelector("#abETitle").textContent = isA ? "Set start" : "Set end";
     edit.querySelector("#abETime").textContent = fmt(val(editing));
-    edit.querySelector("#abECap").innerHTML = "Controls move the <b>" + (isA ? "start (A)" : "end (B)") + "</b> · Play shows " + CTX_SPAN + " s " + (isA ? "from the start" : "up to the end");
     setPlayIcon(edit, !!ctxPlay);
     paintFine();
   }
@@ -10066,7 +10139,6 @@ video.playbackRate =
     panel.querySelector("#abTB").textContent = fmt(B === null ? d : B);
     panel.querySelector("#abEndT").textContent = d ? fmtShort(d) : "";
     panel.querySelector("#abLen").textContent = valid() ? "Length " + fmtLen(B - A) : "";
-    panel.querySelector("#abCap").innerHTML = "Controls move the <b>video</b> · Play repeats the section";
     panel.querySelector("#abGo").textContent = enabled ? "Done" : "Loop this section";
     setPlayIcon(panel, !video.paused);
     paintPlayhead();
@@ -10087,10 +10159,10 @@ video.playbackRate =
     if(panel) setPlayIcon(panel, !video.paused);
     if(edit) setPlayIcon(edit, !!ctxPlay && !video.paused);
   }
-  video.addEventListener("play", syncPlayIcons);
+  video.addEventListener("play", () => { syncPlayIcons(); paintPhF(); });
   video.addEventListener("pause", () => {
     if(!video.seeking){ previewing = false; ctxPlay = null; }
-    syncPlayIcons();
+    syncPlayIcons(); paintPhF();
   });
 
   /* ----- changing A and B ----- */
@@ -10113,6 +10185,62 @@ video.playbackRate =
     if(!keepWindow) keepInView(false);
     if(seek) showFrame(val(h));
     paintPanel(); paintEdit(); paintRegion(); paintTool();
+  }
+
+  /* ----- typing an exact time ----- */
+  let dlg = null;
+  function openTimeDialog(h){
+    const d = dur(); if(!d || A === null) return;
+    if(!dlg){
+      dlg = document.createElement("div");
+      dlg.className = "abDlgBack hidden";
+      dlg.innerHTML =
+        '<div class="abDlg" role="dialog" aria-modal="true"><h4 id="abDT"></h4>' +
+        '<div class="abFields"><label id="abLh">hours<input id="abIh" inputmode="numeric" autocomplete="off" maxlength="3"></label><span class="abSep" id="abSh">:</span>' +
+        '<label>min<input id="abIm" inputmode="numeric" autocomplete="off" maxlength="3"></label><span class="abSep">:</span>' +
+        '<label>sec<input id="abIs" inputmode="decimal" autocomplete="off" maxlength="7"></label></div>' +
+        '<p class="abMsg" id="abMsg"></p>' +
+        '<div class="abFoot"><button type="button" class="abGhost" id="abDc">Cancel</button><button type="button" class="abGo" id="abDo">Set</button></div></div>';
+      stage.appendChild(dlg);
+      dlg.addEventListener("click", e => { e.stopPropagation(); if(e.target === dlg) closeDlg(); });
+      dlg.querySelector("#abDc").addEventListener("click", closeDlg);
+      dlg.querySelector("#abDo").addEventListener("click", commit);
+      dlg.addEventListener("keydown", e => {
+        if(e.key === "Enter"){ e.preventDefault(); commit(); }
+        else if(e.key === "Escape"){ e.preventDefault(); e.stopPropagation(); closeDlg(); }
+      });
+      dlg.querySelectorAll("input").forEach(i => i.addEventListener("input", () => { setMsg("", false); }));
+    }
+    dlg.__h = h;
+    const t = val(h), long = d >= 3600;
+    dlg.querySelector("#abDT").textContent = h === "A" ? "Start time" : "End time";
+    dlg.querySelector("#abLh").style.display = long ? "" : "none";
+    dlg.querySelector("#abSh").style.display = long ? "" : "none";
+    dlg.querySelector("#abIh").value = long ? String(Math.floor(t / 3600)) : "";
+    dlg.querySelector("#abIm").value = String(Math.floor((t % 3600) / 60));
+    dlg.querySelector("#abIs").value = (t % 60).toFixed(2);
+    setMsg("0:00 – " + fmt(d), false);
+    dlg.classList.remove("hidden");
+    const s = dlg.querySelector("#abIs"); s.focus(); s.select();
+  }
+  function setMsg(t, err){
+    const p = dlg && dlg.querySelector("#abMsg"); if(!p) return;
+    p.textContent = t; p.classList.toggle("err", !!err);
+  }
+  function closeDlg(){ if(dlg) dlg.classList.add("hidden"); }
+  function commit(){
+    const d = dur(), h = dlg.__h;
+    const num = id => { const v = dlg.querySelector(id).value.trim(); return v === "" ? 0 : Number(v.replace(",", ".")); };
+    const hh = dlg.querySelector("#abLh").style.display === "none" ? 0 : num("#abIh");
+    const mm = num("#abIm"), ss = num("#abIs");
+    if([hh, mm, ss].some(v => !Number.isFinite(v) || v < 0)){ setMsg("Enter numbers only", true); return; }
+    const t = Math.round((hh * 3600 + mm * 60 + ss) * 1000) / 1000;
+    if(t > d){ setMsg("The video ends at " + fmt(d), true); return; }
+    if(h === "A" && t > B - MIN_GAP){ setMsg("Start must be before the end (" + fmt(B) + ")", true); return; }
+    if(h === "B" && t < A + MIN_GAP){ setMsg("End must be after the start (" + fmt(A) + ")", true); return; }
+    closeDlg();
+    stopPlayback();
+    setHandle(h, t, true);
   }
 
   /* ----- playing from the sheets ----- */
@@ -10188,6 +10316,7 @@ video.playbackRate =
   }
   function openEditor(h){
     if(!edit){ buildEditor(); watchSize(); }
+    pin = clamp(video.currentTime || 0, 0, dur());
     stopPlayback();
     editing = h;
     zoomIdx = ZOOM_DEFAULT;
@@ -10209,6 +10338,7 @@ video.playbackRate =
     fitVideo();
   }
   function closeAll(){
+    closeDlg();
     if(previewing && !enabled){ previewing = false; try{ video.pause(); }catch(e){} }
     ctxPlay = null;
     if(panel) panel.classList.add("hidden");
@@ -10249,6 +10379,7 @@ video.playbackRate =
   }
   document.addEventListener("keydown", e => {
     if(e.key !== "Escape") return;
+    if(dlg && !dlg.classList.contains("hidden")) return;   /* the time box handles its own Escape */
     if(edit && !edit.classList.contains("hidden")){ e.stopPropagation(); closeEditor(); }
     else if(panel && !panel.classList.contains("hidden")){ e.stopPropagation(); closeAll(); }
   }, true);
