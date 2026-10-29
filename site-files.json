@@ -1,6 +1,6 @@
 {
- "count": 306,
- "totalBytes": 283533478,
+ "count": 309,
+ "totalBytes": 283541614,
  "files": [
   {
    "path": "1 Thessalonians Original Text.png",
@@ -503,6 +503,11 @@
    "hash": "88cef668a575e29c"
   },
   {
+   "path": "download.html",
+   "size": 61270,
+   "hash": "662fc418dd4c6e6e"
+  },
+  {
    "path": "Dragon.png",
    "size": 511230,
    "hash": "1d59cbd68a9ba716"
@@ -744,8 +749,8 @@
   },
   {
    "path": "index.html",
-   "size": 154653,
-   "hash": "5e0187842baa48c3"
+   "size": 154699,
+   "hash": "e26953149f2339a9"
   },
   {
    "path": "index.js",
@@ -884,8 +889,8 @@
   },
   {
    "path": "offline-app.js",
-   "size": 31308,
-   "hash": "96e9cbb33dc89db5"
+   "size": 31357,
+   "hash": "5f75898c13f68396"
   },
   {
    "path": "Once Saved, Always Saved.pdf",
@@ -956,6 +961,11 @@
    "path": "predictive programming.mp4",
    "size": 19209867,
    "hash": "ea19658c5b47709c"
+  },
+  {
+   "path": "privacy.html",
+   "size": 2078,
+   "hash": "81b9131aab07ab08"
   },
   {
    "path": "Privacy.pdf",
@@ -1129,8 +1139,13 @@
   },
   {
    "path": "site-tools.js",
-   "size": 73583,
-   "hash": "9fcd2a3a293be4cb"
+   "size": 73681,
+   "hash": "b9afca2263ecb663"
+  },
+  {
+   "path": "sitemap.xml",
+   "size": 5325,
+   "hash": "501210d0904f78e1"
   },
   {
    "path": "Star of David.png",
@@ -1159,8 +1174,8 @@
   },
   {
    "path": "support.html",
-   "size": 61249,
-   "hash": "6f0b602075c64b1c"
+   "size": 519,
+   "hash": "d331632c69a7a796"
   },
   {
    "path": "sw.js",
