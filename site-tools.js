@@ -1344,17 +1344,18 @@ document.addEventListener("click", function(e){
 }, true);
 
 /* ---------------------------------------------------------------
-   Saving videos you watch (shared by the video page, Storage and every page)
-   A watched video is kept on this device, plus the other videos from the same
-   paper. The download carries on from whichever page is open, so leaving the
-   video page early doesn't lose it: the next page picks it up.
+   Saving videos you open (shared by the video page, Storage and every page)
+   Only a video you open is kept on this device (nothing else is ever fetched),
+   so it doesn't have to load again. The download carries on from whichever
+   page is open, so leaving the video page early doesn't lose it: the next page
+   picks it up.
    How often it tries (nothing limits how MANY videos get saved):
    - one video at a time, the watched one first;
    - a video that fails is tried again after 5 minutes, then after 1 hour; after
      a third failure it rests for 3 days. Other videos carry on meanwhile;
    - "limit reached" from the video server pauses everything for an hour;
      a full disk pauses for 6 hours;
-   - related videos are not fetched on mobile data or data saver.
+   - an opened video is saved on any connection (data saver / offline excepted).
 --------------------------------------------------------------- */
 var VS = {
   CACHE: "lanthano-saved-videos", STATE: "savedVideoLog2", WATCH: "videosWatched", OFF: "savedVideosOff",
@@ -1445,9 +1446,8 @@ async function vsFetch(v, signal, onBytes){
     return signal && signal.aborted ? "abort" : "fail";
   }
 }
-/* Which videos should be saved right now, in order: the ones watched (a
-   given one first), then the others from the same paper and group. Each entry
-   carries why it is skipped, if it is. */
+/* Which videos should be saved right now, in order: the ones that were opened
+   (the one just opened first) and aren't saved yet. */
 async function vsPlan(focus){
   var cat = await vsCatalog();
   if(!cat.length || !("caches" in window)) return {todo:[], blocked:[]};
@@ -1460,19 +1460,13 @@ async function vsPlan(focus){
     if(a === focus) return -1; if(b === focus) return 1;
     return ((w[b] && w[b].t) || 0) - ((w[a] && w[a].t) || 0);
   });
-  var related = [];
-  watchedFiles.forEach(function(f){
-    add(by[f]);
-    cat.forEach(function(v){ if(v.file !== f && v.paper === by[f].paper && v.group === by[f].group) related.push(v); });
-  });
-  related.forEach(add);
+  watchedFiles.forEach(function(f){ add(by[f]); });   // only videos that were opened
   var todo = [], blocked = [], metered = vsMetered();
   for(var i = 0; i < order.length; i++){
     var v = order[i], rec = st.rec[v.file] || {};
     var have = await cache.match(vsKey(v.file));
     if(have && (rec.ver === undefined || rec.ver === v.ver)) continue;
-    var isWatched = !!w[v.file];
-    if(!isWatched && metered){ blocked.push({v:v, why:"waiting for Wi-Fi"}); continue; }
+    if(metered && navigator.connection && navigator.connection.saveData){ blocked.push({v:v, why:"data saver is on"}); continue; }
     if(rec.next && now < rec.next){ blocked.push({v:v, why:"will try again " + (rec.next - now < 3600000 ? "soon" : "later"), next:rec.next}); continue; }
     todo.push(v);
   }

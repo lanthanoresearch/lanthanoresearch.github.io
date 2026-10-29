@@ -4788,13 +4788,12 @@ video.addEventListener("playing", function(){
 
     markWatched(src);
 
-    // Saved right away, with the rest of this paper's videos after it. The
-    // shared saver (site-tools.js) carries on from other pages if you leave
-    // early, and does nothing for a video that is already saved.
+    // Only this video is saved (right away). The shared saver (site-tools.js)
+    // carries on from other pages if you leave early, and does nothing for a
+    // video that is already saved.
     setTimeout(function(){
         try{
             if(window.LT && LT.videoSaver) LT.videoSaver.run({ focus: src });
-            else saveAllVideos();
         }catch(e){}
     }, 2000);
 
