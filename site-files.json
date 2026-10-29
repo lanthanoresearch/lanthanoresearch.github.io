@@ -1,6 +1,6 @@
 {
- "count": 309,
- "totalBytes": 283632171,
+ "count": 310,
+ "totalBytes": 283650941,
  "files": [
   {
    "path": "1 Thessalonians Original Text.png",
@@ -504,8 +504,8 @@
   },
   {
    "path": "download.html",
-   "size": 62844,
-   "hash": "89a9d48e1dc0ef96"
+   "size": 62971,
+   "hash": "90f39998ecddab91"
   },
   {
    "path": "Dragon.png",
@@ -749,13 +749,18 @@
   },
   {
    "path": "index.html",
-   "size": 159774,
-   "hash": "d2ed34707961c40c"
+   "size": 160249,
+   "hash": "4e396400671cc992"
   },
   {
    "path": "index.js",
    "size": 13158,
    "hash": "9af4564de636495a"
+  },
+  {
+   "path": "install.html",
+   "size": 13328,
+   "hash": "af0f17a85aad7535"
   },
   {
    "path": "Israel.pdf",
@@ -889,8 +894,8 @@
   },
   {
    "path": "offline-app.js",
-   "size": 31357,
-   "hash": "5f75898c13f68396"
+   "size": 8201,
+   "hash": "6136154535eeb2fa"
   },
   {
    "path": "Once Saved, Always Saved.pdf",
@@ -904,8 +909,8 @@
   },
   {
    "path": "pdf.html",
-   "size": 550424,
-   "hash": "771e9bae01e5d895"
+   "size": 550466,
+   "hash": "792699d821695375"
   },
   {
    "path": "pdfjs/build/pdf.mjs",
@@ -1099,8 +1104,8 @@
   },
   {
    "path": "settings.html",
-   "size": 21506,
-   "hash": "5d01f0c10f715ce2"
+   "size": 21144,
+   "hash": "1d243b37e0334ab6"
   },
   {
    "path": "Shadows Point.png",
@@ -1139,13 +1144,13 @@
   },
   {
    "path": "site-tools.js",
-   "size": 93458,
-   "hash": "033b662bffb682f7"
+   "size": 100355,
+   "hash": "d0a8abbea8f4167d"
   },
   {
    "path": "sitemap.xml",
-   "size": 5325,
-   "hash": "501210d0904f78e1"
+   "size": 5389,
+   "hash": "f3a03c266ec47440"
   },
   {
    "path": "Star of David.png",
@@ -1159,8 +1164,8 @@
   },
   {
    "path": "storage.html",
-   "size": 39951,
-   "hash": "21c83af07de512da"
+   "size": 61306,
+   "hash": "0bcb6ef4ebbbc3e0"
   },
   {
    "path": "Strange Shadows.png",
