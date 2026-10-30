@@ -136,6 +136,30 @@ function setPrep(pct, text){
 
 function wait(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
 
+/* Leaving while the app is being prepared asks first, like the Download page. */
+var leaveDest = null;
+function hidePopup(){ $("leavePopup").style.display = "none"; }
+document.addEventListener("click", function(e){
+    if(!prep || e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey){ return; }
+    var a = e.target && e.target.closest ? e.target.closest("a[href]") : null;
+    if(!a || (a.target && a.target !== "_self") || /^#|^javascript:/i.test(a.getAttribute("href"))){ return; }
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    leaveDest = a.href;
+    $("leavePopup").style.display = "flex";
+}, true);
+window.addEventListener("beforeunload", function(e){
+    if(prep && !leaveDest){ e.preventDefault(); e.returnValue = ""; }
+});
+$("leaveStay").onclick = function(){ leaveDest = null; hidePopup(); };
+$("leaveGo").onclick = function(){
+    var dest = leaveDest || "index.html";
+    if(prep){ prep.cancelled = true; }
+    prep = null;
+    hidePopup();
+    location.assign(dest);
+};
+
 async function startDownload(device, forThisDevice){
     if(prep){ return; }
     var job = { cancelled: false };
@@ -144,6 +168,7 @@ async function startDownload(device, forThisDevice){
     var prevText = btn.textContent, prevClick = btn.onclick;
     $("appStatus").textContent = "";
     $("appPrep").hidden = false;
+    $("appWarn").hidden = false;
     // The Install button itself becomes the Cancel button while everything is put together.
     btn.textContent = "Cancel";
     btn.classList.add("cancelMode");
@@ -154,6 +179,7 @@ async function startDownload(device, forThisDevice){
 
     function restore(){
         $("appPrep").hidden = true;
+        $("appWarn").hidden = true;
         btn.classList.remove("cancelMode");
         btn.textContent = prevText;
         btn.onclick = prevClick;
