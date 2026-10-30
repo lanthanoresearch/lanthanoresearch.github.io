@@ -1,6 +1,6 @@
 {
- "count": 313,
- "totalBytes": 283693982,
+ "count": 311,
+ "totalBytes": 283680808,
  "files": [
   {
    "path": "1 Thessalonians Original Text.png",
@@ -236,11 +236,6 @@
    "path": "build-search.js",
    "size": 2136,
    "hash": "a97a8cf80c83f15d"
-  },
-  {
-   "path": "build-transcripts.js",
-   "size": 3528,
-   "hash": "593adb80b2a82093"
   },
   {
    "path": "Cable.png",
@@ -764,8 +759,8 @@
   },
   {
    "path": "install.html",
-   "size": 15002,
-   "hash": "c5e690885e55aed1"
+   "size": 15104,
+   "hash": "ef3d108198e496d6"
   },
   {
    "path": "Israel.pdf",
@@ -976,11 +971,6 @@
    "path": "predictive programming.mp4",
    "size": 19209867,
    "hash": "ea19658c5b47709c"
-  },
-  {
-   "path": "prepare-app-bundle.js",
-   "size": 9748,
-   "hash": "791ec19b60a3e009"
   },
   {
    "path": "privacy.html",
@@ -1567,8 +1557,5 @@
    "size": 3055626,
    "hash": "fd2253cadd99fb02"
   }
- ],
- "desktop": {
-  "base": "https://github.com/lanthanoresearch/lanthanoresearch.github.io/releases/download/desktop-latest/"
- }
+ ]
 }
