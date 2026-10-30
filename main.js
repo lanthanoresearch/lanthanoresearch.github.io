@@ -161,7 +161,8 @@ const HIDE_WEBSITE_ONLY = [
   'a[href$="storage.html"]',
   'a[href$="install.html"]',
   "#updateCard",
-  "#installCard"
+  "#installCard",
+  ".ltUpdate"
 ].join(",") + "{display:none !important}";
 
 function registerProtocol() {

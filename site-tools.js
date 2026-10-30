@@ -486,6 +486,7 @@ function applyText(){
   if(VIEWER) return;
   var z = parseFloat(get("lt_text")) || 1;
   root.style.zoom = z === 1 ? "" : String(z);
+  if(z === 1){ root.style.removeProperty("--lt-zoom"); } else { root.style.setProperty("--lt-zoom", String(z)); }
 }
 applyText();
 /* A page restored from the back button, or another open tab changing the setting, picks up the current theme. */

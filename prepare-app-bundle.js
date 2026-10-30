@@ -117,6 +117,14 @@ if (LOCAL_ONLY) {
         "  // Installed app: every other file is already inside the app, so the\n" +
         "  // internet is never used for it.\n" +
         "  return;\n\n" + marker));
+      let patched = fs.readFileSync(swFile, "utf8");
+      const act = 'self.addEventListener("activate", event => {';
+      if (patched.includes(act)) {
+        patched = patched.replace(act, act +
+          "\n  // Installed app: forget any copies of live website pages an older version saved.\n" +
+          "  event.waitUntil(Promise.all([SITE_CACHE, OFFLINE_CACHE].map(n => caches.delete(n))));");
+        fs.writeFileSync(swFile, patched);
+      }
       console.log("service worker set to local-only");
     } else {
       console.log("WARNING: could not find where to switch the service worker to local-only");
@@ -129,13 +137,24 @@ if (LOCAL_ONLY) {
   //    page when there is nothing earlier, and only leaves the app from home.
   fs.writeFileSync(path.join(dir, "app-back.js"), [
     "(function(){",
-    "  var C = window.Capacitor, App = C && C.Plugins && C.Plugins.App;",
+    "  var C = window.Capacitor, App = C && ((C.Plugins && C.Plugins.App) || (C.registerPlugin && C.registerPlugin('App')));",
     "  if(!App || !App.addListener) return;",
     "  function atHome(){ return /(^|\\/)(index\\.html)?$/.test(location.pathname); }",
-    "  App.addListener('backButton', function(e){",
-    "    if(e && e.canGoBack){ history.back(); return; }",
-    "    if(!atHome()){ location.href = 'index.html'; return; }",
-    "    App.exitApp();",
+    "  var busy = false;",
+    "  App.addListener('backButton', function(){",
+    "    if(busy) return;",
+    "    busy = true; setTimeout(function(){ busy = false; }, 500);",
+    "    // Always try the page before first. If the phone has nothing earlier to go",
+    "    // back to (the page does not change), go to the home page, and leave the",
+    "    // app only from the home page.",
+    "    var before = location.href, left = false;",
+    "    window.addEventListener('pagehide', function(){ left = true; }, {once:true});",
+    "    history.back();",
+    "    setTimeout(function(){",
+    "      if(left || location.href !== before) return;",
+    "      if(!atHome()){ location.href = 'index.html'; return; }",
+    "      App.exitApp();",
+    "    }, 350);",
     "  });",
     "})();",
     ""
@@ -151,12 +170,25 @@ if (LOCAL_ONLY) {
   }
 }
 
+// Belt and braces: every page in the app also hides, by itself, the links to the
+// website-only pages and the update / install cards, so they can never show up
+// even if a stray old copy of a page ever turned up.
+const CLEAN_STYLE = '<style id="app-clean">a[href$="storage.html"],a[href$="install.html"],#updateCard,#installCard,.ltUpdate{display:none !important}</style>';
+for (const name of fs.readdirSync(dir)) {
+  if (!/\.html$/i.test(name)) continue;
+  const file = path.join(dir, name);
+  const html = fs.readFileSync(file, "utf8");
+  if (html.includes('id="app-clean"') || !/<\/head>/i.test(html)) continue;
+  fs.writeFileSync(file, html.replace(/<\/head>/i, CLEAN_STYLE + "\n</head>"));
+}
+
 // Anything left that still points at a removed page is reported.
 const left = [];
 const leftRe = new RegExp("[\"'](?:\\./|/)?" + GONE_PAGES, "i");
 for (const name of fs.readdirSync(dir)) {
   if (!/\.(html|js)$/i.test(name)) continue;
-  if (leftRe.test(fs.readFileSync(path.join(dir, name), "utf8"))) left.push(name);
+  const text = fs.readFileSync(path.join(dir, name), "utf8").replace(/<style id="app-clean">[\s\S]*?<\/style>/, "");
+  if (leftRe.test(text)) left.push(name);
 }
 if (left.length) console.log("still mentions a removed page: " + left.join(", "));
 console.log("app bundle ready: " + dir);
