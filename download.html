@@ -440,6 +440,9 @@ p{
 .download-button{margin-top:14px;padding:10px 18px;background:#2f7cff;color:#fff;font-family:inherit;font-size:15px;border-radius:7px}
 .download-button:hover{background:#4a8dff}
 .download-button:disabled{opacity:.55;cursor:default}
+.download-button.is-cancel{background:transparent;color:#ff8080;border:1px solid #5a2c2c}
+.download-button.is-cancel:hover{background:#301a1a;border-color:#7a3a3a;color:#ff8080}
+#cancelButton{display:none !important}
 .progress{max-width:none;margin:14px 0 0;padding:12px 14px;background:#262d3d;border:1px solid #2f4f8f;border-radius:10px;text-align:center}
 .progress-percent{color:#8fb2ff;font-size:14px;margin-bottom:8px}
 .progress-percent.finished{color:#8fb2ff}
@@ -575,7 +578,7 @@ p{
         <button
             id="downloadButton"
             class="download-button"
-            onclick="downloadArchive()"
+            onclick="downloadButtonClick()"
         >
             Download Archive
         </button>
@@ -640,6 +643,7 @@ p{
         <button
             id="cancelButton"
             class="cancel-button"
+            hidden
             onclick="cancelArchive()"
         >
             Cancel
@@ -1383,7 +1387,7 @@ function setFinishedState(
     */
 
     button.classList.remove(
-        "finished"
+        "finished", "is-cancel"
     );
 
 
@@ -1654,6 +1658,20 @@ CANCEL ARCHIVE
 ==========================================================
 */
 
+function downloadButtonClick(){
+
+    if(archiveCompiling){
+
+        cancelArchive();
+
+        return;
+
+    }
+
+    downloadArchive();
+
+}
+
 function cancelArchive(){
 
     if(!archiveCompiling){
@@ -1751,7 +1769,7 @@ function cancelArchive(){
 
 
     button.classList.remove(
-        "finished"
+        "finished", "is-cancel"
     );
 
 
@@ -1890,17 +1908,20 @@ async function downloadArchive(){
     */
 
 
-    button.disabled =
-        true;
-
-
+    // The Download button itself becomes the Cancel button while the archive is made.
     button.classList.remove(
         "finished"
     );
 
+    button.disabled =
+        false;
+
+    button.classList.add(
+        "is-cancel"
+    );
 
     button.textContent =
-        "Preparing Archive...";
+        "Cancel";
 
 
     cancelButton.style.display =
@@ -2928,6 +2949,9 @@ ${failedFiles.join("\n")}
         );
 
 
+        button.classList.remove("is-cancel");
+        button.disabled = true;
+
         button.textContent =
             "Starting Download...";
 
@@ -3110,6 +3134,8 @@ ${failedFiles.join("\n")}
             "The archive was not completed. " +
             "You can try again.";
 
+
+        button.classList.remove("is-cancel");
 
         button.disabled =
             false;

@@ -6,6 +6,12 @@
 <script src="site-tools.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#111111">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="file_000000000c40722f92b1fe6758cb4855.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Lanthano Research">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <title>Install</title>
 <style>
 
@@ -326,6 +332,8 @@ html{scroll-behavior:smooth}
 .installBtn[hidden]{display:none}
 .btn.primary{background:#2f7cff;color:#fff}
 .btn.primary:hover{background:#4a8dff}
+.btn.primary.cancelMode{background:transparent;color:#ff8080;border:1px solid #5a2c2c}
+.btn.primary.cancelMode:hover{background:#301a1a;border-color:#7a3a3a;color:#ff8080}
 .btn:disabled{opacity:.55;cursor:default}
 .howTo{color:#999;font-size:13.5px;margin-top:12px}
 .howTo:empty{display:none}
@@ -372,7 +380,7 @@ html{scroll-behavior:smooth}
 
     <div id="pageBody">
 
-    <div class="card">
+    <div class="card" id="introCard">
         <h2 class="hd"><span class="pv-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2.8" width="10" height="18.4" rx="2.4"/><path d="M11 18h2"/><path d="M12 7v6"/><path d="M9.5 10.8 12 13.3l2.5-2.5"/></svg></span>Install the app</h2>
         <p class="note"><b>Install</b> turns the whole website into a real app, with every paper, image and video inside it, so it works without internet. The app is installed on your device like any other app. Because every video is inside, the app is large (over 1 GB), so use a good connection to download it.</p>
     </div>
@@ -384,7 +392,6 @@ html{scroll-behavior:smooth}
         <div class="prep" id="appPrep" hidden>
             <div class="prepTop"><span class="spin"></span><span id="prepText">Putting everything together&hellip;</span><span class="prepPct" id="prepPct">0%</span></div>
             <div class="bar"><i id="prepFill"></i></div>
-            <button type="button" class="btn danger" id="prepCancel">Cancel</button>
         </div>
         <div class="alreadyBox" id="appAlready" hidden><strong>ALREADY INSTALLED</strong><p id="appAlreadyText"></p></div>
         <p class="howTo" id="appHowTo"></p>

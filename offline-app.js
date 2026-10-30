@@ -141,23 +141,33 @@ async function startDownload(device, forThisDevice){
     var job = { cancelled: false };
     prep = job;
     var btn = $("appButton");
+    var prevText = btn.textContent, prevClick = btn.onclick;
     $("appStatus").textContent = "";
     $("appPrep").hidden = false;
-    btn.disabled = true;
+    // The Install button itself becomes the Cancel button while everything is put together.
+    btn.textContent = "Cancel";
+    btn.classList.add("cancelMode");
+    btn.disabled = false;
     var rows = document.querySelectorAll("#otherList button");
     rows.forEach(function(b){ b.disabled = true; });
     setPrep(0, "Putting everything together\u2026");
 
-    function stopped(){
-        if(!job.cancelled){ return false; }
+    function restore(){
         $("appPrep").hidden = true;
+        btn.classList.remove("cancelMode");
+        btn.textContent = prevText;
+        btn.onclick = prevClick;
         btn.disabled = false;
         rows.forEach(function(b){ b.disabled = false; });
+    }
+    function stopped(){
+        if(!job.cancelled){ return false; }
+        restore();
         $("appStatus").textContent = "Cancelled. Nothing was installed.";
         prep = null;
         return true;
     }
-    $("prepCancel").onclick = function(){ job.cancelled = true; stopped(); };
+    btn.onclick = function(){ job.cancelled = true; stopped(); };
 
     // 1. find the newest version
     setPrep(10, "Finding the newest version\u2026");
@@ -186,9 +196,7 @@ async function startDownload(device, forThisDevice){
 
     // 3. hand the file to the browser
     var item = found[device];
-    $("appPrep").hidden = true;
-    btn.disabled = false;
-    rows.forEach(function(b){ b.disabled = false; });
+    restore();
     prep = null;
     if(!item){
         $("appStatus").textContent = "The " + INSTALLERS[device].label + " app is not available right now. Try again soon.";
@@ -249,6 +257,7 @@ async function setup(){
     if(me === "ios"){
         $("appCard").hidden = true;
         $("iosCard").hidden = false;
+        if($("introCard")){ $("introCard").hidden = true; }
         return;
     }
 
