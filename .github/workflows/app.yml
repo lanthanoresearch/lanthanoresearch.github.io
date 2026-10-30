@@ -50,8 +50,37 @@ jobs:
 
           echo "desktop=$build" >> "$GITHUB_OUTPUT"
 
-  desktop:
+  # Downloads the videos from the video server once, so they can be put inside
+  # the installers (the apps then work with no internet). They are remembered
+  # between runs, so only new videos are downloaded.
+  videos:
     needs: changes
+    if: needs.changes.outputs.desktop == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      key: ${{ steps.vkey.outputs.key }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - id: vkey
+        run: echo "key=$(node fetch-videos.js --key)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@v4
+        with:
+          path: .video-cache
+          key: site-videos-${{ steps.vkey.outputs.key }}
+          restore-keys: site-videos-
+          enableCrossOsArchive: true
+
+      - name: Download the videos
+        run: node fetch-videos.js .video-cache
+
+  desktop:
+    needs: [changes, videos]
     if: needs.changes.outputs.desktop == 'true'
     strategy:
       fail-fast: false
@@ -68,10 +97,20 @@ jobs:
         with:
           node-version: 20
 
-      - name: Bundle the whole website into the app
+      - name: Get the videos
+        uses: actions/cache/restore@v4
+        with:
+          path: .video-cache
+          key: site-videos-${{ needs.videos.outputs.key }}
+          restore-keys: site-videos-
+          enableCrossOsArchive: true
+
+      - name: Bundle the whole website, videos included, into the app
         run: |
+          # Any video that is still missing is downloaded now (normally none).
+          node fetch-videos.js .video-cache
           node build-site-manifest.js --copy desktop-app/site
-          node prepare-app-bundle.js desktop-app/site --local-only --no-back
+          node prepare-app-bundle.js desktop-app/site --local-only --no-back --videos .video-cache
           mkdir -p desktop-app/build
           cp file_000000000c40722f92b1fe6758cb4855.png desktop-app/build/icon.png
 

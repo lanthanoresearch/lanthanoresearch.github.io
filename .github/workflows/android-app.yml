@@ -46,13 +46,27 @@ jobs:
           path: ~/.android/debug.keystore
           key: android-signing-key-v1
 
-      - name: Bundle the whole website into the app
+      - id: vkey
+        run: echo "key=$(node fetch-videos.js --key)" >> "$GITHUB_OUTPUT"
+
+      - name: Remember the downloaded videos between runs
+        uses: actions/cache@v4
+        with:
+          path: .video-cache
+          key: site-videos-${{ steps.vkey.outputs.key }}
+          restore-keys: site-videos-
+          enableCrossOsArchive: true
+
+      - name: Download the videos that live on the video server
+        run: node fetch-videos.js .video-cache
+
+      - name: Bundle the whole website, videos included, into the app
         run: |
           mkdir -p android-app
           node build-site-manifest.js --copy android-app/www
           # Storage and Install only belong on the website, not inside the app. The app also
           # never goes to the internet for its own pages, and handles the Back button.
-          node prepare-app-bundle.js android-app/www --local-only
+          node prepare-app-bundle.js android-app/www --local-only --videos .video-cache
 
       - name: Create the Android project
         working-directory: android-app
@@ -163,7 +177,10 @@ jobs:
 
       - name: Build the app
         working-directory: android-app/android
-        run: ./gradlew assembleDebug --no-daemon --stacktrace
+        run: |
+          # The app holds the videos, so it is large: give the build room.
+          echo "org.gradle.jvmargs=-Xmx4g -Dfile.encoding=UTF-8" >> gradle.properties
+          ./gradlew assembleDebug --no-daemon --stacktrace
 
       - name: Publish the app
         env:
