@@ -113,9 +113,10 @@ jobs:
             --notes "Installers for the Lanthano Research desktop app. Built automatically." \
             --target "${{ github.sha }}"
 
+  # Keeps site-files.json and the transcripts up to date. It does not wait for
+  # (or care about) the app builds above, so a failed or slow installer build
+  # can never stop this commit from happening.
   manifest:
-    needs: [changes, release]
-    if: always() && needs.changes.result == 'success' && (needs.release.result == 'success' || needs.release.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
