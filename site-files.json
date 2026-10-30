@@ -1,6 +1,6 @@
 {
  "count": 311,
- "totalBytes": 283680808,
+ "totalBytes": 283680975,
  "files": [
   {
    "path": "1 Thessalonians Original Text.png",
@@ -799,8 +799,8 @@
   },
   {
    "path": "main.js",
-   "size": 11582,
-   "hash": "fe4f762e46be4f3c"
+   "size": 11668,
+   "hash": "cdc187b833298e9c"
   },
   {
    "path": "manifest.json",
@@ -1149,8 +1149,8 @@
   },
   {
    "path": "site-tools.js",
-   "size": 109195,
-   "hash": "4201a1d3bd6e06d3"
+   "size": 109276,
+   "hash": "5c135085a5c4ee58"
   },
   {
    "path": "sitemap.xml",
@@ -1557,5 +1557,8 @@
    "size": 3055626,
    "hash": "fd2253cadd99fb02"
   }
- ]
+ ],
+ "desktop": {
+  "base": "https://github.com/lanthanoresearch/lanthanoresearch.github.io/releases/download/desktop-latest/"
+ }
 }
