@@ -1595,6 +1595,86 @@ function suHex(buf){ return Array.prototype.map.call(new Uint8Array(buf), functi
 function suHash(buf){ return crypto.subtle.digest("SHA-1", buf).then(suHex); }
 function suSiteUrl(file){ return new URL(file.split("/").map(encodeURIComponent).join("/"), location.origin + "/").href; }
 
+/* The site you are using right now: this page, the scripts and styles it loads,
+   and the few files every page leans on. They are compared with the live ones
+   whether or not anything is saved, so a stale copy in the browser is caught too. */
+function suSiteFiles(){
+  var list = {};
+  function add(u){
+    try{
+      var x = new URL(u, location.href);
+      if(x.origin !== location.origin) return;
+      x.hash = ""; x.search = "";
+      var p = x.pathname;
+      if(/\/$/.test(p)){ x.pathname = p + "index.html"; p = x.pathname; }
+      if(!SU.TEXT.test(p)) return;
+      list[x.href] = 1;
+    }catch(e){}
+  }
+  add(location.href);
+  ["index.html", "site-tools.js", "sw.js", "descriptions.json"].forEach(add);
+  [].forEach.call(document.querySelectorAll("script[src],link[rel~='stylesheet'][href]"), function(el){ add(el.src || el.href); });
+  return Object.keys(list);
+}
+/* Every file of the site, from the live site-files.json (pages, scripts and
+   data always; pictures and PDFs too on a deep check). Falls back to just the
+   files of this page when the list cannot be read. */
+async function suSiteList(deep){
+  var urls = {};
+  suSiteFiles().forEach(function(u){ urls[u] = 1; });
+  try{
+    var r = await fetch("site-files.json", {cache:"no-store", headers:{"x-lt-check":"1"}});
+    if(r.status === 200){
+      var d = await r.json();
+      (Array.isArray(d) ? d : (d.files || [])).forEach(function(f){
+        var p = f && f.path; if(!p || /^desktop-app\//.test(p)) return;
+        var kind = suKind(p);
+        if(!kind || (!deep && kind !== "page")) return;
+        urls[suSiteUrl(p)] = 1;
+      });
+    }
+  }catch(e){}
+  return Object.keys(urls);
+}
+async function suCheckSite(out, already, onProgress, base, total, urls){
+  urls = urls.filter(function(u){ return !already[u]; });
+  var idx = 0;
+  async function one(u){
+    try{
+      var h = {"x-lt-check":"1"};
+      // What this browser holds for the file right now (nothing is downloaded for this).
+      var mine = null;
+      try{ mine = await fetch(u, {cache:"only-if-cached", mode:"same-origin", headers:h}); }catch(e){}
+      out.checked++;
+      if(!mine || mine.status !== 200) return;          // not held here: it will load fresh anyway
+      var lh = {"x-lt-check":"1"};
+      var et = mine.headers.get("etag"), lm = mine.headers.get("last-modified");
+      if(et) lh["If-None-Match"] = et; else if(lm) lh["If-Modified-Since"] = lm;
+      var live = await fetch(u, {cache:"no-store", headers:lh});
+      if(live.status === 304) return;
+      if(live.status !== 200) return;
+      var a = await suHash(await mine.arrayBuffer()), b = await suHash(await live.arrayBuffer());
+      if(a === b) return;
+      var kind = suKind(decodeURIComponent(new URL(u).pathname));
+      if(kind === "page"){
+        var again = await fetch(u, {cache:"no-store", headers:h});
+        if(again.status !== 200 || await suHash(await again.arrayBuffer()) !== b) return;
+      }
+      out.changed.push({kind:kind || "page", site:true, url:u, targets:[], title:decodeURIComponent(new URL(u).pathname.split("/").pop() || "Home")});
+    }catch(e){}
+  }
+  var done = 0;
+  async function worker(){
+    while(idx < urls.length){
+      var u = urls[idx++];
+      await one(u);
+      done++;
+      if(onProgress) onProgress(base + done, total);
+    }
+  }
+  await Promise.all([worker(), worker(), worker(), worker()]);
+}
+
 /* Resolves {changed:[{kind,title,...}], checked, error} */
 /* opts.deep: also compare every saved picture, PDF and video with the live one.
    Without it only pages and scripts are checked, which takes a moment. */
@@ -1675,6 +1755,14 @@ async function suCheck(onProgress, opts){
   }
   await Promise.all([worker(), worker(), worker(), worker()]);
   if(failed) out.error = true;
+  // Then the site being used right now, saved or not.
+  var haveUrls = {};
+  out.changed.forEach(function(x){ if(x.url) haveUrls[x.url] = 1; });
+  jobs.forEach(function(j){ haveUrls[j.url] = 1; });
+  try{
+    var siteUrls = await suSiteList(deep);
+    await suCheckSite(out, haveUrls, onProgress, jobs.length, jobs.length + siteUrls.length, siteUrls);
+  }catch(e){}
   try{ var reg = await navigator.serviceWorker.getRegistration(); if(reg) await reg.update(); }catch(e){}
   return out;
 }
@@ -1689,6 +1777,16 @@ async function suApply(changed, onProgress){
       try{
         var res = await fetch(j.url, {cache:"reload", headers:{"x-lt-check":"1"}});
         var targets = j.targets || [{c:j.c, k:j.k}];
+        if(j.site && res.status === 200 && window.caches){
+          // A file of the site in use: also refresh any saved copy of it.
+          var names = await caches.keys();
+          for(var q = 0; q < names.length; q++){
+            if(names[q] === "lanthano-prefs" || names[q] === VS.CACHE) continue;
+            var cc = await caches.open(names[q]);
+            var hit = await cc.match(j.url);
+            if(hit) await cc.put(j.url, res.clone());
+          }
+        }
         if(res.status === 200){ for(var t = 0; t < targets.length; t++) await targets[t].c.put(targets[t].k, res.clone()); out.updated++; }
         else if(res.status === 404){ for(var u = 0; u < targets.length; u++) await targets[u].c.delete(targets[u].k); out.updated++; }
         else out.failed++;
@@ -2018,4 +2116,29 @@ function ready(){
 }
 if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", ready); else ready();
 
+})();
+
+
+/* Installed app (computer or Android): the website-only parts are never shown.
+   This runs on every page, so even if an older copy of a page is ever served,
+   the links to Storage and Install and the update / install cards in Settings
+   stay hidden. On the website itself nothing here does anything. */
+(function(){
+  var inApp = false;
+  try{
+    inApp = location.protocol === "lanthano:" ||
+      !!(window.Capacitor && typeof window.Capacitor.isNativePlatform === "function" && window.Capacitor.isNativePlatform());
+  }catch(e){}
+  if(!inApp) return;
+  var css = 'a[href$="storage.html"],a[href$="install.html"],#updateCard,#installCard,.ltUpdate{display:none !important}';
+  function add(){
+    if(document.getElementById("ltAppClean")) return;
+    var st = document.createElement("style");
+    st.id = "ltAppClean";
+    st.textContent = css;
+    (document.head || document.documentElement).appendChild(st);
+    document.documentElement.classList.add("lt-app");
+  }
+  add();
+  document.addEventListener("DOMContentLoaded", add);
 })();

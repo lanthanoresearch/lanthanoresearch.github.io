@@ -86,6 +86,22 @@ if (fs.existsSync(pdfPage) && fs.existsSync(path.join(dir, "pdfjs", "legacy", "b
   console.log("WARNING: pdfjs/legacy/build not found, the PDF viewer may fail in the app");
 }
 
+// A small line at the bottom of Settings saying which build this is, so it is
+// easy to tell whether the newest version of the app is the one installed.
+if (fs.existsSync(settingsFile)) {
+  const run = process.env.GITHUB_RUN_NUMBER || "local";
+  const sha = (process.env.GITHUB_SHA || "").slice(0, 7);
+  const when = new Date().toISOString().slice(0, 16).replace("T", " ") + " UTC";
+  const line = '<p class="note" id="appBuild" style="text-align:center;margin:30px 0 0">Lanthano Research Offline \u00b7 build ' +
+    run + (sha ? " (" + sha + ")" : "") + " \u00b7 " + when + "</p>\n";
+  const html = fs.readFileSync(settingsFile, "utf8");
+  if (!html.includes('id="appBuild"') && /<\/section>/i.test(html)) {
+    const i = html.toLowerCase().lastIndexOf("</section>");
+    fs.writeFileSync(settingsFile, html.slice(0, i) + line + html.slice(i));
+    console.log("build number added to settings.html");
+  }
+}
+
 // The sitemap and the file list should not mention them either.
 const sitemap = path.join(dir, "sitemap.xml");
 if (fs.existsSync(sitemap)) {

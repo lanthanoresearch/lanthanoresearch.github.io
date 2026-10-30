@@ -294,7 +294,7 @@ html{scroll-behavior:smooth}
 
     <div class="card" id="updateCard">
         <h2 class="hd"><span class="pv-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.5-3.5L4 9"/><path d="M4 4v5h5"/><path d="M4 13a8 8 0 0 0 14.5 3.5L20 15"/><path d="M20 20v-5h-5"/></svg></span>App updates</h2>
-        <p class="note">The site checks for a new version each time you open it. This compares everything your browser has saved (pages, PDFs, pictures and videos) with the live site and replaces whatever changed. Nothing is downloaded to your device, and your favorites, bookmarks and settings are kept.</p>
+        <p class="note">The site checks for a new version each time you open it. This compares the site you are using (this page and the scripts it runs) and everything your browser has saved (pages, PDFs, pictures and videos) with the live site, and replaces whatever changed. Nothing is downloaded to your device, and your favorites, bookmarks and settings are kept.</p>
         <div class="verBox" id="verBox" data-state="checking">
             <span class="verDot" id="verDot"></span>
             <div class="verTxt"><b id="verTitle">Checking your version&hellip;</b><span id="verSub"></span></div>
@@ -489,10 +489,10 @@ buildSearch();
       return;
     }
     lastDeep = !!deep;
-    show("checking", deep ? "Checking every saved file…" : "Checking your version…", "", "Checking…");
+    show("checking", deep ? "Checking the site and every saved file…" : "Checking your version…", "", "Checking…");
     progress(0, 1);
     var r;
-    try{ r = await LT.savedUpdates.check(function(d, t){ progress(d, t); sub.textContent = "Checked " + d + " of " + t + " saved files"; }, {deep: !!deep}); }
+    try{ r = await LT.savedUpdates.check(function(d, t){ progress(d, t); sub.textContent = "Checked " + d + " of " + t + " files"; }, {deep: !!deep}); }
     catch(e){ r = {error: true, changed: [], checked: 0}; }
     busy = false;
     barWrap.hidden = true;
@@ -501,7 +501,7 @@ buildSearch();
     if(r.error && !found.length){
       show("error", "Couldn’t check the version", "Check your connection and try again.", "Try again");
     }else if(!found.length){
-      show("current", justUpdated ? "Updated. You have the most current version." : "You have the most current version.", (deep ? "Deep check: " : "Checked ") + r.checked + (r.checked === 1 ? " saved file" : " saved files") + " at " + when + ".", "Check again");
+      show("current", justUpdated ? "Updated. You have the most current version." : "You have the most current version.", (deep ? "Deep check: " : "Checked ") + r.checked + (r.checked === 1 ? " file" : " files") + " at " + when + ".", "Check again");
     }else{
       show("outdated", "A newer version is available", describe(found) + " " + (found.length === 1 ? "is" : "are") + " out of date. Your favorites, bookmarks and settings are kept.", "Update", true);
     }
@@ -512,7 +512,7 @@ buildSearch();
     if(b.getAttribute("data-mode") !== "outdated"){ run(false); return; }
     busy = true;
     var total = found.length, textChanged = found.some(function(x){ return x.kind === "page"; });
-    show("updating", "Updating 0 of " + total + "…", "Replacing the saved copies with the latest ones.", "Updating…");
+    show("updating", "Updating 0 of " + total + "…", "Replacing them with the latest ones.", "Updating…");
     progress(0, total);
     var res;
     try{

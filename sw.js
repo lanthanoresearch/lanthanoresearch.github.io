@@ -1,3 +1,10 @@
+// Inside an installed app (the Android app's web view, or the computer app) every
+// page, script and picture is already inside the app. This worker must then never
+// answer pages from the internet or from older saved copies of them (that is how
+// links that were taken out of the app could reappear). It only plays back saved
+// videos there. The website in a normal browser is not affected.
+const IN_APP = /; wv\)|Electron\//i.test((self.navigator && self.navigator.userAgent) || "");
+
 const CACHE_NAME = "lanthano-research-v6";
 
 // Filled by the "Offline App" option on download.html (offline-app.js).
@@ -68,6 +75,10 @@ self.addEventListener("install", event => {
 });
 
 self.addEventListener("activate", event => {
+  if (IN_APP) {
+    // Forget any copies of website pages saved by an older version.
+    event.waitUntil(Promise.all([SITE_CACHE, OFFLINE_CACHE].map(n => caches.delete(n))));
+  }
   event.waitUntil(
     caches.keys().then(keys =>
       Promise.all(
@@ -351,6 +362,9 @@ self.addEventListener("fetch", event => {
     event.respondWith(savedVideo(event.request));
     return;
   }
+
+  // Installed app: everything else is served by the app itself.
+  if (IN_APP) return;
 
   // Page navigations: live site first, then the saved copy, then 404.html
   // (whose own script detects navigator.onLine to show "no connection").
