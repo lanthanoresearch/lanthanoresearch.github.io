@@ -117,21 +117,33 @@ jobs:
             echo "::error::Icon picture not found at $ICON"
             exit 1
           fi
-          IM=convert; command -v magick >/dev/null 2>&1 && IM=magick
-          echo "Using $IM on $(identify "$ICON" 2>/dev/null | head -1)"
+          # The pictures are made with Python's Pillow (the build machine has no ImageMagick).
+          python3 -c "import PIL" 2>/dev/null || python3 -m pip install --quiet --break-system-packages pillow || python3 -m pip install --quiet pillow
+          python3 - "$ICON" "$RES" <<'PY'
+          import sys, os
+          from PIL import Image
+          icon = Image.open(sys.argv[1]).convert("RGBA")
+          res = sys.argv[2]
+          print("Icon picture:", icon.size)
+          def fit(px, pct):
+              inner = max(1, px * pct // 100)
+              w, h = icon.size
+              scale = inner / max(w, h)
+              return icon.resize((max(1, round(w * scale)), max(1, round(h * scale))), Image.LANCZOS)
+          def centred(canvas, pic):
+              canvas.alpha_composite(pic, ((canvas.width - pic.width) // 2, (canvas.height - pic.height) // 2))
+              return canvas
           # adaptive icon layer (108dp): the picture takes about 60% of the square
-          for pair in mdpi:108 hdpi:162 xhdpi:216 xxhdpi:324 xxxhdpi:432; do
-            dir="${pair%%:*}"; px="${pair##*:}"; inner=$(( px * 60 / 100 ))
-            mkdir -p "$RES/mipmap-$dir"
-            $IM "$ICON" -background none -resize "${inner}x${inner}" -gravity center -extent "${px}x${px}" "$RES/mipmap-$dir/lanthano_icon_foreground.png"
-          done
+          for d, px in (("mdpi",108),("hdpi",162),("xhdpi",216),("xxhdpi",324),("xxxhdpi",432)):
+              os.makedirs(f"{res}/mipmap-{d}", exist_ok=True)
+              centred(Image.new("RGBA", (px, px), (0,0,0,0)), fit(px, 60)).save(f"{res}/mipmap-{d}/lanthano_icon_foreground.png")
           # older phones: the same picture on the dark square (plain and round)
-          for pair in mdpi:48 hdpi:72 xhdpi:96 xxhdpi:144 xxxhdpi:192; do
-            dir="${pair%%:*}"; px="${pair##*:}"; inner=$(( px * 78 / 100 ))
-            for name in lanthano_icon lanthano_icon_round; do
-              $IM "$ICON" -background none -resize "${inner}x${inner}" -gravity center -background "$BG" -extent "${px}x${px}" -flatten "$RES/mipmap-$dir/$name.png"
-            done
-          done
+          for d, px in (("mdpi",48),("hdpi",72),("xhdpi",96),("xxhdpi",144),("xxxhdpi",192)):
+              os.makedirs(f"{res}/mipmap-{d}", exist_ok=True)
+              img = centred(Image.new("RGBA", (px, px), (17,17,17,255)), fit(px, 78)).convert("RGB")
+              img.save(f"{res}/mipmap-{d}/lanthano_icon.png")
+              img.save(f"{res}/mipmap-{d}/lanthano_icon_round.png")
+          PY
           mkdir -p "$RES/values" "$RES/mipmap-anydpi-v26"
           cat > "$RES/values/lanthano_icon_colors.xml" <<'EOF'
           <?xml version="1.0" encoding="utf-8"?>
