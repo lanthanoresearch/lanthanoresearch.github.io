@@ -1,6 +1,6 @@
 {
- "count": 310,
- "totalBytes": 283650941,
+ "count": 313,
+ "totalBytes": 283687004,
  "files": [
   {
    "path": "1 Thessalonians Original Text.png",
@@ -236,6 +236,11 @@
    "path": "build-search.js",
    "size": 2136,
    "hash": "a97a8cf80c83f15d"
+  },
+  {
+   "path": "build-transcripts.js",
+   "size": 3528,
+   "hash": "593adb80b2a82093"
   },
   {
    "path": "Cable.png",
@@ -504,8 +509,8 @@
   },
   {
    "path": "download.html",
-   "size": 62971,
-   "hash": "90f39998ecddab91"
+   "size": 64212,
+   "hash": "8aba8c43ca6f8553"
   },
   {
    "path": "Dragon.png",
@@ -649,8 +654,8 @@
   },
   {
    "path": "gallery.html",
-   "size": 88720,
-   "hash": "44973ee79e25d115"
+   "size": 88733,
+   "hash": "e3169026014ebe88"
   },
   {
    "path": "Genetic Degradation.pdf",
@@ -739,8 +744,8 @@
   },
   {
    "path": "image.html",
-   "size": 46346,
-   "hash": "33b6f1498cd33a1a"
+   "size": 46409,
+   "hash": "4e65d8216bcf42f3"
   },
   {
    "path": "Images.html",
@@ -749,8 +754,8 @@
   },
   {
    "path": "index.html",
-   "size": 160249,
-   "hash": "4e396400671cc992"
+   "size": 160067,
+   "hash": "1dc4d4ff08144551"
   },
   {
    "path": "index.js",
@@ -759,8 +764,8 @@
   },
   {
    "path": "install.html",
-   "size": 13328,
-   "hash": "af0f17a85aad7535"
+   "size": 15002,
+   "hash": "c5e690885e55aed1"
   },
   {
    "path": "Israel.pdf",
@@ -796,6 +801,11 @@
    "path": "Light Speed Measuring.jpg",
    "size": 133239,
    "hash": "8d706538fe00b19a"
+  },
+  {
+   "path": "main.js",
+   "size": 11582,
+   "hash": "fe4f762e46be4f3c"
   },
   {
    "path": "manifest.json",
@@ -894,8 +904,8 @@
   },
   {
    "path": "offline-app.js",
-   "size": 8201,
-   "hash": "6136154535eeb2fa"
+   "size": 11378,
+   "hash": "373370e3097b7dba"
   },
   {
    "path": "Once Saved, Always Saved.pdf",
@@ -909,8 +919,8 @@
   },
   {
    "path": "pdf.html",
-   "size": 550466,
-   "hash": "792699d821695375"
+   "size": 550523,
+   "hash": "91145b1ff4b7a66e"
   },
   {
    "path": "pdfjs/build/pdf.mjs",
@@ -966,6 +976,11 @@
    "path": "predictive programming.mp4",
    "size": 19209867,
    "hash": "ea19658c5b47709c"
+  },
+  {
+   "path": "prepare-app-bundle.js",
+   "size": 8836,
+   "hash": "cb391d3c6cd69b2d"
   },
   {
    "path": "privacy.html",
@@ -1104,8 +1119,8 @@
   },
   {
    "path": "settings.html",
-   "size": 21144,
-   "hash": "1d243b37e0334ab6"
+   "size": 21797,
+   "hash": "eafef38472380b61"
   },
   {
    "path": "Shadows Point.png",
@@ -1144,8 +1159,8 @@
   },
   {
    "path": "site-tools.js",
-   "size": 100355,
-   "hash": "d0a8abbea8f4167d"
+   "size": 103934,
+   "hash": "c410c403e2cb8564"
   },
   {
    "path": "sitemap.xml",
@@ -1164,8 +1179,8 @@
   },
   {
    "path": "storage.html",
-   "size": 61306,
-   "hash": "0bcb6ef4ebbbc3e0"
+   "size": 61352,
+   "hash": "56c3e8c172e99e2d"
   },
   {
    "path": "Strange Shadows.png",
@@ -1499,8 +1514,8 @@
   },
   {
    "path": "video.html",
-   "size": 283404,
-   "hash": "d2df5940c20afaf2"
+   "size": 285200,
+   "hash": "5f271f5ca5952d5d"
   },
   {
    "path": "What is Everything.pdf",
