@@ -19,8 +19,9 @@
     "electron-builder": "^25.1.8"
   },
   "build": {
+    "compression": "store",
     "appId": "com.lanthano.research",
-    "productName": "Lanthano Research",
+    "productName": "Lanthano Research Offline",
     "directories": {
       "output": "dist",
       "buildResources": "build"
