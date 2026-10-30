@@ -68,6 +68,24 @@ if (fs.existsSync(settingsFile)) {
   }
 }
 
+// The PDF viewer. The website uses the newest build of pdf.js, which needs very
+// recent browser features (the computer app's browser and many phones' do not
+// have them yet, which showed "hashOriginal.toHex is not a function"). pdf.js
+// also ships a "legacy" build that carries what is missing, so the app uses it.
+const pdfPage = path.join(dir, "pdf.html");
+if (fs.existsSync(pdfPage) && fs.existsSync(path.join(dir, "pdfjs", "legacy", "build", "pdf.mjs"))) {
+  const before = fs.readFileSync(pdfPage, "utf8");
+  const after = before
+    .split("./pdfjs/build/pdf.mjs").join("./pdfjs/legacy/build/pdf.mjs")
+    .split("./pdfjs/build/pdf.worker.mjs").join("./pdfjs/legacy/build/pdf.worker.mjs");
+  if (after !== before) {
+    fs.writeFileSync(pdfPage, after);
+    console.log("PDF viewer set to the compatible pdf.js build");
+  }
+} else if (fs.existsSync(pdfPage)) {
+  console.log("WARNING: pdfjs/legacy/build not found, the PDF viewer may fail in the app");
+}
+
 // The sitemap and the file list should not mention them either.
 const sitemap = path.join(dir, "sitemap.xml");
 if (fs.existsSync(sitemap)) {

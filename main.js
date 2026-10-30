@@ -5,7 +5,7 @@
 // It never replaces its own pages with ones from the internet. To get a newer
 // version, install the newest installer.
 
-const { app, BrowserWindow, Menu, protocol, shell } = require("electron");
+const { app, BrowserWindow, Menu, protocol, session, shell } = require("electron");
 const fs = require("fs");
 const path = require("path");
 const { Readable } = require("stream");
@@ -152,10 +152,26 @@ function serveFile(file, request) {
   );
 }
 
+// Pages that only belong on the website. The app never shows them, even if an
+// old copy of them is somehow still lying around.
+const WEBSITE_ONLY = /^\/(storage\.html|install\.html|offline-app\.js|prepare-app-bundle\.js)$/i;
+
+// Hides every link to those pages, and the update / install cards in Settings.
+const HIDE_WEBSITE_ONLY = [
+  'a[href$="storage.html"]',
+  'a[href$="install.html"]',
+  "#updateCard",
+  "#installCard"
+].join(",") + "{display:none !important}";
+
 function registerProtocol() {
   protocol.handle(SCHEME, (request) => {
     try {
       const url = new URL(request.url);
+
+      if (WEBSITE_ONLY.test(url.pathname)) {
+        return new Response("Not found", { status: 404 });
+      }
       const file = resolveFile(url.pathname);
 
       if (file) return serveFile(file, request);
@@ -188,6 +204,42 @@ function clearOldUpdates() {
   try {
     fs.rmSync(updatesDir(), { recursive: true, force: true });
   } catch (e) {}
+}
+
+// ---------------------------------------------------------- video server
+
+// The videos come from the video server, which only answers requests that come
+// from the website (https://lanthanoresearch.com). Pages inside the app live at
+// lanthano://app, so the request is sent as if it came from the website, and
+// the answer is allowed through to the app's pages. The server itself is not
+// changed in any way.
+function allowVideoServer() {
+  const filter = { urls: ["https://videos.lanthanoresearch.com/*"] };
+  const ses = session.defaultSession;
+
+  ses.webRequest.onBeforeSendHeaders(filter, (details, callback) => {
+    const headers = details.requestHeaders;
+    headers["Origin"] = "https://lanthanoresearch.com";
+    headers["Referer"] = "https://lanthanoresearch.com/";
+    callback({ requestHeaders: headers });
+  });
+
+  ses.webRequest.onHeadersReceived(filter, (details, callback) => {
+    const headers = {};
+
+    Object.keys(details.responseHeaders || {}).forEach((name) => {
+      if (!/^access-control-/i.test(name)) headers[name] = details.responseHeaders[name];
+    });
+
+    headers["Access-Control-Allow-Origin"] = [SCHEME + "://app"];
+    headers["Access-Control-Allow-Methods"] = ["GET, HEAD, POST, OPTIONS"];
+    headers["Access-Control-Allow-Headers"] = ["*"];
+    headers["Access-Control-Expose-Headers"] = ["*"];
+
+    const answer = { responseHeaders: headers };
+    if (details.method === "OPTIONS") answer.statusLine = "HTTP/1.1 204 No Content";
+    callback(answer);
+  });
 }
 
 // ---------------------------------------------------------------- window
@@ -318,6 +370,10 @@ function createWindow() {
     else if (direction === "right") goForward();
   });
 
+  mainWindow.webContents.on("dom-ready", () => {
+    mainWindow.webContents.insertCSS(HIDE_WEBSITE_ONLY).catch(() => {});
+  });
+
   mainWindow.on("closed", () => {
     mainWindow = null;
   });
@@ -342,6 +398,7 @@ if (!gotLock) {
 
     clearOldUpdates();
     registerProtocol();
+    allowVideoServer();
     createWindow();
 
     app.on("activate", () => {
