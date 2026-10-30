@@ -1,6 +1,6 @@
 {
  "count": 311,
- "totalBytes": 283682760,
+ "totalBytes": 283685859,
  "files": [
   {
    "path": "1 Thessalonians Original Text.png",
@@ -759,8 +759,8 @@
   },
   {
    "path": "install.html",
-   "size": 15573,
-   "hash": "b9810cefcdebc392"
+   "size": 17571,
+   "hash": "87d1c408556e07c2"
   },
   {
    "path": "Israel.pdf",
@@ -899,8 +899,8 @@
   },
   {
    "path": "offline-app.js",
-   "size": 11715,
-   "hash": "6515a56e3a665077"
+   "size": 12816,
+   "hash": "a6fe9d5b12344425"
   },
   {
    "path": "Once Saved, Always Saved.pdf",
