@@ -1,0 +1,64 @@
+name: Site list
+
+# Keeps site-files.json (the list of every file on the site, used by Settings,
+# the Install page and the apps) and the video transcripts up to date. A "bot"
+# commit is made whenever they change.
+#
+# This is its own workflow on purpose: it starts straight away on every push and
+# never waits for, or depends on, the slow installer builds in app.yml.
+#
+# Put this file in .github/workflows/ next to app.yml and android-app.yml.
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: site-files
+  cancel-in-progress: false
+
+jobs:
+  manifest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build transcripts.json (video transcripts for search)
+        # A problem here must never stop site-files.json from being updated.
+        continue-on-error: true
+        run: |
+          if [ -f build-transcripts.js ]; then
+            node build-transcripts.js
+          else
+            echo "build-transcripts.js is not in the repository, skipping transcripts."
+          fi
+
+      - name: Build site-files.json
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view desktop-latest >/dev/null 2>&1; then
+            export DESKTOP_BASE="https://github.com/${{ github.repository }}/releases/download/desktop-latest/"
+          fi
+          node build-site-manifest.js
+
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add site-files.json
+          for f in transcripts.json transcripts-list.json; do [ -f "$f" ] && git add "$f"; done
+          if git diff --staged --quiet; then
+            echo "Nothing changed."
+          else
+            git commit -m "Update site-files.json and transcripts"
+            git push || (git pull --rebase && git push)
+          fi

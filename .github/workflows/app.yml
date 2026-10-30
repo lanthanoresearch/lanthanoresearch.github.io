@@ -1,4 +1,4 @@
-name: Site list and apps
+name: Desktop apps
 
 # One workflow for everything:
 #  1. Builds the Windows, Mac and Linux installers (only when desktop-app or
@@ -6,8 +6,8 @@ name: Site list and apps
 #     installer exists yet, or when you run it by hand from the Actions tab).
 #     The installers hold a full copy of the site, so they must be rebuilt
 #     whenever the site changes.
-#  2. Rebuilds site-files.json on every push, so the phone app, the
-#     computer app and the installers always know about every file.
+#  (site-files.json and the transcripts are kept up to date by the separate
+#  workflow site-files.yml, so a slow installer build can never hold that up.)
 
 on:
   push:
@@ -151,42 +151,3 @@ jobs:
             --title "Desktop app (latest)" \
             --notes "Installers for the Lanthano Research desktop app. Built automatically." \
             --target "${{ github.sha }}"
-
-  # Keeps site-files.json and the transcripts up to date. It does not wait for
-  # (or care about) the app builds above, so a failed or slow installer build
-  # can never stop this commit from happening.
-  manifest:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Build transcripts.json (video transcripts for search)
-        # A problem here must never stop site-files.json from being updated.
-        continue-on-error: true
-        run: |
-          if [ -f build-transcripts.js ]; then
-            node build-transcripts.js
-          else
-            echo "build-transcripts.js is not in the repository, skipping transcripts."
-          fi
-
-      - name: Build site-files.json
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          if gh release view desktop-latest >/dev/null 2>&1; then
-            export DESKTOP_BASE="https://github.com/${{ github.repository }}/releases/download/desktop-latest/"
-          fi
-          node build-site-manifest.js
-
-      - name: Commit if changed
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add site-files.json
-          for f in transcripts.json transcripts-list.json; do [ -f "$f" ] && git add "$f"; done
-          git diff --staged --quiet || (git commit -m "Update site-files.json and transcripts" && git pull --rebase && git push)
