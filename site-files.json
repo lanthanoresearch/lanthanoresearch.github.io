@@ -1,6 +1,6 @@
 {
  "count": 311,
- "totalBytes": 283680975,
+ "totalBytes": 283682760,
  "files": [
   {
    "path": "1 Thessalonians Original Text.png",
@@ -504,8 +504,8 @@
   },
   {
    "path": "download.html",
-   "size": 64212,
-   "hash": "8aba8c43ca6f8553"
+   "size": 64867,
+   "hash": "1db466f646c8025d"
   },
   {
    "path": "Dragon.png",
@@ -749,8 +749,8 @@
   },
   {
    "path": "index.html",
-   "size": 160067,
-   "hash": "1dc4d4ff08144551"
+   "size": 160391,
+   "hash": "6fc9f7658fdab497"
   },
   {
    "path": "index.js",
@@ -759,8 +759,8 @@
   },
   {
    "path": "install.html",
-   "size": 15104,
-   "hash": "ef3d108198e496d6"
+   "size": 15573,
+   "hash": "b9810cefcdebc392"
   },
   {
    "path": "Israel.pdf",
@@ -899,8 +899,8 @@
   },
   {
    "path": "offline-app.js",
-   "size": 11378,
-   "hash": "373370e3097b7dba"
+   "size": 11715,
+   "hash": "6515a56e3a665077"
   },
   {
    "path": "Once Saved, Always Saved.pdf",
