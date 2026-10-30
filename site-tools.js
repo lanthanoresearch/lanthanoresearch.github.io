@@ -1005,6 +1005,87 @@ function report(item){
 }
 
 /* ---------------------------------------------------------------
+   Downloads inside the Android app
+   A normal browser download does nothing in an Android app, so every
+   download (papers, pictures, videos, zip packages, the archive, the
+   backup) is written to a file on the phone from the app's own bundled
+   content - no internet is used - and the phone's own save / share sheet
+   opens so the file can be kept (Files, Drive, email...).
+--------------------------------------------------------------- */
+function nativeApp(){
+  try{ return !!(window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform()); }catch(e){ return false; }
+}
+function nativePlugin(n){
+  var C = window.Capacitor;
+  return (C.Plugins && C.Plugins[n]) || (C.registerPlugin && C.registerPlugin(n));
+}
+function blobToBase64(blob){
+  return new Promise(function(resolve, reject){
+    var r = new FileReader();
+    r.onload = function(){ resolve(String(r.result).split(",")[1] || ""); };
+    r.onerror = function(){ reject(r.error || new Error("read")); };
+    r.readAsDataURL(blob);
+  });
+}
+var nativeBusy = false;
+function nativeSave(blob, name, readyText){
+  var FS = nativePlugin("Filesystem"), SH = nativePlugin("Share");
+  var folder = "exports", path = folder + "/" + name.replace(/[\\\/:*?"<>|]+/g, "-");
+  var CHUNK = 3 * 1024 * 1024;    // a multiple of 3, so every piece is whole base64
+  if(nativeBusy){ toast("Another file is being prepared. Try again in a moment."); return Promise.resolve(false); }
+  nativeBusy = true;
+  toast("Preparing " + name + "...");
+  return Promise.resolve()
+    .then(function(){ return FS.rmdir({path:folder, directory:"CACHE", recursive:true}).catch(function(){}); })
+    .then(function(){
+      var chain = Promise.resolve(), first = true;
+      for(var off = 0; off < Math.max(blob.size, 1); off += CHUNK){
+        (function(o, isFirst){
+          chain = chain.then(function(){ return blobToBase64(blob.slice(o, o + CHUNK)); }).then(function(b64){
+            return isFirst ? FS.writeFile({path:path, data:b64, directory:"CACHE", recursive:true})
+                           : FS.appendFile({path:path, data:b64, directory:"CACHE"});
+          });
+        })(off, first);
+        first = false;
+      }
+      return chain;
+    })
+    .then(function(){ return FS.getUri({path:path, directory:"CACHE"}); })
+    .then(function(r){
+      toast(readyText || "Ready. Choose where to save it.");
+      return SH.share({title:name, dialogTitle:"Save " + name, url:r.uri});
+    })
+    .then(function(){ return true; }, function(err){
+      if(!/cancel/i.test(String(err && (err.message || err)))) toast("The file could not be saved. Try again.");
+      return false;
+    })
+    .then(function(ok){ nativeBusy = false; return ok; });
+}
+(function(){
+  if(!nativeApp()) return;
+  function handle(a){
+    if(!a || !a.hasAttribute || !a.hasAttribute("download")) return false;
+    var href = a.href;
+    if(!href || /^javascript:/i.test(href) || href.replace(/#.*$/, "") === location.href.replace(/#.*$/, "")) return false;
+    var name = a.getAttribute("download") || decodeURIComponent((href.split("?")[0].split("/").pop()) || "download");
+    // fetch is started right now: the page may release a blob link a moment after the click
+    var p = fetch(href).then(function(r){ if(!r.ok) throw new Error("fetch"); return r.blob(); });
+    p.then(function(blob){ return nativeSave(blob, name); }, function(){ toast("The file could not be saved. Try again."); });
+    return true;
+  }
+  var realClick = HTMLAnchorElement.prototype.click;
+  HTMLAnchorElement.prototype.click = function(){
+    if(handle(this)) return;
+    return realClick.apply(this, arguments);
+  };
+  document.addEventListener("click", function(e){
+    if(e.defaultPrevented) return;
+    var a = e.target && e.target.closest ? e.target.closest("a[download]") : null;
+    if(a && handle(a)){ e.preventDefault(); e.stopImmediatePropagation(); }
+  }, true);
+})();
+
+/* ---------------------------------------------------------------
    Backup / restore (favorites, bookmarks, settings)
 --------------------------------------------------------------- */
 var SKIP = /^(savedVideoLog|lanthanoAppInstalled|lt_pageScan|lt_sizeCache|videoSaveLock|videosWatched|keepAllLast|keepAllLock|archiveStatsCache|archiveFileSizes|lt_seen|lt_hit|lt_last_backup)/;
@@ -1017,12 +1098,23 @@ function exportBackup(){
       data[k] = localStorage.getItem(k);
     }
   }catch(e){}
-  var blob = new Blob([JSON.stringify({app:"lanthano-research", version:1, saved:new Date().toISOString(), data:data}, null, 1)], {type:"application/json"});
-  var a = el("a", {href:URL.createObjectURL(blob), download:"lanthano-backup-" + new Date().toISOString().slice(0,10) + ".json"});
+  var text = JSON.stringify({app:"lanthano-research", version:1, saved:new Date().toISOString(), data:data}, null, 1);
+  var name = "lanthano-backup-" + new Date().toISOString().slice(0,10) + ".json";
+  var count = Object.keys(data).length;
+  set("lt_last_backup", new Date().toISOString());
+  // Inside the Android app a normal browser download does nothing, so the file is written
+  // and the phone's own "save / share" sheet opens (Files, Drive, email...).
+  if(saveNative(text, name, count)) return;
+  var blob = new Blob([text], {type:"application/json"});
+  var a = el("a", {href:URL.createObjectURL(blob), download:name});
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(function(){ URL.revokeObjectURL(a.href); }, 5000);
-  set("lt_last_backup", new Date().toISOString());
-  toast("Backup saved - " + Object.keys(data).length + " items");
+  toast("Backup saved - " + count + " items");
+}
+function saveNative(text, name, count){
+  if(!nativeApp()) return false;
+  nativeSave(new Blob([text], {type:"application/json"}), name, "Backup ready - " + count + " items. Choose where to save it.");
+  return true;
 }
 function importBackup(){
   var inp = el("input", {type:"file", accept:"application/json,.json"});
