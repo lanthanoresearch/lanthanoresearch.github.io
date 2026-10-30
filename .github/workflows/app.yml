@@ -1,9 +1,11 @@
 name: Site list and apps
 
 # One workflow for everything:
-#  1. Builds the Windows, Mac and Linux installers (only when desktop-app
-#     changes, when this file changes, when no installer exists yet, or
-#     when you run it by hand from the Actions tab).
+#  1. Builds the Windows, Mac and Linux installers (only when desktop-app or
+#     any page / script of the site changes, when this file changes, when no
+#     installer exists yet, or when you run it by hand from the Actions tab).
+#     The installers hold a full copy of the site, so they must be rebuilt
+#     whenever the site changes.
 #  2. Rebuilds site-files.json on every push, so the phone app, the
 #     computer app and the installers always know about every file.
 
@@ -42,7 +44,7 @@ jobs:
             build=true
           elif [ -z "$before" ] || [ "$before" = "0000000000000000000000000000000000000000" ] || ! git cat-file -e "$before" 2>/dev/null; then
             build=true
-          elif git diff --name-only "$before" "${{ github.sha }}" | grep -qE '^(desktop-app/|\.github/workflows/app\.yml)'; then
+          elif git diff --name-only "$before" "${{ github.sha }}" | grep -qE '^(desktop-app/|\.github/workflows/app\.yml|prepare-app-bundle\.js|build-site-manifest\.js)|\.(html|js|mjs|css)$|^(descriptions|manifest)\.json$'; then
             build=true
           fi
 
