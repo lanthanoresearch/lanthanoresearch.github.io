@@ -126,7 +126,14 @@ jobs:
           node-version: 20
 
       - name: Build transcripts.json (video transcripts for search)
-        run: node build-transcripts.js
+        # A problem here must never stop site-files.json from being updated.
+        continue-on-error: true
+        run: |
+          if [ -f build-transcripts.js ]; then
+            node build-transcripts.js
+          else
+            echo "build-transcripts.js is not in the repository, skipping transcripts."
+          fi
 
       - name: Build site-files.json
         env:
