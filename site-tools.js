@@ -2121,7 +2121,7 @@ if(document.readyState === "loading") document.addEventListener("DOMContentLoade
 
 /* Installed app (computer or Android): the website-only parts are never shown.
    This runs on every page, so even if an older copy of a page is ever served,
-   the links to Storage and Install and the update / install cards in Settings
+   the link to Install, the update / install cards in Settings and everything on Storage except Backup & restore
    stay hidden. On the website itself nothing here does anything. */
 (function(){
   var inApp = false;
@@ -2130,7 +2130,7 @@ if(document.readyState === "loading") document.addEventListener("DOMContentLoade
       !!(window.Capacitor && typeof window.Capacitor.isNativePlatform === "function" && window.Capacitor.isNativePlatform());
   }catch(e){}
   if(!inApp) return;
-  var css = 'a[href$="storage.html"],a[href$="install.html"],#updateCard,#installCard,.ltUpdate{display:none !important}';
+  var css = 'a[href$="install.html"],#updateCard,#installCard,.ltUpdate{display:none !important}body:has(#bkExport) .card:not(:has(#bkExport)){display:none !important}';
   function add(){
     if(document.getElementById("ltAppClean")) return;
     var st = document.createElement("style");

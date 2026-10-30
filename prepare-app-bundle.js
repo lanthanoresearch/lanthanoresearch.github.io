@@ -1,9 +1,11 @@
 // Gets a copy of the website ready to go inside an installed app.
 //
-// The Storage and Install pages only make sense on the website itself (they
-// manage the browser's saved copies and hand out the app), so they are taken
-// out of the app, along with every link to them. Download stays. Settings stays
-// too, without its "App updates" check (the app is its own offline copy).
+// The Install page only makes sense on the website itself (it hands out the
+// app), so it is taken out of the app, along with every link to it. Download
+// stays. Storage stays too, but only its "Backup & restore" part (the rest is
+// about what the browser saves, which an app that holds everything does not
+// need). Settings stays without its "App updates" check (the app is its own
+// offline copy).
 //
 //   node prepare-app-bundle.js <folder holding the copy of the site> [--local-only]
 //
@@ -30,8 +32,41 @@ const NO_BACK = process.argv.includes("--no-back");
 const VIDEOS_AT = process.argv.indexOf("--videos") > -1 ? process.argv[process.argv.indexOf("--videos") + 1] : "";   // the computer app has its own Back handling
 
 // offline-app.js runs the Install page.
-const REMOVE = ["storage.html", "install.html", "offline-app.js", "prepare-app-bundle.js", "fetch-videos.js"];
-const GONE_PAGES = "(?:storage|install)\\.html";
+const REMOVE = ["install.html", "offline-app.js", "prepare-app-bundle.js", "fetch-videos.js"];
+const GONE_PAGES = "install\\.html";
+
+// Storage stays in the app, but only its "Backup & restore" part: everything else
+// on that page (what is saved in the browser, Save all, and so on) does not apply
+// to an app that already holds everything.
+const storageFile = path.join(dir, "storage.html");
+if (fs.existsSync(storageFile)) {
+  const html = fs.readFileSync(storageFile, "utf8");
+  const head = html.slice(0, html.indexOf("<section>"));
+  const backupFn = /\/\* What a backup would contain right now[\s\S]*?\n\}\n(?=\/\* Sizes in the same units)/.exec(html);
+  const card = /<div class="card">\s*<h2 class="hd">(?:(?!<div class="card">)[\s\S])*?Backup &amp; restore[\s\S]*?<\/div>\s*(?=<\/section>)/.exec(html);
+  const back = /<a class="back"[\s\S]*?<\/a>/.exec(html);
+  const hero = /<div class="hero">[\s\S]*?<\/div><\/div>/.exec(html);
+  const tail = html.slice(html.indexOf('<a href="#" class="top-button"'));
+
+  if (backupFn && card && back && hero && tail.length > 20) {
+    let page =
+      head + "<section>\n\n    " + back[0] + "\n\n    " + hero[0] + "\n\n" +
+      '    <h1 style="margin-bottom:30px">Storage</h1>\n\n    ' + card[0].trim() + "\n\n</section>\n\n" +
+      "<script>\n(function(){\n\"use strict\";\nfunction $(id){ return document.getElementById(id); }\n" +
+      backupFn[0] +
+      'backupSummary();\n' +
+      '$("bkExport").addEventListener("click", function(){ window.LT && LT.exportBackup(); setTimeout(backupSummary, 200); });\n' +
+      '$("bkImport").addEventListener("click", function(){ window.LT && LT.importBackup(); });\n' +
+      "})();\n</script>\n\n" + tail;
+    page = page.replace(/this browser/g, "this app").replace(/<title>[^<]*<\/title>/, "<title>Storage</title>");
+    fs.writeFileSync(storageFile, page);
+    console.log("storage.html reduced to Backup & restore");
+  } else {
+    console.log("WARNING: could not reduce storage.html to Backup & restore, it is left out of the app instead");
+    fs.unlinkSync(storageFile);
+    REMOVE.push("storage.html");
+  }
+}
 
 for (const name of REMOVE) {
   const file = path.join(dir, name);
@@ -239,7 +274,7 @@ if (LOCAL_ONLY) {
 // Belt and braces: every page in the app also hides, by itself, the links to the
 // website-only pages and the update / install cards, so they can never show up
 // even if a stray old copy of a page ever turned up.
-const CLEAN_STYLE = '<style id="app-clean">a[href$="storage.html"],a[href$="install.html"],#updateCard,#installCard,.ltUpdate{display:none !important}</style>';
+const CLEAN_STYLE = '<style id="app-clean">a[href$="install.html"],#updateCard,#installCard,.ltUpdate{display:none !important}body:has(#bkExport) .card:not(:has(#bkExport)){display:none !important}</style>';
 for (const name of fs.readdirSync(dir)) {
   if (!/\.html$/i.test(name)) continue;
   const file = path.join(dir, name);

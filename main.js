@@ -154,16 +154,17 @@ function serveFile(file, request) {
 
 // Pages that only belong on the website. The app never shows them, even if an
 // old copy of them is somehow still lying around.
-const WEBSITE_ONLY = /^\/(storage\.html|install\.html|offline-app\.js|prepare-app-bundle\.js)$/i;
+const WEBSITE_ONLY = /^\/(install\.html|offline-app\.js|prepare-app-bundle\.js)$/i;
 
 // Hides every link to those pages, and the update / install cards in Settings.
 const HIDE_WEBSITE_ONLY = [
-  'a[href$="storage.html"]',
   'a[href$="install.html"]',
   "#updateCard",
   "#installCard",
   ".ltUpdate"
-].join(",") + "{display:none !important}";
+].join(",") + "{display:none !important}" +
+  // Storage keeps only its Backup & restore card.
+  "body:has(#bkExport) .card:not(:has(#bkExport)){display:none !important}";
 
 function registerProtocol() {
   protocol.handle(SCHEME, (request) => {
