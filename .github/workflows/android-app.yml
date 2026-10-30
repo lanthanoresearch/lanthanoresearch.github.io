@@ -102,12 +102,13 @@ jobs:
           npx cap sync android
 
       - name: Use the site icon
-        continue-on-error: true
         working-directory: android-app
         run: |
-          # A proper Android icon: the picture centred on a dark square with room
-          # around it, so the phone can round it off without cutting anything.
+          # The app icon is your picture centred on a dark square. It is added as a
+          # brand-new icon (own file names) and the app is pointed at it, so it does
+          # not matter what the Capacitor template's own icon files look like.
           RES=android/app/src/main/res
+          MANIFEST=android/app/src/main/AndroidManifest.xml
           ICON="$GITHUB_WORKSPACE/file_000000000c40722f92b1fe6758cb4855.png"
           BG="#111111"
           if [ ! -f "$ICON" ]; then
@@ -115,51 +116,48 @@ jobs:
             exit 1
           fi
           IM=convert; command -v magick >/dev/null 2>&1 && IM=magick
-          # adaptive icon layers (108dp): picture takes about 60% of the square
+          echo "Using $IM on $(identify "$ICON" 2>/dev/null | head -1)"
+          # adaptive icon layer (108dp): the picture takes about 60% of the square
           for pair in mdpi:108 hdpi:162 xhdpi:216 xxhdpi:324 xxxhdpi:432; do
             dir="${pair%%:*}"; px="${pair##*:}"; inner=$(( px * 60 / 100 ))
-            $IM "$ICON" -background none -resize "${inner}x${inner}" -gravity center -extent "${px}x${px}" "$RES/mipmap-$dir/ic_launcher_foreground.png"
+            mkdir -p "$RES/mipmap-$dir"
+            $IM "$ICON" -background none -resize "${inner}x${inner}" -gravity center -extent "${px}x${px}" "$RES/mipmap-$dir/lanthano_icon_foreground.png"
           done
-          # older phones (and the round one): the same picture on the dark square
+          # older phones: the same picture on the dark square (plain and round)
           for pair in mdpi:48 hdpi:72 xhdpi:96 xxhdpi:144 xxxhdpi:192; do
             dir="${pair%%:*}"; px="${pair##*:}"; inner=$(( px * 78 / 100 ))
-            for name in ic_launcher ic_launcher_round; do
+            for name in lanthano_icon lanthano_icon_round; do
               $IM "$ICON" -background none -resize "${inner}x${inner}" -gravity center -background "$BG" -extent "${px}x${px}" -flatten "$RES/mipmap-$dir/$name.png"
             done
           done
-          cat > "$RES/values/ic_launcher_background.xml" <<'EOF'
+          mkdir -p "$RES/values" "$RES/mipmap-anydpi-v26"
+          cat > "$RES/values/lanthano_icon_colors.xml" <<'EOF'
           <?xml version="1.0" encoding="utf-8"?>
           <resources>
-              <color name="ic_launcher_background">#111111</color>
+              <color name="lanthano_icon_background">#111111</color>
           </resources>
           EOF
-          # Make sure newer phones use the layers above, whatever the template had.
-          mkdir -p "$RES/mipmap-anydpi-v26"
-          for name in ic_launcher ic_launcher_round; do
+          for name in lanthano_icon lanthano_icon_round; do
             cat > "$RES/mipmap-anydpi-v26/$name.xml" <<'EOF'
           <?xml version="1.0" encoding="utf-8"?>
           <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-              <background android:drawable="@color/ic_launcher_background"/>
-              <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
+              <background android:drawable="@color/lanthano_icon_background"/>
+              <foreground android:drawable="@mipmap/lanthano_icon_foreground"/>
           </adaptive-icon>
           EOF
           done
-          # The template's own icon (the blue X on a grid) is drawn from these two files.
-          # Replace them with the new picture and the dark square, so whichever of
-          # the files a phone reads, it gets the new icon.
-          mkdir -p "$RES/drawable" "$RES/drawable-v24"
-          cat > "$RES/drawable/ic_launcher_background.xml" <<'EOF'
-          <?xml version="1.0" encoding="utf-8"?>
-          <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-              <solid android:color="#111111"/>
-          </shape>
-          EOF
-          cat > "$RES/drawable-v24/ic_launcher_foreground.xml" <<'EOF'
-          <?xml version="1.0" encoding="utf-8"?>
-          <bitmap xmlns:android="http://schemas.android.com/apk/res/android" android:src="@mipmap/ic_launcher_foreground" android:gravity="fill"/>
-          EOF
-          echo "--- adaptive icon files now:"
-          grep -rn "ic_launcher" "$RES/mipmap-anydpi-v26" "$RES/drawable" "$RES/drawable-v24" "$RES/values" || true
+          # Point the app at the new icon.
+          sed -i -E 's#android:icon="[^"]*"#android:icon="@mipmap/lanthano_icon"#; s#android:roundIcon="[^"]*"#android:roundIcon="@mipmap/lanthano_icon_round"#' "$MANIFEST"
+          grep -n "android:icon\|android:roundIcon" "$MANIFEST"
+          if ! grep -q 'android:icon="@mipmap/lanthano_icon"' "$MANIFEST"; then
+            echo "::error::The app icon could not be set in AndroidManifest.xml"
+            cat "$MANIFEST"
+            exit 1
+          fi
+          if ! grep -q 'android:roundIcon="@mipmap/lanthano_icon_round"' "$MANIFEST"; then
+            # No round icon line in the template: add one next to the icon.
+            sed -i 's#android:icon="@mipmap/lanthano_icon"#android:icon="@mipmap/lanthano_icon" android:roundIcon="@mipmap/lanthano_icon_round"#' "$MANIFEST"
+          fi
           ls -l "$RES"/mipmap-xxxhdpi "$RES/mipmap-anydpi-v26"
 
       - name: Name the app
