@@ -26,10 +26,11 @@ if (!process.argv[2] || !fs.existsSync(dir)) {
 }
 
 const LOCAL_ONLY = process.argv.includes("--local-only");
-const NO_BACK = process.argv.includes("--no-back");   // the computer app has its own Back handling
+const NO_BACK = process.argv.includes("--no-back");
+const VIDEOS_AT = process.argv.indexOf("--videos") > -1 ? process.argv[process.argv.indexOf("--videos") + 1] : "";   // the computer app has its own Back handling
 
 // offline-app.js runs the Install page.
-const REMOVE = ["storage.html", "install.html", "offline-app.js", "prepare-app-bundle.js"];
+const REMOVE = ["storage.html", "install.html", "offline-app.js", "prepare-app-bundle.js", "fetch-videos.js"];
 const GONE_PAGES = "(?:storage|install)\\.html";
 
 for (const name of REMOVE) {
@@ -100,6 +101,55 @@ if (fs.existsSync(settingsFile)) {
     fs.writeFileSync(settingsFile, html.slice(0, i) + line + html.slice(i));
     console.log("build number added to settings.html");
   }
+}
+
+// The videos that normally come from the video server are put inside the app
+// (see fetch-videos.js), and the app's list of videos is told to read them from
+// the app itself, exactly like a video that is part of the site. That means they
+// play, and are included in downloads, with no internet.
+if (VIDEOS_AT) {
+  const from = path.resolve(VIDEOS_AT);
+  const listFile = path.join(dir, "descriptions.json");
+  let inside = 0;
+  let insideBytes = 0;
+  let missing = 0;
+
+  if (fs.existsSync(listFile) && fs.existsSync(from)) {
+    const data = JSON.parse(fs.readFileSync(listFile, "utf8"));
+
+    (function walk(o) {
+      if (Array.isArray(o)) o.forEach(walk);
+      else if (o && typeof o === "object") {
+        if (typeof o.file === "string" && o.file && o.source !== "site") {
+          const rel = o.file.split("/");
+          const src = path.join(from, ...rel);
+
+          if (fs.existsSync(src) && fs.statSync(src).size > 0) {
+            const dest = path.join(dir, ...rel);
+            fs.mkdirSync(path.dirname(dest), { recursive: true });
+            if (!fs.existsSync(dest)) {
+              try { fs.linkSync(src, dest); } catch (e) { fs.copyFileSync(src, dest); }
+            }
+            o.source = "site";
+            inside++;
+            insideBytes += fs.statSync(src).size;
+          } else {
+            missing++;
+          }
+        }
+        Object.values(o).forEach(walk);
+      }
+    })(data);
+
+    fs.writeFileSync(listFile, JSON.stringify(data, null, 2));
+  }
+
+  console.log("videos inside the app: " + inside + (missing ? " (" + missing + " could not be included and still need the internet)" : ""));
+  console.log("size of those videos: " + (insideBytes / 1e9).toFixed(2) + " GB");
+  if (insideBytes > 1.7e9) {
+    console.log("::warning::The videos are " + (insideBytes / 1e9).toFixed(2) + " GB. Installers and GitHub downloads are limited to about 2 GB each, so the build may fail.");
+  }
+  if (missing) console.log("::warning::" + missing + " videos are not inside the app");
 }
 
 // The sitemap and the file list should not mention them either.

@@ -22,6 +22,9 @@ const IGNORE_DIRS = new Set([".git", ".github", "node_modules", ".vscode", "desk
 const IGNORE_FILES = new Set([
   "site-files.json",
   "build-site-manifest.js",
+  "build-transcripts.js",
+  "fetch-videos.js",
+  "prepare-app-bundle.js",
   "package.json",
   "package-lock.json",
   "CNAME",
