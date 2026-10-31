@@ -29,6 +29,8 @@ if (!process.argv[2] || !fs.existsSync(dir)) {
 
 const LOCAL_ONLY = process.argv.includes("--local-only");
 const NO_BACK = process.argv.includes("--no-back");
+// --require-videos: the app is only made if EVERY video is inside it.
+const REQUIRE_VIDEOS = process.argv.includes("--require-videos");
 const VIDEOS_AT = process.argv.indexOf("--videos") > -1 ? process.argv[process.argv.indexOf("--videos") + 1] : "";   // the computer app has its own Back handling
 
 const T = require("./app-transform.js");
@@ -86,6 +88,19 @@ if (VIDEOS_AT) {
     console.log("::warning::The videos are " + (insideBytes / 1e9).toFixed(2) + " GB. Installers and GitHub downloads are limited to about 2 GB each, so the build may fail.");
   }
   if (missing) console.log("::warning::" + missing + " videos are not inside the app");
+}
+
+if (REQUIRE_VIDEOS) {
+  const from = VIDEOS_AT ? path.resolve(VIDEOS_AT) : "";
+  if (!from || !fs.existsSync(from)) {
+    console.log("::error title=Videos are missing from the app::The folder with the videos was not found, so the app was not built.");
+    process.exit(1);
+  }
+  if (insideVideos.size < listedVideos.size) {
+    console.log("::error title=Videos are missing from the app::Only " + insideVideos.size + " of " + listedVideos.size +
+      " videos are inside, so the app was not built (an app without all its videos is not published).");
+    process.exit(1);
+  }
 }
 
 // Every page, the list of videos and the sitemap get the app's version.
