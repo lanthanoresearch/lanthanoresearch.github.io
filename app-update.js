@@ -84,6 +84,27 @@
 
   /* ------------------------------------------------ the website's files */
 
+  // The phone's network code hands a file back in different forms: binary files as
+  // base64 text, but JSON already read into an object and text files as plain text.
+  // This turns whichever it is into the file's bytes.
+  function httpBytes(r) {
+    var d = r.data;
+    if (d === null || d === undefined) return null;
+    if (typeof d === "string") {
+      var head = r.headers || {};
+      var type = String(head["Content-Type"] || head["content-type"] || "").toLowerCase();
+      var textual = /^text\/|json|javascript|xml|svg/.test(type);
+      var flat = d.replace(/\s/g, "");
+      var base64 = /^[A-Za-z0-9+\/]*={0,2}$/.test(flat) && flat.length % 4 === 0;
+      if (!textual || base64) { try { return b64ToBytes(flat); } catch (e) {} }
+      return new TextEncoder().encode(d);
+    }
+    if (d instanceof ArrayBuffer) return new Uint8Array(d);
+    if (ArrayBuffer.isView(d)) return new Uint8Array(d.buffer, d.byteOffset, d.byteLength);
+    if (typeof d === "object") return new TextEncoder().encode(JSON.stringify(d));
+    return null;
+  }
+
   // Remembers each file's fingerprint from the website's list, so a file is never
   // answered from an old saved copy.
   var LIVE_HASH = {};
@@ -99,12 +120,17 @@
       var Http = (C.Plugins && C.Plugins.CapacitorHttp) || (C.registerPlugin && C.registerPlugin("CapacitorHttp"));
       if (!Http || !Http.request) throw new Error("the phone's network code is not available");
       var url = LIVE + enc(rel) + "?v=" + v, r, lastErr;
-      var kinds = ["blob", "arraybuffer"];
+      var kinds = ["blob", "arraybuffer", "text"];
       for (var i = 0; i < kinds.length; i++) {
         try {
           r = await Http.request({ url: url, method: "GET", responseType: kinds[i] });
-          if (r && r.status === 200 && typeof r.data === "string") return b64ToBytes(r.data);
-          lastErr = new Error("the website answered " + (r && r.status));
+          if (r && r.status === 200) {
+            var got = httpBytes(r);
+            if (got) return got;
+            lastErr = new Error("the website's answer could not be read");
+          } else {
+            lastErr = new Error("the website answered " + (r && r.status));
+          }
         } catch (e) { lastErr = e; }
       }
       throw lastErr || new Error("no answer");
