@@ -200,8 +200,19 @@ jobs:
         run: |
           cp android-app/android/app/build/outputs/apk/debug/app-debug.apk Lanthano-Research.apk
           ls -l Lanthano-Research.apk
-          gh release delete android-latest --cleanup-tag --yes || true
-          gh release create android-latest Lanthano-Research.apk \
-            --title "Android app (latest)" \
-            --notes "The Lanthano Research Android app. Built automatically. Install it from the Install page on the website." \
-            --target "${{ github.sha }}"
+          SIZE=$(stat -c %s Lanthano-Research.apk)
+          echo "The app is $((SIZE / 1000000)) MB"
+          if [ "$SIZE" -gt 2000000000 ]; then
+            echo "::error::The app is $((SIZE / 1000000)) MB. GitHub allows 2000 MB for one file, so it cannot be published. The videos make it too big."
+            exit 1
+          fi
+          # The newest version replaces the old one's file. The old release is never
+          # deleted first, so if anything goes wrong the Install page keeps working.
+          if gh release view android-latest >/dev/null 2>&1; then
+            gh release upload android-latest Lanthano-Research.apk --clobber
+          else
+            gh release create android-latest Lanthano-Research.apk \
+              --title "Android app (latest)" \
+              --notes "The Lanthano Research Android app. Built automatically. Install it from the Install page on the website." \
+              --target "${{ github.sha }}"
+          fi

@@ -146,8 +146,13 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           ls -l installers
-          gh release delete desktop-latest --cleanup-tag --yes || true
-          gh release create desktop-latest installers/* \
-            --title "Desktop app (latest)" \
-            --notes "Installers for the Lanthano Research desktop app. Built automatically." \
-            --target "${{ github.sha }}"
+          # The newest installers replace the old ones' files. The old release is never
+          # deleted first, so if anything goes wrong the Install page keeps working.
+          if gh release view desktop-latest >/dev/null 2>&1; then
+            gh release upload desktop-latest installers/* --clobber
+          else
+            gh release create desktop-latest installers/* \
+              --title "Desktop app (latest)" \
+              --notes "Installers for the Lanthano Research desktop app. Built automatically." \
+              --target "${{ github.sha }}"
+          fi
