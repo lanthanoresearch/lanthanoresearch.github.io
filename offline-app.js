@@ -78,34 +78,55 @@ function loadSiteData(){
         .catch(function(){ return null; });
 }
 
-/* Android lives in its own release in the same repository, so the address is
-   worked out from the computer one, and the release is checked through the
-   GitHub API (which allows this page to ask). */
-async function findAndroid(desktopBase){
-    var m = /github\.com\/([^\/]+)\/([^\/]+)\/releases\/download\//.exec(desktopBase || "");
-    if(!m){ return null; }
+/* The apps are published as GitHub releases of this site's repository. The
+   repository is worked out from the computer installers' address when the site
+   list has it, and is otherwise the site's own. */
+var DEFAULT_REPO = ["lanthanoresearch", "lanthanoresearch.github.io"];
+
+function repoFrom(base){
+    var m = /github\.com\/([^\/]+)\/([^\/]+)\/releases\/download\//.exec(base || "");
+    return m ? [m[1], m[2]] : DEFAULT_REPO;
+}
+
+/* The files of one release: {name: {url, size}}, or null when the release does
+   not exist, or "unknown" when GitHub could not be asked (busy, no connection) -
+   the plain download address is then used, which does not need to ask. */
+async function releaseFiles(repo, tag){
     try{
-        var r = await fetch("https://api.github.com/repos/" + m[1] + "/" + m[2] + "/releases/tags/android-latest");
-        if(!r.ok){ return null; }
+        var r = await fetch("https://api.github.com/repos/" + repo[0] + "/" + repo[1] + "/releases/tags/" + tag);
+        if(r.status === 404){ return null; }
+        if(!r.ok){ return "unknown"; }
         var rel = await r.json();
-        var asset = (rel.assets || []).filter(function(a){ return a.name === INSTALLERS.android.file; })[0];
-        if(!asset){ return null; }
-        return { url: asset.browser_download_url, size: asset.size || 0 };
+        var out = {};
+        (rel.assets || []).forEach(function(a){ out[a.name] = { url: a.browser_download_url, size: a.size || 0 }; });
+        return out;
     }catch(e){
-        return null;
+        return "unknown";
     }
+}
+
+function directUrl(repo, tag, file){
+    return "https://github.com/" + repo[0] + "/" + repo[1] + "/releases/download/" + tag + "/" + file;
 }
 
 async function findInstallers(){
     var data = await loadSiteData();
     var base = data && data.desktop && data.desktop.base;
-    if(base){
-        ["windows", "mac", "linux"].forEach(function(os){
-            found[os] = { url: base + INSTALLERS[os].file, size: 0 };
-        });
+    var repo = repoFrom(base);
+
+    var pairs = [["android", "android-latest"], ["windows", "desktop-latest"], ["mac", "desktop-latest"], ["linux", "desktop-latest"]];
+    var cache = {};
+    for(var i = 0; i < pairs.length; i++){
+        var os = pairs[i][0], tag = pairs[i][1], file = INSTALLERS[os].file;
+        if(os !== "android" && base){
+            found[os] = { url: base + file, size: 0 };
+            continue;
+        }
+        if(!(tag in cache)){ cache[tag] = await releaseFiles(repo, tag); }
+        var files = cache[tag];
+        if(files === "unknown"){ found[os] = { url: directUrl(repo, tag, file), size: 0 }; }
+        else if(files && files[file]){ found[os] = files[file]; }
     }
-    var apk = await findAndroid(base);
-    if(apk){ found.android = apk; }
 }
 
 
@@ -115,7 +136,7 @@ var HOWTO = {
     windows: "Open the file when it finishes downloading. Windows may show a SmartScreen notice because the app is not code signed. Choose “More info”, then “Run anyway”.",
     mac: "Open the file and drag the app into Applications. The first time, right-click the app and choose “Open”.",
     linux: "Make the file executable (right-click, Properties, Permissions), then run it.",
-    android: "Open the file when it finishes downloading. Android asks you to allow installs from this browser. Allow it, then tap Install. Google Play Protect may show a notice because the app is not from the Play Store. To update later, delete the app and install the newest version from here."
+    android: "Open the file when it finishes downloading. Android asks you to allow installs from this browser. Allow it, then tap Install. Google Play Protect may show a notice because the app is not from the Play Store. To update later, use Settings inside the app, or install the newest version from here."
 };
 
 function sizeText(n){
@@ -297,7 +318,7 @@ async function setup(){
         if(found[me]){
             desc.textContent = "Installs Lanthano Research Offline on your " + (me === "android" ? "phone" : "computer") +
                 ". The whole website (every paper, image and video it holds) is inside the app, so it works with no internet at all. " +
-                (me === "android" ? "To update, delete the app and install the newest version." : "To update, install the newest version from here.");
+                "To update later, use Settings inside the app (turn Lockdown off, then press Check), or install the newest version from here.";
             how.textContent = HOWTO[me];
             btn.textContent = "Install for " + label + (found[me].size ? " (" + sizeText(found[me].size) + ")" : "");
             btn.disabled = false;
