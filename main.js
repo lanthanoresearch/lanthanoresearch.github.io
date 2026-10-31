@@ -7,7 +7,7 @@
 // asks (see app-update.js): they are kept in a separate folder next to the
 // app's own files, and a newer installer always starts again from its own files.
 
-const { app, BrowserWindow, Menu, protocol, session, shell } = require("electron");
+const { app, BrowserWindow, Menu, net, protocol, session, shell } = require("electron");
 const fs = require("fs");
 const path = require("path");
 const { Readable } = require("stream");
@@ -286,6 +286,22 @@ async function handlePatch(request, url) {
     }
 
     if (action === "lockdown" && request.method !== "POST") return json({ locked: lockdown });
+
+    // "Update" in Settings: gets one file from the website. This is done here, with
+    // the app's own network code, so no page security rule can get in the way.
+    // Only possible while Lockdown is off, and only from the website.
+    if (action === "live") {
+      if (lockdown) return json({ error: "lockdown" }, 403);
+      if (!rel) return json({ error: "bad path" }, 400);
+      const address = SITE + rel.split("/").map(encodeURIComponent).join("/") +
+        "?v=" + encodeURIComponent(url.searchParams.get("v") || Date.now());
+      const res = await net.fetch(address, { cache: "no-store" });
+      const bytes = Buffer.from(await res.arrayBuffer());
+      return new Response(bytes, {
+        status: res.status,
+        headers: { "Content-Type": "application/octet-stream", "Cache-Control": "no-store" }
+      });
+    }
 
     if (request.method !== "POST") return json({ error: "POST only" }, 405);
 

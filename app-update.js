@@ -84,20 +84,35 @@
 
   /* ------------------------------------------------ the website's files */
 
+  // Remembers each file's fingerprint from the website's list, so a file is never
+  // answered from an old saved copy.
+  var LIVE_HASH = {};
+
   async function liveBytes(rel) {
     if (await isLocked()) throw new Error("lockdown");
-    var url = LIVE + enc(rel) + (rel === "site-files.json" || rel === "descriptions.json" ? "?t=" + Date.now() : "");
+    var v = LIVE_HASH[rel] || Date.now();
+
     if (PLAT === "android") {
       // A normal request to lanthanoresearch.com would be answered by the app
       // itself, so the phone's own network code is used.
       var C = window.Capacitor;
       var Http = (C.Plugins && C.Plugins.CapacitorHttp) || (C.registerPlugin && C.registerPlugin("CapacitorHttp"));
-      var r = await Http.request({ url: url, method: "GET", responseType: "blob", headers: { "Cache-Control": "no-cache" } });
-      if (!r || r.status !== 200) throw new Error("http " + (r && r.status));
-      return typeof r.data === "string" ? b64ToBytes(r.data) : new Uint8Array(0);
+      if (!Http || !Http.request) throw new Error("the phone's network code is not available");
+      var url = LIVE + enc(rel) + "?v=" + v, r, lastErr;
+      var kinds = ["blob", "arraybuffer"];
+      for (var i = 0; i < kinds.length; i++) {
+        try {
+          r = await Http.request({ url: url, method: "GET", responseType: kinds[i] });
+          if (r && r.status === 200 && typeof r.data === "string") return b64ToBytes(r.data);
+          lastErr = new Error("the website answered " + (r && r.status));
+        } catch (e) { lastErr = e; }
+      }
+      throw lastErr || new Error("no answer");
     }
-    var res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) throw new Error("http " + res.status);
+
+    // Computer app: main.js gets the file from the website.
+    var res = await fetch("/__patch/live?p=" + encodeURIComponent(rel) + "&v=" + encodeURIComponent(v));
+    if (!res.ok) throw new Error(res.status === 403 ? "lockdown" : "the website answered " + res.status);
     return new Uint8Array(await res.arrayBuffer());
   }
 
@@ -208,6 +223,8 @@
   async function check() {
     var mine = await localJson("site-files.json", { files: [] });
     var live = JSON.parse(await liveText("site-files.json"));
+    LIVE_HASH = {};
+    (live.files || []).forEach(function (f) { LIVE_HASH[f.path] = f.hash; });
     var keep = new Set(T.KEEP);
     var have = byPath(mine.files), now = byPath(live.files);
     var plan = { added: [], changed: [], removed: [], newVideos: [], goneVideos: [], live: live, mine: mine };
@@ -333,7 +350,7 @@
     lock.innerHTML =
       '<h2 class="hd"><span class="pv-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.2"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/></svg></span>Lockdown</h2>' +
       '<div class="rows"><div class="row"><span>Lockdown</span>' +
-      '<button type="button" class="toggleSwitch" id="auLockToggle" role="switch" aria-checked="true" aria-label="Lockdown"><span class="toggleKnob"></span></button></div></div>' +
+      '<button type="button" class="toggleSwitch active" id="auLockToggle" role="switch" aria-checked="true" aria-label="Lockdown"><span class="toggleKnob"></span></button></div></div>' +
       '<p class="note" id="auLockNote"></p>';
 
     var up = document.createElement("div");
@@ -375,6 +392,7 @@
 
     function paintLock() {
       $("auLockToggle").setAttribute("aria-checked", locked ? "true" : "false");
+      $("auLockToggle").classList.toggle("active", locked);
       $("auLockNote").textContent = locked
         ? "On: nothing goes in and nothing comes out. This app never connects to the website and nothing can change its files, so this version stays exactly as it is. Turn it off only if you want to update the app."
         : "Off: the Update card below can connect to the website and bring this app up to date. Turn Lockdown back on to freeze this version.";
@@ -403,7 +421,7 @@
       } catch (e) {
         if (mine.cancelled) return;
         working = false;
-        state("error", "Could not reach the website", "Check your internet connection and try again.");
+        state("error", "Could not reach the website", "Check your internet connection and try again. (" + (e && e.message ? e.message : "no answer") + ")");
         actions([{ text: "Check", cls: "primary", run: doCheck }]);
         return;
       }

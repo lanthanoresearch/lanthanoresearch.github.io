@@ -1994,6 +1994,7 @@ window.LT.sources = sources;
 window.LT.zipImages = zipImages;
 window.LT.makeZip = makeZip;
 window.LT.toast = toast;
+window.LT.showUpdateBanner = showUpdateBanner;
 
 /* A link to share. Inside the computer app the address is lanthano://app/...,
    so it is turned back into the real website address. On the website and in the
@@ -2092,12 +2093,14 @@ function showUpdateBanner(){
   if(updateShown || !document.body) return;
   updateShown = true;
   var b = el("div", {"class":"ltUpdate", role:"status"});
-  b.style.cssText = "position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:99990;display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:999px;background:#1d1d1d;color:#eee;border:1px solid #444;font:14px Arial,sans-serif;box-shadow:0 6px 24px rgba(0,0,0,.45);max-width:calc(100vw - 24px)";
-  b.innerHTML = '<span>A new version is ready</span>';
+  // left/right + auto margins (not left:50% + translate): the box then has the whole screen
+  // width to work with, so the text stays on one line instead of one word per line.
+  b.style.cssText = "position:fixed;left:12px;right:12px;bottom:calc(18px + env(safe-area-inset-bottom,0px));margin:0 auto;width:max-content;max-width:min(440px,calc(100vw - 24px));box-sizing:border-box;z-index:99990;display:flex;align-items:center;gap:12px;padding:10px 12px 10px 18px;border-radius:16px;background:#1d1d1d;color:#eee;border:1px solid #444;font:14px/1.35 Arial,sans-serif;box-shadow:0 6px 24px rgba(0,0,0,.45)";
+  b.innerHTML = '<span style="flex:1 1 auto;min-width:0">A new version is ready</span>';
   var go = el("button", {type:"button"}, "Refresh");
-  go.style.cssText = "border:0;border-radius:999px;padding:6px 14px;background:#2f7cff;color:#fff;font:inherit;cursor:pointer";
+  go.style.cssText = "flex:none;white-space:nowrap;border:0;border-radius:999px;padding:7px 16px;background:#2f7cff;color:#fff;font:inherit;cursor:pointer";
   var x = el("button", {type:"button", "aria-label":"Dismiss"}, "×");
-  x.style.cssText = "border:0;background:none;color:inherit;font-size:18px;line-height:1;cursor:pointer;padding:0 2px;opacity:.7";
+  x.style.cssText = "flex:none;border:0;background:none;color:inherit;font-size:20px;line-height:1;cursor:pointer;padding:2px 6px;opacity:.7";
   go.onclick = function(){ location.reload(); };
   x.onclick = function(){ b.remove(); };
   b.appendChild(go); b.appendChild(x);
