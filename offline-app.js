@@ -216,16 +216,23 @@ async function startDownload(device, forThisDevice){
     }
     btn.onclick = function(){ job.cancelled = true; stopped(); };
 
-    // 1. find the newest version
+    // 1. find the newest version (if this cannot be worked out, the address found
+    //    when the page opened is used - nothing here can leave the page stuck)
     setPrep(10, "Finding the newest version\u2026");
-    var data = await loadSiteData();
-    if(job.cancelled){ return; }
-    if(device === "android"){
-        var apk = await findAndroid(data && data.desktop && data.desktop.base);
-        if(apk){ found.android = apk; }
-    }else if(data && data.desktop && data.desktop.base){
-        found[device] = { url: data.desktop.base + INSTALLERS[device].file, size: (found[device] && found[device].size) || 0 };
-    }
+    try{
+        var data = await loadSiteData();
+        if(job.cancelled){ return; }
+        var base = data && data.desktop && data.desktop.base;
+        if(device === "android"){
+            var repo = repoFrom(base);
+            var files = await releaseFiles(repo, "android-latest");
+            var file = INSTALLERS.android.file;
+            if(files === "unknown"){ found.android = { url: directUrl(repo, "android-latest", file), size: (found.android && found.android.size) || 0 }; }
+            else if(files && files[file]){ found.android = files[file]; }
+        }else if(base){
+            found[device] = { url: base + INSTALLERS[device].file, size: (found[device] && found[device].size) || 0 };
+        }
+    }catch(e){}
     if(job.cancelled){ return; }
 
     // 2. a few steps so there is time to change your mind
