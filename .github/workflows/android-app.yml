@@ -49,16 +49,27 @@ jobs:
       - id: vkey
         run: echo "key=$(node fetch-videos.js --key)" >> "$GITHUB_OUTPUT"
 
-      - name: Remember the downloaded videos between runs
-        uses: actions/cache@v4
+      # Whatever was downloaded is remembered even when the download fails, so the
+      # next run only has to fetch what is still missing.
+      - uses: actions/cache/restore@v4
         with:
           path: .video-cache
-          key: site-videos-${{ steps.vkey.outputs.key }}
+          key: site-videos-${{ steps.vkey.outputs.key }}-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: site-videos-
           enableCrossOsArchive: true
 
+      # Every video must come down, or the app is not built (and the app already
+      # published stays as it is).
       - name: Download the videos that live on the video server
-        run: node fetch-videos.js .video-cache
+        run: STRICT=1 node fetch-videos.js .video-cache
+
+      - name: Remember the videos
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: .video-cache
+          key: site-videos-${{ steps.vkey.outputs.key }}-${{ github.run_id }}-${{ github.run_attempt }}
+          enableCrossOsArchive: true
 
       - name: Bundle the whole website, videos included, into the app
         run: |
@@ -66,7 +77,7 @@ jobs:
           node build-site-manifest.js --copy android-app/www
           # Storage and Install only belong on the website, not inside the app. The app also
           # never goes to the internet for its own pages, and handles the Back button.
-          node prepare-app-bundle.js android-app/www --local-only --videos .video-cache
+          node prepare-app-bundle.js android-app/www --local-only --videos .video-cache --require-videos
 
       - name: Create the Android project
         working-directory: android-app

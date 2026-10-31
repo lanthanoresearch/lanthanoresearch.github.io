@@ -69,15 +69,27 @@ jobs:
       - id: vkey
         run: echo "key=$(node fetch-videos.js --key)" >> "$GITHUB_OUTPUT"
 
-      - uses: actions/cache@v4
+      # Whatever was downloaded is remembered even when the download fails, so the
+      # next run only has to fetch what is still missing.
+      - uses: actions/cache/restore@v4
         with:
           path: .video-cache
-          key: site-videos-${{ steps.vkey.outputs.key }}
+          key: site-videos-${{ steps.vkey.outputs.key }}-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: site-videos-
           enableCrossOsArchive: true
 
+      # Every video must come down, or the apps are not built (and the apps already
+      # published stay as they are).
       - name: Download the videos
-        run: node fetch-videos.js .video-cache
+        run: STRICT=1 node fetch-videos.js .video-cache
+
+      - name: Remember the videos
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: .video-cache
+          key: site-videos-${{ steps.vkey.outputs.key }}-${{ github.run_id }}-${{ github.run_attempt }}
+          enableCrossOsArchive: true
 
   desktop:
     needs: [changes, videos]
@@ -101,16 +113,16 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: .video-cache
-          key: site-videos-${{ needs.videos.outputs.key }}
+          key: site-videos-${{ needs.videos.outputs.key }}-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: site-videos-
           enableCrossOsArchive: true
 
       - name: Bundle the whole website, videos included, into the app
         run: |
           # Any video that is still missing is downloaded now (normally none).
-          node fetch-videos.js .video-cache
+          STRICT=1 node fetch-videos.js .video-cache
           node build-site-manifest.js --copy desktop-app/site
-          node prepare-app-bundle.js desktop-app/site --local-only --no-back --videos .video-cache
+          node prepare-app-bundle.js desktop-app/site --local-only --no-back --videos .video-cache --require-videos
           mkdir -p desktop-app/build
           cp file_000000000c40722f92b1fe6758cb4855.png desktop-app/build/icon.png
 
