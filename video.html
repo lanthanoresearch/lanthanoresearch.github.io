@@ -4255,6 +4255,13 @@ homeButton.href =
 
 const VIDEO_API = "https://videos.lanthanoresearch.com";
 
+/* Inside the installed app every video is stored in the app, so nothing is
+   fetched from anywhere and nothing "connects". */
+const inAppVideos = !!(window.LT_IN_APP || window.LT_APP_PLATFORM || location.protocol === "lanthano:" ||
+    (window.Capacitor && typeof Capacitor.isNativePlatform === "function" && Capacitor.isNativePlatform()));
+const LOADING_TEXT = inAppVideos ? "Opening video\u2026" : "Loading video...";
+try{ const st0 = document.getElementById("statusText"); if(st0) st0.textContent = LOADING_TEXT; }catch(e){}
+
 const isR2 =
     !!src &&
     params.get("source") === "r2";
@@ -4349,6 +4356,8 @@ function r2Stop(message){
     }catch(e){}
     statusText.textContent = message;
     loadingOverlay.style.display = "flex";
+    // A message instead of a loading wheel, so it never looks like it is still loading.
+    try{ loadingOverlay.querySelector(".spinner").style.display = "none"; }catch(e){}
 }
 
 let r2Ticket = "";
@@ -4849,6 +4858,14 @@ async function r2Load(resumeAt){
             return;
         }
 
+        // Inside the app every video is stored in the app and plays from it.
+        // One that is not stored here (the installer was built without it)
+        // is never fetched from anywhere, so say so straight away.
+        if(inAppVideos){
+            r2Stop("This video is not stored inside this app. Install the newest version of the app to get every video.");
+            return;
+        }
+
         const gate = r2Check();
 
         if(!gate.ok){
@@ -4856,8 +4873,9 @@ async function r2Load(resumeAt){
             return;
         }
 
-        statusText.textContent = "Loading video...";
+        statusText.textContent = LOADING_TEXT;
         loadingOverlay.style.display = "flex";
+        try{ loadingOverlay.querySelector(".spinner").style.display = ""; }catch(e){}
 
         if(gate.wait > 0){
             await new Promise(resolve => setTimeout(resolve, gate.wait));
@@ -5596,7 +5614,7 @@ video.addEventListener(
     function(){
 
         statusText.textContent =
-            "Loading video...";
+            LOADING_TEXT;
 
         loadingOverlay.style.display =
             "flex";
@@ -8049,7 +8067,7 @@ function playLocalFile(file){
     title.textContent = name;
     document.title = name;
 
-    statusText.textContent = "Loading video...";
+    statusText.textContent = LOADING_TEXT;
     loadingOverlay.style.display = "flex";
 
     video.src = localObjectUrl;

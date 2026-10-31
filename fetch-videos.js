@@ -187,6 +187,22 @@ async function fetchOne(video, target) {
     await wait(400);
   }
 
+  // The server may only have been busy: wait a little and try the ones that failed once more.
+  if (failed.length && !process.env.NO_SECOND_PASS) {
+    console.log("trying the " + failed.length + " that failed once more after a pause...");
+    await wait(Number(process.env.SECOND_PASS_MS) || 90000);
+    for (const file of failed.slice()) {
+      const target = path.join(outDir, ...file.split("/"));
+      const bytes = await fetchOne({ file }, target);
+      if (bytes) {
+        got++;
+        failed.splice(failed.indexOf(file), 1);
+        console.log("  " + file + ": " + Math.round(bytes / 1e6) + " MB");
+      }
+      await wait(400);
+    }
+  }
+
   console.log("done: " + got + " downloaded, " + kept + " already there, " + failed.length + " failed");
 
   if (failed.length) {

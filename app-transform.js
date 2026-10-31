@@ -75,14 +75,6 @@
     return tags ? html.replace(/<\/body>/i, tags + "</body>") : html;
   }
 
-  // The PDF viewer uses pdf.js's "legacy" build, which also runs in the app's
-  // browser and on phones without the newest features.
-  function pdf(html) {
-    return html
-      .split("./pdfjs/build/pdf.mjs").join("./pdfjs/legacy/build/pdf.mjs")
-      .split("./pdfjs/build/pdf.worker.mjs").join("./pdfjs/legacy/build/pdf.worker.mjs");
-  }
-
   // The list of videos: the ones that are inside the app are read from the app.
   // hasFile(file) says whether a video file is inside the app.
   function descriptions(text, hasFile) {
@@ -134,9 +126,8 @@
     }
     html = removeLinks(html);
     if (name === "settings.html") html = addScripts(settingsCards(html), ["app-transform.js", "app-update.js"]);
-    if (name === "pdf.html" && opts.legacyPdf !== false) html = pdf(html);
     return finishPage(html, opts);
   }
 
-  return { REMOVE, KEEP, GONE_PAGES, CLEAN_STYLE, storage, removeLinks, settingsCards, addScripts, pdf, descriptions, sitemap, finishPage, file };
+  return { REMOVE, KEEP, GONE_PAGES, CLEAN_STYLE, storage, removeLinks, settingsCards, addScripts, descriptions, sitemap, finishPage, file };
 });

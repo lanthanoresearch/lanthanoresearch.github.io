@@ -2224,7 +2224,25 @@ if(document.readyState === "loading") document.addEventListener("DOMContentLoade
     inApp = location.protocol === "lanthano:" ||
       !!(window.Capacitor && typeof window.Capacitor.isNativePlatform === "function" && window.Capacitor.isNativePlatform());
   }catch(e){}
+  if(window.LT_APP_PLATFORM) inApp = true;   // set by tests only
   if(!inApp) return;
+  window.LT_IN_APP = true;
+  // Everything is inside the app. The only thing that ever goes online is the
+  // Update in Settings (and only with Lockdown off), which does not use this
+  // page's fetch, so the video server is simply never asked.
+  try{
+    var realFetch = window.fetch;
+    if(typeof realFetch === "function"){
+      window.fetch = function(input){
+        var u = "";
+        try{ u = typeof input === "string" ? input : (input && input.url) || String(input); }catch(e){}
+        if(/^https?:\/\/videos\.lanthanoresearch\.com(\/|$)/i.test(u)){
+          return Promise.reject(new TypeError("This app works without the internet"));
+        }
+        return realFetch.apply(this, arguments);
+      };
+    }
+  }catch(e){}
   var css = 'a[href$="install.html"],#updateCard,#installCard,.ltUpdate{display:none !important}body:has(#bkExport) .card:not(:has(#bkExport)){display:none !important}';
   function add(){
     if(document.getElementById("ltAppClean")) return;

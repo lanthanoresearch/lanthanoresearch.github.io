@@ -455,7 +455,7 @@
       working = false;
       var n = plan.added.length + plan.changed.length + plan.removedAll.length;
       var nv = plan.newVideos.length;
-      var videoNote = nv ? nv + (nv === 1 ? " video on the website is not inside this app and plays" : " videos on the website are not inside this app and play") + " when you are online." : "";
+      var videoNote = nv ? nv + (nv === 1 ? " video on the website is not inside this app. Install the newest version of the app to get it." : " videos on the website are not inside this app. Install the newest version of the app to get them.") : "";
       if (!n) {
         state("current", "Everything is in sync", plan.total + " of " + plan.total + " files match the website.");
         $("auNote").textContent = "Checked " + new Date().toLocaleString() + "." + (videoNote ? " " + videoNote : "");

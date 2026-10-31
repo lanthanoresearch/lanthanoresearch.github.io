@@ -45,6 +45,7 @@ function has(name) { return fs.existsSync(path.join(dir, name)); }
 // the app itself, exactly like a video that is part of the site. That means they
 // play, and are included in downloads, with no internet.
 const insideVideos = new Set();
+const listedVideos = new Set();   // every video that comes from the video server
 if (VIDEOS_AT) {
   const from = path.resolve(VIDEOS_AT);
   const listFile = path.join(dir, "descriptions.json");
@@ -58,6 +59,7 @@ if (VIDEOS_AT) {
       if (Array.isArray(o)) o.forEach(walk);
       else if (o && typeof o === "object") {
         if (typeof o.file === "string" && o.file && o.source !== "site") {
+          listedVideos.add(o.file);
           const rel = o.file.split("/");
           const src = path.join(from, ...rel);
 
@@ -94,13 +96,6 @@ for (const name of fs.readdirSync(dir)) {
   if (!/\.(html|xml)$/i.test(name) && name !== "descriptions.json") continue;
   const before = read(name);
 
-  if (name === "pdf.html" && !has("pdfjs/legacy/build/pdf.mjs")) {
-    console.log("WARNING: pdfjs/legacy/build not found, the PDF viewer may fail in the app");
-    opts.legacyPdf = false;
-  } else {
-    opts.legacyPdf = true;
-  }
-
   const after = T.file(name, before, opts);
 
   if (after === null) {
@@ -130,7 +125,8 @@ const sha = (process.env.GITHUB_SHA || "").slice(0, 7);
 const when = new Date().toISOString().slice(0, 16).replace("T", " ") + " UTC";
 if (has("settings.html")) {
   const line = '<p class="note" id="appBuild" style="text-align:center;margin:30px 0 0">Lanthano Research Offline \u00b7 build ' +
-    run + (sha ? " (" + sha + ")" : "") + " \u00b7 " + when + "</p>\n";
+    run + (sha ? " (" + sha + ")" : "") + " \u00b7 " + when +
+    (VIDEOS_AT ? " \u00b7 videos inside: " + insideVideos.size + " of " + listedVideos.size : "") + "</p>\n";
   const html = read("settings.html");
   if (!html.includes('id="appBuild"') && /<\/section>/i.test(html)) {
     const i = html.toLowerCase().lastIndexOf("</section>");
