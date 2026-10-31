@@ -2,8 +2,10 @@
 //
 // The installer carries a complete copy of the website (the "site" folder
 // is bundled at build time), so the app works with NO internet at all.
-// It never replaces its own pages with ones from the internet. To get a newer
-// version, install the newest installer.
+// It never replaces its own pages with ones from the internet by itself.
+// "Update" in Settings can fetch newer files from the website when the person
+// asks (see app-update.js): they are kept in a separate folder next to the
+// app's own files, and a newer installer always starts again from its own files.
 
 const { app, BrowserWindow, Menu, protocol, session, shell } = require("electron");
 const fs = require("fs");
@@ -64,6 +66,13 @@ function bundledDir() {
     : path.join(__dirname, "site");
 }
 
+// The folder of files fetched by "Update" in Settings. A file here is used
+// instead of the app's own copy.
+function patchDir() {
+  return path.join(app.getPath("userData"), "site-patch");
+}
+
+// The OLD live updater's folder (from earlier versions). It is always deleted.
 function updatesDir() {
   return path.join(app.getPath("userData"), "site-updates");
 }
@@ -91,7 +100,10 @@ function resolveFile(urlPath) {
   rel = rel.replace(/^\/+/, "");
   if (rel === "" || rel.endsWith("/")) rel += "index.html";
 
-  for (const base of [updatesDir(), bundledDir()]) {
+  // A file the website no longer has and that "Update" removed.
+  if (removedFiles.has(rel)) return null;
+
+  for (const base of [patchDir(), bundledDir()]) {
     const full = path.resolve(base, rel);
 
     // Never leave the site folder.
@@ -152,6 +164,169 @@ function serveFile(file, request) {
   );
 }
 
+// ------------------------------------------------------------ Update store
+//
+// "Update" in Settings fetches files from the website in the page itself and
+// hands them to the app here (lanthano://app/__patch/...). Only the app's own
+// pages can reach this address.
+
+let removedFiles = new Set();
+
+// Lockdown (ON unless the person turned it off in Settings): nothing may change
+// the app's files and the app makes no connections to the internet at all.
+let lockdown = true;
+
+function lockFile() {
+  return path.join(app.getPath("userData"), "lockdown.json");
+}
+
+function loadLockdown() {
+  try {
+    lockdown = JSON.parse(fs.readFileSync(lockFile(), "utf8")).locked !== false;
+  } catch (e) {
+    lockdown = true;
+  }
+}
+
+function saveLockdown(on) {
+  lockdown = !!on;
+  try {
+    fs.mkdirSync(path.dirname(lockFile()), { recursive: true });
+    fs.writeFileSync(lockFile(), JSON.stringify({ locked: lockdown }));
+  } catch (e) {}
+}
+
+// While Lockdown is on, every request to the internet is stopped. The app's own
+// pages (lanthano://) are never affected.
+function applyLockdown() {
+  try {
+    session.defaultSession.webRequest.onBeforeRequest(
+      { urls: ["http://*/*", "https://*/*", "ws://*/*", "wss://*/*"] },
+      (details, callback) => callback({ cancel: lockdown })
+    );
+  } catch (e) {}
+}
+
+function removedList() {
+  return path.join(patchDir(), ".removed.json");
+}
+
+function loadRemoved() {
+  try {
+    removedFiles = new Set(JSON.parse(fs.readFileSync(removedList(), "utf8")));
+  } catch (e) {
+    removedFiles = new Set();
+  }
+}
+
+function saveRemoved() {
+  fs.mkdirSync(patchDir(), { recursive: true });
+  fs.writeFileSync(removedList(), JSON.stringify([...removedFiles]));
+}
+
+// A newer installer has newer files of its own than anything fetched earlier,
+// so the fetched files are dropped when the app's build changes.
+function resetPatchForNewBuild() {
+  let build = "";
+
+  try {
+    build = JSON.parse(fs.readFileSync(path.join(bundledDir(), "app-build.json"), "utf8")).build || "";
+  } catch (e) {}
+
+  const baseFile = path.join(patchDir(), ".base");
+  let had = "";
+
+  try {
+    had = fs.readFileSync(baseFile, "utf8");
+  } catch (e) {}
+
+  if (had !== build) {
+    try {
+      fs.rmSync(patchDir(), { recursive: true, force: true });
+    } catch (e) {}
+    if (build) {
+      fs.mkdirSync(patchDir(), { recursive: true });
+      fs.writeFileSync(baseFile, build);
+    }
+  }
+
+  loadRemoved();
+}
+
+// A clean relative path, or null.
+function cleanRel(p) {
+  if (typeof p !== "string") return null;
+  const rel = p.replace(/\\/g, "/").replace(/^\/+/, "");
+  if (!rel || rel.split("/").some((part) => part === ".." || part === "." || part === "" || part.startsWith("."))) return null;
+  return rel;
+}
+
+function listPatchFiles(dir, prefix, out) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (entry.name.startsWith(".")) continue;
+    if (entry.isDirectory()) listPatchFiles(path.join(dir, entry.name), prefix + entry.name + "/", out);
+    else out.push(prefix + entry.name);
+  }
+  return out;
+}
+
+async function handlePatch(request, url) {
+  const json = (data, status) => new Response(JSON.stringify(data), {
+    status: status || 200,
+    headers: { "Content-Type": "application/json", "Cache-Control": "no-store" }
+  });
+  const action = url.pathname.slice("/__patch/".length);
+  const rel = cleanRel(url.searchParams.get("p"));
+
+  try {
+    if (action === "state") {
+      let files = [];
+      try { files = listPatchFiles(patchDir(), "", []); } catch (e) {}
+      return json({ files, removed: [...removedFiles] });
+    }
+
+    if (action === "lockdown" && request.method !== "POST") return json({ locked: lockdown });
+
+    if (request.method !== "POST") return json({ error: "POST only" }, 405);
+
+    if (action === "lockdown") {
+      saveLockdown(url.searchParams.get("p") !== "off");
+      return json({ locked: lockdown });
+    }
+
+    // Nothing can touch the app's files while Lockdown is on.
+    if (lockdown) return json({ error: "lockdown" }, 403);
+
+    if (action === "put" && rel) {
+      const target = path.resolve(patchDir(), rel);
+      if (!target.startsWith(patchDir() + path.sep)) return json({ error: "bad path" }, 400);
+      fs.mkdirSync(path.dirname(target), { recursive: true });
+      fs.writeFileSync(target, Buffer.from(await request.arrayBuffer()));
+      if (removedFiles.delete(rel)) saveRemoved();
+      return json({ ok: true });
+    }
+
+    if (action === "remove" && rel) {
+      const target = path.resolve(patchDir(), rel);
+      if (target.startsWith(patchDir() + path.sep)) fs.rmSync(target, { force: true });
+      removedFiles.add(rel);
+      saveRemoved();
+      return json({ ok: true });
+    }
+
+    if (action === "reset") {
+      fs.rmSync(patchDir(), { recursive: true, force: true });
+      removedFiles = new Set();
+      resetPatchForNewBuild();
+      return json({ ok: true });
+    }
+  } catch (e) {
+    return json({ error: String(e && e.message || e) }, 500);
+  }
+
+  return json({ error: "unknown" }, 404);
+}
+
 // Pages that only belong on the website. The app never shows them, even if an
 // old copy of them is somehow still lying around.
 const WEBSITE_ONLY = /^\/(install\.html|offline-app\.js|prepare-app-bundle\.js)$/i;
@@ -170,6 +345,8 @@ function registerProtocol() {
   protocol.handle(SCHEME, (request) => {
     try {
       const url = new URL(request.url);
+
+      if (url.pathname.startsWith("/__patch/")) return handlePatch(request, url);
 
       if (WEBSITE_ONLY.test(url.pathname)) {
         return new Response("Not found", { status: 404 });
@@ -198,10 +375,11 @@ function registerProtocol() {
 // ------------------------------------------------------- old update folder
 
 // Earlier versions of the app copied newer pages from the website into an
-// update folder and used them instead of the built-in ones. The app is now
-// complete and offline on its own (to update, install the newest version), so
-// anything left there is removed. Otherwise old pages could bring back links
-// that were taken out of the app.
+// update folder by themselves and used them instead of the built-in ones.
+// That is gone (updating now only happens when the person asks, and goes
+// through the page's own "Update" with every file checked), so anything left
+// there is removed. Otherwise old pages could bring back links that were taken
+// out of the app.
 function clearOldUpdates() {
   try {
     fs.rmSync(updatesDir(), { recursive: true, force: true });
@@ -399,6 +577,9 @@ if (!gotLock) {
     app.setAppUserModelId("com.lanthano.research");
 
     clearOldUpdates();
+    resetPatchForNewBuild();
+    loadLockdown();
+    applyLockdown();
     registerProtocol();
     allowVideoServer();
     createWindow();

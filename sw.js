@@ -5,6 +5,16 @@
 // videos there. The website in a normal browser is not affected.
 const IN_APP = /; wv\)|Electron\//i.test((self.navigator && self.navigator.userAgent) || "");
 
+// Installed Android app, after "Update" in Settings: the page registers this
+// worker as sw.js?overlay=1. Files fetched from the website are then kept in
+// UPDATE_CACHE and are used instead of the app's own copy of the same file, and
+// files the website no longer has (and the person chose to remove) are answered
+// with "not found". Everything else is passed straight on to the app. Without
+// "?overlay=1" (the website, or an app that was never updated) none of this runs.
+const OVERLAY = /[?&]overlay=1/.test((self.location && self.location.search) || "");
+const UPDATE_CACHE = "lanthano-app-update";
+const REMOVED_URL = "/__update/removed.json";
+
 const CACHE_NAME = "lanthano-research-v6";
 
 // Filled by the "Offline App" option on download.html (offline-app.js).
@@ -83,7 +93,7 @@ self.addEventListener("activate", event => {
     caches.keys().then(keys =>
       Promise.all(
         keys
-          .filter(key => ![CACHE_NAME, OFFLINE_CACHE, SITE_CACHE, VIDEO_CACHE, PREFS_CACHE].includes(key))
+          .filter(key => ![CACHE_NAME, OFFLINE_CACHE, SITE_CACHE, VIDEO_CACHE, PREFS_CACHE, UPDATE_CACHE].includes(key))
           .map(key => caches.delete(key))
       )
     )
@@ -103,7 +113,55 @@ self.addEventListener("activate", event => {
 // A page can ask a waiting copy of this worker to take over now.
 self.addEventListener("message", event => {
   if (event.data && event.data.type === "skip-waiting") self.skipWaiting();
+  if (event.data && event.data.type === "lt-overlay-changed") removedSet = null;
+  if (event.data && event.data.type === "lt-health") {
+    // The page asks: can this worker get the app's own files? If not (some
+    // phones may not allow it), it switches itself off so the app keeps working.
+    const port = event.ports && event.ports[0];
+    event.waitUntil(
+      fetch("app-build.json", { cache: "no-store" })
+        .then(r => r.ok)
+        .catch(() => false)
+        .then(ok => {
+          if (!ok && OVERLAY) self.registration.unregister();
+          if (port) port.postMessage({ ok });
+        })
+    );
+  }
 });
+
+// ------------------------------------------------------------ app update
+
+let removedSet = null;
+
+async function loadRemovedSet() {
+  try {
+    const c = await caches.open(UPDATE_CACHE);
+    const r = await c.match(REMOVED_URL);
+    removedSet = new Set(r ? await r.json() : []);
+  } catch (e) {
+    removedSet = new Set();
+  }
+}
+
+async function overlayAnswer(request, url) {
+  if (!removedSet) await loadRemovedSet();
+
+  let rel;
+  try { rel = decodeURIComponent(url.pathname); } catch (e) { rel = url.pathname; }
+  rel = rel.replace(/^\/+/, "");
+  if (rel === "" || rel.endsWith("/")) rel += "index.html";
+
+  if (removedSet.has(rel)) {
+    return new Response("Not found", { status: 404, headers: { "Content-Type": "text/plain" } });
+  }
+
+  const cache = await caches.open(UPDATE_CACHE);
+  const hit = await cache.match(new URL("/" + rel, self.location.origin).href, { ignoreSearch: true });
+  if (hit) return request.headers.has("range") ? rangeFromCache(request, hit) : hit;
+
+  return fetch(request);
+}
 
 // Look in the saved copy. ignoreSearch lets "category.html?category=x" match
 // the saved "category.html", and "/" match "/index.html".
@@ -360,6 +418,12 @@ self.addEventListener("fetch", event => {
   // Whole videos saved by video.html (played from the device).
   if (url.pathname.startsWith(VIDEO_PREFIX)) {
     event.respondWith(savedVideo(event.request));
+    return;
+  }
+
+  // Installed app after "Update": newer files fetched from the website win.
+  if (OVERLAY && !url.pathname.startsWith("/__update/")) {
+    event.respondWith(overlayAnswer(event.request, url));
     return;
   }
 

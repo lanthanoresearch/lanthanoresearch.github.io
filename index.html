@@ -3064,7 +3064,7 @@ document.querySelectorAll(".cat-skel, .featured-skeleton").forEach(el => el.remo
 if ("serviceWorker" in navigator) {
 
 navigator.serviceWorker
-.register("sw.js")
+.register((function(){ try{ return localStorage.getItem("lt_overlay") === "1" ? "sw.js?overlay=1" : "sw.js"; }catch(e){ return "sw.js"; } })())
 .then(() => console.log("Service Worker Registered"));
 
 }
