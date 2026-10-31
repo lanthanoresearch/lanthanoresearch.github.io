@@ -1,6 +1,6 @@
 {
- "count": 313,
- "totalBytes": 283732456,
+ "count": 316,
+ "totalBytes": 283738374,
  "files": [
   {
    "path": "1 Thessalonians Original Text.png",
@@ -109,13 +109,13 @@
   },
   {
    "path": "app-transform.js",
-   "size": 6472,
-   "hash": "24c0996ea2afdc44"
+   "size": 6048,
+   "hash": "20831be029382af0"
   },
   {
    "path": "app-update.js",
-   "size": 24571,
-   "hash": "43093e33f13fe9c8"
+   "size": 24628,
+   "hash": "887a39873fdfc620"
   },
   {
    "path": "Artemis stunning photos.png",
@@ -923,9 +923,24 @@
    "hash": "e12a64beab48326b"
   },
   {
+   "path": "pdf-compat.js",
+   "size": 4012,
+   "hash": "6560ed48893a9136"
+  },
+  {
+   "path": "pdf-lib.mjs",
+   "size": 158,
+   "hash": "94116bcbb4d3ba33"
+  },
+  {
+   "path": "pdf-worker.mjs",
+   "size": 157,
+   "hash": "0287a7b7f09028ff"
+  },
+  {
    "path": "pdf.html",
-   "size": 550523,
-   "hash": "91145b1ff4b7a66e"
+   "size": 550503,
+   "hash": "4ec0a8242eb51fa5"
   },
   {
    "path": "pdfjs/build/pdf.mjs",
@@ -1159,8 +1174,8 @@
   },
   {
    "path": "site-tools.js",
-   "size": 114130,
-   "hash": "e514b7043b09a31f"
+   "size": 114933,
+   "hash": "9c935fdf11d5b433"
   },
   {
    "path": "sitemap.xml",
@@ -1514,8 +1529,8 @@
   },
   {
    "path": "video.html",
-   "size": 285200,
-   "hash": "5f271f5ca5952d5d"
+   "size": 286375,
+   "hash": "758362ee2b8dc6f1"
   },
   {
    "path": "What is Everything.pdf",
