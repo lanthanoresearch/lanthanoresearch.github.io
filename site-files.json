@@ -1,6 +1,6 @@
 {
- "count": 311,
- "totalBytes": 283690309,
+ "count": 313,
+ "totalBytes": 283727844,
  "files": [
   {
    "path": "1 Thessalonians Original Text.png",
@@ -106,6 +106,16 @@
    "path": "Antarctica.jpg",
    "size": 565082,
    "hash": "42a24460cfe235cf"
+  },
+  {
+   "path": "app-transform.js",
+   "size": 6472,
+   "hash": "24c0996ea2afdc44"
+  },
+  {
+   "path": "app-update.js",
+   "size": 22623,
+   "hash": "40e0086360dc6608"
   },
   {
    "path": "Artemis stunning photos.png",
@@ -749,8 +759,8 @@
   },
   {
    "path": "index.html",
-   "size": 160391,
-   "hash": "6fc9f7658fdab497"
+   "size": 160516,
+   "hash": "837ce4f438d37cf0"
   },
   {
    "path": "index.js",
@@ -799,8 +809,8 @@
   },
   {
    "path": "main.js",
-   "size": 11668,
-   "hash": "cdc187b833298e9c"
+   "size": 17471,
+   "hash": "5c8fafa4b6a044c7"
   },
   {
    "path": "manifest.json",
@@ -910,7 +920,7 @@
   {
    "path": "page-counts.json",
    "size": 587,
-   "hash": "35221c02b05b2503"
+   "hash": "e12a64beab48326b"
   },
   {
    "path": "pdf.html",
@@ -1189,8 +1199,8 @@
   },
   {
    "path": "sw.js",
-   "size": 13319,
-   "hash": "77a2d606aa504745"
+   "size": 15831,
+   "hash": "092a120a424d7acb"
   },
   {
    "path": "Symbolism.pdf",
