@@ -10,9 +10,11 @@
 const { app, BrowserWindow, Menu, net, protocol, session, shell } = require("electron");
 const fs = require("fs");
 const path = require("path");
-const { Readable } = require("stream");
+const { Readable, Transform } = require("stream");
+const { pipeline } = require("stream/promises");
 
 const SITE = "https://lanthanoresearch.com/";
+const VIDEO_API = "https://videos.lanthanoresearch.com";
 const SCHEME = "lanthano";
 const START_URL = SCHEME + "://app/index.html";
 
@@ -250,6 +252,7 @@ function resetPatchForNewBuild() {
     }
   }
 
+  removePartials(patchDir());
   loadRemoved();
 }
 
@@ -270,6 +273,91 @@ function listPatchFiles(dir, prefix, out) {
   return out;
 }
 
+// ------------------------------------------------------- videos in Update
+//
+// "Update" can bring in videos that are new on the website. A video is big, so
+// it is downloaded here (never through the page's memory) straight into the
+// update folder, where the app plays it from like any other file. This asks the
+// video server the same way the website's video page does: for a short-lived
+// ticket first, then for the video. Only possible while Lockdown is off.
+
+let videoJob = null;   // the video being downloaded: { file, got, total, controller }
+
+const VIDEO_HEADERS = { Origin: "https://lanthanoresearch.com", Referer: "https://lanthanoresearch.com/" };
+
+function removePartials(dir) {
+  let entries = [];
+  try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch (e) { return; }
+  for (const entry of entries) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) removePartials(full);
+    else if (entry.name.endsWith(".lt-part")) { try { fs.rmSync(full, { force: true }); } catch (e) {} }
+  }
+}
+
+async function downloadVideo(rel) {
+  if (!/\.(mp4|webm|m4v|mov)$/i.test(rel)) return { status: 400, body: { error: "not a video" } };
+  if (videoJob) return { status: 409, body: { error: "busy" } };
+
+  const target = path.resolve(patchDir(), rel);
+  if (!target.startsWith(patchDir() + path.sep)) return { status: 400, body: { error: "bad path" } };
+
+  const controller = new AbortController();
+  const job = { file: rel, got: 0, total: 0, controller };
+  videoJob = job;
+  const part = target + ".lt-part";
+
+  try {
+    const ticketRes = await net.fetch(VIDEO_API + "/ticket?f=" + encodeURIComponent(rel), {
+      headers: VIDEO_HEADERS, cache: "no-store", signal: controller.signal
+    });
+    if (ticketRes.status === 429 || ticketRes.status === 503) return { status: 503, body: { error: "busy" } };
+    if (!ticketRes.ok) return { status: 502, body: { error: "refused", status: ticketRes.status } };
+    const ticket = (await ticketRes.json()).t;
+
+    const res = await net.fetch(VIDEO_API + "/play?t=" + encodeURIComponent(ticket), {
+      headers: VIDEO_HEADERS, signal: controller.signal
+    });
+    if (res.status === 429 || res.status === 503) return { status: 503, body: { error: "busy" } };
+    if (res.status !== 200 || !res.body) return { status: 502, body: { error: "refused", status: res.status } };
+
+    const type = String(res.headers.get("content-type") || "").toLowerCase();
+    if (type && !type.startsWith("video/") && !type.includes("octet-stream")) {
+      return { status: 502, body: { error: "refused", status: 415 } };
+    }
+
+    const len = Number(res.headers.get("content-length")) || 0;
+    job.total = len;
+
+    // Room for it (and some to spare)?
+    try {
+      const st = fs.statfsSync(app.getPath("userData"));
+      if (len && st.bavail * st.bsize < len + 300 * 1024 * 1024) return { status: 507, body: { error: "space" } };
+    } catch (e) {}
+
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    const counter = new Transform({
+      transform(chunk, enc, cb) { job.got += chunk.length; cb(null, chunk); }
+    });
+    await pipeline(Readable.fromWeb(res.body), counter, fs.createWriteStream(part));
+
+    const size = fs.statSync(part).size;
+    if (size < 1024 || (len && size !== len)) return { status: 502, body: { error: "incomplete" } };
+
+    fs.rmSync(target, { force: true });
+    fs.renameSync(part, target);
+    if (removedFiles.delete(rel)) saveRemoved();
+    return { status: 200, body: { ok: true, bytes: size } };
+  } catch (e) {
+    if (controller.signal.aborted) return { status: 499, body: { error: "cancelled" } };
+    if (e && (e.code === "ENOSPC")) return { status: 507, body: { error: "space" } };
+    return { status: 502, body: { error: "network", message: String(e && e.message || e) } };
+  } finally {
+    try { fs.rmSync(part, { force: true }); } catch (e) {}
+    if (videoJob === job) videoJob = null;
+  }
+}
+
 async function handlePatch(request, url) {
   const json = (data, status) => new Response(JSON.stringify(data), {
     status: status || 200,
@@ -286,6 +374,10 @@ async function handlePatch(request, url) {
     }
 
     if (action === "lockdown" && request.method !== "POST") return json({ locked: lockdown });
+
+    if (action === "videoprogress") {
+      return json(videoJob ? { active: true, file: videoJob.file, got: videoJob.got, total: videoJob.total } : { active: false });
+    }
 
     // "Update" in Settings: gets one file from the website. This is done here, with
     // the app's own network code, so no page security rule can get in the way.
@@ -310,8 +402,18 @@ async function handlePatch(request, url) {
       return json({ locked: lockdown });
     }
 
+    if (action === "videocancel") {
+      if (videoJob) videoJob.controller.abort();
+      return json({ ok: true });
+    }
+
     // Nothing can touch the app's files while Lockdown is on.
     if (lockdown) return json({ error: "lockdown" }, 403);
+
+    if (action === "video" && rel) {
+      const result = await downloadVideo(rel);
+      return json(result.body, result.status);
+    }
 
     if (action === "put" && rel) {
       const target = path.resolve(patchDir(), rel);
