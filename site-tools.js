@@ -2233,6 +2233,7 @@ if(document.readyState === "loading") document.addEventListener("DOMContentLoade
   try{
     var realFetch = window.fetch;
     if(typeof realFetch === "function"){
+      window.LT_REAL_FETCH = realFetch.bind(window);   // for Update (Settings) only
       window.fetch = function(input){
         var u = "";
         try{ u = typeof input === "string" ? input : (input && input.url) || String(input); }catch(e){}

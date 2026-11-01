@@ -60,6 +60,16 @@
     return out;
   }
 
+  var VIDEO_API = "https://videos.lanthanoresearch.com";
+
+  // Why a video could not be brought in: lockdown, busy (the video server asked
+  // to wait), space (not enough room), refused, incomplete, cancelled, network.
+  function videoError(code) { var e = new Error("video: " + code); e.code = code; return e; }
+
+  function mb(n) {
+    return n >= 1e9 ? (n / 1e9).toFixed(2) + " GB" : Math.max(1, Math.round(n / 1e6)) + " MB";
+  }
+
   /* ------------------------------------------------------------ lockdown */
 
   // ON unless the person turned it off. The computer app keeps the answer in
@@ -156,6 +166,31 @@
         .then(function (r) { if (!r.ok) throw new Error("store " + r.status); });
     };
     store = {
+      // A new video: main.js downloads it straight into the app's folder.
+      video: async function (rel, onBytes, ctl) {
+        var timer = setInterval(async function () {
+          try {
+            var r = await fetch("/__patch/videoprogress", { cache: "no-store" });
+            var j = await r.json();
+            if (j.active && onBytes) onBytes(j.got, j.total);
+          } catch (e) {}
+        }, 500);
+        var stopper = setInterval(function () {
+          if (ctl && ctl.cancelled) fetch("/__patch/videocancel", { method: "POST" }).catch(function () {});
+        }, 300);
+        try {
+          var res = await fetch("/__patch/video?p=" + encodeURIComponent(rel), { method: "POST" });
+          var j2 = {};
+          try { j2 = await res.json(); } catch (e) {}
+          if (res.ok) return j2.bytes || 0;
+          throw videoError(res.status === 403 ? "lockdown" : (j2.error || "network"));
+        } catch (e) {
+          if (e && e.code) throw e;
+          throw videoError("network");
+        } finally {
+          clearInterval(timer); clearInterval(stopper);
+        }
+      },
       put: function (rel, bytes) { return post("put", rel, bytes); },
       remove: function (rel) { return post("remove", rel); },
       finish: function () { return Promise.resolve(true); },
@@ -172,6 +207,66 @@
       return removed;
     };
     store = {
+      // A new video: asked for from the video server (ticket first, then the video)
+      // and streamed straight into the app's storage, never held whole in memory.
+      video: async function (rel, onBytes, ctl) {
+        if (await isLocked()) throw videoError("lockdown");
+        var f = window.LT_REAL_FETCH || window.fetch.bind(window);
+        var ac = new AbortController();
+        var watch = setInterval(function () { if (ctl && ctl.cancelled) ac.abort(); }, 300);
+        try {
+          var tk = await f(VIDEO_API + "/ticket?f=" + encodeURIComponent(rel), { cache: "no-store", signal: ac.signal });
+          if (tk.status === 429 || tk.status === 503) throw videoError("busy");
+          if (!tk.ok) throw videoError("refused");
+          var ticket = (await tk.json()).t;
+          var res = await f(VIDEO_API + "/play?t=" + encodeURIComponent(ticket), { signal: ac.signal });
+          if (res.status === 429 || res.status === 503) throw videoError("busy");
+          if (res.status !== 200 || !res.body) throw videoError("refused");
+          var type = String(res.headers.get("content-type") || "").toLowerCase();
+          if (type && type.indexOf("video/") !== 0 && type.indexOf("octet-stream") < 0) throw videoError("refused");
+          var len = Number(res.headers.get("content-length")) || 0;
+
+          try {
+            var est = navigator.storage && navigator.storage.estimate ? await navigator.storage.estimate() : null;
+            if (est && est.quota && len && est.quota - (est.usage || 0) < len + 200 * 1024 * 1024) throw videoError("space");
+          } catch (e) { if (e && e.code === "space") throw e; }
+
+          var got = 0, reader = res.body.getReader();
+          var stream = new ReadableStream({
+            pull: async function (c) {
+              var r = await reader.read();
+              if (r.done) { c.close(); return; }
+              got += r.value.length;
+              if (onBytes) onBytes(got, len);
+              c.enqueue(r.value);
+            },
+            cancel: function (why) { return reader.cancel(why); }
+          });
+          var c = await caches.open(CACHE), key = keyOf(rel);
+          var headers = { "Content-Type": mimeOf(rel) };
+          if (len) headers["Content-Length"] = String(len);
+          try {
+            await c.put(key, new Response(stream, { headers: headers }));
+          } catch (e) {
+            try { await c.delete(key); } catch (x) {}
+            if (ac.signal.aborted) throw videoError("cancelled");
+            throw videoError(e && e.name === "QuotaExceededError" ? "space" : "network");
+          }
+          var stored = await c.match(key), blob = stored ? await stored.blob() : null;
+          if (!blob || blob.size < 1024 || (len && blob.size !== len)) {
+            await c.delete(key);
+            throw videoError("incomplete");
+          }
+          (await loadRemoved()).delete(rel);
+          return blob.size;
+        } catch (e) {
+          if (ac.signal.aborted) throw videoError("cancelled");
+          if (e && e.code) throw e;
+          throw videoError("network");
+        } finally {
+          clearInterval(watch);
+        }
+      },
       put: async function (rel, bytes) {
         if (await isLocked()) throw new Error("lockdown");
         var c = await caches.open(CACHE);
@@ -245,6 +340,19 @@
     return out;
   }
 
+  // The size of each video the website lists (when it says), by file.
+  function r2Sizes(descriptionsText) {
+    var out = {};
+    (function walk(o) {
+      if (Array.isArray(o)) o.forEach(walk);
+      else if (o && typeof o === "object") {
+        if (typeof o.file === "string" && o.file && o.source !== "site" && typeof o.size === "number") out[o.file] = o.size;
+        Object.keys(o).forEach(function (k) { walk(o[k]); });
+      }
+    })(JSON.parse(descriptionsText));
+    return out;
+  }
+
   // What is new, changed or gone on the website compared with this app.
   async function check() {
     var mine = await localJson("site-files.json", { files: [] });
@@ -268,8 +376,12 @@
     var inApp = await localJson("app-videos.json", []);
     plan.inApp = inApp;
     if (now["descriptions.json"]) {
-      var liveVideos = r2Videos(await liveText("descriptions.json"));
+      var liveDesc = await liveText("descriptions.json");
+      var liveVideos = r2Videos(liveDesc);
+      var sizes = r2Sizes(liveDesc);
       plan.newVideos = Array.from(liveVideos).filter(function (f) { return inApp.indexOf(f) < 0; });
+      plan.newVideoBytes = plan.newVideos.reduce(function (n, f) { return n + (sizes[f] || 0); }, 0);
+      plan.newVideoSized = plan.newVideos.every(function (f) { return !!sizes[f]; });
       plan.goneVideos = inApp.filter(function (f) { return !liveVideos.has(f); });
     }
 
@@ -277,27 +389,66 @@
     plan.removedAll = plan.removed.concat(plan.goneVideos);
     plan.total = Object.keys(now).filter(function (p) { return !keep.has(p); }).length;
     plan.inSync = plan.total - plan.added.length - plan.changed.length;
-    // New videos alone are not an update: they are not inside the app and play online.
-    plan.same = !plan.added.length && !plan.changed.length && !plan.removedAll.length;
+    plan.same = !plan.added.length && !plan.changed.length && !plan.removedAll.length && !plan.newVideos.length;
     return plan;
   }
 
   /* --------------------------------------------------------------- apply */
 
   // Makes the app match the website exactly: new and changed files are fetched,
-  // files the website no longer has are removed.
+  // files the website no longer has are removed, and videos that are new on the
+  // website are downloaded into the app (one at a time, the biggest job).
   async function apply(plan, progress, ctl) {
     ctl = ctl || {};
     var android = PLAT === "android";
     var removeNow = plan.removedAll;
     var inApp = (plan.inApp || []).filter(function (f) { return removeNow.indexOf(f) < 0; });
     var inAppSet = new Set(inApp);
+    var newVideos = (plan.newVideos || []).slice();
     var work = plan.added.concat(plan.changed);
-    var total = work.length + removeNow.length + 1;
+    var total = work.length + removeNow.length + newVideos.length + 1;
     var done = 0, wrote = 0;
+    var failedVideos = [], videoWhy = "", videosAdded = 0;
 
     function step(name) { done++; if (progress) progress(done, total, name); }
+    function saveVideoList() {
+      return store.put("app-videos.json", new TextEncoder().encode(JSON.stringify(inApp.slice().sort())));
+    }
 
+    // 1. Files the website no longer has.
+    for (var j = 0; j < removeNow.length && !ctl.cancelled; j++) {
+      await store.remove(removeNow[j]);
+      step(removeNow[j]);
+    }
+
+    // 2. New videos, one at a time. The list of the app's videos is written after
+    //    each one, so a stop part way never loses what already came in.
+    for (var v = 0; v < newVideos.length && !ctl.cancelled; v++) {
+      var file = newVideos[v];
+      var label = file.split("/").pop().replace(/\.[^.]+$/, "");
+      if (videoWhy === "busy" || videoWhy === "space") { failedVideos.push(file); step(file); continue; }
+      try {
+        await store.video(file, function (got, len) {
+          if (progress) progress(done + (len ? Math.min(got / len, 0.99) : 0), total,
+            "video " + (v + 1) + " of " + newVideos.length + " · " + mb(got) + (len ? " of " + mb(len) : "") + " · " + label);
+        }, ctl);
+        inApp.push(file); inAppSet.add(file); videosAdded++;
+        await saveVideoList();
+      } catch (e) {
+        if (ctl.cancelled || (e && e.code === "cancelled")) break;
+        if (e && e.code === "lockdown") throw e;
+        failedVideos.push(file);
+        videoWhy = (e && e.code) || "network";
+      }
+      step(file);
+    }
+
+    if (ctl.cancelled) {
+      if (videosAdded) { await saveVideoList(); await store.finish(); }
+      return { cancelled: true, wrote: wrote, removed: 0, videosAdded: videosAdded };
+    }
+
+    // 3. Everything else: new and changed files.
     var queue = work.slice();
     async function worker() {
       while (queue.length && !ctl.cancelled) {
@@ -322,18 +473,8 @@
     await Promise.all(pool);
 
     if (ctl.cancelled) {
-      if (wrote) await store.finish();
-      return { cancelled: true, wrote: wrote, removed: 0 };
-    }
-
-    for (var j = 0; j < removeNow.length && !ctl.cancelled; j++) {
-      await store.remove(removeNow[j]);
-      step(removeNow[j]);
-    }
-
-    if (ctl.cancelled) {
-      await store.finish();
-      return { cancelled: true, wrote: wrote, removed: 0 };
+      if (wrote || videosAdded) { await saveVideoList(); await store.finish(); }
+      return { cancelled: true, wrote: wrote, removed: 0, videosAdded: videosAdded };
     }
 
     // The app's own lists: the files it now has, and the videos inside it.
@@ -342,12 +483,13 @@
     var list = { count: files.length, totalBytes: files.reduce(function (n, f) { return n + (f.size || 0); }, 0), files: files };
     if (plan.live.desktop) list.desktop = plan.live.desktop;
     await store.put("site-files.json", new TextEncoder().encode(JSON.stringify(list, null, 1)));
-    await store.put("app-videos.json", new TextEncoder().encode(JSON.stringify(inApp)));
+    await saveVideoList();
     step("site-files.json");
 
     var ok = await store.finish();
     try { localStorage.setItem("lt_app_updated", new Date().toISOString()); } catch (e) {}
-    return { cancelled: false, wrote: wrote, removed: removeNow.length, serviceOk: ok };
+    return { cancelled: false, wrote: wrote, removed: removeNow.length, serviceOk: ok,
+             videosAdded: videosAdded, failedVideos: failedVideos, videoWhy: videoWhy };
   }
 
   async function reset() { await store.reset(); try { localStorage.removeItem("lt_app_updated"); } catch (e) {} }
@@ -385,10 +527,10 @@
     up.hidden = true;
     up.innerHTML =
       '<h2 class="hd"><span class="pv-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.5-3.5L4 9"/><path d="M4 4v5h5"/><path d="M4 13a8 8 0 0 0 14.5 3.5L20 15"/><path d="M20 20v-5h-5"/></svg></span>Update</h2>' +
-      '<p class="note">Check goes through every file of this app (pages, scripts, pictures, PDFs and data) and compares it with the website. Update then makes this app match the website exactly. It needs internet. Your favorites, bookmarks and settings are kept.</p>' +
+      '<p class="note">Check goes through every file of this app (pages, scripts, pictures, PDFs and data) and compares it with the website. Update then makes this app match the website exactly, and saves any videos that are new on the website inside the app. It needs internet. Your favorites, bookmarks and settings are kept.</p>' +
       '<div class="verBox" id="auBox" data-state="current"><span class="verDot"></span><div class="verTxt"><b id="auTitle">Not checked yet</b><span id="auSub"></span></div></div>' +
       '<div class="verBarWrap" id="auBarWrap" hidden><i id="auBar"></i></div>' +
-      '<div class="auWarn" id="auDont" hidden><strong>DO NOT CLOSE OR LEAVE THIS PAGE</strong><br><br>The app is being updated. Leaving this page may interrupt the process.</div>' +
+      '<div class="auWarn" id="auDont" hidden><strong>DO NOT CLOSE OR LEAVE THIS PAGE</strong><br><br>The app is being updated. Leaving this page may interrupt the process.<span id="auDontMore" hidden><br><br>New videos are large, so this can take a while. Stay on Wi-Fi if you can.</span></div>' +
       '<div class="actions" id="auActions"></div>' +
       '<p class="note" id="auNote"></p>';
 
@@ -453,17 +595,19 @@
       }
       if (mine.cancelled) return;
       working = false;
-      var n = plan.added.length + plan.changed.length + plan.removedAll.length;
       var nv = plan.newVideos.length;
-      var videoNote = nv ? nv + (nv === 1 ? " video on the website is not inside this app. Install the newest version of the app to get it." : " videos on the website are not inside this app. Install the newest version of the app to get them.") : "";
+      var n = plan.added.length + plan.changed.length + plan.removedAll.length + nv;
+      var videoText = nv
+        ? " · includes " + nv + (nv === 1 ? " new video" : " new videos") + (plan.newVideoSized && plan.newVideoBytes ? " (about " + mb(plan.newVideoBytes) + ")" : "")
+        : "";
       if (!n) {
         state("current", "Everything is in sync", plan.total + " of " + plan.total + " files match the website.");
-        $("auNote").textContent = "Checked " + new Date().toLocaleString() + "." + (videoNote ? " " + videoNote : "");
+        $("auNote").textContent = "Checked " + new Date().toLocaleString() + ".";
         actions([{ text: "Check", cls: "primary", run: doCheck }]);
         return;
       }
-      state("outdated", "An update is available", plan.inSync + " files are in sync · " + n + " need updating");
-      $("auNote").textContent = videoNote;
+      state("outdated", "An update is available", plan.inSync + " files are in sync · " + n + " need updating" + videoText);
+      $("auNote").textContent = nv ? (nv === 1 ? "The new video is saved inside the app, so it needs room on this device and plays with no internet afterwards." : "The new videos are saved inside the app, so they need room on this device and play with no internet afterwards.") : "";
       actions([{ text: "Update", cls: "primary", run: doUpdate }]);
     }
 
@@ -472,6 +616,7 @@
       working = true; ctl = { cancelled: false };
       var mine = ctl, p = plan;
       $("auDont").hidden = false; $("auBarWrap").hidden = false; $("auBar").style.width = "0";
+      $("auDontMore").hidden = !(p.newVideos && p.newVideos.length);
       $("auNote").textContent = "";
       state("updating", "Updating…", "");
       actions([{ text: "Cancel", cls: "primary cancelMode", run: function () { mine.cancelled = true; $("auTitle").textContent = "Stopping…"; } }]);
@@ -508,10 +653,54 @@
         actions([{ text: "Check", cls: "primary", run: doCheck }]);
         return;
       }
+      var bad = (res.failedVideos || []).length;
+      if (bad) {
+        var why = res.videoWhy === "busy" ? "The video server is busy right now. Press Check, then Update, to try again later."
+          : res.videoWhy === "space" ? "There is not enough room on this device for them. Free some space, then press Check and Update."
+          : "Press Check, then Update, to try again. Make sure you are online.";
+        state("outdated", "Updated, but " + bad + (bad === 1 ? " video" : " videos") + " could not be saved", why);
+        actions([{ text: "Check", cls: "primary", run: doCheck }]);
+        showVideoCount();
+        return;
+      }
       state("current", "Updated", "The app now matches the website. Reloading…");
       actions([]);
       setTimeout(function () { location.reload(); }, 1200);
     }
+
+    // The small line at the bottom of Settings counts the videos inside the app.
+    async function showVideoCount() {
+      try {
+        var line = document.getElementById("appBuild");
+        var have = await localJson("app-videos.json", []);
+        var data = await localJson("descriptions.json", {});
+        var all = new Set(have);
+        (function walk(o) {
+          if (Array.isArray(o)) o.forEach(walk);
+          else if (o && typeof o === "object") {
+            if (typeof o.file === "string" && o.file && o.source !== "site") all.add(o.file);
+            Object.keys(o).forEach(function (k) { walk(o[k]); });
+          }
+        })(data);
+        var counts = "videos inside: " + have.length + " of " + all.size;
+        if (!line) {
+          // Update swaps in the website's Settings page, which has no build line, so draw it again.
+          var b = await localJson("app-build.json", null);
+          if (!b || !b.run) return;
+          line = document.createElement("p");
+          line.className = "note"; line.id = "appBuild";
+          line.style.cssText = "text-align:center;margin:30px 0 0";
+          line.textContent = "Lanthano Research Offline \u00b7 build " + b.run + (b.sha ? " (" + b.sha + ")" : "") + " \u00b7 " + b.when + " \u00b7 " + counts;
+          var secs = document.querySelectorAll("section");
+          if (secs.length) secs[secs.length - 1].parentNode.insertBefore(line, secs[secs.length - 1].nextSibling);
+          else document.body.appendChild(line);
+          return;
+        }
+        if (!/videos inside:/.test(line.textContent)) return;
+        line.textContent = line.textContent.replace(/videos inside: .*$/, counts);
+      } catch (e) {}
+    }
+    showVideoCount();
 
     $("auLockToggle").addEventListener("click", async function () {
       if (working) return;
