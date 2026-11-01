@@ -1,6 +1,6 @@
 {
  "count": 317,
- "totalBytes": 283801735,
+ "totalBytes": 283811889,
  "files": [
   {
    "path": "1 Thessalonians Original Text.png",
@@ -114,8 +114,8 @@
   },
   {
    "path": "app-update.js",
-   "size": 24628,
-   "hash": "887a39873fdfc620"
+   "size": 34506,
+   "hash": "f14ebcc109c806c5"
   },
   {
    "path": "Artemis stunning photos.png",
@@ -464,8 +464,8 @@
   },
   {
    "path": "descriptions.json",
-   "size": 20189,
-   "hash": "0672900befd2e222"
+   "size": 20380,
+   "hash": "12afff90e3f7ce40"
   },
   {
    "path": "Desert.png",
@@ -1174,8 +1174,8 @@
   },
   {
    "path": "site-tools.js",
-   "size": 114933,
-   "hash": "9c935fdf11d5b433"
+   "size": 115018,
+   "hash": "9938e6163313e950"
   },
   {
    "path": "sitemap.xml",
