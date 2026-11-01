@@ -42,6 +42,9 @@ jobs:
             build=true
           elif ! gh release view desktop-latest >/dev/null 2>&1; then
             build=true
+          elif ! gh release view desktop-latest --json body -q .body | grep -q "all-videos-v1"; then
+            # The published installer was not built under the "every video is inside" rule.
+            build=true
           elif [ -z "$before" ] || [ "$before" = "0000000000000000000000000000000000000000" ] || ! git cat-file -e "$before" 2>/dev/null; then
             build=true
           elif git diff --name-only "$before" "${{ github.sha }}" | grep -qE '^(desktop-app/|\.github/workflows/app\.yml|prepare-app-bundle\.js|build-site-manifest\.js)|\.(html|js|mjs|css)$|^(descriptions|manifest)\.json$'; then
@@ -160,11 +163,13 @@ jobs:
           ls -l installers
           # The newest installers replace the old ones' files. The old release is never
           # deleted first, so if anything goes wrong the Install page keeps working.
+          NOTES="Installers for the Lanthano Research desktop app. Built automatically. Every video is inside (all-videos-v1)."
           if gh release view desktop-latest >/dev/null 2>&1; then
             gh release upload desktop-latest installers/* --clobber
+            gh release edit desktop-latest --notes "$NOTES"
           else
             gh release create desktop-latest installers/* \
               --title "Desktop app (latest)" \
-              --notes "Installers for the Lanthano Research desktop app. Built automatically." \
+              --notes "$NOTES" \
               --target "${{ github.sha }}"
           fi
