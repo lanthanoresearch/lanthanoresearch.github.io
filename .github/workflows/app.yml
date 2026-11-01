@@ -45,7 +45,7 @@ jobs:
           }
           need prepare-app-bundle.js "the main folder" "REQUIRE_VIDEOS"
           need fetch-videos.js "the main folder" "useCurl"
-          need app-update.js "the main folder" "Install the newest version of the app to get"
+          need app-update.js "the main folder" "newVideoBytes"
           need app-transform.js "the main folder" "settingsCards"
           need site-tools.js "the main folder" "LT_IN_APP"
           need video.html "the main folder" "inAppVideos"
