@@ -31,6 +31,37 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Check that every file in the repository is the newest version
+        run: |
+          fail=0
+          need() {
+            if [ ! -f "$1" ]; then
+              echo "::error title=File missing::$1 is not in the repository (it belongs in $2)."
+              fail=1
+            elif ! grep -q -- "$3" "$1"; then
+              echo "::error title=Old file in the repository::$1 is an old version. Upload the newest one to $2."
+              fail=1
+            fi
+          }
+          need prepare-app-bundle.js "the main folder" "REQUIRE_VIDEOS"
+          need fetch-videos.js "the main folder" "useCurl"
+          need app-update.js "the main folder" "Install the newest version of the app to get"
+          need app-transform.js "the main folder" "settingsCards"
+          need site-tools.js "the main folder" "LT_IN_APP"
+          need video.html "the main folder" "inAppVideos"
+          need pdf.html "the main folder" "pdf-lib.mjs"
+          need pdf-compat.js "the main folder" "Uint8Array"
+          need pdf-lib.mjs "the main folder" "pdf-compat"
+          need pdf-worker.mjs "the main folder" "pdf-compat"
+          need offline-app.js "the main folder" "findInstallers"
+          need install.html "the main folder" "appWarn"
+          need sw.js "the main folder" "lt-overlay-changed"
+          need desktop-app/main.js "the desktop-app folder (the file is named main.js)" "applyLockdown"
+          if [ "$fail" != "0" ]; then
+            echo "The app was not built, so the apps already published stay as they are."
+            exit 1
+          fi
+
       - id: check
         env:
           GH_TOKEN: ${{ github.token }}
@@ -145,8 +176,10 @@ jobs:
           if-no-files-found: error
 
   release:
-    needs: [changes, desktop]
-    if: needs.changes.outputs.desktop == 'true' && needs.desktop.result == 'success'
+    needs: [changes, videos, desktop]
+    # Publishes whichever installers were built, even if one of the three failed,
+    # as long as the videos were all downloaded (the build needs them first).
+    if: always() && needs.changes.outputs.desktop == 'true' && needs.videos.result == 'success' && (needs.desktop.result == 'success' || needs.desktop.result == 'failure')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -163,7 +196,15 @@ jobs:
           ls -l installers
           # The newest installers replace the old ones' files. The old release is never
           # deleted first, so if anything goes wrong the Install page keeps working.
-          NOTES="Installers for the Lanthano Research desktop app. Built automatically. Every video is inside (all-videos-v1)."
+          # Only the installers that were built are published. The release is marked as
+          # complete only when all three were built, so an incomplete one is rebuilt
+          # on the next push.
+          NOTES="Installers for the Lanthano Research desktop app. Built automatically."
+          if [ -f installers/Lanthano-Research-Setup.exe ] && [ -f installers/Lanthano-Research.dmg ] && [ -f installers/Lanthano-Research.AppImage ]; then
+            NOTES="$NOTES Every video is inside (all-videos-v1)."
+          else
+            echo "::warning::Not every installer was built, so the release is not marked as complete."
+          fi
           if gh release view desktop-latest >/dev/null 2>&1; then
             gh release upload desktop-latest installers/* --clobber
             gh release edit desktop-latest --notes "$NOTES"

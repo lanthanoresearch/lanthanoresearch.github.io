@@ -31,6 +31,36 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Check that every file in the repository is the newest version
+        run: |
+          fail=0
+          need() {
+            if [ ! -f "$1" ]; then
+              echo "::error title=File missing::$1 is not in the repository (it belongs in $2)."
+              fail=1
+            elif ! grep -q -- "$3" "$1"; then
+              echo "::error title=Old file in the repository::$1 is an old version. Upload the newest one to $2."
+              fail=1
+            fi
+          }
+          need prepare-app-bundle.js "the main folder" "REQUIRE_VIDEOS"
+          need fetch-videos.js "the main folder" "useCurl"
+          need app-update.js "the main folder" "Install the newest version of the app to get"
+          need app-transform.js "the main folder" "settingsCards"
+          need site-tools.js "the main folder" "LT_IN_APP"
+          need video.html "the main folder" "inAppVideos"
+          need pdf.html "the main folder" "pdf-lib.mjs"
+          need pdf-compat.js "the main folder" "Uint8Array"
+          need pdf-lib.mjs "the main folder" "pdf-compat"
+          need pdf-worker.mjs "the main folder" "pdf-compat"
+          need offline-app.js "the main folder" "findInstallers"
+          need install.html "the main folder" "appWarn"
+          need sw.js "the main folder" "lt-overlay-changed"
+          if [ "$fail" != "0" ]; then
+            echo "The app was not built, so the apps already published stay as they are."
+            exit 1
+          fi
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
