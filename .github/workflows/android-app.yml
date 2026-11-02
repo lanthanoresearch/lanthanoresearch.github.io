@@ -55,7 +55,7 @@ jobs:
           need pdf-worker.mjs "the main folder" "pdf-compat"
           need offline-app.js "the main folder" "findInstallers"
           need install.html "the main folder" "appWarn"
-          need sw.js "the main folder" "lt-overlay-changed"
+          need sw.js "the main folder" "overlayIndex"
           if [ "$fail" != "0" ]; then
             echo "The app was not built, so the apps already published stay as they are."
             exit 1
