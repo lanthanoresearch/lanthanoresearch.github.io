@@ -85,6 +85,9 @@ self.addEventListener("install", event => {
 });
 
 self.addEventListener("activate", event => {
+  if (OVERLAY && self.registration && self.registration.navigationPreload) {
+    event.waitUntil(self.registration.navigationPreload.enable().catch(() => {}));
+  }
   if (IN_APP) {
     // Forget any copies of website pages saved by an older version.
     event.waitUntil(Promise.all([SITE_CACHE, OFFLINE_CACHE].map(n => caches.delete(n))));
@@ -113,19 +116,20 @@ self.addEventListener("activate", event => {
 // A page can ask a waiting copy of this worker to take over now.
 self.addEventListener("message", event => {
   if (event.data && event.data.type === "skip-waiting") self.skipWaiting();
-  if (event.data && event.data.type === "lt-overlay-changed") removedSet = null;
+  if (event.data && event.data.type === "lt-overlay-changed") {
+    removedSet = null; overlayIndex = null; overlayLoading = null;
+    if (OVERLAY) event.waitUntil(loadOverlayIndex().catch(() => {}));
+  }
   if (event.data && event.data.type === "lt-health") {
-    // The page asks: can this worker get the app's own files? If not (some
-    // phones may not allow it), it switches itself off so the app keeps working.
+    // The page asks: is this worker ready to hand the app's saved updates to its
+    // pages? It never goes to the internet itself (on some phones a worker's own
+    // requests do not reach the app's files), so this only checks its own storage.
+    // The page then checks that the app's own files still open.
     const port = event.ports && event.ports[0];
     event.waitUntil(
-      fetch("app-build.json", { cache: "no-store" })
-        .then(r => r.ok)
-        .catch(() => false)
-        .then(ok => {
-          if (!ok && OVERLAY) self.registration.unregister();
-          if (port) port.postMessage({ ok });
-        })
+      (OVERLAY ? loadOverlayIndex() : Promise.resolve())
+        .then(() => true, () => false)
+        .then(ok => { if (port) port.postMessage({ ok, v: 2 }); })
     );
   }
 });
@@ -133,6 +137,40 @@ self.addEventListener("message", event => {
 // ------------------------------------------------------------ app update
 
 let removedSet = null;
+
+// Which files the saved update holds, known without waiting, so that a file that
+// is NOT in it is left alone and the app answers it itself (this worker makes no
+// requests of its own: on some phones those never reach the app's files).
+let overlayIndex = null;
+let overlayLoading = null;
+
+function overlayKey(pathname) {
+  let rel;
+  try { rel = decodeURIComponent(pathname); } catch (e) { rel = pathname; }
+  rel = rel.replace(/^\/+/, "");
+  if (rel === "" || rel.endsWith("/")) rel += "index.html";
+  return rel;
+}
+
+function loadOverlayIndex() {
+  if (overlayLoading) return overlayLoading;
+  overlayLoading = (async () => {
+    const c = await caches.open(UPDATE_CACHE);
+    const keys = await c.keys();
+    const set = new Set();
+    for (const k of keys) {
+      const p = new URL(k.url).pathname;
+      if (p.startsWith("/__update/")) continue;
+      set.add(overlayKey(p));
+    }
+    await loadRemovedSet();
+    overlayIndex = set;
+    return set;
+  })();
+  overlayLoading.catch(() => { overlayLoading = null; });
+  return overlayLoading;
+}
+if (OVERLAY) loadOverlayIndex().catch(() => {});
 
 async function loadRemovedSet() {
   try {
@@ -160,7 +198,9 @@ async function overlayAnswer(request, url) {
   const hit = await cache.match(new URL("/" + rel, self.location.origin).href, { ignoreSearch: true });
   if (hit) return request.headers.has("range") ? rangeFromCache(request, hit) : hit;
 
-  return fetch(request);
+  // Not in the saved update. Only reached right after this worker starts, before
+  // it knows its files: the page's own preloaded answer comes from the app itself.
+  return null;
 }
 
 // Look in the saved copy. ignoreSearch lets "category.html?category=x" match
@@ -423,7 +463,23 @@ self.addEventListener("fetch", event => {
 
   // Installed app after "Update": newer files fetched from the website win.
   if (OVERLAY && !url.pathname.startsWith("/__update/")) {
-    event.respondWith(overlayAnswer(event.request, url));
+    const key = overlayKey(url.pathname);
+    if (overlayIndex && removedSet) {
+      if (removedSet.has(key) || overlayIndex.has(key)) event.respondWith(overlayAnswer(event.request, url).then(r => r || Response.error()));
+      return;                                     // not in the update: the app answers it itself
+    }
+    // Just started: wait for the list of saved files, then answer or hand over.
+    event.respondWith((async () => {
+      try { await loadOverlayIndex(); } catch (e) {}
+      if (overlayIndex && !removedSet.has(key) && !overlayIndex.has(key)) {
+        if (event.request.mode === "navigate" && event.preloadResponse) {
+          const pre = await event.preloadResponse;
+          if (pre) return pre;
+        }
+        return fetch(event.request);
+      }
+      return (await overlayAnswer(event.request, url)) || fetch(event.request);
+    })());
     return;
   }
 

@@ -351,7 +351,15 @@
               ch.port1.onmessage = function (e) { clearTimeout(t); resolve(!!(e.data && e.data.ok)); };
               worker.postMessage({ type: "lt-health" }, [ch.port2]);
             });
-            if (answer === true) return { ok: true };
+            if (answer === true) {
+              // The worker leaves the app's own files to the app. They must still open.
+              try {
+                var own = await fetch("app-build.json", { cache: "no-store" });
+                if (!own.ok) return { ok: false, why: "the app's own files could not be opened (answer " + own.status + ")" };
+                await own.json();
+              } catch (e) { return { ok: false, why: "the app's own files could not be opened" }; }
+              return { ok: true };
+            }
             if (answer === false) return { ok: false, why: "the app's worker could not read the app's own files" };
           }
           return { ok: false, why: "the app's worker is from an older build and does not answer" };
