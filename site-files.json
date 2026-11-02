@@ -1,6 +1,6 @@
 {
  "count": 317,
- "totalBytes": 283820685,
+ "totalBytes": 283823599,
  "files": [
   {
    "path": "1 Thessalonians Original Text.png",
@@ -114,8 +114,8 @@
   },
   {
    "path": "app-update.js",
-   "size": 42412,
-   "hash": "45adc4e8274d2f02"
+   "size": 42892,
+   "hash": "8ec064b2f82975e7"
   },
   {
    "path": "Artemis stunning photos.png",
@@ -1214,8 +1214,8 @@
   },
   {
    "path": "sw.js",
-   "size": 15831,
-   "hash": "092a120a424d7acb"
+   "size": 18265,
+   "hash": "018f592681b61376"
   },
   {
    "path": "Symbolism.pdf",
