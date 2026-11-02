@@ -119,9 +119,9 @@
   // answered from an old saved copy.
   var LIVE_HASH = {};
 
-  async function liveBytes(rel) {
+  async function liveBytes(rel, bust) {
     if (await isLocked()) throw new Error("lockdown");
-    var v = LIVE_HASH[rel] || Date.now();
+    var v = bust ? (LIVE_HASH[rel] || "") + "-" + Date.now() : (LIVE_HASH[rel] || Date.now());
 
     if (PLAT === "android") {
       // A normal request to lanthanoresearch.com would be answered by the app
@@ -150,6 +150,47 @@
     var res = await fetch("/__patch/live?p=" + encodeURIComponent(rel) + "&v=" + encodeURIComponent(v));
     if (!res.ok) throw new Error(res.status === 403 ? "lockdown" : "the website answered " + res.status);
     return new Uint8Array(await res.arrayBuffer());
+  }
+
+  // The website's list fingerprints each file with the first 16 letters of its SHA-1.
+  // Every downloaded file is checked against that, so an old copy that a network
+  // cache still holds can never be saved as if it were the newest.
+  function sha1Bytes(bytes) {
+    var h0 = 0x67452301, h1 = 0xEFCDAB89, h2 = 0x98BADCFE, h3 = 0x10325476, h4 = 0xC3D2E1F0;
+    var n = bytes.length, total = ((n + 9 + 63) >> 6) << 6;
+    var m = new Uint8Array(total);
+    m.set(bytes); m[n] = 0x80;
+    var bits = n * 8, hi = Math.floor(bits / 4294967296), lo = bits >>> 0;
+    for (var q = 0; q < 4; q++) { m[total - 8 + q] = (hi >>> (24 - 8 * q)) & 255; m[total - 4 + q] = (lo >>> (24 - 8 * q)) & 255; }
+    var w = new Int32Array(80);
+    function rol(x, c) { return (x << c) | (x >>> (32 - c)); }
+    for (var off = 0; off < total; off += 64) {
+      var i;
+      for (i = 0; i < 16; i++) w[i] = (m[off + i * 4] << 24) | (m[off + i * 4 + 1] << 16) | (m[off + i * 4 + 2] << 8) | m[off + i * 4 + 3];
+      for (i = 16; i < 80; i++) w[i] = rol(w[i - 3] ^ w[i - 8] ^ w[i - 14] ^ w[i - 16], 1);
+      var a = h0, bb = h1, c = h2, d = h3, e = h4;
+      for (i = 0; i < 80; i++) {
+        var f, kk;
+        if (i < 20) { f = (bb & c) | (~bb & d); kk = 0x5A827999; }
+        else if (i < 40) { f = bb ^ c ^ d; kk = 0x6ED9EBA1; }
+        else if (i < 60) { f = (bb & c) | (bb & d) | (c & d); kk = 0x8F1BBCDC; }
+        else { f = bb ^ c ^ d; kk = 0xCA62C1D6; }
+        var t = (rol(a, 5) + f + e + kk + w[i]) | 0;
+        e = d; d = c; c = rol(bb, 30); bb = a; a = t;
+      }
+      h0 = (h0 + a) | 0; h1 = (h1 + bb) | 0; h2 = (h2 + c) | 0; h3 = (h3 + d) | 0; h4 = (h4 + e) | 0;
+    }
+    return [h0, h1, h2, h3, h4].map(function (x) { return ("00000000" + (x >>> 0).toString(16)).slice(-8); }).join("");
+  }
+
+  async function fingerprint(bytes) {
+    try {
+      if (window.crypto && crypto.subtle && crypto.subtle.digest) {
+        var d = new Uint8Array(await crypto.subtle.digest("SHA-1", bytes));
+        return Array.prototype.map.call(d, function (x) { return ("0" + x.toString(16)).slice(-2); }).join("").slice(0, 16);
+      }
+    } catch (e) {}
+    return sha1Bytes(bytes).slice(0, 16);
   }
 
   async function liveText(rel) {
@@ -285,20 +326,38 @@
         var c = await caches.open(CACHE);
         await c.put("/__update/removed.json", new Response(JSON.stringify([].concat(Array.from(await loadRemoved()))), { headers: { "Content-Type": "application/json" } }));
         try { localStorage.setItem("lt_overlay", "1"); } catch (e) {}
-        if (!("serviceWorker" in navigator)) return false;
-        var reg = await navigator.serviceWorker.register("sw.js?overlay=1");
-        var ready = await Promise.race([
-          navigator.serviceWorker.ready,
-          new Promise(function (_, no) { setTimeout(function () { no(new Error("slow")); }, 15000); })
-        ]);
-        var worker = reg.active || (ready && ready.active);
-        if (!worker) return false;
-        worker.postMessage({ type: "lt-overlay-changed" });
-        return await new Promise(function (resolve) {
-          var ch = new MessageChannel(), t = setTimeout(function () { resolve(false); }, 8000);
-          ch.port1.onmessage = function (e) { clearTimeout(t); resolve(!!(e.data && e.data.ok)); };
-          worker.postMessage({ type: "lt-health" }, [ch.port2]);
-        });
+        var r = await store.probe();
+        store.lastWhy = r.why || "";
+        return r.ok;
+      },
+      lastWhy: "",
+      // Can this phone's worker hand the app's saved updates to its pages? An app installed
+      // from an older build has a worker that cannot (it never answers), and Update cannot
+      // replace that file. Asked before anything is downloaded, and again at the end.
+      probe: async function () {
+        if (!("serviceWorker" in navigator)) return { ok: false, why: "this phone's browser engine has no service worker" };
+        try {
+          var reg = await navigator.serviceWorker.register("sw.js?overlay=1");
+          var ready = await Promise.race([
+            navigator.serviceWorker.ready,
+            new Promise(function (_, no) { setTimeout(function () { no(new Error("slow")); }, 15000); })
+          ]);
+          var worker = reg.active || (ready && ready.active);
+          if (!worker) return { ok: false, why: "the app's worker did not start" };
+          worker.postMessage({ type: "lt-overlay-changed" });
+          for (var tries = 0; tries < 2; tries++) {
+            var answer = await new Promise(function (resolve) {
+              var ch = new MessageChannel(), t = setTimeout(function () { resolve(null); }, 8000);
+              ch.port1.onmessage = function (e) { clearTimeout(t); resolve(!!(e.data && e.data.ok)); };
+              worker.postMessage({ type: "lt-health" }, [ch.port2]);
+            });
+            if (answer === true) return { ok: true };
+            if (answer === false) return { ok: false, why: "the app's worker could not read the app's own files" };
+          }
+          return { ok: false, why: "the app's worker is from an older build and does not answer" };
+        } catch (e) {
+          return { ok: false, why: "the app's worker could not be started (" + (e && e.message ? e.message : "no reason") + ")" };
+        }
       },
       reset: async function () {
         try { localStorage.removeItem("lt_overlay"); } catch (e) {}
@@ -408,7 +467,7 @@
     var work = plan.added.concat(plan.changed);
     var total = work.length + removeNow.length + newVideos.length + 1;
     var done = 0, wrote = 0;
-    var failedVideos = [], videoWhy = "", videosAdded = 0;
+    var failedVideos = [], videoWhy = "", videosAdded = 0, mismatched = {};
 
     function step(name) { done++; if (progress) progress(done, total, name); }
     function saveVideoList() {
@@ -454,6 +513,18 @@
       while (queue.length && !ctl.cancelled) {
         var rel = queue.shift();
         var bytes = await liveBytes(rel);
+        var want = LIVE_HASH[rel];
+        // The phone hands text and data files over already decoded, so only their
+        // meaning (not their exact bytes) can be compared; those are not checked.
+        if (PLAT === "android" && /\.(html?|xml|json|js|mjs|css|txt|svg|webmanifest)$/i.test(rel)) want = "";
+        if (want) {
+          var got = await fingerprint(bytes);
+          if (got !== want) {                      // an old copy from a network cache: ask again, past it
+            bytes = await liveBytes(rel, true);
+            got = await fingerprint(bytes);
+          }
+          if (got !== want) { mismatched[rel] = got; }
+        }
 
         if (/\.(html|xml)$/i.test(rel) || rel === "descriptions.json") {
           var out = T.file(rel, new TextDecoder().decode(bytes), {
@@ -478,7 +549,9 @@
     }
 
     // The app's own lists: the files it now has, and the videos inside it.
-    var files = plan.live.files.filter(function (f) { return T.KEEP.indexOf(f.path) < 0; });
+    var files = plan.live.files.filter(function (f) { return T.KEEP.indexOf(f.path) < 0; }).map(function (f) {
+      return mismatched[f.path] ? { path: f.path, size: f.size, hash: mismatched[f.path] } : f;   // flagged again by the next Check
+    });
     files.sort(function (a, b) { return a.path < b.path ? -1 : 1; });
     var list = { count: files.length, totalBytes: files.reduce(function (n, f) { return n + (f.size || 0); }, 0), files: files };
     if (plan.live.desktop) list.desktop = plan.live.desktop;
@@ -489,7 +562,8 @@
     var ok = await store.finish();
     try { localStorage.setItem("lt_app_updated", new Date().toISOString()); } catch (e) {}
     return { cancelled: false, wrote: wrote, removed: removeNow.length, serviceOk: ok,
-             videosAdded: videosAdded, failedVideos: failedVideos, videoWhy: videoWhy };
+             videosAdded: videosAdded, failedVideos: failedVideos, videoWhy: videoWhy,
+             notYet: Object.keys(mismatched) };
   }
 
   async function reset() { await store.reset(); try { localStorage.removeItem("lt_app_updated"); } catch (e) {} }
@@ -507,6 +581,10 @@
     css.textContent =
       "#appUpdateCard .auWarn{margin-top:14px;padding:12px 14px;background:#211515;border:1px solid #5a2525;border-radius:8px;color:#ccc;font-size:.9em;line-height:1.45}" +
       "#appUpdateCard .auWarn strong{color:#ff5555}" +
+      "#appUpdateCard details{margin-top:12px;font-size:.9em;color:#bbb}" +
+      "#appUpdateCard summary{cursor:pointer;padding:6px 0}" +
+      "#appUpdateCard #auList b{display:block;margin:10px 0 4px;color:#ddd}" +
+      "#appUpdateCard #auList div.row{padding:2px 0;word-break:break-word}" +
       "#appUpdateCard [hidden],#appLockCard [hidden]{display:none}" +
       "#appUpdateCard .btn.cancelMode{background:transparent;color:#ff8080;border:1px solid #5a2c2c}" +
       "#appUpdateCard .btn.cancelMode:hover{background:#301a1a;border-color:#7a3a3a}";
@@ -529,6 +607,7 @@
       '<h2 class="hd"><span class="pv-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.5-3.5L4 9"/><path d="M4 4v5h5"/><path d="M4 13a8 8 0 0 0 14.5 3.5L20 15"/><path d="M20 20v-5h-5"/></svg></span>Update</h2>' +
       '<p class="note">Check goes through every file of this app (pages, scripts, pictures, PDFs and data) and compares it with the website. Update then makes this app match the website exactly, and saves any videos that are new on the website inside the app. It needs internet. Your favorites, bookmarks and settings are kept.</p>' +
       '<div class="verBox" id="auBox" data-state="current"><span class="verDot"></span><div class="verTxt"><b id="auTitle">Not checked yet</b><span id="auSub"></span></div></div>' +
+      '<details id="auDetails" hidden><summary id="auSummary"></summary><div id="auList"></div></details>' +
       '<div class="verBarWrap" id="auBarWrap" hidden><i id="auBar"></i></div>' +
       '<div class="auWarn" id="auDont" hidden><strong>DO NOT CLOSE OR LEAVE THIS PAGE</strong><br><br>The app is being updated. Leaving this page may interrupt the process.<span id="auDontMore" hidden><br><br>New videos are large, so this can take a while. Stay on Wi-Fi if you can.</span></div>' +
       '<div class="actions" id="auActions"></div>' +
@@ -539,6 +618,49 @@
 
     var $ = function (id) { return document.getElementById(id); };
     var working = false, ctl = null, plan = null, locked = true;
+
+    // Names what Check found, so nothing is a mystery.
+    function showDetails(p) {
+      var d = $("auDetails"), box = $("auList");
+      box.innerHTML = "";
+      if (!p) { d.hidden = true; return; }
+      var groups = [["New on the website", p.added], ["Changed on the website", p.changed],
+                    ["No longer on the website", p.removedAll], ["New videos to save inside the app", p.newVideos]];
+      var count = 0;
+      groups.forEach(function (g) {
+        if (!g[1].length) return;
+        count += g[1].length;
+        var h = document.createElement("b");
+        h.textContent = g[0] + " (" + g[1].length + ")";
+        box.appendChild(h);
+        g[1].slice(0, 80).forEach(function (name) {
+          var r = document.createElement("div"); r.className = "row"; r.textContent = name; box.appendChild(r);
+        });
+        if (g[1].length > 80) {
+          var more = document.createElement("div"); more.className = "row"; more.textContent = "…and " + (g[1].length - 80) + " more"; box.appendChild(more);
+        }
+      });
+      $("auSummary").textContent = "See exactly what will change (" + count + ")";
+      d.hidden = !count;
+    }
+
+    // Every page, picture and paper again, whatever the lists say.
+    function everything(p) {
+      var q = {};
+      Object.keys(p).forEach(function (k) { q[k] = p[k]; });
+      q.added = [];
+      q.changed = p.live.files.map(function (f) { return f.path; }).filter(function (x) { return T.KEEP.indexOf(x) < 0; }).sort();
+      q.refreshAll = true;
+      return q;
+    }
+    function refreshAction() {
+      return { text: "Refresh everything", run: function () {
+        if (working || !plan) return;
+        plan = everything(plan);
+        showDetails(null);
+        doUpdate();
+      } };
+    }
 
     function state(kind, title, sub) {
       $("auBox").setAttribute("data-state", kind);
@@ -573,6 +695,7 @@
       var when = "";
       try { when = localStorage.getItem("lt_app_updated") || ""; } catch (e) {}
       state("current", "Not checked yet", "");
+      showDetails(null);
       $("auNote").textContent = when ? "Last updated " + new Date(when).toLocaleString() + "." : "";
       actions([{ text: "Check", cls: "primary", run: doCheck }]);
     }
@@ -594,6 +717,19 @@
         return;
       }
       if (mine.cancelled) return;
+      if (PLAT === "android" && store.probe && !plan.same) {
+        state("checking", "Checking that this phone can take the update…", "");
+        var pr = await store.probe();
+        if (mine.cancelled) return;
+        if (!pr.ok) {
+          working = false;
+          showDetails(null);
+          state("error", "This app is too old to be updated here",
+            "It was installed from an older build, which cannot take updates. Nothing on this phone was changed. Install the newest app once from lanthanoresearch.com (its Install page), and Update will work from then on. (" + pr.why + ")");
+          actions([{ text: "Check", cls: "primary", run: doCheck }]);
+          return;
+        }
+      }
       working = false;
       var nv = plan.newVideos.length;
       var n = plan.added.length + plan.changed.length + plan.removedAll.length + nv;
@@ -602,13 +738,15 @@
         : "";
       if (!n) {
         state("current", "Everything is in sync", plan.total + " of " + plan.total + " files match the website.");
-        $("auNote").textContent = "Checked " + new Date().toLocaleString() + ".";
-        actions([{ text: "Check", cls: "primary", run: doCheck }]);
+        $("auNote").textContent = "Checked " + new Date().toLocaleString() + ". If a paper or page still looks old, press Refresh everything: it downloads every page and paper again.";
+        showDetails(null);
+        actions([{ text: "Check", cls: "primary", run: doCheck }, refreshAction()]);
         return;
       }
       state("outdated", "An update is available", plan.inSync + " files are in sync · " + n + " need updating" + videoText);
       $("auNote").textContent = nv ? (nv === 1 ? "The new video is saved inside the app, so it needs room on this device and plays with no internet afterwards." : "The new videos are saved inside the app, so they need room on this device and play with no internet afterwards.") : "";
-      actions([{ text: "Update", cls: "primary", run: doUpdate }]);
+      showDetails(plan);
+      actions([{ text: "Update", cls: "primary", run: doUpdate }, refreshAction()]);
     }
 
     async function doUpdate() {
@@ -617,6 +755,7 @@
       var mine = ctl, p = plan;
       $("auDont").hidden = false; $("auBarWrap").hidden = false; $("auBar").style.width = "0";
       $("auDontMore").hidden = !(p.newVideos && p.newVideos.length);
+      $("auDetails").hidden = true;
       $("auNote").textContent = "";
       state("updating", "Updating…", "");
       actions([{ text: "Cancel", cls: "primary cancelMode", run: function () { mine.cancelled = true; $("auTitle").textContent = "Stopping…"; } }]);
@@ -649,11 +788,19 @@
       }
       if (PLAT === "android" && res.serviceOk === false) {
         try { await window.AppUpdate.reset(); } catch (e) {}
-        state("error", "This phone could not use the update", "The app keeps working with the files it came with.");
+        state("error", "This phone could not use the update", "The app keeps working with the files it came with. (" + (store.lastWhy || "no reason given") + ")");
         actions([{ text: "Check", cls: "primary", run: doCheck }]);
         return;
       }
+      var late = (res.notYet || []).length;
       var bad = (res.failedVideos || []).length;
+      if (late && !bad) {
+        state("outdated", "Updated, but " + late + (late === 1 ? " file was" : " files were") + " not the newest yet",
+          "The website is still publishing " + (late === 1 ? "it" : "them") + ". Wait a few minutes, then press Check and Update. (" + res.notYet.slice(0, 3).join(", ") + (late > 3 ? ", …" : "") + ")");
+        actions([{ text: "Check", cls: "primary", run: doCheck }]);
+        showVideoCount();
+        return;
+      }
       if (bad) {
         var why = res.videoWhy === "busy" ? "The video server is busy right now. Press Check, then Update, to try again later."
           : res.videoWhy === "space" ? "There is not enough room on this device for them. Free some space, then press Check and Update."
