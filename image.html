@@ -2236,6 +2236,164 @@ viewer.onpointercancel =
     };
 
 
+/* ---------- Double Tap / Double Click ----------
+   Double tap zooms in on the spot that was tapped. Double tap again
+   zooms back out so the whole image fits. Works with a finger, a pen
+   and a mouse. A drag, a pinch, or a slow second tap does not count. */
+
+const DOUBLE_TAP_ZOOM = 2.5;
+
+let tapStart = null;
+
+let lastTap = null;
+
+
+viewer.addEventListener(
+    "pointerdown",
+    e => {
+
+        if(pointers.size > 1){
+
+            tapStart = null;
+
+            lastTap = null;
+
+            return;
+
+        }
+
+        tapStart = {
+            x:e.clientX,
+            y:e.clientY,
+            time:Date.now()
+        };
+
+    }
+);
+
+
+viewer.addEventListener(
+    "pointerup",
+    e => {
+
+        if(!tapStart || !img.naturalWidth)
+            return;
+
+
+        const moved =
+            Math.hypot(
+                e.clientX - tapStart.x,
+                e.clientY - tapStart.y
+            );
+
+        const held =
+            Date.now() - tapStart.time;
+
+        tapStart = null;
+
+
+        if(moved > 12 || held > 350){
+
+            lastTap = null;
+
+            return;
+
+        }
+
+
+        const now =
+            Date.now();
+
+        const isDouble =
+            lastTap &&
+            now - lastTap.time < 400 &&
+            Math.hypot(
+                e.clientX - lastTap.x,
+                e.clientY - lastTap.y
+            ) < 40;
+
+
+        if(!isDouble){
+
+            lastTap = {
+                x:e.clientX,
+                y:e.clientY,
+                time:now
+            };
+
+            return;
+
+        }
+
+
+        lastTap = null;
+
+
+        if(zoom > 1.05){
+
+            fit();
+
+            return;
+
+        }
+
+
+        const rect =
+            viewer.getBoundingClientRect();
+
+        const px =
+            e.clientX -
+            rect.left -
+            rect.width / 2;
+
+        const py =
+            e.clientY -
+            rect.top -
+            rect.height / 2;
+
+        const ratio =
+            DOUBLE_TAP_ZOOM / zoom;
+
+        offsetX =
+            px - (px - offsetX) * ratio;
+
+        offsetY =
+            py - (py - offsetY) * ratio;
+
+        zoom =
+            DOUBLE_TAP_ZOOM;
+
+
+        img.style.transition =
+            "transform .22s";
+
+        draw();
+
+        setTimeout(
+            () => {
+
+                img.style.transition = "";
+
+            },
+            220
+        );
+
+    }
+);
+
+
+viewer.addEventListener(
+    "pointercancel",
+    () => {
+
+        tapStart = null;
+
+        lastTap = null;
+
+    }
+);
+
+
 /* ---------- Initial Draw ---------- */
 
 draw();
