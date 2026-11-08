@@ -3405,10 +3405,13 @@ try{ Object.assign(searchFilters, JSON.parse(sessionStorage.getItem("searchFilte
 function passesFilters(item){
 const f = searchFilters;
 if(!f.category && !f.media && !f.year) return true;
+// A stand-alone video (like Predictive Programming) belongs to no paper: it has
+// no category, year or images, and is only ever a "videos" result.
+if(item.videoGroup) return !f.category && !f.year && f.media === "videos";
 const p = papersByUrl[item.paperUrl || item.url];
 if(!p) return false;
 if(f.category && !(p.category || []).includes(f.category)) return false;
-const hasV = !!(p.videos && p.videos.length), hasI = !!(p.images && p.images.length);
+const hasV = !!(p.videos && p.videos.some(v => v && !v.group)), hasI = !!(p.images && p.images.length);
 if(f.media === "videos" && !hasV) return false;
 if(f.media === "images" && !hasI) return false;
 if(f.media === "both" && !(hasV && hasI)) return false;
@@ -3973,10 +3976,13 @@ videoThumb:(v.thumbnail && String(v.thumbnail).trim())
 ? String(v.thumbnail).trim()
 : "thumbnails/" + base + ".jpg",
 paperTitle:label,
-paperUrl:paper.url,
-warning: paper.warning,
+paperUrl:v.group ? "" : paper.url,
+videoGroup:!!v.group,
+warning: v.group ? false : paper.warning,
 searchText:
-(
+v.group
+? (label + " " + (v.title || base))
+: (
 paper.title + " " +
 (paper.description || "") + " " +
 (

@@ -806,7 +806,7 @@ function findPaper(kind, name){
       if(kind === "paper") ok = p.url === want || baseName(p.url) === wantBase;
       else if(kind === "image") ok = (p.images || []).some(function(i){ return i === want || baseName(i) === wantBase; });
       else if(kind === "video") ok = (p.videos || []).some(function(v){
-        return v && (v.file === want || baseName(v.file) === wantBase);
+        return v && !v.group && (v.file === want || baseName(v.file) === wantBase);
       });
       if(ok) hit = p;
       return ok;
@@ -1266,6 +1266,12 @@ function realList(a){
     return typeof f === "string" && f.trim() && f.trim().indexOf("#$") !== 0;
   });
 }
+/* A paper's own videos. Videos with a "group" (like Predictive Programming) are
+   stand-alone: they are listed under a paper in descriptions.json only to keep
+   them in the data, but they do not belong to that paper. */
+function paperVideos(paper){
+  return realList(paper && paper.videos).filter(function(v){ return !(v && v.group); });
+}
 function saveBlob(blob, name){
   var a = el("a", {href:URL.createObjectURL(blob), download:name});
   document.body.appendChild(a); a.click(); a.remove();
@@ -1280,7 +1286,7 @@ function downloadPdf(paper){
 
 /* paper: {title, url, images:[], videos:[{file, source}]} */
 function downloadMenu(anchor, paper){
-  var imgs = realList(paper.images).length, vids = realList(paper.videos).length;
+  var imgs = realList(paper.images).length, vids = paperVideos(paper).length;
   var items = [];
   if(imgs || vids) items.push({label:"Everything as a package", note:".zip", icon:"package", onClick:function(){ zipPackage(paper); }});
   items.push({label:"PDF", note:".pdf", icon:"pdf", onClick:function(){ downloadPdf(paper); }});
@@ -1438,7 +1444,7 @@ function zipSection(title, images, videos, wrap){
    a Videos folder (only the ones the paper has). */
 function zipPackage(paper){
   if(zipBusy){ toast("A download is already in progress"); return; }
-  var images = realList(paper && paper.images), videos = realList(paper && paper.videos), tasks = [];
+  var images = realList(paper && paper.images), videos = paperVideos(paper), tasks = [];
   if(paper && paper.url){
     tasks.push({folder: "", name: baseName(paper.url), kind:"pdf", get: function(){ return fetch(encPath(paper.url)); }});
   }
@@ -1448,7 +1454,7 @@ function zipPackage(paper){
   return runZip(paper && paper.title, tasks, "package");
 }
 function zipImages(paper){ return zipAssets(paper && paper.title, paper && paper.images, []); }
-function zipVideos(paper){ return zipAssets(paper && paper.title, [], paper && paper.videos); }
+function zipVideos(paper){ return zipAssets(paper && paper.title, [], paperVideos(paper)); }
 
 /* ---------------------------------------------------------------
    Wire up any button marked data-lt="cite|report|sources"
