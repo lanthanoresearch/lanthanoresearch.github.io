@@ -1773,11 +1773,76 @@ function clampZoom(){
 }
 
 
+/* ---------- Keep The Image Reachable ----------
+   The image can be moved freely, right up until it is just off the edge
+   of the screen, and no further. It can never be pushed away into
+   nowhere, so it is always right there next to the screen. The limit is
+   worked out from the image's own size at the current zoom, so it holds
+   for any size or shape of image: tiny, huge, very wide or very tall.
+   It applies to every way of moving or zooming: dragging, pinching, the
+   wheel, the buttons and the % box. */
+
+function clampOffset(){
+
+    if(!img.naturalWidth || !img.naturalHeight)
+        return;
+
+
+    const scale =
+        base * zoom;
+
+    const w =
+        img.naturalWidth * scale;
+
+    const h =
+        img.naturalHeight * scale;
+
+    const angle =
+        rotation * Math.PI / 180;
+
+    const cos =
+        Math.abs(Math.cos(angle));
+
+    const sin =
+        Math.abs(Math.sin(angle));
+
+    // half of the space the (possibly rotated) image covers
+    const halfW =
+        (w * cos + h * sin) / 2;
+
+    const halfH =
+        (w * sin + h * cos) / 2;
+
+
+    // image centre may travel until the image just clears the screen
+    const maxX =
+        viewer.clientWidth / 2 + halfW;
+
+    const maxY =
+        viewer.clientHeight / 2 + halfH;
+
+
+    if(!isFinite(offsetX)) offsetX = 0;
+
+    if(!isFinite(offsetY)) offsetY = 0;
+
+
+    offsetX =
+        Math.max(-maxX, Math.min(maxX, offsetX));
+
+    offsetY =
+        Math.max(-maxY, Math.min(maxY, offsetY));
+
+}
+
+
 /* ---------- Draw ---------- */
 
 function draw(){
 
     clampZoom();
+
+    clampOffset();
 
 
     img.style.transform =
