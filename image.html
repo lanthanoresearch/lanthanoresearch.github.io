@@ -899,6 +899,22 @@ body.reading-mode #readingModeFloat{
     return {file: f, paper: q.get("paper") || "", page: num("pg") || 1, index: num("idx") || 1,
             w: sz ? +sz[1] : 0, h: sz ? +sz[2] : 0, hash: q.get("hx") || "", n: num("n")};
   })();
+  /* Getting the PDF reader and opening the PDF takes the longest, so it starts
+     right now, while the rest of the page is still being set up. Only the parts
+     of the PDF that are needed are fetched (not the whole file). */
+  if(window.__pdfRef){
+    try{
+      window.__pdfLib = import("./pdf-lib.mjs").then(function(lib){
+        lib.GlobalWorkerOptions.workerSrc = "./pdf-worker.mjs";
+        return lib;
+      });
+      window.__pdfDoc = window.__pdfLib.then(function(lib){
+        return lib.getDocument({ url: window.__pdfRef.file, disableAutoFetch: true, rangeChunkSize: 1048576 }).promise;
+      });
+      window.__pdfLib.catch(function(){});
+      window.__pdfDoc.catch(function(){});
+    }catch(e){}
+  }
   window.__pdfBackUrl = function(){
     var r = window.__pdfRef; if(!r) return "";
     var name = r.paper || r.file.split("/").pop().replace(/\.[^.]*$/, "");
@@ -2886,6 +2902,44 @@ document
         }
 
 
+        if(pdfRef && window.__pdfImageBlob && window.__pdfImageBlob.type !== "image/png"){
+
+            menu.style.display =
+                "none";
+
+            showToast(
+                "Preparing the download..."
+            );
+
+            const pic = new Image();
+
+            pic.onload = () => {
+                const c = document.createElement("canvas");
+                c.width = pic.naturalWidth;
+                c.height = pic.naturalHeight;
+                c.getContext("2d").drawImage(pic, 0, 0);
+                c.toBlob(png => {
+                    if(!png){ showToast("Couldn't prepare the download."); return; }
+                    const url = URL.createObjectURL(png);
+                    const link = document.createElement("a");
+                    link.href = url;
+                    link.download = (title.textContent || "image").replace(/[\\/:*?"<>|]+/g, " ").trim() + ".png";
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                    setTimeout(() => URL.revokeObjectURL(url), 60000);
+                }, "image/png");
+            };
+
+            pic.onerror = () => showToast("Couldn't prepare the download.");
+
+            pic.src = window.__pdfImageUrl;
+
+            return;
+
+        }
+
+
         showToast(
             "Downloading..."
         );
@@ -3202,7 +3256,7 @@ if(pdfRef){
 
         try{
 
-            pdfjs = await import("./pdf-lib.mjs");
+            pdfjs = await (window.__pdfLib || import("./pdf-lib.mjs"));
 
             pdfjs.GlobalWorkerOptions.workerSrc = "./pdf-worker.mjs";
 
@@ -3404,7 +3458,7 @@ if(pdfRef){
 
         try{
 
-            doc = await pdfjs.getDocument({ url: pdfRef.file }).promise;
+            doc = await (window.__pdfDoc || pdfjs.getDocument({ url: pdfRef.file, disableAutoFetch: true, rangeChunkSize: 1048576 }).promise);
 
         }catch(error){
 
@@ -3641,7 +3695,13 @@ if(pdfRef){
                 transform: [1, 0, 0, 1, -left, -top]
             }).promise;
 
-            const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+            // A big picture is saved as a high quality JPEG for showing (several times
+            // faster to make than a PNG); Download turns it into a PNG when asked.
+            const big = canvas.width * canvas.height > 4000000;
+
+            const blob = await new Promise(resolve =>
+                big ? canvas.toBlob(resolve, "image/jpeg", 0.93) : canvas.toBlob(resolve, "image/png")
+            );
 
             if(!blob){
                 throw new Error("could not make the image");
@@ -3704,7 +3764,35 @@ if(pdfRef){
                     return;
                 }
 
+                // The number of pictures on each page is remembered on this device (for
+                // this exact PDF), so the next picture from it is numbered at once.
                 const counts = new Map();
+
+                const memoryKey = "lt_picc:" + ((doc.fingerprints && doc.fingerprints[0]) || pdfRef.file);
+
+                try{
+
+                    const saved = JSON.parse(localStorage.getItem(memoryKey) || "null");
+
+                    if(saved && saved.pages === doc.numPages && Array.isArray(saved.c)){
+                        saved.c.forEach((v, i) => { if(typeof v === "number") counts.set(i + 1, v); });
+                    }
+
+                }catch(error){}
+
+                const remember = () => {
+
+                    try{
+
+                        const c = [];
+
+                        for(let n = 1; n <= doc.numPages; n++){ c.push(counts.has(n) ? counts.get(n) : null); }
+
+                        localStorage.setItem(memoryKey, JSON.stringify({ pages: doc.numPages, c }));
+
+                    }catch(error){}
+
+                };
 
                 const countPage = async (n) => {
 
@@ -3732,17 +3820,27 @@ if(pdfRef){
 
                 };
 
-                let before = 0;
+                const need = [];
 
-                for(let n = 1; n < where.page; n++){
+                for(let n = 1; n < where.page; n++){ if(!counts.has(n)) need.push(n); }
+
+                // A few pages at a time (each is let go of straight after), nearest the
+                // picture last so the number settles in order.
+                for(let i = 0; i < need.length; i += 3){
 
                     while(document.hidden){ await sleep(700); }
 
-                    try{ before += await countPage(n); }catch(error){}
+                    await Promise.all(need.slice(i, i + 3).map(n => countPage(n).catch(() => 0)));
 
-                    await sleep(40);
+                    if(i % 30 === 27) remember();
 
                 }
+
+                if(need.length) remember();
+
+                let before = 0;
+
+                for(let n = 1; n < where.page; n++){ before += counts.get(n) || 0; }
 
                 pdfRef.n = before + where.index;
 

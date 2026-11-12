@@ -1095,7 +1095,7 @@ function nativeSave(blob, name, readyText){
 /* ---------------------------------------------------------------
    Backup / restore (favorites, bookmarks, settings)
 --------------------------------------------------------------- */
-var SKIP = /^(savedVideoLog|lanthanoAppInstalled|lt_pageScan|lt_sizeCache|videoSaveLock|videosWatched|keepAllLast|keepAllLock|archiveStatsCache|archiveFileSizes|lt_seen|lt_hit|lt_last_backup)/;
+var SKIP = /^(lt_picc|savedVideoLog|lanthanoAppInstalled|lt_pageScan|lt_sizeCache|videoSaveLock|videosWatched|keepAllLast|keepAllLock|archiveStatsCache|archiveFileSizes|lt_seen|lt_hit|lt_last_backup)/;
 function exportBackup(){
   var data = {};
   try{
