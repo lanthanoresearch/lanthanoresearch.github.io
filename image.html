@@ -3101,6 +3101,8 @@ if(pdfRef){
 
         const fail = (message) => {
 
+            if(window.__pdfSlowNote) clearTimeout(window.__pdfSlowNote);
+
             if(loadingText){
                 loadingText.textContent = message;
             }
@@ -3383,6 +3385,21 @@ if(pdfRef){
 
         /* ----- open the PDF ----- */
 
+        // Say what is happening, so a big PDF never looks stuck.
+        const stage = (text) => { if(loadingText && !img.naturalWidth) loadingText.textContent = text; };
+
+        const slowNote = setTimeout(() => {
+            if(!img.naturalWidth){
+                stage("Still working\u2026 this PDF is large. The picture will appear as soon as it is ready.");
+            }
+        }, 15000);
+
+        window.__pdfSlowNote = slowNote;
+
+        img.addEventListener("load", () => clearTimeout(slowNote), { once: true });
+
+        stage("Opening the PDF\u2026");
+
         let doc;
 
         try{
@@ -3398,6 +3415,10 @@ if(pdfRef){
             return;
 
         }
+
+        const hadHash = !!pdfRef.hash;
+
+        const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
         const cache = new Map();
 
@@ -3473,11 +3494,31 @@ if(pdfRef){
 
             let sizeOnly = null;
 
+            // A long PDF (a scanned book, say) must not be gone through page by
+            // page for ever: after a while the best guess is used.
+            const giveUp = Date.now() + 20000;
+
             for(const n of order){
+
+                if(Date.now() > giveUp) break;
+
+                if(loadingText && n !== pdfRef.page){
+                    loadingText.textContent = "Looking for the picture\u2026 (page " + n + " of " + doc.numPages + ")";
+                }
 
                 let here;
 
                 try{ here = await onPage(n); }catch(error){ continue; }
+
+                // Pages that are only being looked at are let go of right after, so
+                // their pictures don't pile up in memory.
+                const looked = here;
+                const letGo = () => {
+                    if(!spot || spot.here !== looked){
+                        cache.delete(n);
+                        try{ looked.page.cleanup(); }catch(error){}
+                    }
+                };
 
                 for(let i = 0; i < here.list.length; i++){
 
@@ -3503,11 +3544,15 @@ if(pdfRef){
 
                 }
 
+                if(!(sizeOnly && sizeOnly.here === here)) letGo();
+
             }
 
             return spot || sizeOnly || null;
 
         }
+
+        stage("Finding the picture\u2026");
 
         let where;
 
@@ -3549,6 +3594,8 @@ if(pdfRef){
 
 
         /* ----- draw it at full detail ----- */
+
+        stage("Drawing the picture\u2026");
 
         try{
 
@@ -3631,6 +3678,10 @@ if(pdfRef){
 
         /* ----- the picture's number in the PDF, and its fingerprint ----- */
 
+        // Counting the pictures on every earlier page means reading those pages,
+        // and a scanned book has a big picture on each one. So it is done one page
+        // at a time, in the background, letting go of each page afterwards, and the
+        // picture is already on screen before it starts.
         void (async () => {
 
             try{
@@ -3641,19 +3692,55 @@ if(pdfRef){
 
                 }
 
+                // The page that is showing is finished with.
+                try{ where.here.page.cleanup(); }catch(error){}
+
+                syncAddress();
+
+                // A link that already had its number, and whose picture is still
+                // where it was, is trusted: nothing needs counting.
+                if(hadHash && where.exact && !where.moved && pdfRef.n){
+                    window.__pdfImageRefreshTitle();
+                    return;
+                }
+
+                const counts = new Map();
+
+                const countPage = async (n) => {
+
+                    if(counts.has(n)) return counts.get(n);
+
+                    let c = 0;
+
+                    if(cache.has(n)){
+
+                        c = (await cache.get(n)).list.length;
+
+                    }else{
+
+                        const page = await doc.getPage(n);
+
+                        c = pictures(await page.getOperatorList()).length;
+
+                        try{ page.cleanup(); }catch(error){}
+
+                    }
+
+                    counts.set(n, c);
+
+                    return c;
+
+                };
+
                 let before = 0;
 
-                const pages = [];
+                for(let n = 1; n < where.page; n++){
 
-                for(let n = 1; n < where.page; n++){ pages.push(n); }
+                    while(document.hidden){ await sleep(700); }
 
-                for(let i = 0; i < pages.length; i += 4){
+                    try{ before += await countPage(n); }catch(error){}
 
-                    const group = await Promise.all(
-                        pages.slice(i, i + 4).map(n => onPage(n).then(v => v.list.length, () => 0))
-                    );
-
-                    before += group.reduce((a, b) => a + b, 0);
+                    await sleep(40);
 
                 }
 
