@@ -8236,69 +8236,56 @@ newTabButton.addEventListener(
             return;
         }
 
-        // Inside the installed app this opens the video in the default browser,
-        // or (when that can't be done, e.g. no internet) full screen inside the
-        // app with its own Back button.
+        // Inside an installed app this opens the video in the default browser,
+        // which plays it in its own player (the website opens a normal new tab).
         if(inAppVideos && window.LT && LT.openTab){
 
-            const local = video.currentSrc || (isR2 ? "" : src);
+            let at = 0;
+            try{ at = video.currentTime || 0; }catch(e){}
 
-            if(local){
+            // The video itself, so the browser's own player shows it right away. A
+            // video from the video server needs a short pass from it, which is only
+            // asked for when Lockdown is off; otherwise (or if that fails) the video's
+            // own page on the website.
+            let web = "";
 
-                let at = 0;
-                try{ at = video.currentTime || 0; }catch(e){}
+            try{
 
-                // What the default browser is given: the video itself, so its own
-                // player shows it right away. A video from the video server needs
-                // a short pass from it, which is only asked for when Lockdown is
-                // off; otherwise (or if that fails) the video's page on the website.
-                let web = "";
+                if(!isR2){
+                    web = new URL(src, location.href).href;
+                }else{
+                    let locked = true;
+                    try{ locked = localStorage.getItem("lt_lockdown") !== "off"; }catch(e){}
 
-                try{
-
-                    if(!isR2){
-                        web = new URL(src, location.href).href;
-                    }else{
-                        let locked = true;
-                        try{ locked = localStorage.getItem("lt_lockdown") !== "off"; }catch(e){}
-
-                        if(!locked && navigator.onLine !== false){
-                            const ask = window.LT_REAL_FETCH || window.fetch.bind(window);
-                            const ctl = new AbortController();
-                            const timer = setTimeout(() => ctl.abort(), 6000);
-                            try{
-                                const res = await ask(VIDEO_API + "/ticket?f=" + encodeURIComponent(src), { cache: "no-store", signal: ctl.signal });
-                                if(res.ok) web = VIDEO_API + "/play?t=" + encodeURIComponent((await res.json()).t);
-                            }catch(e){}
-                            clearTimeout(timer);
-                        }
+                    if(!locked && navigator.onLine !== false){
+                        const ask = window.LT_REAL_FETCH || window.fetch.bind(window);
+                        const ctl = new AbortController();
+                        const timer = setTimeout(() => ctl.abort(), 6000);
+                        try{
+                            const res = await ask(VIDEO_API + "/ticket?f=" + encodeURIComponent(src), { cache: "no-store", signal: ctl.signal });
+                            if(res.ok) web = VIDEO_API + "/play?t=" + encodeURIComponent((await res.json()).t);
+                        }catch(e){}
+                        clearTimeout(timer);
                     }
-
-                }catch(e){ web = ""; }
-
-                if(web && at > 1) web += "#t=" + Math.floor(at);
-
-                if(!web){
-                    const page = new URL(location.href);
-                    page.hash = "";
-                    web = page.href;
                 }
 
-                if(LT.openTab({
-                    kind: "video",
-                    url: local,
-                    webUrl: web,
-                    title: (document.getElementById("title") || {}).textContent || "",
-                    time: at
-                })){
-                    try{ video.pause(); }catch(e){}
-                    return;
-                }
+            }catch(e){ web = ""; }
 
+            if(web && at > 1) web += "#t=" + Math.floor(at);
+
+            if(!web){
+                const page = new URL(location.href);
+                page.hash = "";
+                web = page.href;
             }
 
-            if(isR2){
-                showToast("This video is not stored inside this app.");
+            if(LT.openTab({
+                url: video.currentSrc || web,
+                fileUrl: video.currentSrc || "",
+                webUrl: web,
+                filename: decodeURIComponent(String(src).split("?")[0].split("/").pop() || "video.mp4")
+            })){
+                try{ video.pause(); }catch(e){}
                 return;
             }
 

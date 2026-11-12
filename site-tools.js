@@ -2272,258 +2272,19 @@ if(document.readyState === "loading") document.addEventListener("DOMContentLoade
 
 
 /* ---------------------------------------------------------------
-   "Open in New Tab" inside an installed app
-   A real new tab or window cannot be shown properly inside the
-   installed apps: the phone app has no tabs (a picture from a PDF came
-   up black), and a window opened by the computer app has no Back. So
-   there the picture, video or PDF opens on its own full screen inside
-   the app, with a Back button. The phone's Back button, Esc, and the
-   mouse's Back button all close it and return to the viewer. On the
-   website nothing changes: openPlain says "no" and the viewer opens a
-   normal new tab like before.
-     LT.openPlain({kind: "image" | "video" | "pdf", url, title, time, page, onClose})
-   Returns true when it handled the request.
---------------------------------------------------------------- */
-(function(){
-  function inAppWindow(){
-    try{
-      if(window.LT_IN_APP || window.LT_APP_PLATFORM || window.LT_PLAIN_FORCE) return true;
-      if(location.protocol === "lanthano:") return true;
-      if(window.Capacitor && typeof Capacitor.isNativePlatform === "function" && Capacitor.isNativePlatform()) return true;
-      if(navigator.standalone === true) return true;
-      if(window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) return true;
-    }catch(e){}
-    return false;
-  }
-
-  var current = null;
-
-  function el(tag, css, text){
-    var e = document.createElement(tag);
-    if(css) e.style.cssText = css;
-    if(text != null) e.textContent = text;
-    return e;
-  }
-
-  function openPlain(opt){
-    opt = opt || {};
-    if(!opt.url || !inAppWindow()) return false;
-
-    // Something that lives on another website is not inside the app: leave that to the caller.
-    try{
-      var u = new URL(opt.url, location.href);
-      if(/^https?:$/i.test(u.protocol) && u.origin !== location.origin) return false;
-      opt.url = u.href;
-    }catch(e){ return false; }
-
-    if(current) current.close(false);
-
-    var kind = opt.kind || (/\.pdf(\?|#|$)/i.test(opt.url) ? "pdf" : /\.(mp4|webm|m4v|mov)(\?|#|$)/i.test(opt.url) ? "video" : "image");
-    var title = String(opt.title || "");
-    var closed = false, cleanup = [];
-
-    var root = el("div", "position:fixed;left:0;top:0;right:0;bottom:0;z-index:100000;background:#000;color:#eee;display:flex;flex-direction:column;font-family:Arial,sans-serif;outline:none");
-    root.id = "ltPlain";
-    root.setAttribute("role", "dialog");
-    root.setAttribute("aria-label", title || "Viewer");
-    root.tabIndex = -1;
-
-    var bar = el("div", "flex:0 0 auto;display:flex;align-items:center;gap:10px;padding:calc(6px + env(safe-area-inset-top,0px)) 10px 6px 10px;background:#161616;border-bottom:1px solid #333");
-    var back = el("button", "flex:0 0 auto;min-height:44px;padding:0 18px;border-radius:12px;border:1px solid #555;background:#262626;color:#fff;font:600 16px Arial,sans-serif;cursor:pointer;display:flex;align-items:center;gap:8px", "← Back");
-    back.type = "button";
-    back.id = "ltPlainBack";
-    var heading = el("div", "flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:15px;color:#ccc", title);
-    bar.appendChild(back); bar.appendChild(heading);
-
-    var body = el("div", "flex:1 1 auto;min-height:0;position:relative;overflow:auto;-webkit-overflow-scrolling:touch;background:#000");
-    var msg = el("div", "position:absolute;left:0;right:0;top:40%;text-align:center;font-size:16px;color:#bbb;padding:0 20px;pointer-events:none", "Opening…");
-    body.appendChild(msg);
-    root.appendChild(bar); root.appendChild(body);
-
-    function fail(text){ msg.textContent = text; msg.style.display = ""; }
-    function ready(){ msg.style.display = "none"; }
-
-    // The page underneath keeps its place; the phone's Back and Esc close this first.
-    var pushed = false;
-    try{
-      var h = new URL(location.href); h.hash = "plain";
-      history.pushState({ ltPlain: 1 }, "", h.href);
-      pushed = true;
-    }catch(e){}
-    function onPop(){ close(true); }
-    window.addEventListener("popstate", onPop);
-    function onKey(e){
-      if(e.key === "Escape" || e.key === "BrowserBack"){ e.stopPropagation(); e.preventDefault(); close(false); }
-    }
-    document.addEventListener("keydown", onKey, true);
-    // keys pressed here belong to this view, not to the viewer underneath
-    root.addEventListener("keydown", function(e){ e.stopPropagation(); });
-    root.addEventListener("keyup", function(e){ e.stopPropagation(); });
-    // taps, swipes, pinches and the wheel belong to this view too: the viewer
-    // underneath (zoom, pan, double tap) must not react to them
-    ["touchstart","touchmove","touchend","touchcancel","pointerdown","pointermove","pointerup","pointercancel",
-     "mousedown","mousemove","mouseup","click","dblclick","wheel","contextmenu"].forEach(function(t){
-      root.addEventListener(t, function(e){ e.stopPropagation(); });
-    });
-
-    function close(fromPop){
-      if(closed) return;
-      closed = true;
-      window.removeEventListener("popstate", onPop);
-      document.removeEventListener("keydown", onKey, true);
-      cleanup.forEach(function(f){ try{ f(); }catch(e){} });
-      try{ root.remove(); }catch(e){}
-      document.documentElement.style.overflow = prevOverflow;
-      if(current && current.root === root) current = null;
-      // our own history entry is taken off again (the button case)
-      if(!fromPop && pushed){ try{ history.back(); }catch(e){} }
-      if(typeof opt.onClose === "function"){ try{ opt.onClose(); }catch(e){} }
-    }
-    back.addEventListener("click", function(){ close(false); });
-
-    var prevOverflow = document.documentElement.style.overflow;
-    document.documentElement.style.overflow = "hidden";
-    document.body.appendChild(root);
-    try{ root.focus({ preventScroll: true }); }catch(e){}
-    current = { root: root, close: close };
-
-    if(kind === "image"){
-      var img = new Image();
-      var zoomed = false;
-      img.alt = title;
-      img.draggable = false;
-      var fit = "display:block;margin:auto;width:100%;height:100%;object-fit:contain;cursor:zoom-in";
-      var full = "display:block;margin:auto;width:auto;height:auto;max-width:none;max-height:none;cursor:zoom-out";
-      body.style.display = "flex";
-      img.style.cssText = fit;
-      img.addEventListener("load", function(){ ready(); });
-      img.addEventListener("error", function(){ img.style.display = "none"; fail("Couldn’t open this image."); });
-      img.addEventListener("click", function(){
-        zoomed = !zoomed;
-        img.style.cssText = zoomed ? full : fit;
-      });
-      body.appendChild(img);
-      img.src = opt.url;
-    }else if(kind === "video"){
-      var v = document.createElement("video");
-      v.controls = true; v.autoplay = true; v.playsInline = true;
-      v.setAttribute("playsinline", "");
-      v.style.cssText = "position:absolute;left:0;top:0;width:100%;height:100%;background:#000";
-      v.addEventListener("loadeddata", ready);
-      v.addEventListener("error", function(){ fail("Couldn’t play this video."); });
-      if(opt.time > 1){
-        v.addEventListener("loadedmetadata", function(){ try{ v.currentTime = opt.time; }catch(e){} }, { once: true });
-      }
-      body.appendChild(v);
-      v.src = opt.url;
-      v.play && v.play().catch(function(){});
-      cleanup.push(function(){ try{ v.pause(); v.removeAttribute("src"); v.load(); }catch(e){} });
-    }else{
-      plainPdf(opt, body, ready, fail, cleanup);
-    }
-    return true;
-  }
-
-  // A PDF is drawn page after page (only the pages near the screen are drawn).
-  function plainPdf(opt, body, ready, fail, cleanup){
-    var dead = false, doc = null, observer = null;
-    cleanup.push(function(){
-      dead = true;
-      try{ observer && observer.disconnect(); }catch(e){}
-      try{ doc && doc.destroy(); }catch(e){}
-    });
-    body.style.background = "#2b2b2b";
-    import("./pdf-lib.mjs").then(function(lib){
-      if(dead) return;
-      try{ lib.GlobalWorkerOptions.workerSrc = new URL("pdf-worker.mjs", location.href).href; }catch(e){}
-      return lib.getDocument({ url: opt.url }).promise;
-    }).then(function(d){
-      if(dead){ try{ d && d.destroy(); }catch(e){} return; }
-      doc = d;
-      return d.getPage(1).then(function(first){
-        if(dead) return;
-        var wrap = el("div", "padding:10px 0 24px 0");
-        body.appendChild(wrap);
-        var width = Math.max(200, Math.min(1100, body.clientWidth - 16));
-        var vp1 = first.getViewport({ scale: 1 });
-        var ratio = vp1.height / vp1.width;
-        var holders = [];
-        var dpr = Math.min(2, window.devicePixelRatio || 1);
-
-        function drawn(h){ return !!h.canvas; }
-        function release(h){
-          if(h.canvas){ try{ h.canvas.width = 0; h.canvas.height = 0; h.canvas.remove(); }catch(e){} h.canvas = null; }
-          h.token++;
-        }
-        function render(h){
-          if(drawn(h) || h.busy) return;
-          h.busy = true;
-          var token = ++h.token;
-          doc.getPage(h.n).then(function(page){
-            if(dead || token !== h.token){ h.busy = false; if(!dead && h.vis) render(h); return; }
-            var base = page.getViewport({ scale: 1 });
-            var scale = width / base.width;
-            var vp = page.getViewport({ scale: scale });
-            h.box.style.height = Math.round(vp.height) + "px";
-            var c = document.createElement("canvas");
-            c.width = Math.floor(vp.width * dpr); c.height = Math.floor(vp.height * dpr);
-            c.style.cssText = "display:block;width:" + Math.round(vp.width) + "px;height:" + Math.round(vp.height) + "px";
-            var ctx = c.getContext("2d", { alpha: false });
-            return page.render({ canvasContext: ctx, viewport: page.getViewport({ scale: scale * dpr }) }).promise.then(function(){
-              h.busy = false;
-              if(dead){ return; }
-              if(token !== h.token){ if(h.vis) render(h); return; }
-              h.box.appendChild(c); h.canvas = c; ready();
-            });
-          }).catch(function(){ h.busy = false; });
-        }
-        for(var i = 1; i <= doc.numPages; i++){
-          var box = el("div", "width:" + width + "px;height:" + Math.round(width * ratio) + "px;margin:0 auto 10px auto;background:#fff");
-          wrap.appendChild(box);
-          holders.push({ n: i, box: box, canvas: null, busy: false, token: 0, vis: false });
-        }
-        if("IntersectionObserver" in window){
-          observer = new IntersectionObserver(function(entries){
-            entries.forEach(function(en){
-              var h = holders[Number(en.target.getAttribute("data-n")) - 1];
-              if(!h) return;
-              h.vis = en.isIntersecting;
-              if(h.vis) render(h); else release(h);
-            });
-          }, { root: body, rootMargin: "1500px 0px 1500px 0px" });
-          holders.forEach(function(h){ h.box.setAttribute("data-n", String(h.n)); observer.observe(h.box); });
-        }else{
-          holders.slice(0, 20).forEach(render);
-        }
-        var p = Math.round(Number(opt.page));
-        if(p > 1 && p <= holders.length){
-          setTimeout(function(){ try{ holders[p - 1].box.scrollIntoView({ block: "start" }); }catch(e){} }, 0);
-        }
-      });
-    }).catch(function(){
-      if(!dead) fail("Couldn’t open this PDF.");
-    });
-  }
-
-  window.LT = window.LT || {};
-  window.LT.openPlain = openPlain;
-  window.LT.inAppWindow = inAppWindow;
-})();
-
-
-/* ---------------------------------------------------------------
-   "Open in New Tab" inside an installed app: the default browser
-   The website's own address of whatever is open is handed to the phone's
-   or computer's default browser (the computer app opens it in the default
-   browser; the phone app in a browser tab that has a close button back to
-   the app). When that cannot be done (no internet, an older copy of the
-   app, the iPhone's installed site) the in-app full screen view is used
-   instead, so something always opens and Back always works.
-     LT.openTab({kind, url, webUrl, title, time, page, onClose})
-        url    - the copy inside the app (for the in-app view)
-        webUrl - the same thing on the website (for the browser); defaults to url
-   Returns true when it was handled. On the website itself it returns false
-   and the viewer opens a normal new tab.
+   "Open in Browser" inside the installed apps
+   The website's own viewers open a file in a new browser tab, where the
+   browser's own viewer shows it. An installed app has no tabs, so there the
+   same file is handed to the real browser / viewer of the phone or computer:
+     - Android: the phone's default browser (a browser tab with a close button
+       back to the app) showing the file straight from the website.
+     - Computer: the default browser, the same way. A picture taken out of a PDF
+       (which exists only inside the app), and anything while offline, is opened
+       in the computer's own default app for that kind of file instead.
+   Nothing of the website's own pages is shown inside the app for this.
+     LT.openTab({url, webUrl, fileUrl, filename, blob, title})
+   Returns true when handled; false on the website (and the installed website),
+   where the viewer opens its normal new tab.
 --------------------------------------------------------------- */
 (function(){
   function platform(){
@@ -2545,48 +2306,72 @@ if(document.readyState === "loading") document.addEventListener("DOMContentLoade
     }catch(e){ return null; }
   }
 
-  function outside(opt){
-    var plat = platform();
-    if(plat !== "desktop" && plat !== "android") return false;
-    if(navigator.onLine === false) return false;       // nothing to reach: use the in-app view
-    var web = "";
-    try{ web = window.LT.siteUrl(opt.webUrl || opt.url); }catch(e){}
-    if(!/^https?:\/\//i.test(web)) return false;
-    function said(){ try{ window.LT.toast && window.LT.toast("Opening in your browser\u2026"); }catch(e){} }
-    if(plat === "desktop"){
-      // The computer app hands every web address to the default browser.
-      try{ window.open(web, "_blank", "noopener"); }catch(e){ return false; }
-      said();
-      return true;
-    }
-    var B = browserPlugin();
-    if(!B) return false;
-    try{
-      var r = B.open({ url: web });
-      said();
-      // If the phone could not open its browser after all, show it here instead.
-      if(r && typeof r.catch === "function"){
-        r.catch(function(){
-          try{ window.LT.toast && window.LT.toast("Couldn\u2019t open your browser, so it is shown here."); }catch(e){}
-          if(window.LT.openPlain) window.LT.openPlain(opt);
-        });
-      }
-      return true;
-    }catch(e){ return false; }
+  function say(text){ try{ window.LT.toast && window.LT.toast(text); }catch(e){} }
+
+  // The computer app saves the file to a temporary place and opens it with the
+  // computer's default app for it (the computer app's main process does the rest).
+  function handToComputer(href, name){
+    var a = document.createElement("a");
+    a.href = href;
+    a.download = "__open__" + String(name || "file").replace(/[\\/:*?"<>|]+/g, " ").trim();
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   }
 
   window.LT = window.LT || {};
-  window.LT.openOutside = outside;
   window.LT.openTab = function(opt){
     opt = opt || {};
-    if(!opt.url) return false;
     var plat = platform();
-    if(!plat && !(window.LT.inAppWindow && window.LT.inAppWindow())) return false;   // the website
-    if(outside(opt)){
-      if(typeof opt.onClose === "function"){ try{ opt.onClose(); }catch(e){} }
+    if(plat !== "desktop" && plat !== "android") return false;
+
+    var web = "";
+    try{ web = window.LT.siteUrl(opt.webUrl || opt.url); }catch(e){}
+    if(!/^https?:\/\//i.test(web)) web = "";
+
+    var offline = navigator.onLine === false;
+    var local = opt.fileUrl || opt.url;
+
+    if(plat === "desktop"){
+      var canHand = window.LT_APP_OPENFILE === true && !!local;
+      if((opt.blob || offline) && canHand){
+        handToComputer(local, opt.filename);
+        say("Opening\u2026");
+        return true;
+      }
+      if(offline){
+        say("Opening in your browser needs an internet connection.");
+        return true;
+      }
+      if(!web) return false;
+      try{ window.open(web, "_blank", "noopener"); }catch(e){ return false; }
+      say("Opening in your browser\u2026");
       return true;
     }
-    return window.LT.openPlain ? window.LT.openPlain(opt) : false;
+
+    // Android
+    if(offline){
+      say("Opening in your browser needs an internet connection.");
+      return true;
+    }
+    if(!web) return false;
+    var B = browserPlugin();
+    if(B){
+      try{
+        var r = B.open({ url: web });
+        if(r && typeof r.catch === "function"){
+          r.catch(function(){ try{ window.open(web, "_blank"); }catch(e){} });
+        }
+        say("Opening in your browser\u2026");
+        return true;
+      }catch(e){}
+    }
+    // An older copy of the app has no browser plugin: opening a new window is
+    // what the phone's own web view hands to the default browser.
+    try{ window.open(web, "_blank"); }catch(e){ return false; }
+    say("Opening in your browser\u2026");
+    return true;
   };
 })();
 

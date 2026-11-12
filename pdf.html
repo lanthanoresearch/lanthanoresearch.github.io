@@ -17239,17 +17239,12 @@ document.getElementById("downloadBtn").addEventListener("click", () => {
 document.getElementById("newTabBtn").onclick = () => {
   menu.style.display = "none";
 
-  // Inside the installed app the PDF opens in the default browser (or, when
-  // that can't be done, plainly on its own screen inside the app with Back).
-  let here = 0;
-  try{ here = Number(document.getElementById("pageNumber").value) || 0; }catch(e){}
-
+  // Inside an installed app the PDF opens in the default browser, which shows
+  // it in its own viewer (the website opens a normal new tab).
   if(window.LT && LT.openTab && LT.openTab({
-    kind: "pdf",
-    url: file,
+    url: new URL(file, location.href).href,
     webUrl: new URL(file, location.href).href,
-    title: (typeof title === "string" && title) || (paper && paper.title) || file,
-    page: here
+    filename: decodeURIComponent(String(file).split("?")[0].split("/").pop() || "document.pdf")
   })){
     return;
   }
@@ -17618,21 +17613,23 @@ document.getElementById("imgCtxView").addEventListener("click", async () => {
     const blob = await currentPageImageBlob();
     const blobUrl = URL.createObjectURL(blob);
 
-    // On the website this is a normal new tab. Inside the installed app the
-    // picture's page opens in the default browser, or (if that can't be done)
-    // full screen inside the app, with a Back button.
+    // On the website this is a normal new tab. In an installed app the picture
+    // (which exists only in here) is handed to the computer's own viewer, or its
+    // website page to the phone's browser.
     const label = (paper && paper.title ? paper.title : title) + " image";
     const inApp = window.LT && LT.openTab && LT.openTab({
-      kind: "image",
       url: blobUrl,
-      webUrl: webLink || window.location.href,
-      title: label,
-      onClose: () => URL.revokeObjectURL(blobUrl)
+      fileUrl: blobUrl,
+      blob: true,
+      filename: label + ".png",
+      webUrl: webLink || window.location.href
     });
 
     if(!inApp){
       window.open(blobUrl, "_blank");
       setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+    }else{
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 300000);
     }
 
   }catch(error){

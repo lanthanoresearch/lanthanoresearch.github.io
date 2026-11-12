@@ -1761,7 +1761,7 @@ if(pdfRef){
 
     if(loadingText){
         loadingText.textContent =
-            "Opening image\u2026";
+            "Loading image...";
     }
 
 }else if(!src){
@@ -2846,11 +2846,17 @@ document
             webLink.searchParams.delete("return");
             webLink.hash = "";
 
+            // On the website this is a normal new tab. In an installed app the
+            // picture (which exists only in here) is handed to the computer's own
+            // viewer, or its website page to the phone's browser.
+            const asPng = window.__pdfImageBlob && window.__pdfImageBlob.type === "image/png";
+
             if(!(window.LT && LT.openTab && LT.openTab({
-                kind: "image",
                 url: window.__pdfImageUrl,
-                webUrl: webLink.href,
-                title: (document.getElementById("title") || {}).textContent
+                fileUrl: window.__pdfImageUrl,
+                blob: true,
+                filename: ((document.getElementById("title") || {}).textContent || "image").trim() + (asPng ? ".png" : ".jpg"),
+                webUrl: webLink.href
             }))){
                 window.open(
                     window.__pdfImageUrl,
@@ -2863,13 +2869,11 @@ document
         }
 
 
-        // Inside the installed app the picture opens in the default browser
-        // (or, if that can't be done, full screen inside the app with Back).
+        // Inside an installed app the picture opens in the default browser.
         if(!(window.LT && LT.openTab && LT.openTab({
-            kind: "image",
-            url: (img && img.currentSrc) || src,
+            url: new URL(src, location.href).href,
             webUrl: src,
-            title: (document.getElementById("title") || {}).textContent
+            filename: decodeURIComponent(String(src).split("?")[0].split("/").pop() || "image")
         }))){
             window.open(
                 src,
@@ -3155,8 +3159,6 @@ if(pdfRef){
 
         const fail = (message) => {
 
-            if(window.__pdfSlowNote) clearTimeout(window.__pdfSlowNote);
-
             if(loadingText){
                 loadingText.textContent = message;
             }
@@ -3439,20 +3441,6 @@ if(pdfRef){
 
         /* ----- open the PDF ----- */
 
-        // Say what is happening, so a big PDF never looks stuck.
-        const stage = (text) => { if(loadingText && !img.naturalWidth) loadingText.textContent = text; };
-
-        const slowNote = setTimeout(() => {
-            if(!img.naturalWidth){
-                stage("Still working\u2026 this PDF is large. The picture will appear as soon as it is ready.");
-            }
-        }, 15000);
-
-        window.__pdfSlowNote = slowNote;
-
-        img.addEventListener("load", () => clearTimeout(slowNote), { once: true });
-
-        stage("Opening the PDF\u2026");
 
         let doc;
 
@@ -3536,10 +3524,6 @@ if(pdfRef){
 
             /* Not where the link says: look through the PDF, nearest pages first. */
 
-            if(loadingText){
-                loadingText.textContent = "Looking for the picture…";
-            }
-
             const order = [];
 
             for(let n = 1; n <= doc.numPages; n++){ order.push(n); }
@@ -3555,10 +3539,6 @@ if(pdfRef){
             for(const n of order){
 
                 if(Date.now() > giveUp) break;
-
-                if(loadingText && n !== pdfRef.page){
-                    loadingText.textContent = "Looking for the picture\u2026 (page " + n + " of " + doc.numPages + ")";
-                }
 
                 let here;
 
@@ -3606,8 +3586,6 @@ if(pdfRef){
 
         }
 
-        stage("Finding the picture\u2026");
-
         let where;
 
         try{
@@ -3648,8 +3626,6 @@ if(pdfRef){
 
 
         /* ----- draw it at full detail ----- */
-
-        stage("Drawing the picture\u2026");
 
         try{
 
