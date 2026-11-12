@@ -645,7 +645,12 @@ function createWindow() {
 
   // Links to other websites open in the normal browser.
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    if (isAppUrl(url)) return { action: "allow" };
+    // A page of the app never opens in a separate window (it would have no
+    // Back and no way to close it): it opens here, in the same window, so Back works.
+    if (isAppUrl(url)) {
+      if (mainWindow) mainWindow.loadURL(url);
+      return { action: "deny" };
+    }
     if (/^https?:|^mailto:/i.test(url)) shell.openExternal(url);
     return { action: "deny" };
   });
