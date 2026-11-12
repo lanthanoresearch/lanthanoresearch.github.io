@@ -5141,7 +5141,7 @@ function setupHls(url){
 
     const fail = function(){
         statusText.textContent =
-            "This stream couldn't be played here. Try Open in New Tab from the menu.";
+            "This stream couldn't be played here. Try " + (window.LT_IN_APP ? "Open in Browser" : "Open in New Tab") + " from the menu.";
         loadingOverlay.style.display = "flex";
     };
 
@@ -5695,7 +5695,7 @@ video.addEventListener(
             window.__localName
                 ? "Your browser can't play this file (its video format isn't supported here). Try an MP4 or WebM version."
                 : isLink
-                ? "This link couldn't be played here. It may not point straight to a video file, or its site may not allow other pages to play it. Try Open in New Tab from the menu."
+                ? "This link couldn't be played here. It may not point straight to a video file, or its site may not allow other pages to play it. Try " + (window.LT_IN_APP ? "Open in Browser" : "Open in New Tab") + " from the menu."
                 : "Unable to load video.";
 
         loadingOverlay.style.display =
@@ -8236,10 +8236,10 @@ newTabButton.addEventListener(
             return;
         }
 
-        // Inside the installed app a new tab can't be shown. A video that is
-        // stored in the app opens full screen in the app, with its own Back
-        // button. (Videos that live on another website open outside, as before.)
-        if(inAppVideos && window.LT && LT.openPlain){
+        // Inside the installed app this opens the video in the default browser,
+        // or (when that can't be done, e.g. no internet) full screen inside the
+        // app with its own Back button.
+        if(inAppVideos && window.LT && LT.openTab){
 
             const local = video.currentSrc || (isR2 ? "" : src);
 
@@ -8248,9 +8248,46 @@ newTabButton.addEventListener(
                 let at = 0;
                 try{ at = video.currentTime || 0; }catch(e){}
 
-                if(LT.openPlain({
+                // What the default browser is given: the video itself, so its own
+                // player shows it right away. A video from the video server needs
+                // a short pass from it, which is only asked for when Lockdown is
+                // off; otherwise (or if that fails) the video's page on the website.
+                let web = "";
+
+                try{
+
+                    if(!isR2){
+                        web = new URL(src, location.href).href;
+                    }else{
+                        let locked = true;
+                        try{ locked = localStorage.getItem("lt_lockdown") !== "off"; }catch(e){}
+
+                        if(!locked && navigator.onLine !== false){
+                            const ask = window.LT_REAL_FETCH || window.fetch.bind(window);
+                            const ctl = new AbortController();
+                            const timer = setTimeout(() => ctl.abort(), 6000);
+                            try{
+                                const res = await ask(VIDEO_API + "/ticket?f=" + encodeURIComponent(src), { cache: "no-store", signal: ctl.signal });
+                                if(res.ok) web = VIDEO_API + "/play?t=" + encodeURIComponent((await res.json()).t);
+                            }catch(e){}
+                            clearTimeout(timer);
+                        }
+                    }
+
+                }catch(e){ web = ""; }
+
+                if(web && at > 1) web += "#t=" + Math.floor(at);
+
+                if(!web){
+                    const page = new URL(location.href);
+                    page.hash = "";
+                    web = page.href;
+                }
+
+                if(LT.openTab({
                     kind: "video",
                     url: local,
+                    webUrl: web,
                     title: (document.getElementById("title") || {}).textContent || "",
                     time: at
                 })){

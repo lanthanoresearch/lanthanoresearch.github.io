@@ -17239,14 +17239,15 @@ document.getElementById("downloadBtn").addEventListener("click", () => {
 document.getElementById("newTabBtn").onclick = () => {
   menu.style.display = "none";
 
-  // Inside the installed app a new tab can't be shown, so the PDF opens
-  // plainly on its own screen inside the app, with a Back button.
+  // Inside the installed app the PDF opens in the default browser (or, when
+  // that can't be done, plainly on its own screen inside the app with Back).
   let here = 0;
   try{ here = Number(document.getElementById("pageNumber").value) || 0; }catch(e){}
 
-  if(window.LT && LT.openPlain && LT.openPlain({
+  if(window.LT && LT.openTab && LT.openTab({
     kind: "pdf",
     url: file,
+    webUrl: new URL(file, location.href).href,
     title: (typeof title === "string" && title) || (paper && paper.title) || file,
     page: here
   })){
@@ -17596,20 +17597,35 @@ document.getElementById("imgCtxOpen").addEventListener("click", () => {
 
 document.getElementById("imgCtxView").addEventListener("click", async () => {
 
+  const ref = imageContextMenuRef;
+
   closeImageContextMenu();
+
+  // The website's own page for this picture (for the default browser).
+  let webLink = "";
+  if(ref && ref.page && ref.index){
+    const link = new URL("image.html", window.location.href);
+    link.searchParams.set("pdf", file);
+    link.searchParams.set("paper", paper?.title || title);
+    link.searchParams.set("pg", String(ref.page));
+    link.searchParams.set("idx", String(ref.index));
+    if(ref.w && ref.h) link.searchParams.set("sz", `${ref.w}x${ref.h}`);
+    webLink = link.href;
+  }
 
   try{
 
     const blob = await currentPageImageBlob();
     const blobUrl = URL.createObjectURL(blob);
 
-    // On the website this is a normal new tab. Inside the installed app a
-    // new tab can't be shown (a picture made here would come up black), so
-    // the picture opens full screen inside the app, with a Back button.
+    // On the website this is a normal new tab. Inside the installed app the
+    // picture's page opens in the default browser, or (if that can't be done)
+    // full screen inside the app, with a Back button.
     const label = (paper && paper.title ? paper.title : title) + " image";
-    const inApp = window.LT && LT.openPlain && LT.openPlain({
+    const inApp = window.LT && LT.openTab && LT.openTab({
       kind: "image",
       url: blobUrl,
+      webUrl: webLink || window.location.href,
       title: label,
       onClose: () => URL.revokeObjectURL(blobUrl)
     });

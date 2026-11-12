@@ -2509,3 +2509,115 @@ if(document.readyState === "loading") document.addEventListener("DOMContentLoade
   window.LT.openPlain = openPlain;
   window.LT.inAppWindow = inAppWindow;
 })();
+
+
+/* ---------------------------------------------------------------
+   "Open in New Tab" inside an installed app: the default browser
+   The website's own address of whatever is open is handed to the phone's
+   or computer's default browser (the computer app opens it in the default
+   browser; the phone app in a browser tab that has a close button back to
+   the app). When that cannot be done (no internet, an older copy of the
+   app, the iPhone's installed site) the in-app full screen view is used
+   instead, so something always opens and Back always works.
+     LT.openTab({kind, url, webUrl, title, time, page, onClose})
+        url    - the copy inside the app (for the in-app view)
+        webUrl - the same thing on the website (for the browser); defaults to url
+   Returns true when it was handled. On the website itself it returns false
+   and the viewer opens a normal new tab.
+--------------------------------------------------------------- */
+(function(){
+  function platform(){
+    try{
+      if(window.LT_APP_PLATFORM) return String(window.LT_APP_PLATFORM);
+      if(location.protocol === "lanthano:") return "desktop";
+      if(window.Capacitor && typeof Capacitor.isNativePlatform === "function" && Capacitor.isNativePlatform()) return "android";
+    }catch(e){}
+    return "";
+  }
+
+  function browserPlugin(){
+    try{
+      var C = window.Capacitor;
+      if(!C) return null;
+      if(typeof C.isPluginAvailable === "function" && !C.isPluginAvailable("Browser")) return null;
+      var p = (C.Plugins && C.Plugins.Browser) || (C.registerPlugin && C.registerPlugin("Browser"));
+      return p && typeof p.open === "function" ? p : null;
+    }catch(e){ return null; }
+  }
+
+  function outside(opt){
+    var plat = platform();
+    if(plat !== "desktop" && plat !== "android") return false;
+    if(navigator.onLine === false) return false;       // nothing to reach: use the in-app view
+    var web = "";
+    try{ web = window.LT.siteUrl(opt.webUrl || opt.url); }catch(e){}
+    if(!/^https?:\/\//i.test(web)) return false;
+    function said(){ try{ window.LT.toast && window.LT.toast("Opening in your browser\u2026"); }catch(e){} }
+    if(plat === "desktop"){
+      // The computer app hands every web address to the default browser.
+      try{ window.open(web, "_blank", "noopener"); }catch(e){ return false; }
+      said();
+      return true;
+    }
+    var B = browserPlugin();
+    if(!B) return false;
+    try{
+      var r = B.open({ url: web });
+      said();
+      // If the phone could not open its browser after all, show it here instead.
+      if(r && typeof r.catch === "function"){
+        r.catch(function(){
+          try{ window.LT.toast && window.LT.toast("Couldn\u2019t open your browser, so it is shown here."); }catch(e){}
+          if(window.LT.openPlain) window.LT.openPlain(opt);
+        });
+      }
+      return true;
+    }catch(e){ return false; }
+  }
+
+  window.LT = window.LT || {};
+  window.LT.openOutside = outside;
+  window.LT.openTab = function(opt){
+    opt = opt || {};
+    if(!opt.url) return false;
+    var plat = platform();
+    if(!plat && !(window.LT.inAppWindow && window.LT.inAppWindow())) return false;   // the website
+    if(outside(opt)){
+      if(typeof opt.onClose === "function"){ try{ opt.onClose(); }catch(e){} }
+      return true;
+    }
+    return window.LT.openPlain ? window.LT.openPlain(opt) : false;
+  };
+})();
+
+
+/* In the installed apps the button opens the default browser, so it says so.
+   (On the website it opens a tab, and says that.) */
+(function(){
+  function plat(){
+    try{
+      if(window.LT_APP_PLATFORM) return String(window.LT_APP_PLATFORM);
+      if(location.protocol === "lanthano:") return "desktop";
+      if(window.Capacitor && typeof Capacitor.isNativePlatform === "function" && Capacitor.isNativePlatform()) return "android";
+    }catch(e){}
+    return "";
+  }
+  var p = plat();
+  if(p !== "desktop" && p !== "android") return;
+  function relabel(){
+    ["newTabBtn", "imgCtxView"].forEach(function(id){
+      var b = document.getElementById(id);
+      if(!b || b.getAttribute("data-lt-label") === "browser") return;
+      var done = false;
+      for(var i = 0; i < b.childNodes.length; i++){
+        var n = b.childNodes[i];
+        if(n.nodeType === 3 && /\S/.test(n.nodeValue)){
+          n.nodeValue = done ? "" : n.nodeValue.replace(/Open in New Tab/i, "Open in Browser");
+          done = true;
+        }
+      }
+      b.setAttribute("data-lt-label", "browser");
+    });
+  }
+  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", relabel); else relabel();
+})();

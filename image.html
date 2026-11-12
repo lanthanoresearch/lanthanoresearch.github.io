@@ -2825,9 +2825,15 @@ document
 
             }
 
-            if(!(window.LT && LT.openPlain && LT.openPlain({
+            // The website's own link to this picture (what Share sends).
+            const webLink = new URL(location.href);
+            webLink.searchParams.delete("return");
+            webLink.hash = "";
+
+            if(!(window.LT && LT.openTab && LT.openTab({
                 kind: "image",
                 url: window.__pdfImageUrl,
+                webUrl: webLink.href,
                 title: (document.getElementById("title") || {}).textContent
             }))){
                 window.open(
@@ -2841,11 +2847,12 @@ document
         }
 
 
-        // Inside the installed app a new tab can't be shown, so the picture
-        // opens full screen inside the app with its own Back button.
-        if(!(window.LT && LT.openPlain && LT.openPlain({
+        // Inside the installed app the picture opens in the default browser
+        // (or, if that can't be done, full screen inside the app with Back).
+        if(!(window.LT && LT.openTab && LT.openTab({
             kind: "image",
             url: (img && img.currentSrc) || src,
+            webUrl: src,
             title: (document.getElementById("title") || {}).textContent
         }))){
             window.open(
