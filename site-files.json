@@ -1,6 +1,6 @@
 {
  "count": 317,
- "totalBytes": 283865536,
+ "totalBytes": 283872784,
  "files": [
   {
    "path": "1 Thessalonians Original Text.png",
@@ -749,8 +749,8 @@
   },
   {
    "path": "image.html",
-   "size": 70193,
-   "hash": "348379e5d7155dbc"
+   "size": 70465,
+   "hash": "0814cd3c6afc0b9f"
   },
   {
    "path": "Images.html",
@@ -939,8 +939,8 @@
   },
   {
    "path": "pdf.html",
-   "size": 554561,
-   "hash": "4f37fb216a65c6b7"
+   "size": 555181,
+   "hash": "ff40f73da753d223"
   },
   {
    "path": "pdfjs/build/pdf.mjs",
@@ -1174,8 +1174,8 @@
   },
   {
    "path": "site-tools.js",
-   "size": 127201,
-   "hash": "967e37c518a99188"
+   "size": 131792,
+   "hash": "609597f7ff449807"
   },
   {
    "path": "sitemap.xml",
@@ -1534,8 +1534,8 @@
   },
   {
    "path": "video.html",
-   "size": 287944,
-   "hash": "4cfd511311ebb692"
+   "size": 289709,
+   "hash": "aac9d416acf47ccd"
   },
   {
    "path": "What is Everything.pdf",
