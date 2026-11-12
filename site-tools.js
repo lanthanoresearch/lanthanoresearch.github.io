@@ -2320,6 +2320,24 @@ if(document.readyState === "loading") document.addEventListener("DOMContentLoade
     a.remove();
   }
 
+  function viaShareSheet(opt, web){
+    var SH = null;
+    try{
+      var C = window.Capacitor;
+      SH = C && ((C.Plugins && C.Plugins.Share) || (C.registerPlugin && C.registerPlugin("Share")));
+    }catch(e){}
+    if(SH && typeof SH.share === "function"){
+      try{
+        var r = SH.share({ title: opt.filename || "Open", url: web, dialogTitle: "Open with" });
+        if(r && typeof r.catch === "function") r.catch(function(){});
+        say("Choose a browser to open it.");
+        return true;
+      }catch(e){}
+    }
+    say("Install the newest app to open this in your browser.");
+    return true;
+  }
+
   window.LT = window.LT || {};
   window.LT.openTab = function(opt){
     opt = opt || {};
@@ -2361,17 +2379,17 @@ if(document.readyState === "loading") document.addEventListener("DOMContentLoade
       try{
         var r = B.open({ url: web });
         if(r && typeof r.catch === "function"){
-          r.catch(function(){ try{ window.open(web, "_blank"); }catch(e){} });
+          r.catch(function(){ viaShareSheet(opt, web); });
         }
         say("Opening in your browser\u2026");
         return true;
       }catch(e){}
     }
-    // An older copy of the app has no browser plugin: opening a new window is
-    // what the phone's own web view hands to the default browser.
-    try{ window.open(web, "_blank"); }catch(e){ return false; }
-    say("Opening in your browser\u2026");
-    return true;
+    // An older copy of the app has no browser piece. It cannot open a browser by
+    // itself, so the phone's own "open with" list is shown for the address (pick
+    // the browser there). Installing the newest app makes this open the browser
+    // straight away.
+    return viaShareSheet(opt, web);
   };
 })();
 
