@@ -624,6 +624,47 @@ function buildMenu() {
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 }
 
+// "Open in Browser" for something that only exists inside the app (a picture taken
+// out of a PDF) or while offline: the page starts a download whose name begins with
+// __open__, which is saved to a temporary folder and opened with the computer's own
+// default app for that kind of file. Nothing else about downloads changes.
+function handOpenDownloads() {
+  try {
+    session.defaultSession.on("will-download", (event, item) => {
+      const name = item.getFilename() || "";
+      if (!/^__open__/.test(name)) return;
+
+      const clean = name.replace(/^__open__/, "").replace(/[\\/:*?"<>|]+/g, " ").trim() || "file";
+      let file;
+
+      try {
+        const dir = fs.mkdtempSync(path.join(app.getPath("temp"), "lanthano-open-"));
+        file = path.join(dir, clean);
+      } catch (e) {
+        return;
+      }
+
+      item.setSavePath(file);
+
+      item.once("done", (e, state) => {
+        if (state === "completed") shell.openPath(file).catch(() => {});
+      });
+    });
+  } catch (e) {}
+}
+
+function clearOpenedFiles() {
+  try {
+    const tmp = app.getPath("temp");
+
+    fs.readdirSync(tmp).forEach((name) => {
+      if (/^lanthano-open-/.test(name)) {
+        try { fs.rmSync(path.join(tmp, name), { recursive: true, force: true }); } catch (e) {}
+      }
+    });
+  } catch (e) {}
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1280,
@@ -675,6 +716,8 @@ function createWindow() {
 
   mainWindow.webContents.on("dom-ready", () => {
     mainWindow.webContents.insertCSS(HIDE_WEBSITE_ONLY).catch(() => {});
+    // Tells the pages that "Open in Browser" can hand a file to the computer's own app.
+    mainWindow.webContents.executeJavaScript("window.LT_APP_OPENFILE = true;").catch(() => {});
   });
 
   mainWindow.on("closed", () => {
@@ -705,6 +748,8 @@ if (!gotLock) {
     applyLockdown();
     registerProtocol();
     allowVideoServer();
+    clearOpenedFiles();
+    handOpenDownloads();
     createWindow();
 
     app.on("activate", () => {
