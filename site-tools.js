@@ -820,9 +820,16 @@ function findPaper(kind, name){
 --------------------------------------------------------------- */
 function currentItem(){
   var q = new URLSearchParams(location.search);
-  var type = "page", name = "", title = "";
+  var type = "page", name = "", title = "", lookup = "";
   if(path === "pdf.html"){ type = "paper"; name = safeDecode(q.get("file") || ""); title = safeDecode(q.get("paper") || ""); }
-  else if(path === "image.html"){ type = "image"; name = safeDecode(q.get("image") || ""); title = baseName(name).replace(/\.[a-z0-9]+$/i, ""); }
+  else if(path === "image.html"){
+    type = "image"; name = safeDecode(q.get("image") || ""); title = baseName(name).replace(/\.[a-z0-9]+$/i, "");
+    // A picture taken out of a PDF: it belongs to that PDF, and is named after it.
+    if(q.get("pdf")){
+      lookup = "paper"; name = q.get("pdf");
+      title = window.__pdfImageTitle || ((q.get("paper") || baseName(name).replace(/\.[a-z0-9]+$/i, "")) + " image" + (q.get("n") ? " #" + q.get("n") : ""));
+    }
+  }
   else if(path === "video.html"){ type = "video"; name = safeDecode(q.get("video") || q.get("link") || ""); title = safeDecode(q.get("title") || "") || baseName(name).replace(/\.[a-z0-9]+$/i, ""); }
   else { title = (document.title || "").replace(/\s*[-—|].*$/, ""); }
   var u = new URL(location.href);
@@ -832,7 +839,7 @@ function currentItem(){
   u.hash = "";
   var pub = SITE + u.pathname + u.search;
   if(!/lanthanoresearch\.com$/.test(location.hostname)) pub = u.origin + u.pathname + u.search;
-  return {type:type, name:name, title:title, url:pub};
+  return {type:type, name:name, title:title, url:pub, lookup:lookup};
 }
 function liveContext(){
   try{ return (window.LT && typeof window.LT.context === "function") ? (window.LT.context() || {}) : {}; }
@@ -912,7 +919,7 @@ function sourcesHtml(paper){
 
 function cite(item){
   item = item || currentItem();
-  findPaper(item.type, item.name).then(function(paper){
+  findPaper(item.lookup || item.type, item.name).then(function(paper){
     var list = buildCitations(item, paper);
     var opts = list.map(function(x){ return {value:x.name, label:x.name}; });
     /* remember the format you used last, for every paper, picture and video */
@@ -962,7 +969,7 @@ function copyRich(c){
 --------------------------------------------------------------- */
 function sources(item){
   item = item || currentItem();
-  findPaper(item.type, item.name).then(function(paper){
+  findPaper(item.lookup || item.type, item.name).then(function(paper){
     var html = sourcesHtml(paper).replace('<div class="ltLabel">Sources</div>', "");
     var box = modal("<h3>Sources</h3>",
       '<p class="ltSub">' + esc((paper && paper.title) || item.title) + "</p>" +
@@ -2024,7 +2031,7 @@ window.LT.setAccentStrong = setAccentStrong;
 window.LT.menu = menu;
 window.LT.hasSources = function(){
   var it = currentItem();
-  return findPaper(it.type, it.name).then(function(p){ return !!(p && p.sources && p.sources.length); });
+  return findPaper(it.lookup || it.type, it.name).then(function(p){ return !!(p && p.sources && p.sources.length); });
 };
 window.LT.ask = ask;
 window.LT.zoom = zoomF;

@@ -870,8 +870,27 @@ body.reading-mode #readingModeFloat{
         }
       }
     }catch(e){}
+    if(window.__pdfRef) return window.__pdfBackUrl();
     return "index.html";
   }
+
+  /* A picture taken out of a PDF is named by its address: the PDF, the page, the
+     picture's place on that page, its pixel size and (once known) a fingerprint.
+     With no other idea where you came from, Back goes to that PDF on that page. */
+  window.__pdfRef = (function(){
+    var q = new URLSearchParams(location.search), f = q.get("pdf");
+    if(!f) return null;
+    function num(k){ var v = parseInt(q.get(k), 10); return v > 0 ? v : 0; }
+    var sz = /^(\d+)x(\d+)$/.exec(q.get("sz") || "");
+    return {file: f, paper: q.get("paper") || "", page: num("pg") || 1, index: num("idx") || 1,
+            w: sz ? +sz[1] : 0, h: sz ? +sz[2] : 0, hash: q.get("hx") || "", n: num("n")};
+  })();
+  window.__pdfBackUrl = function(){
+    var r = window.__pdfRef; if(!r) return "";
+    var name = r.paper || r.file.split("/").pop().replace(/\.[^.]*$/, "");
+    return "pdf.html?file=" + encodeURIComponent(encodeURIComponent(r.file)) +
+      "&paper=" + encodeURIComponent(encodeURIComponent(name)) + "&page=" + r.page;
+  };
 
   var raw = new URLSearchParams(location.search).get("return");
   var storeKey = "viewerReturn:" + location.pathname + location.search;
@@ -1037,6 +1056,10 @@ body.reading-mode #readingModeFloat{
   try{
     var p = new URLSearchParams(location.search), name = "";
     name = decodeURIComponent((p.get("image") || "").split("/").pop()).replace(/\.[^/.]+$/, "").replace(/[-_]+/g, " ").replace(/\b\w/g, function(c){ return c.toUpperCase(); });
+    if(window.__pdfRef){
+      var r0 = window.__pdfRef;
+      name = (r0.paper || r0.file.split("/").pop().replace(/\.[^.]*$/, "")) + " image" + (r0.n ? " #" + r0.n : "");
+    }
     if(name && ti && /^\s*Loading/.test(ti.textContent)){
       var s = d.createElement("span"); s.className = "title-text"; s.textContent = name;
       ti.textContent = ""; ti.appendChild(s);
@@ -1514,6 +1537,30 @@ fetch("descriptions.json")
 
     let paper = null;
 
+    if(window.__pdfRef){
+
+        /* A picture from a PDF: the parent is that PDF. */
+
+        const found =
+            Object.values(data).find(
+                item => item && item.url === window.__pdfRef.file
+            );
+
+        if(found){
+
+            window.__pdfRef.paper =
+                found.title || window.__pdfRef.paper;
+
+            if(window.__pdfImageRefreshTitle){
+                window.__pdfImageRefreshTitle();
+            }
+
+        }
+
+        return;
+
+    }
+
     /*
         Match by filename only, not the full path/string.
 
@@ -1673,7 +1720,21 @@ img.onerror =
     };
 
 
-if(!src){
+const pdfRef =
+    window.__pdfRef;
+
+
+if(pdfRef){
+
+    /* A picture taken out of a PDF: it is drawn from the PDF itself (see
+       "PICTURE FROM A PDF" at the bottom of this script). */
+
+    if(loadingText){
+        loadingText.textContent =
+            "Opening image\u2026";
+    }
+
+}else if(!src){
 
     if(loadingText){
         loadingText.textContent =
@@ -1708,12 +1769,29 @@ const displayName =
         });
 
 
-title.textContent =
-    displayName;
+if(!pdfRef){
+
+    title.textContent =
+        displayName;
 
 
-document.title =
-    displayName;
+    document.title =
+        displayName;
+
+}else{
+
+    const early =
+        (pdfRef.paper || pdfRef.file.split("/").pop().replace(/\.[^.]*$/, "")) +
+        " image" +
+        (pdfRef.n ? " #" + pdfRef.n : "");
+
+    title.textContent =
+        early;
+
+    document.title =
+        early;
+
+}
 
 
 /* =========================================================
@@ -2721,6 +2799,28 @@ document
             "none";
 
 
+        if(pdfRef){
+
+            if(!window.__pdfImageUrl){
+
+                showToast(
+                    "Still opening this image..."
+                );
+
+                return;
+
+            }
+
+            window.open(
+                window.__pdfImageUrl,
+                "_blank"
+            );
+
+            return;
+
+        }
+
+
         window.open(
             src,
             "_blank"
@@ -2737,6 +2837,20 @@ document
     .getElementById("downloadBtn")
     .onclick = () => {
 
+        if(pdfRef && !window.__pdfImageUrl){
+
+            menu.style.display =
+                "none";
+
+            showToast(
+                "Still opening this image..."
+            );
+
+            return;
+
+        }
+
+
         showToast(
             "Downloading..."
         );
@@ -2747,11 +2861,13 @@ document
 
 
         a.href =
-            src;
+            pdfRef ? window.__pdfImageUrl : src;
 
 
         a.download =
-            src.split("/").pop();
+            pdfRef
+                ? (title.textContent || "image").replace(/[\\/:*?"<>|]+/g, " ").trim() + ".png"
+                : src.split("/").pop();
 
 
         document.body.appendChild(a);
@@ -2779,8 +2895,28 @@ document
         "click",
         async () => {
 
+            let shareFrom =
+                window.location.href;
+
+            if(pdfRef){
+
+                /* The link to a PDF picture should open the picture, not
+                   send the visitor back to whatever page you were on. */
+
+                const clean =
+                    new URL(window.location.href);
+
+                clean.searchParams.delete("return");
+
+                clean.hash = "";
+
+                shareFrom =
+                    clean.href;
+
+            }
+
             const url =
-                (window.LT && LT.siteUrl) ? LT.siteUrl(window.location.href) : window.location.href;
+                (window.LT && LT.siteUrl) ? LT.siteUrl(shareFrom) : shareFrom;
 
 
             menu.style.display =
@@ -2905,6 +3041,606 @@ if(
 syncViewerTop();
 
 syncTitleBarHeight();
+
+
+/* =========================================================
+   PICTURE FROM A PDF
+
+   Opened from the PDF viewer's "View Image", or from a copied link.
+   The address names the PDF, the page, the picture's place on that
+   page (1 = the first picture), its pixel size and, once known, a
+   fingerprint of the picture itself. The picture is then drawn
+   straight from the PDF at full detail.
+
+   If the PDF has been edited since a link was made (pages added or
+   removed, pictures moved) the fingerprint is used to find the very
+   same picture wherever it is now. If it is gone, the picture at the
+   same place is shown instead, with a note. "image #N" is the
+   picture's number counting every picture in the PDF in reading
+   order, worked out from the PDF as it is now.
+   ========================================================= */
+
+if(pdfRef){
+
+    (async () => {
+
+        const fail = (message) => {
+
+            if(loadingText){
+                loadingText.textContent = message;
+            }
+
+            const spinner = loadingOverlay.querySelector(".spinner");
+
+            if(spinner){
+                spinner.style.display = "none";
+            }
+
+            loadingOverlay.style.display = "flex";
+
+        };
+
+        const prettyFile =
+            pdfRef.file.split("/").pop().replace(/\.[^.]*$/, "");
+
+        window.__pdfImageRefreshTitle = () => {
+
+            const name =
+                (pdfRef.paper || prettyFile) +
+                " image" +
+                (pdfRef.n ? " #" + pdfRef.n : "");
+
+            title.textContent = name;
+
+            document.title = name;
+
+            window.__pdfImageTitle = name;
+
+        };
+
+        window.__pdfImageRefreshTitle();
+
+
+        /* "Open Parent PDF" goes to the PDF at this picture's page. */
+
+        const updatePdfButton = () => {
+
+            pdfButtonEl.href =
+                "pdf.html?file=" +
+                encodeURIComponent(encodeURIComponent(pdfRef.file)) +
+                "&paper=" +
+                encodeURIComponent(encodeURIComponent(pdfRef.paper || prettyFile)) +
+                "&page=" + pdfRef.page +
+                "&return=" +
+                encodeURIComponent(encodeURIComponent(location.href));
+
+            pdfButtonEl.classList.remove("disabled");
+
+            pdfButtonEl.removeAttribute("aria-disabled");
+
+            pdfButtonEl.textContent = "Open Parent PDF";
+
+            pdfButtonEl.title =
+                "Open " + (pdfRef.paper || prettyFile) + " PDF";
+
+        };
+
+        updatePdfButton();
+
+
+        /* Keep the address true to what is on screen, so a copied or
+           shared link always finds this picture. */
+
+        const syncAddress = () => {
+
+            try{
+
+                const u = new URL(location.href);
+
+                u.searchParams.set("pg", String(pdfRef.page));
+                u.searchParams.set("idx", String(pdfRef.index));
+
+                if(pdfRef.w && pdfRef.h){
+                    u.searchParams.set("sz", pdfRef.w + "x" + pdfRef.h);
+                }
+
+                if(pdfRef.hash){
+                    u.searchParams.set("hx", pdfRef.hash);
+                }
+
+                if(pdfRef.n){
+                    u.searchParams.set("n", String(pdfRef.n));
+                }
+
+                history.replaceState(history.state, "", u.pathname + u.search + u.hash);
+
+            }catch(error){}
+
+            updatePdfButton();
+
+        };
+
+
+        let pdfjs;
+
+        try{
+
+            pdfjs = await import("./pdf-lib.mjs");
+
+            pdfjs.GlobalWorkerOptions.workerSrc = "./pdf-worker.mjs";
+
+        }catch(error){
+
+            console.warn("PDF image: could not load the PDF reader", error);
+
+            fail("This device can't open pictures from a PDF.");
+
+            return;
+
+        }
+
+        const OPS = pdfjs.OPS;
+
+
+        /* ----- the pictures on a page (same rules as the PDF viewer) ----- */
+
+        function pictures(opList){
+
+            const found = [];
+
+            let matrix = [1, 0, 0, 1, 0, 0];
+
+            const stack = [];
+
+            const multiply = (a, b) => [
+                a[0]*b[0] + a[1]*b[2],
+                a[0]*b[1] + a[1]*b[3],
+                a[2]*b[0] + a[3]*b[2],
+                a[2]*b[1] + a[3]*b[3],
+                a[4]*b[0] + a[5]*b[2] + b[4],
+                a[4]*b[1] + a[5]*b[3] + b[5]
+            ];
+
+            const point = (m, x, y) => [m[0]*x + m[2]*y + m[4], m[1]*x + m[3]*y + m[5]];
+
+            const fns = opList?.fnArray || [];
+
+            const args = opList?.argsArray || [];
+
+            for(let i = 0; i < fns.length; i++){
+
+                const fn = fns[i];
+
+                if(fn === OPS.save){ stack.push(matrix); continue; }
+
+                if(fn === OPS.restore){ matrix = stack.pop() || matrix; continue; }
+
+                if(fn === OPS.transform){ matrix = multiply(args[i], matrix); continue; }
+
+                if(
+                    fn === OPS.paintImageXObject ||
+                    fn === OPS.paintImageXObjectRepeat ||
+                    fn === OPS.paintInlineImageXObject
+                ){
+
+                    const c = [point(matrix, 0, 0), point(matrix, 1, 0), point(matrix, 0, 1), point(matrix, 1, 1)];
+
+                    const xs = c.map(v => v[0]);
+
+                    const ys = c.map(v => v[1]);
+
+                    const rect = [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
+
+                    if(rect[2] - rect[0] >= 20 && rect[3] - rect[1] >= 20){
+
+                        const inline = fn === OPS.paintInlineImageXObject;
+
+                        const a = args[i];
+
+                        found.push({
+                            rect,
+                            inline: inline ? a?.[0] : null,
+                            objId: inline ? "" : a?.[0],
+                            w: Number(inline ? a?.[0]?.width : a?.[1]) || 0,
+                            h: Number(inline ? a?.[0]?.height : a?.[2]) || 0
+                        });
+
+                    }
+
+                }
+
+            }
+
+            return found;
+
+        }
+
+
+        /* ----- a fingerprint of the picture's own pixels ----- */
+
+        const mix = (h, v) => Math.imul(h ^ v, 16777619) >>> 0;
+
+        async function fingerprint(page, region){
+
+            try{
+
+                let data = region.inline || null;
+
+                if(!data && region.objId){
+
+                    data = await new Promise(resolve => {
+
+                        let done = false;
+
+                        const timer = setTimeout(() => { if(!done){ done = true; resolve(null); } }, 5000);
+
+                        try{
+
+                            page.objs.get(region.objId, value => {
+
+                                if(!done){ done = true; clearTimeout(timer); resolve(value || null); }
+
+                            });
+
+                        }catch(error){
+
+                            clearTimeout(timer);
+
+                            resolve(null);
+
+                        }
+
+                    });
+
+                }
+
+                if(!data) return "";
+
+                let h = 2166136261;
+
+                h = mix(h, data.width || region.w || 0);
+
+                h = mix(h, data.height || region.h || 0);
+
+                if(data.data && data.data.length){
+
+                    const n = data.data.length;
+
+                    const step = Math.max(1, Math.floor(n / 6000));
+
+                    for(let i = 0; i < n; i += step){
+                        h = mix(h, data.data[i]);
+                    }
+
+                }else if(data.bitmap){
+
+                    const tiny = document.createElement("canvas");
+
+                    tiny.width = 24;
+                    tiny.height = 24;
+
+                    const t = tiny.getContext("2d", { willReadFrequently: true });
+
+                    t.drawImage(data.bitmap, 0, 0, 24, 24);
+
+                    const px = t.getImageData(0, 0, 24, 24).data;
+
+                    for(let i = 0; i < px.length; i++){
+                        h = mix(h, px[i] >> 3);
+                    }
+
+                }else{
+
+                    return "";
+
+                }
+
+                return h.toString(16).padStart(8, "0");
+
+            }catch(error){
+
+                return "";
+
+            }
+
+        }
+
+
+        /* ----- open the PDF ----- */
+
+        let doc;
+
+        try{
+
+            doc = await pdfjs.getDocument({ url: pdfRef.file }).promise;
+
+        }catch(error){
+
+            console.warn("PDF image: could not open the PDF", error);
+
+            fail("Couldn't open the PDF this picture is from.");
+
+            return;
+
+        }
+
+        const cache = new Map();
+
+        const onPage = (n) => {
+
+            if(!cache.has(n)){
+
+                cache.set(n, (async () => {
+
+                    const page = await doc.getPage(n);
+
+                    const opList = await page.getOperatorList();
+
+                    return { page, list: pictures(opList) };
+
+                })());
+
+            }
+
+            return cache.get(n);
+
+        };
+
+        const sameSize = (r) =>
+            !pdfRef.w || !pdfRef.h || !r.w || !r.h || (r.w === pdfRef.w && r.h === pdfRef.h);
+
+
+        /* ----- find the picture ----- */
+
+        async function locate(){
+
+            let spot = null;
+
+            if(pdfRef.page <= doc.numPages){
+
+                const here = await onPage(pdfRef.page);
+
+                const r = here.list[pdfRef.index - 1];
+
+                if(r){
+
+                    if(sameSize(r)){
+
+                        if(!pdfRef.hash){
+                            return { page: pdfRef.page, index: pdfRef.index, here, exact: true };
+                        }
+
+                        const h = await fingerprint(here.page, r);
+
+                        if(!h || h === pdfRef.hash){
+                            return { page: pdfRef.page, index: pdfRef.index, here, exact: true };
+                        }
+
+                    }
+
+                    spot = { page: pdfRef.page, index: pdfRef.index, here, exact: false };
+
+                }
+
+            }
+
+            /* Not where the link says: look through the PDF, nearest pages first. */
+
+            if(loadingText){
+                loadingText.textContent = "Looking for the picture…";
+            }
+
+            const order = [];
+
+            for(let n = 1; n <= doc.numPages; n++){ order.push(n); }
+
+            order.sort((a, b) => Math.abs(a - pdfRef.page) - Math.abs(b - pdfRef.page) || a - b);
+
+            let sizeOnly = null;
+
+            for(const n of order){
+
+                let here;
+
+                try{ here = await onPage(n); }catch(error){ continue; }
+
+                for(let i = 0; i < here.list.length; i++){
+
+                    const r = here.list[i];
+
+                    if(!r.w || !r.h || !sameSize(r)){
+                        continue;
+                    }
+
+                    if(pdfRef.hash){
+
+                        const h = await fingerprint(here.page, r);
+
+                        if(h && h === pdfRef.hash){
+                            return { page: n, index: i + 1, here, exact: true, moved: true };
+                        }
+
+                    }else if(!sizeOnly){
+
+                        sizeOnly = { page: n, index: i + 1, here, exact: false };
+
+                    }
+
+                }
+
+            }
+
+            return spot || sizeOnly || null;
+
+        }
+
+        let where;
+
+        try{
+
+            where = await locate();
+
+        }catch(error){
+
+            console.warn("PDF image: search failed", error);
+
+            fail("Couldn't find this picture in the PDF.");
+
+            return;
+
+        }
+
+        if(!where){
+
+            fail("This picture is no longer in the PDF.");
+
+            return;
+
+        }
+
+        pdfRef.page = where.page;
+
+        pdfRef.index = where.index;
+
+        const region = where.here.list[where.index - 1];
+
+        if(region.w && region.h){
+
+            pdfRef.w = region.w;
+
+            pdfRef.h = region.h;
+
+        }
+
+
+        /* ----- draw it at full detail ----- */
+
+        try{
+
+            const rect = region.rect;
+
+            const widthPt = rect[2] - rect[0];
+
+            const heightPt = rect[3] - rect[1];
+
+            let scale = region.w ? region.w / widthPt : 3;
+
+            scale = Math.max(1.5, Math.min(scale, 8));
+
+            scale = Math.min(
+                scale,
+                5000 / Math.max(widthPt, heightPt),
+                Math.sqrt(16000000 / (widthPt * heightPt))
+            );
+
+            const viewport = where.here.page.getViewport({ scale });
+
+            const first = viewport.convertToViewportPoint(rect[0], rect[1]);
+
+            const second = viewport.convertToViewportPoint(rect[2], rect[3]);
+
+            const box = [first[0], first[1], second[0], second[1]];
+
+            const left = Math.round(Math.min(box[0], box[2]));
+
+            const top = Math.round(Math.min(box[1], box[3]));
+
+            const canvas = document.createElement("canvas");
+
+            canvas.width = Math.max(1, Math.round(Math.abs(box[2] - box[0])));
+
+            canvas.height = Math.max(1, Math.round(Math.abs(box[3] - box[1])));
+
+            const context = canvas.getContext("2d", { alpha: false });
+
+            await where.here.page.render({
+                canvasContext: context,
+                viewport,
+                transform: [1, 0, 0, 1, -left, -top]
+            }).promise;
+
+            const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+
+            if(!blob){
+                throw new Error("could not make the image");
+            }
+
+            window.__pdfImageBlob = blob;
+
+            window.__pdfImageUrl = URL.createObjectURL(blob);
+
+            img.src = window.__pdfImageUrl;
+
+        }catch(error){
+
+            console.warn("PDF image: drawing failed", error);
+
+            fail("Couldn't draw this picture from the PDF.");
+
+            return;
+
+        }
+
+        syncAddress();
+
+        if(!where.exact){
+
+            showToast("The PDF has changed since this link was made.");
+
+        }else if(where.moved){
+
+            showToast("Found this picture on page " + where.page + ".");
+
+        }
+
+
+        /* ----- the picture's number in the PDF, and its fingerprint ----- */
+
+        void (async () => {
+
+            try{
+
+                if(!pdfRef.hash){
+
+                    pdfRef.hash = await fingerprint(where.here.page, region);
+
+                }
+
+                let before = 0;
+
+                const pages = [];
+
+                for(let n = 1; n < where.page; n++){ pages.push(n); }
+
+                for(let i = 0; i < pages.length; i += 4){
+
+                    const group = await Promise.all(
+                        pages.slice(i, i + 4).map(n => onPage(n).then(v => v.list.length, () => 0))
+                    );
+
+                    before += group.reduce((a, b) => a + b, 0);
+
+                }
+
+                pdfRef.n = before + where.index;
+
+                window.__pdfImageRefreshTitle();
+
+                syncAddress();
+
+            }catch(error){
+
+                console.warn("PDF image: could not number the picture", error);
+
+                syncAddress();
+
+            }
+
+        })();
+
+    })();
+
+}
 
 
 </script>

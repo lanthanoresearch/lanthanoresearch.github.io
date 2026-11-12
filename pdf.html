@@ -4745,7 +4745,8 @@ body.reading-mode #readingModeFloat{
 ========================================================== -->
 <div id="imageContextMenu" class="hidden" role="menu">
 <button id="imgCtxDownload" role="menuitem">Download Image</button>
-<button id="imgCtxView" role="menuitem">View in Browser</button>
+<button id="imgCtxOpen" role="menuitem">View Image</button>
+<button id="imgCtxView" role="menuitem">Open in New Tab</button>
 <button id="imgCtxCopy" role="menuitem">Copy Image</button>
 <button id="imgCtxShare" role="menuitem">Share Image</button>
 </div>
@@ -5555,6 +5556,18 @@ async function paintText(view, generation){
   }
 }
 
+/* Turns a rectangle in PDF points into the same rectangle in the page's
+   on-screen pixels: [x1, y1, x2, y2] (the corners may come back in either
+   order). The PDF library no longer offers this as one call, so it is done
+   from its two corner points - the same result the old call gave. */
+function convertRectToViewport(viewport, rect){
+
+  const first = viewport.convertToViewportPoint(rect[0], rect[1]);
+  const second = viewport.convertToViewportPoint(rect[2], rect[3]);
+
+  return [first[0], first[1], second[0], second[1]];
+}
+
 /* ============================================================
    IMAGE REGIONS
 
@@ -5651,6 +5664,20 @@ function extractImageRegionsFromOperatorList(opList){
       // as tiny images, single-pixel gradients, etc.) - 20pt is a
       // little under a quarter inch.
       if(widthPt >= 20 && heightPt >= 20){
+
+        // The picture's own pixel size, kept with the rectangle so a
+        // link to it can tell it apart from other pictures later.
+        try{
+          const args = argsArray[i];
+          if(fn === OPS.paintInlineImageXObject){
+            rect.meta = { w: args?.[0]?.width || 0, h: args?.[0]?.height || 0 };
+          }else{
+            rect.meta = { w: Number(args?.[1]) || 0, h: Number(args?.[2]) || 0 };
+          }
+        }catch(error){
+          rect.meta = { w: 0, h: 0 };
+        }
+
         regions.push(rect);
       }
     }
@@ -5688,7 +5715,7 @@ async function paintImageRegions(view, generation){
 function computeImageCropRect(view, pdfRect){
 
   const viewport = view.viewport;
-  const cssRect = viewport.convertToViewportRectangle(pdfRect);
+  const cssRect = convertRectToViewport(viewport, pdfRect);
 
   const left = Math.min(cssRect[0], cssRect[2]);
   const top = Math.min(cssRect[1], cssRect[3]);
@@ -5725,7 +5752,7 @@ function findImageRegionAtPoint(view, pageX, pageY){
 
   for(const pdfRect of view.imageRegions){
 
-    const cssRect = viewport.convertToViewportRectangle(pdfRect);
+    const cssRect = convertRectToViewport(viewport, pdfRect);
 
     const left = Math.min(cssRect[0], cssRect[2]);
     const top = Math.min(cssRect[1], cssRect[3]);
@@ -5792,7 +5819,7 @@ function renderLinkLayer(view){
       continue;
     }
 
-    const rect = viewport.convertToViewportRectangle(annotation.rect);
+    const rect = convertRectToViewport(viewport, annotation.rect);
 
     const left = Math.min(rect[0], rect[2]);
     const top = Math.min(rect[1], rect[3]);
@@ -17299,11 +17326,13 @@ document.getElementById("copyLinkBtn").addEventListener("click", () => {
 const imageContextMenu = document.getElementById("imageContextMenu");
 let imageContextMenuCanvas = null;
 let imageContextMenuCropRect = null;
+let imageContextMenuRef = null;
 
-function openImageContextMenu(canvas, cropRect, x, y){
+function openImageContextMenu(canvas, cropRect, x, y, ref){
 
   imageContextMenuCanvas = canvas;
   imageContextMenuCropRect = cropRect;
+  imageContextMenuRef = ref || null;
 
   closeSearch();
   closeToc();
@@ -17381,7 +17410,17 @@ viewer.addEventListener("contextmenu", event => {
 
   const cropRect = computeImageCropRect(view, pdfRect);
 
-  openImageContextMenu(view.canvas, cropRect, event.clientX, event.clientY);
+  // Which picture this is: its page, its place among that page's
+  // pictures (1 = the first one), and its own pixel size. The image
+  // viewer uses these to open exactly this picture.
+  const ref = {
+    page: pageNumber,
+    index: view.imageRegions.indexOf(pdfRect) + 1,
+    w: pdfRect.meta?.w || 0,
+    h: pdfRect.meta?.h || 0
+  };
+
+  openImageContextMenu(view.canvas, cropRect, event.clientX, event.clientY, ref);
 });
 
 imageContextMenu.addEventListener("click", event => event.stopPropagation());
@@ -17483,6 +17522,44 @@ document.getElementById("imgCtxDownload").addEventListener("click", async () => 
     console.warn("Image download failed:", error);
     showToast("Couldn't download this image.");
   }
+});
+
+/* "View Image" opens the picture in the image viewer, named after the
+   paper ("The Moon Hoax image #5"). The address carries the PDF, the page,
+   the picture's place on that page and its pixel size (the viewer adds a
+   fingerprint of the picture itself), so a copied link finds the same
+   picture again even after the PDF is edited. Back returns to this PDF,
+   on the page the picture is on. */
+document.getElementById("imgCtxOpen").addEventListener("click", () => {
+
+  const ref = imageContextMenuRef;
+
+  closeImageContextMenu();
+
+  if(!ref || !ref.page || !ref.index){
+    showToast("Couldn't open this image.");
+    return;
+  }
+
+  const back = new URL(window.location.href);
+  back.searchParams.set("page", String(ref.page));
+  back.hash = "";
+
+  const link = new URL("image.html", window.location.href);
+
+  link.searchParams.set("pdf", file);
+  link.searchParams.set("paper", paper?.title || title);
+  link.searchParams.set("pg", String(ref.page));
+  link.searchParams.set("idx", String(ref.index));
+
+  if(ref.w && ref.h){
+    link.searchParams.set("sz", `${ref.w}x${ref.h}`);
+  }
+
+  // Same double-encoded style the other viewers use for "return".
+  link.searchParams.set("return", encodeURIComponent(back.href));
+
+  window.location.assign(link.href);
 });
 
 document.getElementById("imgCtxView").addEventListener("click", async () => {
