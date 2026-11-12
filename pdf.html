@@ -4403,6 +4403,20 @@ body.reading-mode #readingModeFloat{
      (opened in a new tab, direct link...) open the page. */
   function norm(p){ return p.replace(/index\.html$/, ""); }
 
+  // The same address can be written two ways (a space as %20 or as +), and the
+  // PDF viewer's page number moves as it is read. Neither means "a different
+  // page", so stepping back (instead of opening the page again as a new step)
+  // still works.
+  function sameQuery(a, b, path){
+    function key(s){
+      var p = new URLSearchParams(s), out = [];
+      if(/pdf\.html$/i.test(path)) p.delete("page");
+      p.forEach(function(v, k){ out.push(k + "=" + v); });
+      return out.sort().join("&");
+    }
+    try{ return key(a) === key(b); }catch(e){ return a === b; }
+  }
+
   function goBackTo(dest, before){
     try{ if(before) before(); }catch(e){}
 
@@ -4412,7 +4426,7 @@ body.reading-mode #readingModeFloat{
         var r = new URL(document.referrer), t = new URL(dest, location.href);
         canStep = r.origin === t.origin &&
           norm(r.pathname) === norm(t.pathname) &&
-          r.search === t.search;
+          sameQuery(r.search, t.search, t.pathname);
       }
     }catch(e){}
 
@@ -17222,7 +17236,25 @@ document.getElementById("downloadBtn").addEventListener("click", () => {
    NEW TAB
 ============================================================ */
 
-document.getElementById("newTabBtn").onclick = () => window.open(file, "_blank");
+document.getElementById("newTabBtn").onclick = () => {
+  menu.style.display = "none";
+
+  // Inside the installed app a new tab can't be shown, so the PDF opens
+  // plainly on its own screen inside the app, with a Back button.
+  let here = 0;
+  try{ here = Number(document.getElementById("pageNumber").value) || 0; }catch(e){}
+
+  if(window.LT && LT.openPlain && LT.openPlain({
+    kind: "pdf",
+    url: file,
+    title: (typeof title === "string" && title) || (paper && paper.title) || file,
+    page: here
+  })){
+    return;
+  }
+
+  window.open(file, "_blank");
+};
 
 /* ============================================================
    FULLSCREEN
@@ -17571,14 +17603,21 @@ document.getElementById("imgCtxView").addEventListener("click", async () => {
     const blob = await currentPageImageBlob();
     const blobUrl = URL.createObjectURL(blob);
 
-    // A generated image blob isn't a page of this site, so this
-    // intentionally opens as a normal new tab rather than the
-    // in-app navigation used for same-origin links elsewhere in
-    // this file - there's no "page" here to keep someone inside the
-    // PWA for, just an image to look at.
-    window.open(blobUrl, "_blank");
+    // On the website this is a normal new tab. Inside the installed app a
+    // new tab can't be shown (a picture made here would come up black), so
+    // the picture opens full screen inside the app, with a Back button.
+    const label = (paper && paper.title ? paper.title : title) + " image";
+    const inApp = window.LT && LT.openPlain && LT.openPlain({
+      kind: "image",
+      url: blobUrl,
+      title: label,
+      onClose: () => URL.revokeObjectURL(blobUrl)
+    });
 
-    setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+    if(!inApp){
+      window.open(blobUrl, "_blank");
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+    }
 
   }catch(error){
     console.warn("Opening image failed:", error);

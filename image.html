@@ -818,6 +818,20 @@ body.reading-mode #readingModeFloat{
      (opened in a new tab, direct link...) open the page. */
   function norm(p){ return p.replace(/index\.html$/, ""); }
 
+  // The same address can be written two ways (a space as %20 or as +), and the
+  // PDF viewer's page number moves as it is read. Neither means "a different
+  // page", so stepping back (instead of opening the page again as a new step)
+  // still works.
+  function sameQuery(a, b, path){
+    function key(s){
+      var p = new URLSearchParams(s), out = [];
+      if(/pdf\.html$/i.test(path)) p.delete("page");
+      p.forEach(function(v, k){ out.push(k + "=" + v); });
+      return out.sort().join("&");
+    }
+    try{ return key(a) === key(b); }catch(e){ return a === b; }
+  }
+
   function goBackTo(dest, before){
     try{ if(before) before(); }catch(e){}
 
@@ -827,7 +841,7 @@ body.reading-mode #readingModeFloat{
         var r = new URL(document.referrer), t = new URL(dest, location.href);
         canStep = r.origin === t.origin &&
           norm(r.pathname) === norm(t.pathname) &&
-          r.search === t.search;
+          sameQuery(r.search, t.search, t.pathname);
       }
     }catch(e){}
 
@@ -2811,20 +2825,34 @@ document
 
             }
 
-            window.open(
-                window.__pdfImageUrl,
-                "_blank"
-            );
+            if(!(window.LT && LT.openPlain && LT.openPlain({
+                kind: "image",
+                url: window.__pdfImageUrl,
+                title: (document.getElementById("title") || {}).textContent
+            }))){
+                window.open(
+                    window.__pdfImageUrl,
+                    "_blank"
+                );
+            }
 
             return;
 
         }
 
 
-        window.open(
-            src,
-            "_blank"
-        );
+        // Inside the installed app a new tab can't be shown, so the picture
+        // opens full screen inside the app with its own Back button.
+        if(!(window.LT && LT.openPlain && LT.openPlain({
+            kind: "image",
+            url: (img && img.currentSrc) || src,
+            title: (document.getElementById("title") || {}).textContent
+        }))){
+            window.open(
+                src,
+                "_blank"
+            );
+        }
 
     };
 

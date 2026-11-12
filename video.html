@@ -2784,6 +2784,20 @@ body.video-fullscreen.fs-rotate #videoStage{
      (opened in a new tab, direct link...) open the page. */
   function norm(p){ return p.replace(/index\.html$/, ""); }
 
+  // The same address can be written two ways (a space as %20 or as +), and the
+  // PDF viewer's page number moves as it is read. Neither means "a different
+  // page", so stepping back (instead of opening the page again as a new step)
+  // still works.
+  function sameQuery(a, b, path){
+    function key(s){
+      var p = new URLSearchParams(s), out = [];
+      if(/pdf\.html$/i.test(path)) p.delete("page");
+      p.forEach(function(v, k){ out.push(k + "=" + v); });
+      return out.sort().join("&");
+    }
+    try{ return key(a) === key(b); }catch(e){ return a === b; }
+  }
+
   function goBackTo(dest, before){
     try{ if(before) before(); }catch(e){}
 
@@ -2793,7 +2807,7 @@ body.video-fullscreen.fs-rotate #videoStage{
         var r = new URL(document.referrer), t = new URL(dest, location.href);
         canStep = r.origin === t.origin &&
           norm(r.pathname) === norm(t.pathname) &&
-          r.search === t.search;
+          sameQuery(r.search, t.search, t.pathname);
       }
     }catch(e){}
 
@@ -8220,6 +8234,37 @@ newTabButton.addEventListener(
 
         if(!src){
             return;
+        }
+
+        // Inside the installed app a new tab can't be shown. A video that is
+        // stored in the app opens full screen in the app, with its own Back
+        // button. (Videos that live on another website open outside, as before.)
+        if(inAppVideos && window.LT && LT.openPlain){
+
+            const local = video.currentSrc || (isR2 ? "" : src);
+
+            if(local){
+
+                let at = 0;
+                try{ at = video.currentTime || 0; }catch(e){}
+
+                if(LT.openPlain({
+                    kind: "video",
+                    url: local,
+                    title: (document.getElementById("title") || {}).textContent || "",
+                    time: at
+                })){
+                    try{ video.pause(); }catch(e){}
+                    return;
+                }
+
+            }
+
+            if(isR2){
+                showToast("This video is not stored inside this app.");
+                return;
+            }
+
         }
 
         if(!isR2){
