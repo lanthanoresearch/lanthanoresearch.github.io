@@ -39,6 +39,7 @@
   //   1. one download, streamed in
   //   2. the same with a fresh pass from the server
   //   3. the website's own video page, which plays it
+  var startAt = Math.floor(Number(q.get("t"))) || 0;   // where the person was watching
   var STALL = Number(q.get("stall")) || 30000;   // no data at all for this long = give up on this try
   var ctl = null, stallTimer = 0;
 
@@ -100,46 +101,94 @@
     });
   }
 
-  // Before the browser is sent to the finished video, it is tried here in a hidden
-  // player. If this browser cannot show it (unsupported kind of video, damaged
-  // file), that is found out now and the website's own video page is used, rather
-  // than leaving an empty player.
-  function playable(url){
+  // The finished video is kept by the browser itself (its cache, answered by a small
+  // worker under /__rawvideo/), because a video held only by this page stops loading
+  // the moment the page is left. The browser is then sent to that address, to play it
+  // in its own player. Before that, the same address is tried here in a hidden frame:
+  // if this browser cannot show it, that is found out now and the website's own video
+  // page is used, rather than leaving an empty player.
+  // Names carry the time they were made (base 36); anything older than "age" is removed.
+  function prune(cache, age){
+    return cache.keys().then(function(keys){
+      return Promise.all(keys.map(function(k){
+        var m = /\/__rawvideo\/([0-9a-z]+)\./.exec(k.url);
+        var made = m ? parseInt(m[1], 36) : 0;
+        return (!made || Date.now() - made > age) ? cache.delete(k) : null;
+      }));
+    }).catch(function(){});
+  }
+
+  function keep(blob){
+    if(!("serviceWorker" in navigator) || !("caches" in window)) return Promise.reject(new Error("this browser cannot keep it"));
+    var type = blob.type || "video/mp4";
+    var ext = ({ "video/webm": "webm", "video/quicktime": "mov", "video/ogg": "ogv" })[type] || "mp4";
+    var address = new URL("__rawvideo/" + Date.now().toString(36) + "." + ext, location.href).href;
+    return navigator.serviceWorker.register("raw-video-sw.js", { scope: "./__rawvideo/" }).then(function(reg){
+      return new Promise(function(resolve, reject){
+        var w = reg.active || reg.waiting || reg.installing;
+        if(!w) return reject(new Error("no worker"));
+        if(w.state === "activated") return resolve();
+        var t = setTimeout(function(){ reject(new Error("worker did not start")); }, 10000);
+        w.addEventListener("statechange", function(){
+          if(w.state === "activated"){ clearTimeout(t); resolve(); }
+          else if(w.state === "redundant"){ clearTimeout(t); reject(new Error("worker failed")); }
+        });
+      });
+    }).then(function(){
+      return caches.open("lt-raw-video");
+    }).then(function(cache){
+      // Older copies go (a video opened a moment ago in another tab stays).
+      return prune(cache, 15 * 60 * 1000).then(function(){
+        return cache.put(address, new Response(blob, { headers: { "Content-Type": type } }));
+      });
+    }).then(function(){ return address; });
+  }
+
+  function playable(address){
     return new Promise(function(resolve){
-      var v = document.createElement("video"), done = false;
+      var f = document.createElement("iframe"), done = false, poll = 0;
       var finish = function(ok, why){
         if(done) return;
         done = true;
+        clearInterval(poll);
         clearTimeout(timer);
-        try{ v.removeAttribute("src"); v.load(); }catch(e){}
+        try{ f.remove(); }catch(e){}
         resolve({ ok: ok, why: why || "" });
       };
-      var timer = setTimeout(function(){ finish(false, "it did not start"); }, 15000);
-      v.preload = "auto";
-      v.muted = true;
-      v.playsInline = true;
-      v.onerror = function(){ finish(false, "error " + (v.error ? v.error.code : "?") + (v.error && v.error.message ? ": " + v.error.message : "")); };
-      v.onloadeddata = function(){
-        if(v.videoWidth > 0 && v.duration > 0) finish(true);
-        else finish(false, "no picture in it (" + v.videoWidth + "x" + v.videoHeight + ", " + Math.round(v.duration || 0) + "s)");
+      var timer = setTimeout(function(){ finish(false, "it did not start"); }, 20000);
+      f.style.cssText = "position:fixed;left:0;top:0;width:2px;height:2px;opacity:0;border:0";
+      f.onload = function(){
+        poll = setInterval(function(){
+          try{
+            var v = f.contentDocument && f.contentDocument.querySelector("video");
+            if(!v) return;
+            if(v.error) return finish(false, "error " + v.error.code + (v.error.message ? ": " + v.error.message : ""));
+            if(v.readyState >= 2){
+              if(v.videoWidth > 0 && v.duration > 0) finish(true);
+              else finish(false, "no picture in it (" + v.videoWidth + "x" + v.videoHeight + ", " + Math.round(v.duration || 0) + "s)");
+            }
+          }catch(e){ finish(false, "could not be checked"); }
+        }, 250);
       };
-      v.src = url;
+      f.src = address;
+      document.documentElement.appendChild(f);
     });
   }
 
   function open(blob){
-    var url = URL.createObjectURL(blob);
     say("Opening...");
-    return playable(url).then(function(r){
-      if(r.ok){
-        location.replace(url);
-        // Still here a moment later: the browser did not go to it. The video's own page.
-        setTimeout(viewer, 6000);
-        return;
-      }
-      say("This browser could not play it here (" + r.why + "; " + (blob.size / 1048576).toFixed(1) + " MB, " + (blob.type || "no type") + "). Opening the video's own page...");
-      setTimeout(viewer, 3500);
-    });
+    return keep(blob).then(function(address){
+      return playable(address).then(function(r){
+        if(r.ok){
+          location.replace(address + (startAt > 1 ? "#t=" + startAt : ""));
+          // Still here a moment later: the browser did not go to it. The video's own page.
+          setTimeout(viewer, 8000);
+          return;
+        }
+        say("This browser could not play it here (" + r.why + "; " + (blob.size / 1048576).toFixed(1) + " MB, " + (blob.type || "no type") + "). Opening the video's own page...");
+        setTimeout(viewer, 3500);
+      });
+    }).catch(function(){ viewer(); });
   }
 
   attempt(ticket)
@@ -149,6 +198,29 @@
       return attempt(ticket).then(function(){ return attempt(plain); });
     })
     .then(open, viewer);
+})();
+</script>
+<script>
+/* A video kept for the browser's own player (see above) is not needed for long:
+   on any visit, copies older than an hour are removed from the browser's storage. */
+(function(){
+  try{
+    if(!("caches" in window)) return;
+    setTimeout(function(){
+      caches.has("lt-raw-video").then(function(has){
+        if(!has) return;
+        return caches.open("lt-raw-video").then(function(c){
+          return c.keys().then(function(keys){
+            return Promise.all(keys.map(function(k){
+              var m = /\/__rawvideo\/([0-9a-z]+)\./.exec(k.url);
+              var made = m ? parseInt(m[1], 36) : 0;
+              return (!made || Date.now() - made > 3600000) ? c.delete(k) : null;
+            }));
+          });
+        });
+      }).catch(function(){});
+    }, 4000);
+  }catch(e){}
 })();
 </script>
 <script src="site-tools.js"></script>
@@ -8431,6 +8503,7 @@ newTabButton.addEventListener(
             page.hash = "";
             page.searchParams.set("source", onSite ? "site" : "r2");
             if(!onSite) page.searchParams.set("raw", "1");
+            if(!onSite && at > 1) page.searchParams.set("t", String(Math.floor(at)));
 
             if(LT.openTab({
                 url: web || held || page.href,
@@ -8457,10 +8530,34 @@ newTabButton.addEventListener(
 
         }
 
-        // Bucket videos only play through the gate. The tab is opened right
-        // away (from the tap, so pop-up blockers allow it), the video is
-        // fetched with a fresh short-lived pass, and the tab then shows it in
-        // the browser's own video player.
+        // Bucket videos only play through the gate. The new tab opens right away
+        // (from the tap, so pop-up blockers allow it) on a plain loading page that
+        // fetches the video and sends the browser to it, to play in the browser's
+        // own player (the same way the installed apps do it, with the same
+        // fallbacks). That tab does not depend on this one staying open.
+        if(params.get("video")){
+
+            const page = new URL(location.href);
+            page.hash = "";
+            page.searchParams.set("source", "r2");
+            page.searchParams.set("raw", "1");
+
+            let at = 0;
+            try{ at = video.currentTime || 0; }catch(e){}
+            if(at > 1) page.searchParams.set("t", String(Math.floor(at)));
+            else page.searchParams.delete("t");
+
+            const tab = window.open(page.href, "_blank");
+
+            if(tab){
+                try{ video.pause(); }catch(e){}
+            }else{
+                showToast("Allow pop-ups to open this video in a new tab.");
+            }
+
+            return;
+        }
+
         const win = window.open("", "_blank");
 
         if(win){

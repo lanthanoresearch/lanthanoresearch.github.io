@@ -18027,6 +18027,26 @@ document.getElementById("imgCtxView").addEventListener("click", async () => {
     webLink = link.href;
   }
 
+  // On the website the new tab is opened right now, from the tap (a browser only
+  // allows that straight from a tap, and drawing the picture can take a moment),
+  // and is sent to the picture when it is ready. Installed apps have no tabs.
+  const inAppNow = (window.LT_APP_PLATFORM && /^(desktop|android)$/.test(String(window.LT_APP_PLATFORM))) ||
+    location.protocol === "lanthano:" ||
+    !!(window.Capacitor && typeof Capacitor.isNativePlatform === "function" && Capacitor.isNativePlatform());
+
+  let tab = null;
+  if(!inAppNow){
+    try{
+      tab = window.open("", "_blank");
+      if(tab){
+        tab.document.title = "Loading image...";
+        tab.document.documentElement.style.colorScheme = "light dark";
+        tab.document.body.style.cssText = "margin:0;padding:16px;background:Canvas;color:GrayText;font:15px system-ui,-apple-system,sans-serif";
+        tab.document.body.textContent = "Loading image...";
+      }
+    }catch(e){ tab = null; }
+  }
+
   try{
 
     const blob = await currentPageImageBlob();
@@ -18045,14 +18065,19 @@ document.getElementById("imgCtxView").addEventListener("click", async () => {
     });
 
     if(!inApp){
-      window.open(blobUrl, "_blank");
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+      if(tab && !tab.closed){
+        tab.location.href = blobUrl;
+      }else if(!window.open(blobUrl, "_blank")){
+        showToast("Allow pop-ups to open this image in a new tab.");
+      }
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 1800000);
     }else{
       setTimeout(() => URL.revokeObjectURL(blobUrl), 300000);
     }
 
   }catch(error){
     console.warn("Opening image failed:", error);
+    try{ if(tab) tab.close(); }catch(e){}
     showToast("Couldn't open this image.");
   }
 });
