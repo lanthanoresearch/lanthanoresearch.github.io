@@ -39,7 +39,6 @@
   //   1. one download, streamed in
   //   2. the same with a fresh pass from the server
   //   3. the website's own video page, which plays it
-  var startAt = Math.floor(Number(q.get("t"))) || 0;   // where the person was watching
   var STALL = Number(q.get("stall")) || 30000;   // no data at all for this long = give up on this try
   var ctl = null, stallTimer = 0;
 
@@ -180,7 +179,7 @@
     return keep(blob).then(function(address){
       return playable(address).then(function(r){
         if(r.ok){
-          location.replace(address + (startAt > 1 ? "#t=" + startAt : ""));
+          location.replace(address);
           // Still here a moment later: the browser did not go to it. The video's own page.
           setTimeout(viewer, 8000);
           return;
@@ -3982,6 +3981,16 @@ const title =
 
 const loadingOverlay =
     document.getElementById("loadingOverlay");
+
+/* "Reference video" only works once the video has really loaded (the loading
+   screen is gone and nothing has failed). */
+window.LT_MEDIA_READY = function(){
+    try{
+        if(getComputedStyle(loadingOverlay).display !== "none") return false;
+        if(video && video.error) return false;
+        return true;
+    }catch(e){ return false; }
+};
 
 const statusText =
     document.getElementById("statusText");
@@ -8461,9 +8470,6 @@ newTabButton.addEventListener(
         // which plays it in its own player (the website opens a normal new tab).
         if(inAppVideos && window.LT && LT.openTab){
 
-            let at = 0;
-            try{ at = video.currentTime || 0; }catch(e){}
-
             // The video itself, so the browser's own player shows it right away. A
             // video from the video server needs a short pass from it, which is only
             // asked for when Lockdown is off; otherwise (or if that fails) the video's
@@ -8488,8 +8494,6 @@ newTabButton.addEventListener(
                 try{ web = new URL(src, location.href).href; }catch(e){ web = ""; }
             }
 
-            if(web && at > 1) web += "#t=" + Math.floor(at);
-
             // No direct link (a video of the video server): the computer app hands the video
             // file it holds to the computer's own player; otherwise the video's own
             // page on the website, written the way the website writes it.
@@ -8503,7 +8507,7 @@ newTabButton.addEventListener(
             page.hash = "";
             page.searchParams.set("source", onSite ? "site" : "r2");
             if(!onSite) page.searchParams.set("raw", "1");
-            if(!onSite && at > 1) page.searchParams.set("t", String(Math.floor(at)));
+            page.searchParams.delete("t");   // a new tab always starts from the beginning
 
             if(LT.openTab({
                 url: web || held || page.href,
@@ -8542,16 +8546,12 @@ newTabButton.addEventListener(
             page.searchParams.set("source", "r2");
             page.searchParams.set("raw", "1");
 
-            let at = 0;
-            try{ at = video.currentTime || 0; }catch(e){}
-            if(at > 1) page.searchParams.set("t", String(Math.floor(at)));
-            else page.searchParams.delete("t");
+            // A new tab always starts the video from its beginning.
+            page.searchParams.delete("t");
 
             const tab = window.open(page.href, "_blank");
 
-            if(tab){
-                try{ video.pause(); }catch(e){}
-            }else{
+            if(!tab){
                 showToast("Allow pop-ups to open this video in a new tab.");
             }
 

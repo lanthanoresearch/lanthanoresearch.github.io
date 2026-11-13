@@ -5275,6 +5275,15 @@ const MAX_ZOOM_LEVEL = zoomLevels[zoomLevels.length - 1];
 ============================================================ */
 
 let pdfDoc = null;
+
+/* "Reference PDF" only works once the PDF has really loaded (its first page is
+   showing and the loading screen is gone). */
+window.LT_MEDIA_READY = function(){
+  try{
+    if(!pdfDoc) return false;
+    return getComputedStyle(document.getElementById("loadingOverlay")).display === "none";
+  }catch(e){ return false; }
+};
 const pageViews = [];
 
 // Tracks in-flight ensurePageView() calls per page number. Without

@@ -158,7 +158,9 @@ header{
 
   left:0;
   right:0;
-  bottom:0;
+  /* The picture is centred in the space between the toolbar and the name bar,
+     not behind the name bar. */
+  bottom:var(--titlebar-h);
 
   height:auto;
 }
@@ -731,6 +733,8 @@ body.reading-mode #layout{
 
   top:0 !important;
 
+  bottom:0 !important;
+
   height:100% !important;
 
   position:absolute;
@@ -1111,7 +1115,11 @@ body.reading-mode #readingModeFloat{
       d.documentElement.style.setProperty("--viewer-top", t + "px");
       if(ov) ov.style.top = t + "px";
     }
-    if(ov && bar) ov.style.bottom = Math.ceil(bar.getBoundingClientRect().height) + "px";
+    if(bar){
+      var bh = Math.ceil(bar.getBoundingClientRect().height);
+      d.documentElement.style.setProperty("--titlebar-h", bh + "px");
+      if(ov) ov.style.bottom = bh + "px";
+    }
   }
   sync();
   window.addEventListener("resize", sync);
@@ -1121,7 +1129,9 @@ body.reading-mode #readingModeFloat{
     name = decodeURIComponent((p.get("image") || "").split("/").pop()).replace(/\.[^/.]+$/, "").replace(/[-_]+/g, " ").replace(/\b\w/g, function(c){ return c.toUpperCase(); });
     if(window.__pdfRef){
       var r0 = window.__pdfRef;
-      name = (r0.paper || r0.file.split("/").pop().replace(/\.[^.]*$/, "")) + " image" + (r0.n ? " #" + r0.n : "");
+      // Only a complete name is ever shown: with no number yet, the bar keeps its
+      // "Loading..." until the number is known.
+      name = r0.n ? (r0.paper || r0.file.split("/").pop().replace(/\.[^.]*$/, "")) + " image #" + r0.n : "";
     }
     if(name && ti && /^\s*Loading/.test(ti.textContent)){
       var s = d.createElement("span"); s.className = "title-text"; s.textContent = name;
@@ -1346,6 +1356,23 @@ const toast =
 
 const titleBar =
     document.getElementById("titleBar");
+
+
+/* "Reference image" only works once the picture is really showing (and, for a
+   picture out of a PDF, once its name is complete). */
+window.LT_MEDIA_READY = function(){
+
+    if(!img.complete || !img.naturalWidth){
+        return false;
+    }
+
+    if(window.__pdfRef && !window.__pdfImageTitleFinal){
+        return false;
+    }
+
+    return true;
+
+};
 
 
 function syncTitleBarHeight(){
@@ -1843,16 +1870,25 @@ if(!pdfRef){
 
 }else{
 
-    const early =
-        (pdfRef.paper || pdfRef.file.split("/").pop().replace(/\.[^.]*$/, "")) +
-        " image" +
-        (pdfRef.n ? " #" + pdfRef.n : "");
+    // Only a complete name is ever shown. With no number yet the bar keeps its
+    // "Loading..." and the name appears, whole, once the number is known.
+    if(pdfRef.n){
 
-    title.textContent =
-        early;
+        const early =
+            (pdfRef.paper || pdfRef.file.split("/").pop().replace(/\.[^.]*$/, "")) +
+            " image #" + pdfRef.n;
 
-    document.title =
-        early;
+        title.textContent =
+            early;
+
+        document.title =
+            early;
+
+        window.__pdfImageTitle = early;
+
+        window.__pdfImageTitleFinal = true;
+
+    }
 
 }
 
@@ -3144,6 +3180,10 @@ if(
     "ResizeObserver" in window
 ){
 
+    let lastViewerHeight = -1;
+
+    let lastReading = false;
+
     const chromeObserver =
         new ResizeObserver(
             () => {
@@ -3151,6 +3191,41 @@ if(
                 syncViewerTop();
 
                 syncTitleBarHeight();
+
+                /*
+                    When the bars change size (a longer name, another text
+                    size) the space for the picture changes, so a picture
+                    that is just fitted is fitted again to the new space.
+                    Switching Reading Mode on or off does not do this.
+                */
+
+                const reading =
+                    document.body.classList.contains("reading-mode");
+
+                const height =
+                    viewer.clientHeight;
+
+                const changed =
+                    lastViewerHeight >= 0 &&
+                    height !== lastViewerHeight &&
+                    reading === lastReading;
+
+                lastViewerHeight = height;
+
+                lastReading = reading;
+
+                if(
+                    changed &&
+                    !reading &&
+                    img.naturalWidth &&
+                    zoom === 1 &&
+                    !offsetX &&
+                    !offsetY
+                ){
+
+                    fit();
+
+                }
 
             }
         );
@@ -3202,6 +3277,8 @@ if(pdfRef){
             // viewer, with the reason, instead of a loading line that never ends.
             document.documentElement.classList.remove("lt-raw");
 
+            try{ window.__pdfImageRefreshTitle(true); }catch(error){}
+
             if(loadingText){
                 loadingText.textContent = message;
             }
@@ -3219,7 +3296,11 @@ if(pdfRef){
         const prettyFile =
             pdfRef.file.split("/").pop().replace(/\.[^.]*$/, "");
 
-        window.__pdfImageRefreshTitle = () => {
+        // The name is only put on screen complete: with the picture's number, or (once
+        // the number could not be worked out, final = true) without one.
+        window.__pdfImageRefreshTitle = (final) => {
+
+            if(!pdfRef.n && !final) return;
 
             const name =
                 (pdfRef.paper || prettyFile) +
@@ -3231,6 +3312,8 @@ if(pdfRef){
             document.title = name;
 
             window.__pdfImageTitle = name;
+
+            window.__pdfImageTitleFinal = true;
 
         };
 
@@ -4122,16 +4205,29 @@ const LTPics = (function(){
 
             try{
 
+                // The fingerprint is worked out alongside, so it never holds the number up.
                 if(!pdfRef.hash){
 
-                    pdfRef.hash = await fingerprint(where.here.page, region);
+                    Promise.resolve(fingerprint(where.here.page, region)).then(hash => {
+
+                        pdfRef.hash = hash;
+
+                    }).catch(() => {}).then(() => {
+
+                        // The page that is showing is finished with.
+                        try{ where.here.page.cleanup(); }catch(error){}
+
+                        syncAddress();
+
+                    });
+
+                }else{
+
+                    try{ where.here.page.cleanup(); }catch(error){}
+
+                    syncAddress();
 
                 }
-
-                // The page that is showing is finished with.
-                try{ where.here.page.cleanup(); }catch(error){}
-
-                syncAddress();
 
                 // A link that already had its number, and whose picture is still
                 // where it was, is trusted: nothing needs counting.
@@ -4227,6 +4323,9 @@ const LTPics = (function(){
             }catch(error){
 
                 console.warn("PDF image: could not number the picture", error);
+
+                // No number to wait for: the name is shown as it is, and stays so.
+                window.__pdfImageRefreshTitle(true);
 
                 syncAddress();
 

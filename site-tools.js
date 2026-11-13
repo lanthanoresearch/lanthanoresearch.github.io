@@ -1466,12 +1466,53 @@ function zipVideos(paper){ return zipAssets(paper && paper.title, [], paperVideo
 /* ---------------------------------------------------------------
    Wire up any button marked data-lt="cite|report|sources"
 --------------------------------------------------------------- */
+/* A reference made while the picture, video or PDF is still loading (or has failed to)
+   could describe the wrong thing, so "Reference ..." waits: it is greyed out and does
+   nothing until the page says what it shows has really loaded. A page says so with
+   window.LT_MEDIA_READY (a function returning true once it has). Pages that do not
+   define it are never held back. */
+function mediaReady(){
+  try{
+    if(typeof window.LT_MEDIA_READY === "function") return !!window.LT_MEDIA_READY();
+  }catch(e){ return false; }
+  return true;
+}
+(function(){
+  try{
+    var st = document.createElement("style");
+    st.textContent = '[data-lt="cite"][aria-disabled="true"]{opacity:.4;cursor:default}';
+    (document.head || document.documentElement).appendChild(st);
+  }catch(e){}
+  function paint(){
+    var ready = mediaReady();
+    var list = document.querySelectorAll('[data-lt="cite"]');
+    for(var i = 0; i < list.length; i++){
+      if(list[i].dataset.title) continue;   // a list entry for something else
+      if(ready) list[i].removeAttribute("aria-disabled"); else list[i].setAttribute("aria-disabled", "true");
+    }
+    return ready;
+  }
+  var started = Date.now();
+  var timer = setInterval(function(){
+    var ready = paint();
+    var defined = typeof window.LT_MEDIA_READY === "function";
+    // Done once the page says it has loaded; a page that never says anything is left alone.
+    if((ready && defined) || (!defined && Date.now() - started > 30000)) clearInterval(timer);
+  }, 400);
+  document.addEventListener("click", function(){ paint(); }, true);
+})();
+
 document.addEventListener("click", function(e){
   var b = e.target.closest && e.target.closest("[data-lt]");
   if(!b) return;
   var a = b.getAttribute("data-lt");
   if(a !== "cite" && a !== "report" && a !== "sources" && a !== "zip") return;
   e.preventDefault();
+  if(a === "cite" && !b.dataset.title && !mediaReady()){
+    e.stopPropagation();
+    toast("Still loading - try again in a moment");
+    return;
+  }
   var menu = document.getElementById("menu"); if(menu) menu.style.display = "none";
   collapseMore();
   var item = null;
