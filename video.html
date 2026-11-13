@@ -14,20 +14,73 @@
   var q; try{ q = new URLSearchParams(location.search); }catch(e){ return; }
   if(q.get("raw") !== "1" || q.get("source") !== "r2" || !q.get("video")) return;
   var API = "https://videos.lanthanoresearch.com", link = "";
+  // None of this page is shown: a plain line over everything, until the browser is
+  // sent to the video itself.
   function say(t){
-    try{
-      document.open();
-      document.write('<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><title>Video</title><body style="margin:0;background:#111;color:#bbb;font:16px sans-serif;display:flex;align-items:center;justify-content:center;height:100vh">' + t);
-      document.close();
-    }catch(e){}
+    try{ document.documentElement.setAttribute("data-lt-say", t); }catch(e){}
   }
+  try{
+    var st = document.createElement("style");
+    st.textContent = "html.lt-raw body{display:none!important}html.lt-raw{background:#111!important}" +
+      "html.lt-raw::before{content:attr(data-lt-say);position:fixed;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;background:#111;color:#bbb;font:16px sans-serif;z-index:2147483647}";
+    document.documentElement.appendChild(st);
+    document.documentElement.classList.add("lt-raw");
+  }catch(e){}
   window.__ltRawOpen = true;   // the rest of this page stays idle
   say("Loading video...");
+  // Fast way: the video server plays for the website's own pages, so a hidden player
+  // on this page is asked first. If it starts, the browser is sent straight to the
+  // same link and streams it (no waiting for the whole video). If not, the video is
+  // downloaded here first (the way the website's "Open in New Tab" does it).
+  function startsPlaying(url){
+    return new Promise(function(resolve){
+      var v = document.createElement("video"), done = false;
+      var finish = function(ok){
+        if(done) return;
+        done = true;
+        clearTimeout(timer);
+        try{ v.removeAttribute("src"); v.load(); }catch(e){}
+        resolve(ok);
+      };
+      var timer = setTimeout(function(){ finish(false); }, 6000);
+      v.preload = "metadata";
+      v.muted = true;
+      v.onloadedmetadata = function(){ finish(true); };
+      v.onerror = function(){ finish(false); };
+      v.src = url;
+    });
+  }
+  function downloadFirst(){
+    return fetch(link).then(function(r){
+      if(!r.ok) throw new Error("play");
+      var type = r.headers.get("content-type") || "video/mp4";
+      var total = Number(r.headers.get("content-length")) || 0;
+      if(!r.body || !r.body.getReader) return r.blob();
+      var rd = r.body.getReader(), parts = [], got = 0, last = 0;
+      return (function pump(){
+        return rd.read().then(function(x){
+          if(x.done) return new Blob(parts, { type: type });
+          parts.push(x.value);
+          got += x.value.length;
+          var now = Date.now();
+          if(now - last > 400){
+            last = now;
+            say(total ? ("Loading video... " + Math.min(99, Math.floor(got / total * 100)) + "%") : ("Loading video... " + (got / 1048576).toFixed(0) + " MB"));
+          }
+          return pump();
+        });
+      })();
+    }).then(function(b){ location.replace(URL.createObjectURL(b)); });
+  }
   fetch(API + "/ticket?f=" + encodeURIComponent(q.get("video")), { cache: "no-store" })
     .then(function(r){ if(!r.ok) throw new Error("ticket"); return r.json(); })
-    .then(function(d){ link = API + "/play?t=" + encodeURIComponent(d.t); return fetch(link); })
-    .then(function(r){ if(!r.ok) throw new Error("play"); return r.blob(); })
-    .then(function(b){ location.replace(URL.createObjectURL(b)); })
+    .then(function(d){
+      link = API + "/play?t=" + encodeURIComponent(d.t);
+      return startsPlaying(link).then(function(ok){
+        if(ok){ location.replace(link); return; }
+        return downloadFirst();
+      });
+    })
     .catch(function(){ if(link) location.replace(link); else say("This video isn't available right now."); });
 })();
 </script>

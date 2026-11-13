@@ -5,6 +5,36 @@
 <link rel="icon" type="image/png" href="file_000000000c40722f92b1fe6758cb4855.png">
 
 <meta charset="UTF-8">
+<script>
+/* A picture from a PDF needs the PDF viewer's files: ask for them all at once, right
+   away, instead of one after another as each one is found. */
+(function(){
+  try{
+    if(!new URLSearchParams(location.search).get("pdf")) return;
+    ["./pdf-compat.js", "./pdf-lib.mjs", "./pdfjs/build/pdf.mjs", "./pdf-worker.mjs", "./pdfjs/build/pdf.worker.mjs"].forEach(function(u){
+      var l = document.createElement("link");
+      l.rel = "modulepreload";
+      l.href = u;
+      document.head.appendChild(l);
+    });
+  }catch(e){}
+})();
+</script>
+<script>
+/* Opened for a browser's bare picture (an installed app's "Open in Browser"): none
+   of this viewer is shown, only a plain loading line, until the browser is sent to
+   the picture itself. */
+(function(){
+  try{
+    if(new URLSearchParams(location.search).get("raw") !== "1") return;
+    var st = document.createElement("style");
+    st.textContent = "html.lt-raw body{display:none!important}html.lt-raw{background:#111!important}" +
+      "html.lt-raw::before{content:'Loading image...';position:fixed;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;background:#111;color:#bbb;font:16px sans-serif;z-index:2147483647}";
+    document.documentElement.appendChild(st);
+    document.documentElement.classList.add("lt-raw");
+  }catch(e){}
+})();
+</script>
 <script src="site-tools.js"></script>
 
 <meta
