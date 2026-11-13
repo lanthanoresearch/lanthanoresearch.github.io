@@ -1,6 +1,6 @@
 {
- "count": 317,
- "totalBytes": 283909547,
+ "count": 318,
+ "totalBytes": 283917492,
  "files": [
   {
    "path": "1 Thessalonians Original Text.png",
@@ -939,8 +939,8 @@
   },
   {
    "path": "pdf.html",
-   "size": 569928,
-   "hash": "785c87a1d863d1e8"
+   "size": 571096,
+   "hash": "ba189e400421e297"
   },
   {
    "path": "pdfjs/build/pdf.mjs",
@@ -1041,6 +1041,11 @@
    "path": "Rapture Differences.png",
    "size": 146760,
    "hash": "d3af4e2b6d87b500"
+  },
+  {
+   "path": "raw-video-sw.js",
+   "size": 2411,
+   "hash": "c9ff04c4293163ac"
   },
   {
    "path": "research-assistant-engine.js",
@@ -1534,8 +1539,8 @@
   },
   {
    "path": "video.html",
-   "size": 296333,
-   "hash": "bc49290a31b89d12"
+   "size": 300699,
+   "hash": "6027c36a8e8babae"
   },
   {
    "path": "What is Everything.pdf",
