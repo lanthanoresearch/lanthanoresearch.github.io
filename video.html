@@ -100,10 +100,46 @@
     });
   }
 
+  // Before the browser is sent to the finished video, it is tried here in a hidden
+  // player. If this browser cannot show it (unsupported kind of video, damaged
+  // file), that is found out now and the website's own video page is used, rather
+  // than leaving an empty player.
+  function playable(url){
+    return new Promise(function(resolve){
+      var v = document.createElement("video"), done = false;
+      var finish = function(ok, why){
+        if(done) return;
+        done = true;
+        clearTimeout(timer);
+        try{ v.removeAttribute("src"); v.load(); }catch(e){}
+        resolve({ ok: ok, why: why || "" });
+      };
+      var timer = setTimeout(function(){ finish(false, "it did not start"); }, 15000);
+      v.preload = "auto";
+      v.muted = true;
+      v.playsInline = true;
+      v.onerror = function(){ finish(false, "error " + (v.error ? v.error.code : "?") + (v.error && v.error.message ? ": " + v.error.message : "")); };
+      v.onloadeddata = function(){
+        if(v.videoWidth > 0 && v.duration > 0) finish(true);
+        else finish(false, "no picture in it (" + v.videoWidth + "x" + v.videoHeight + ", " + Math.round(v.duration || 0) + "s)");
+      };
+      v.src = url;
+    });
+  }
+
   function open(blob){
-    location.replace(URL.createObjectURL(blob));
-    // Still here a moment later: the browser did not go to it. The video's own page.
-    setTimeout(viewer, 6000);
+    var url = URL.createObjectURL(blob);
+    say("Opening...");
+    return playable(url).then(function(r){
+      if(r.ok){
+        location.replace(url);
+        // Still here a moment later: the browser did not go to it. The video's own page.
+        setTimeout(viewer, 6000);
+        return;
+      }
+      say("This browser could not play it here (" + r.why + "; " + (blob.size / 1048576).toFixed(1) + " MB, " + (blob.type || "no type") + "). Opening the video's own page...");
+      setTimeout(viewer, 3500);
+    });
   }
 
   attempt(ticket)
