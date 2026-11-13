@@ -2443,14 +2443,26 @@ if(document.readyState === "loading") document.addEventListener("DOMContentLoade
 
     // Android
     if(opt.blob && local){
+      // A picture taken out of a PDF: the browser opens the website's page for it
+      // (the same picture, drawn from the same PDF), like any other picture. Only
+      // without a connection (or a browser) is the picture's own file handed to the
+      // phone's viewer.
+      var B0 = browserPlugin();
+      if(web && B0 && !offline){
+        try{
+          var r0 = B0.open({ url: web });
+          if(r0 && typeof r0.catch === "function"){
+            r0.catch(function(){ openFileOnPhone(opt); });
+          }
+          say("Opening in your browser\u2026");
+          return true;
+        }catch(e){}
+      }
       say("Opening\u2026");
       openFileOnPhone(opt).then(function(done){
         if(done) return;
-        // Could not hand the picture over itself: its website page, in the browser.
-        if(offline){ say("Opening in your browser needs an internet connection."); return; }
-        var B0 = browserPlugin();
-        if(web && B0){ try{ B0.open({ url: web }); return; }catch(e){} }
-        if(web) viaShareSheet(opt, web); else say("Couldn't open this picture.");
+        if(web && !offline) viaShareSheet(opt, web);
+        else say("Opening in your browser needs an internet connection.");
       });
       return true;
     }

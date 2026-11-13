@@ -8259,31 +8259,17 @@ newTabButton.addEventListener(
                 onSite = (list.files || []).some(f => f.path === src);
             }catch(e){}
 
-            // A video from the video server needs a short pass from it to play in the
-            // browser's own player. Pressing this button is the person asking to go
-            // online, so the pass is asked for here (if it can't be got, the next best
-            // thing is used below).
-            try{
-
-                if(onSite){
-                    web = new URL(src, location.href).href;
-                }else if(navigator.onLine !== false){
-                    try{ LT.toast && LT.toast("Opening in your browser\u2026"); }catch(e){}
-                    const ask = window.LT_REAL_FETCH || window.fetch.bind(window);
-                    const ctl = new AbortController();
-                    const timer = setTimeout(() => ctl.abort(), 5000);
-                    try{
-                        const res = await ask(VIDEO_API + "/ticket?f=" + encodeURIComponent(src), { cache: "no-store", signal: ctl.signal });
-                        if(res.ok) web = VIDEO_API + "/play?t=" + encodeURIComponent((await res.json()).t);
-                    }catch(e){}
-                    clearTimeout(timer);
-                }
-
-            }catch(e){ web = ""; }
+            // A video that is a file of the website opens as that raw file, in the
+            // browser's own player. A video from the video server only plays for the
+            // website's own pages (the server answers nothing else, so a direct link
+            // gives an empty player), so it opens on the video's own page.
+            if(onSite){
+                try{ web = new URL(src, location.href).href; }catch(e){ web = ""; }
+            }
 
             if(web && at > 1) web += "#t=" + Math.floor(at);
 
-            // No direct link (no pass could be got): the computer app hands the video
+            // No direct link (a video of the video server): the computer app hands the video
             // file it holds to the computer's own player; otherwise the video's own
             // page on the website, written the way the website writes it.
             let held = "";
