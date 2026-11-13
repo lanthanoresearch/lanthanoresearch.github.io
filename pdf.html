@@ -18023,6 +18023,7 @@ document.getElementById("imgCtxView").addEventListener("click", async () => {
     link.searchParams.set("pg", String(ref.page));
     link.searchParams.set("idx", String(ref.index));
     if(ref.w && ref.h) link.searchParams.set("sz", `${ref.w}x${ref.h}`);
+    link.searchParams.set("raw", "1");   // the browser gets the bare picture
     webLink = link.href;
   }
 

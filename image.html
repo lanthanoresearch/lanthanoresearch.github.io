@@ -2850,6 +2850,7 @@ document
             // (the PDF there is the very same one), so the fingerprint isn't needed.
             webLink.searchParams.delete("hx");
             webLink.searchParams.delete("n");
+            webLink.searchParams.set("raw", "1");   // the browser gets the bare picture
 
             // On the website this is a normal new tab. In an installed app the
             // picture (which exists only in here) is handed to the computer's own
@@ -4036,6 +4037,15 @@ const LTPics = (function(){
             window.__pdfImageBlob = blob;
 
             window.__pdfImageUrl = URL.createObjectURL(blob);
+
+            // Opened by an installed app's "Open in Browser": the browser is sent to
+            // the bare picture, so it shows it in its own image viewer.
+            try{
+                if(new URLSearchParams(location.search).get("raw") === "1"){
+                    location.replace(window.__pdfImageUrl);
+                    return;
+                }
+            }catch(error){}
 
             img.src = window.__pdfImageUrl;
 

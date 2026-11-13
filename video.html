@@ -5,6 +5,32 @@
 <link rel="icon" type="image/png" href="file_000000000c40722f92b1fe6758cb4855.png">
 
 <meta charset="UTF-8">
+<script>
+/* "Open in Browser" from an installed app, for a video kept in the video server:
+   the browser must be handed the bare video, to play in its own player, not this
+   page. So nothing of this page is shown or started: the video is fetched the way
+   the website fetches it for "Open in New Tab" and the browser is sent to it. */
+(function(){
+  var q; try{ q = new URLSearchParams(location.search); }catch(e){ return; }
+  if(q.get("raw") !== "1" || q.get("source") !== "r2" || !q.get("video")) return;
+  var API = "https://videos.lanthanoresearch.com", link = "";
+  function say(t){
+    try{
+      document.open();
+      document.write('<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><title>Video</title><body style="margin:0;background:#111;color:#bbb;font:16px sans-serif;display:flex;align-items:center;justify-content:center;height:100vh">' + t);
+      document.close();
+    }catch(e){}
+  }
+  window.__ltRawOpen = true;   // the rest of this page stays idle
+  say("Loading video...");
+  fetch(API + "/ticket?f=" + encodeURIComponent(q.get("video")), { cache: "no-store" })
+    .then(function(r){ if(!r.ok) throw new Error("ticket"); return r.json(); })
+    .then(function(d){ link = API + "/play?t=" + encodeURIComponent(d.t); return fetch(link); })
+    .then(function(r){ if(!r.ok) throw new Error("play"); return r.blob(); })
+    .then(function(b){ location.replace(URL.createObjectURL(b)); })
+    .catch(function(){ if(link) location.replace(link); else say("This video isn't available right now."); });
+})();
+</script>
 <script src="site-tools.js"></script>
 
 <meta
@@ -4880,6 +4906,9 @@ async function r2Load(resumeAt){
             return;
         }
 
+        // Opened for the browser's bare video (see the small script in the header).
+        if(window.__ltRawOpen) return;
+
         const gate = r2Check();
 
         if(!gate.ok){
@@ -8281,6 +8310,7 @@ newTabButton.addEventListener(
             const page = new URL(location.href);
             page.hash = "";
             page.searchParams.set("source", onSite ? "site" : "r2");
+            if(!onSite) page.searchParams.set("raw", "1");
 
             if(LT.openTab({
                 url: web || held || page.href,
