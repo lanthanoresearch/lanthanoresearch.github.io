@@ -17,12 +17,17 @@
   // None of this page is shown: a plain line over everything, until the browser is
   // sent to the video itself.
   function say(t){
-    try{ document.documentElement.setAttribute("data-lt-say", t); }catch(e){}
+    try{
+      document.documentElement.setAttribute("data-lt-say", t);
+      document.title = t;
+    }catch(e){}
   }
   try{
     var st = document.createElement("style");
-    st.textContent = "html.lt-raw body{display:none!important}html.lt-raw{background:#111!important}" +
-      "html.lt-raw::before{content:attr(data-lt-say);position:fixed;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;background:#111;color:#bbb;font:16px sans-serif;z-index:2147483647}";
+    // Nothing of this site shows: a bare page in the browser's own colours and
+    // type, like any plain page the browser is still opening.
+    st.textContent = "html.lt-raw{color-scheme:light dark}html.lt-raw body{display:none!important}" +
+      "html.lt-raw::before{content:attr(data-lt-say);position:fixed;left:0;top:0;right:0;bottom:0;display:block;background:Canvas;color:GrayText;font:15px system-ui,-apple-system,sans-serif;padding:16px;z-index:2147483647}";
     document.documentElement.appendChild(st);
     document.documentElement.classList.add("lt-raw");
   }catch(e){}
@@ -31,10 +36,9 @@
   // The video is downloaded here first, then the browser is sent to the finished
   // video (the way the website's own "Open in New Tab" does it); the video server
   // does not play a bare link opened in the browser. Every step has a way back:
-  //   1. in pieces, several at a time (quicker)
-  //   2. one plain download
-  //   3. one plain download with a fresh pass from the server
-  //   4. the website's own video page, which plays it
+  //   1. one download, streamed in
+  //   2. the same with a fresh pass from the server
+  //   3. the website's own video page, which plays it
   var STALL = Number(q.get("stall")) || 30000;   // no data at all for this long = give up on this try
   var ctl = null, stallTimer = 0;
 
@@ -69,35 +73,6 @@
       .then(function(d){ link = API + "/play?t=" + encodeURIComponent(d.t); return link; });
   }
 
-  function inPieces(signal){
-    var PIECE = 4 * 1048576, LANES = 4;
-    return fetch(link, { method: "HEAD", signal: signal }).then(function(h){
-      var n = Number(h.headers.get("content-length")) || 0;
-      if(!h.ok || n < 2 * PIECE) throw new Error("small");
-      var type = typeOf(h.headers.get("content-type"));
-      var count = Math.ceil(n / PIECE), pieces = new Array(count), next = 0, got = 0, last = 0;
-      function lane(){
-        if(next >= count) return Promise.resolve();
-        var i = next++, from = i * PIECE, to = Math.min(n, from + PIECE) - 1;
-        return fetch(link, { headers: { Range: "bytes=" + from + "-" + to }, signal: signal }).then(function(r){
-          if(r.status !== 206) throw new Error("range");
-          return r.arrayBuffer();
-        }).then(function(buf){
-          if(buf.byteLength !== to - from + 1) throw new Error("length");
-          pieces[i] = buf;
-          got += buf.byteLength;
-          arm();
-          var now = Date.now();
-          if(now - last > 400){ last = now; say("Loading video... " + Math.min(99, Math.floor(got / n * 100)) + "%"); }
-          return lane();
-        });
-      }
-      var lanes = [];
-      for(var k = 0; k < LANES; k++) lanes.push(lane());
-      return Promise.all(lanes).then(function(){ return new Blob(pieces, { type: type }); });
-    });
-  }
-
   function plain(signal){
     return fetch(link, { signal: signal }).then(function(r){
       if(!r.ok) throw new Error("play");
@@ -107,7 +82,10 @@
       var rd = r.body.getReader(), parts = [], got = 0, last = 0;
       return (function pump(){
         return rd.read().then(function(x){
-          if(x.done) return new Blob(parts, { type: type });
+          if(x.done){
+            if(total && got !== total) throw new Error("short");   // not all of it came
+            return new Blob(parts, { type: type });
+          }
           parts.push(x.value);
           got += x.value.length;
           arm();
@@ -129,7 +107,7 @@
   }
 
   attempt(ticket)
-    .then(function(){ return attempt(inPieces).catch(function(){ return attempt(plain); }); })
+    .then(function(){ return attempt(plain); })
     .catch(function(){
       // a fresh pass, one more plain try
       return attempt(ticket).then(function(){ return attempt(plain); });

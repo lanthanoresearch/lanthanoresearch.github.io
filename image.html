@@ -28,10 +28,11 @@
   try{
     if(new URLSearchParams(location.search).get("raw") !== "1") return;
     var st = document.createElement("style");
-    st.textContent = "html.lt-raw body{display:none!important}html.lt-raw{background:#111!important}" +
-      "html.lt-raw::before{content:'Loading image...';position:fixed;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;background:#111;color:#bbb;font:16px sans-serif;z-index:2147483647}";
+    st.textContent = "html.lt-raw{color-scheme:light dark}html.lt-raw body{display:none!important}" +
+      "html.lt-raw::before{content:'Loading image...';position:fixed;left:0;top:0;right:0;bottom:0;display:block;background:Canvas;color:GrayText;font:15px system-ui,-apple-system,sans-serif;padding:16px;z-index:2147483647}";
     document.documentElement.appendChild(st);
     document.documentElement.classList.add("lt-raw");
+    document.title = "Loading image...";
     // Never a loading line that does not end: after a while the viewer shows.
     setTimeout(function(){ document.documentElement.classList.remove("lt-raw"); }, 45000);
   }catch(e){}
