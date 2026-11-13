@@ -11,6 +11,9 @@
 //       app is made to match the website exactly (files the website no longer
 //       has are removed too).
 //
+// Turning Lockdown off asks twice first: it ends the promise that this app never
+// connects to anything and never changes.
+//
 // Nothing happens by itself: the website is contacted only when "Check" is
 // pressed with Lockdown off. The website, and the website installed as a PWA,
 // never load this.
@@ -576,6 +579,15 @@
 
   async function reset() { await store.reset(); try { localStorage.removeItem("lt_app_updated"); } catch (e) {} }
 
+  // When the app last knew it matched the website (shown instead of "Not checked yet").
+  function getVerified() { try { return localStorage.getItem("lt_update_verified") || ""; } catch (e) { return ""; } }
+  function setVerified(on) {
+    try {
+      if (on) localStorage.setItem("lt_update_verified", new Date().toISOString());
+      else localStorage.removeItem("lt_update_verified");
+    } catch (e) {}
+  }
+
   window.AppUpdate = { check: check, apply: apply, reset: reset, platform: PLAT, isLocked: isLocked, setLocked: setLocked };
 
   /* ------------------------------------------------------ Settings cards */
@@ -702,7 +714,9 @@
       $("auBarWrap").hidden = true; $("auDont").hidden = true;
       var when = "";
       try { when = localStorage.getItem("lt_app_updated") || ""; } catch (e) {}
-      state("current", "Not checked yet", "");
+      var ver = getVerified();
+      if (ver) state("current", "Everything is up to date", "As of " + new Date(ver).toLocaleString() + ". Press Check to look again.");
+      else state("current", "Not checked yet", "");
       showDetails(null);
       $("auNote").textContent = when ? "Last updated " + new Date(when).toLocaleString() + "." : "";
       actions([{ text: "Check", cls: "primary", run: doCheck }]);
@@ -745,12 +759,14 @@
         ? " · includes " + nv + (nv === 1 ? " new video" : " new videos") + (plan.newVideoSized && plan.newVideoBytes ? " (about " + mb(plan.newVideoBytes) + ")" : "")
         : "";
       if (!n) {
+        setVerified(true);
         state("current", "Everything is in sync", plan.total + " of " + plan.total + " files match the website.");
         $("auNote").textContent = "Checked " + new Date().toLocaleString() + ". If a paper or page still looks old, press Refresh everything: it downloads every page and paper again.";
         showDetails(null);
         actions([{ text: "Check", cls: "primary", run: doCheck }, refreshAction()]);
         return;
       }
+      setVerified(false);
       state("outdated", "An update is available", plan.inSync + " files are in sync · " + n + " need updating" + videoText);
       $("auNote").textContent = nv ? (nv === 1 ? "The new video is saved inside the app, so it needs room on this device and plays with no internet afterwards." : "The new videos are saved inside the app, so they need room on this device and play with no internet afterwards.") : "";
       showDetails(plan);
@@ -765,6 +781,7 @@
       $("auDontMore").hidden = !(p.newVideos && p.newVideos.length);
       $("auDetails").hidden = true;
       $("auNote").textContent = "";
+      setVerified(false);
       state("updating", "Updating…", "");
       actions([{ text: "Cancel", cls: "primary cancelMode", run: function () { mine.cancelled = true; $("auTitle").textContent = "Stopping…"; } }]);
       $("auLockToggle").disabled = true;
@@ -818,6 +835,9 @@
         showVideoCount();
         return;
       }
+      // Remembered, so the page that opens after the reload says everything is up to
+      // date instead of "Not checked yet".
+      setVerified(true);
       state("current", "Updated", "The app now matches the website. Reloading…");
       actions([]);
       setTimeout(function () { location.reload(); }, 1200);
@@ -857,9 +877,23 @@
     }
     showVideoCount();
 
+    // Turning Lockdown OFF asks twice. Turning it back on needs no question.
+    async function sure() {
+      var ask = window.LT && window.LT.confirmStep;
+      if (!ask) return window.confirm("Turn off Lockdown? This app will no longer be sealed: it can connect to the internet and its files can change. Are you sure?");
+      var first = await ask("Turn off Lockdown?",
+        "Lockdown keeps this app sealed: it never connects to the website or anything else, and nothing can change its files. With it off, the app can go online to check for and install updates, and the promise that this version stays exactly as it is no longer holds. Nothing is guaranteed to stay the same.",
+        "Continue", true);
+      if (!first) return false;
+      return ask("Are you sure?",
+        "Lockdown's promise (this app never connects to anything and never changes) will no longer apply. You can turn Lockdown back on at any time.",
+        "Yes, turn Lockdown off", true);
+    }
+
     $("auLockToggle").addEventListener("click", async function () {
       if (working) return;
       var want = !locked;
+      if (!want && !(await sure())) return;
       try { await setLocked(want); } catch (e) { return; }
       locked = await isLocked();
       paintLock();
