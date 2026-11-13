@@ -32,6 +32,8 @@
       "html.lt-raw::before{content:'Loading image...';position:fixed;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;background:#111;color:#bbb;font:16px sans-serif;z-index:2147483647}";
     document.documentElement.appendChild(st);
     document.documentElement.classList.add("lt-raw");
+    // Never a loading line that does not end: after a while the viewer shows.
+    setTimeout(function(){ document.documentElement.classList.remove("lt-raw"); }, 45000);
   }catch(e){}
 })();
 </script>
@@ -3195,6 +3197,10 @@ if(pdfRef){
 
         const fail = (message) => {
 
+            // Opened for the browser's bare picture and it could not be made: show the
+            // viewer, with the reason, instead of a loading line that never ends.
+            document.documentElement.classList.remove("lt-raw");
+
             if(loadingText){
                 loadingText.textContent = message;
             }
@@ -4070,14 +4076,17 @@ const LTPics = (function(){
 
             // Opened by an installed app's "Open in Browser": the browser is sent to
             // the bare picture, so it shows it in its own image viewer.
+            img.src = window.__pdfImageUrl;
+
             try{
                 if(new URLSearchParams(location.search).get("raw") === "1"){
                     location.replace(window.__pdfImageUrl);
+                    // Still here a moment later: the browser did not go to it. The
+                    // viewer, with the picture in it, is shown instead.
+                    setTimeout(() => document.documentElement.classList.remove("lt-raw"), 4000);
                     return;
                 }
             }catch(error){}
-
-            img.src = window.__pdfImageUrl;
 
         }catch(error){
 

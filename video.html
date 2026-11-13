@@ -28,40 +28,89 @@
   }catch(e){}
   window.__ltRawOpen = true;   // the rest of this page stays idle
   say("Loading video...");
-  // Fast way: the video server plays for the website's own pages, so a hidden player
-  // on this page is asked first. If it starts, the browser is sent straight to the
-  // same link and streams it (no waiting for the whole video). If not, the video is
-  // downloaded here first (the way the website's "Open in New Tab" does it).
-  function startsPlaying(url){
-    return new Promise(function(resolve){
-      var v = document.createElement("video"), done = false;
-      var finish = function(ok){
-        if(done) return;
-        done = true;
-        clearTimeout(timer);
-        try{ v.removeAttribute("src"); v.load(); }catch(e){}
-        resolve(ok);
-      };
-      var timer = setTimeout(function(){ finish(false); }, 6000);
-      v.preload = "metadata";
-      v.muted = true;
-      v.onloadedmetadata = function(){ finish(true); };
-      v.onerror = function(){ finish(false); };
-      v.src = url;
+  // The video is downloaded here first, then the browser is sent to the finished
+  // video (the way the website's own "Open in New Tab" does it); the video server
+  // does not play a bare link opened in the browser. Every step has a way back:
+  //   1. in pieces, several at a time (quicker)
+  //   2. one plain download
+  //   3. one plain download with a fresh pass from the server
+  //   4. the website's own video page, which plays it
+  var STALL = Number(q.get("stall")) || 30000;   // no data at all for this long = give up on this try
+  var ctl = null, stallTimer = 0;
+
+  function arm(){
+    clearTimeout(stallTimer);
+    stallTimer = setTimeout(function(){ try{ ctl.abort(); }catch(e){} }, STALL);
+  }
+  function attempt(work){
+    ctl = new AbortController();
+    arm();
+    return work(ctl.signal).then(function(v){ clearTimeout(stallTimer); return v; }, function(e){ clearTimeout(stallTimer); throw e; });
+  }
+
+  function viewer(){
+    try{
+      var u = new URL(location.href);
+      u.searchParams.delete("raw");
+      location.replace(u.href);
+    }catch(e){ say("This video isn't available right now."); }
+  }
+
+  function typeOf(given){
+    if(/^video\//i.test(given || "")) return given;
+    var m = /\.([a-z0-9]+)$/i.exec(String(q.get("video")));
+    var e = m ? m[1].toLowerCase() : "";
+    return ({ webm: "video/webm", mov: "video/quicktime", m4v: "video/mp4", mp4: "video/mp4", ogv: "video/ogg" })[e] || "video/mp4";
+  }
+
+  function ticket(signal){
+    return fetch(API + "/ticket?f=" + encodeURIComponent(q.get("video")), { cache: "no-store", signal: signal })
+      .then(function(r){ if(!r.ok) throw new Error("ticket"); return r.json(); })
+      .then(function(d){ link = API + "/play?t=" + encodeURIComponent(d.t); return link; });
+  }
+
+  function inPieces(signal){
+    var PIECE = 4 * 1048576, LANES = 4;
+    return fetch(link, { method: "HEAD", signal: signal }).then(function(h){
+      var n = Number(h.headers.get("content-length")) || 0;
+      if(!h.ok || n < 2 * PIECE) throw new Error("small");
+      var type = typeOf(h.headers.get("content-type"));
+      var count = Math.ceil(n / PIECE), pieces = new Array(count), next = 0, got = 0, last = 0;
+      function lane(){
+        if(next >= count) return Promise.resolve();
+        var i = next++, from = i * PIECE, to = Math.min(n, from + PIECE) - 1;
+        return fetch(link, { headers: { Range: "bytes=" + from + "-" + to }, signal: signal }).then(function(r){
+          if(r.status !== 206) throw new Error("range");
+          return r.arrayBuffer();
+        }).then(function(buf){
+          if(buf.byteLength !== to - from + 1) throw new Error("length");
+          pieces[i] = buf;
+          got += buf.byteLength;
+          arm();
+          var now = Date.now();
+          if(now - last > 400){ last = now; say("Loading video... " + Math.min(99, Math.floor(got / n * 100)) + "%"); }
+          return lane();
+        });
+      }
+      var lanes = [];
+      for(var k = 0; k < LANES; k++) lanes.push(lane());
+      return Promise.all(lanes).then(function(){ return new Blob(pieces, { type: type }); });
     });
   }
-  function downloadFirst(){
-    return fetch(link).then(function(r){
+
+  function plain(signal){
+    return fetch(link, { signal: signal }).then(function(r){
       if(!r.ok) throw new Error("play");
-      var type = r.headers.get("content-type") || "video/mp4";
+      var type = typeOf(r.headers.get("content-type"));
       var total = Number(r.headers.get("content-length")) || 0;
-      if(!r.body || !r.body.getReader) return r.blob();
+      if(!r.body || !r.body.getReader) return r.blob().then(function(b){ return b.slice(0, b.size, type); });
       var rd = r.body.getReader(), parts = [], got = 0, last = 0;
       return (function pump(){
         return rd.read().then(function(x){
           if(x.done) return new Blob(parts, { type: type });
           parts.push(x.value);
           got += x.value.length;
+          arm();
           var now = Date.now();
           if(now - last > 400){
             last = now;
@@ -70,18 +119,22 @@
           return pump();
         });
       })();
-    }).then(function(b){ location.replace(URL.createObjectURL(b)); });
+    });
   }
-  fetch(API + "/ticket?f=" + encodeURIComponent(q.get("video")), { cache: "no-store" })
-    .then(function(r){ if(!r.ok) throw new Error("ticket"); return r.json(); })
-    .then(function(d){
-      link = API + "/play?t=" + encodeURIComponent(d.t);
-      return startsPlaying(link).then(function(ok){
-        if(ok){ location.replace(link); return; }
-        return downloadFirst();
-      });
+
+  function open(blob){
+    location.replace(URL.createObjectURL(blob));
+    // Still here a moment later: the browser did not go to it. The video's own page.
+    setTimeout(viewer, 6000);
+  }
+
+  attempt(ticket)
+    .then(function(){ return attempt(inPieces).catch(function(){ return attempt(plain); }); })
+    .catch(function(){
+      // a fresh pass, one more plain try
+      return attempt(ticket).then(function(){ return attempt(plain); });
     })
-    .catch(function(){ if(link) location.replace(link); else say("This video isn't available right now."); });
+    .then(open, viewer);
 })();
 </script>
 <script src="site-tools.js"></script>
