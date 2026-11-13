@@ -8249,40 +8249,59 @@ newTabButton.addEventListener(
             // own page on the website.
             let web = "";
 
+            // Inside the app every video is marked as a file of this site (it is stored
+            // here). On the website itself only a few really are; the rest live in the
+            // video server. The app's own list of the website's files says which.
+            let onSite = false;
+
+            try{
+                const list = await (await fetch("site-files.json", { cache: "no-store" })).json();
+                onSite = (list.files || []).some(f => f.path === src);
+            }catch(e){}
+
+            // A video from the video server needs a short pass from it to play in the
+            // browser's own player. Pressing this button is the person asking to go
+            // online, so the pass is asked for here (if it can't be got, the next best
+            // thing is used below).
             try{
 
-                if(!isR2){
+                if(onSite){
                     web = new URL(src, location.href).href;
-                }else{
-                    let locked = true;
-                    try{ locked = localStorage.getItem("lt_lockdown") !== "off"; }catch(e){}
-
-                    if(!locked && navigator.onLine !== false){
-                        const ask = window.LT_REAL_FETCH || window.fetch.bind(window);
-                        const ctl = new AbortController();
-                        const timer = setTimeout(() => ctl.abort(), 6000);
-                        try{
-                            const res = await ask(VIDEO_API + "/ticket?f=" + encodeURIComponent(src), { cache: "no-store", signal: ctl.signal });
-                            if(res.ok) web = VIDEO_API + "/play?t=" + encodeURIComponent((await res.json()).t);
-                        }catch(e){}
-                        clearTimeout(timer);
-                    }
+                }else if(navigator.onLine !== false){
+                    try{ LT.toast && LT.toast("Opening in your browser\u2026"); }catch(e){}
+                    const ask = window.LT_REAL_FETCH || window.fetch.bind(window);
+                    const ctl = new AbortController();
+                    const timer = setTimeout(() => ctl.abort(), 5000);
+                    try{
+                        const res = await ask(VIDEO_API + "/ticket?f=" + encodeURIComponent(src), { cache: "no-store", signal: ctl.signal });
+                        if(res.ok) web = VIDEO_API + "/play?t=" + encodeURIComponent((await res.json()).t);
+                    }catch(e){}
+                    clearTimeout(timer);
                 }
 
             }catch(e){ web = ""; }
 
             if(web && at > 1) web += "#t=" + Math.floor(at);
 
-            if(!web){
-                const page = new URL(location.href);
-                page.hash = "";
-                web = page.href;
-            }
+            // No direct link (no pass could be got): the computer app hands the video
+            // file it holds to the computer's own player; otherwise the video's own
+            // page on the website, written the way the website writes it.
+            let held = "";
+            try{
+                const cs = video.currentSrc || "";
+                if(cs && (/^blob:/i.test(cs) || new URL(cs, location.href).origin === location.origin)) held = cs;
+            }catch(e){}
+
+            const page = new URL(location.href);
+            page.hash = "";
+            page.searchParams.set("source", onSite ? "site" : "r2");
 
             if(LT.openTab({
-                url: video.currentSrc || web,
-                fileUrl: video.currentSrc || "",
+                url: web || held || page.href,
+                fileUrl: held,
+                preferFile: !web,
                 webUrl: web,
+                pageUrl: page.href,
                 filename: decodeURIComponent(String(src).split("?")[0].split("/").pop() || "video.mp4")
             })){
                 try{ video.pause(); }catch(e){}

@@ -2338,22 +2338,95 @@ if(document.readyState === "loading") document.addEventListener("DOMContentLoade
     return true;
   }
 
+  function plugin(name){
+    try{
+      var C = window.Capacitor;
+      if(!C) return null;
+      if(typeof C.isPluginAvailable === "function" && !C.isPluginAvailable(name)) return null;
+      return (C.Plugins && C.Plugins[name]) || (C.registerPlugin && C.registerPlugin(name)) || null;
+    }catch(e){ return null; }
+  }
+
+  function mimeOf(name){
+    var m = /\.([a-z0-9]+)$/i.exec(String(name || ""));
+    var e = m ? m[1].toLowerCase() : "";
+    return ({ png:"image/png", jpg:"image/jpeg", jpeg:"image/jpeg", gif:"image/gif", webp:"image/webp",
+              pdf:"application/pdf", mp4:"video/mp4", webm:"video/webm" })[e] || "application/octet-stream";
+  }
+
+  // A picture that exists only inside the app (taken out of a PDF): its real file
+  // is saved in the app's temporary space and opened with the phone's own viewer,
+  // so the person gets the picture itself, not a web page.
+  function openFileOnPhone(opt){
+    var FS = plugin("Filesystem");
+    var src = opt.fileUrl || opt.url;
+    if(!FS || typeof FS.writeFile !== "function" || !src) return Promise.resolve(false);
+    // Plain letters, digits and spaces only: a "#" or "%" in a file's name would be
+    // read as part of the address by the phone.
+    var name = String(opt.filename || "image.png").replace(/[^\p{L}\p{N} ._()-]+/gu, "").replace(/\s+/g, " ").trim() || "image.png";
+    return fetch(src).then(function(r){ return r.blob(); }).then(function(blob){
+      return new Promise(function(resolve, reject){
+        var f = new FileReader();
+        f.onload = function(){ resolve(String(f.result).split(",")[1] || ""); };
+        f.onerror = reject;
+        f.readAsDataURL(blob);
+      });
+    }).then(function(data){
+      var clear = (typeof FS.rmdir === "function")
+        ? Promise.resolve(FS.rmdir({ path: "lanthano-open", directory: "CACHE", recursive: true })).catch(function(){})
+        : Promise.resolve();
+      return clear.then(function(){
+        return FS.writeFile({ path: "lanthano-open/" + name, data: data, directory: "CACHE", recursive: true });
+      });
+    }).then(function(saved){
+      var uri = saved && saved.uri;
+      if(!uri) return false;
+      var FO = plugin("FileOpener");
+      if(FO && typeof FO.open === "function"){
+        return Promise.resolve(FO.open({ filePath: uri, contentType: mimeOf(name), openWithDefault: true })).then(function(){ return true; }, function(){
+          return shareFile(uri, name);
+        });
+      }
+      return shareFile(uri, name);
+    }).catch(function(){ return false; });
+  }
+
+  function shareFile(uri, name){
+    var SH = plugin("Share");
+    if(!SH || typeof SH.share !== "function") return false;
+    try{
+      var r = SH.share({ title: name, url: uri, dialogTitle: "Open with" });
+      if(r && typeof r.catch === "function") r.catch(function(){});
+      say("Choose an app to view it.");
+      return true;
+    }catch(e){ return false; }
+  }
+
   window.LT = window.LT || {};
   window.LT.openTab = function(opt){
     opt = opt || {};
     var plat = platform();
     if(plat !== "desktop" && plat !== "android") return false;
 
-    var web = "";
-    try{ web = window.LT.siteUrl(opt.webUrl || opt.url); }catch(e){}
-    if(!/^https?:\/\//i.test(web)) web = "";
+    var asLink = function(u){
+      var w = "";
+      if(!u) return "";
+      try{ w = window.LT.siteUrl(u); }catch(e){}
+      return /^https?:\/\//i.test(w) ? w : "";
+    };
+
+    // raw: the file itself on the website / video server (what the browser's own
+    // viewer or player shows). page: the viewer's website page for it, which is
+    // only the last resort when no direct link can be made.
+    var raw = asLink(opt.webUrl || (opt.pageUrl ? "" : opt.url));
+    var web = raw || asLink(opt.pageUrl);
 
     var offline = navigator.onLine === false;
-    var local = opt.fileUrl || opt.url;
+    var local = ("fileUrl" in opt) ? opt.fileUrl : opt.url;
 
     if(plat === "desktop"){
       var canHand = window.LT_APP_OPENFILE === true && !!local;
-      if((opt.blob || offline) && canHand){
+      if(canHand && (opt.blob || offline || (opt.preferFile && !raw))){
         handToComputer(local, opt.filename);
         say("Opening\u2026");
         return true;
@@ -2369,6 +2442,18 @@ if(document.readyState === "loading") document.addEventListener("DOMContentLoade
     }
 
     // Android
+    if(opt.blob && local){
+      say("Opening\u2026");
+      openFileOnPhone(opt).then(function(done){
+        if(done) return;
+        // Could not hand the picture over itself: its website page, in the browser.
+        if(offline){ say("Opening in your browser needs an internet connection."); return; }
+        var B0 = browserPlugin();
+        if(web && B0){ try{ B0.open({ url: web }); return; }catch(e){} }
+        if(web) viaShareSheet(opt, web); else say("Couldn't open this picture.");
+      });
+      return true;
+    }
     if(offline){
       say("Opening in your browser needs an internet connection.");
       return true;

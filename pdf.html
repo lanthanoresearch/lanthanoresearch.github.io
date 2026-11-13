@@ -5603,101 +5603,493 @@ function convertRectToViewport(viewport, rect){
    rendered page.
 ============================================================ */
 
-function extractImageRegionsFromOperatorList(opList){
+/* LT-PICS-BEGIN  (one shared copy: kept identical in pdf.html and image.html)
 
-  const regions = [];
+   Pictures inside a PDF page.
 
-  // Mirrors the canvas's own save()/restore() stack and the
-  // composition order transform()/"cm" ops use: a new transform is
-  // applied to LOCAL coordinates first, then whatever CTM already
-  // existed - i.e. newCTM = local * oldCTM, in the row-vector
-  // convention PDF/canvas both use.
-  let matrix = [1, 0, 0, 1, 0, 0];
-  const matrixStack = [];
+   find()    walks the page's drawing list the way the page is drawn (saves,
+             moves, pictures-inside-forms, clipping) and returns every picture
+             that is really visible, as it is cut off by the page and by any
+             frame it sits in. Pictures that were cut into strips or tiles by
+             the program that made the PDF are joined back into one.
+   extract() makes the picture itself: the PDF's own pixels, one for one, turned
+             the way the page shows them. No page drawing, no resizing, no white
+             edges. (A picture that is tilted at an odd angle is drawn from the
+             page instead, at its own detail.) */
+const LTPics = (function(){
 
-  function multiply(first, second){
-    return [
-      first[0]*second[0] + first[1]*second[2],
-      first[0]*second[1] + first[1]*second[3],
-      first[2]*second[0] + first[3]*second[2],
-      first[2]*second[1] + first[3]*second[3],
-      first[4]*second[0] + first[5]*second[2] + second[4],
-      first[4]*second[1] + first[5]*second[3] + second[5]
+    const mul = (a, b) => [
+        a[0]*b[0] + a[1]*b[2],
+        a[0]*b[1] + a[1]*b[3],
+        a[2]*b[0] + a[3]*b[2],
+        a[2]*b[1] + a[3]*b[3],
+        a[4]*b[0] + a[5]*b[2] + b[4],
+        a[4]*b[1] + a[5]*b[3] + b[5]
     ];
-  }
 
-  function applyToPoint(m, x, y){
-    return [m[0]*x + m[2]*y + m[4], m[1]*x + m[3]*y + m[5]];
-  }
+    const arr6 = (m) => [Number(m[0]), Number(m[1]), Number(m[2]), Number(m[3]), Number(m[4]), Number(m[5])];
 
-  const fnArray = opList?.fnArray || [];
-  const argsArray = opList?.argsArray || [];
+    const apply = (m, x, y) => [m[0]*x + m[2]*y + m[4], m[1]*x + m[3]*y + m[5]];
 
-  for(let i = 0; i < fnArray.length; i++){
-
-    const fn = fnArray[i];
-
-    if(fn === OPS.save){
-      matrixStack.push(matrix);
-      continue;
+    function boxOf(m, r){
+        const p = [apply(m, r[0], r[1]), apply(m, r[2], r[1]), apply(m, r[0], r[3]), apply(m, r[2], r[3])];
+        const xs = p.map(v => v[0]);
+        const ys = p.map(v => v[1]);
+        return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
     }
 
-    if(fn === OPS.restore){
-      matrix = matrixStack.pop() || matrix;
-      continue;
+    function cut(a, b){
+        if(!a) return b ? b.slice() : null;
+        if(!b) return a.slice();
+        const r = [Math.max(a[0], b[0]), Math.max(a[1], b[1]), Math.min(a[2], b[2]), Math.min(a[3], b[3])];
+        return (r[2] > r[0] && r[3] > r[1]) ? r : [0, 0, 0, 0];
     }
 
-    if(fn === OPS.transform){
-      matrix = multiply(argsArray[i], matrix);
-      continue;
+    function invert(m){
+        const d = m[0]*m[3] - m[1]*m[2];
+        if(!d) return null;
+        return [
+            m[3]/d, -m[1]/d, -m[2]/d, m[0]/d,
+            (m[2]*m[5] - m[3]*m[4])/d, (m[1]*m[4] - m[0]*m[5])/d
+        ];
     }
 
-    if(
-      fn === OPS.paintImageXObject ||
-      fn === OPS.paintImageXObjectRepeat ||
-      fn === OPS.paintInlineImageXObject
-    ){
+    /* ---------- finding the pictures ---------- */
 
-      const corners = [
-        applyToPoint(matrix, 0, 0),
-        applyToPoint(matrix, 1, 0),
-        applyToPoint(matrix, 0, 1),
-        applyToPoint(matrix, 1, 1)
-      ];
+    function find(opList, OPS, view){
 
-      const xs = corners.map(point => point[0]);
-      const ys = corners.map(point => point[1]);
+        const fns = opList?.fnArray || [];
+        const args = opList?.argsArray || [];
 
-      const rect = [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
+        let matrix = [1, 0, 0, 1, 0, 0];
+        let clip = (view && view.length === 4) ? [Number(view[0]), Number(view[1]), Number(view[2]), Number(view[3])] : null;
+        const stack = [];
+        let pendingClip = false;
 
-      const widthPt = rect[2] - rect[0];
-      const heightPt = rect[3] - rect[1];
+        const raw = [];
 
-      // Skip anything too small to plausibly be a meaningful
-      // picture (hairline shading rects some PDF generators paint
-      // as tiny images, single-pixel gradients, etc.) - 20pt is a
-      // little under a quarter inch.
-      if(widthPt >= 20 && heightPt >= 20){
+        const add = (m, objId, inline, w, h) => {
+            const full = boxOf(m, [0, 0, 1, 1]);
+            const vis = cut(full, clip);
+            if(!vis || vis[2] - vis[0] < 1 || vis[3] - vis[1] < 1) return;
+            raw.push({ m, full, vis, objId, inline, w, h });
+        };
 
-        // The picture's own pixel size, kept with the rectangle so a
-        // link to it can tell it apart from other pictures later.
-        try{
-          const args = argsArray[i];
-          if(fn === OPS.paintInlineImageXObject){
-            rect.meta = { w: args?.[0]?.width || 0, h: args?.[0]?.height || 0 };
-          }else{
-            rect.meta = { w: Number(args?.[1]) || 0, h: Number(args?.[2]) || 0 };
-          }
-        }catch(error){
-          rect.meta = { w: 0, h: 0 };
+        for(let i = 0; i < fns.length; i++){
+
+            const fn = fns[i];
+            const a = args[i];
+
+            if(fn === OPS.save){ stack.push([matrix, clip]); continue; }
+
+            if(fn === OPS.restore){
+                const s = stack.pop();
+                if(s){ matrix = s[0]; clip = s[1]; }
+                continue;
+            }
+
+            if(fn === OPS.transform){ matrix = mul(arr6(a), matrix); continue; }
+
+            if(fn === OPS.paintFormXObjectBegin){
+                stack.push([matrix, clip]);
+                if(a && a[0]) matrix = mul(arr6(a[0]), matrix);
+                if(a && a[1]) clip = cut(clip, boxOf(matrix, [Number(a[1][0]), Number(a[1][1]), Number(a[1][2]), Number(a[1][3])]));
+                continue;
+            }
+
+            if(fn === OPS.paintFormXObjectEnd){
+                const s = stack.pop();
+                if(s){ matrix = s[0]; clip = s[1]; }
+                continue;
+            }
+
+            if(fn === OPS.beginGroup){
+                stack.push([matrix, clip]);
+                const g = a && a[0];
+                if(g && g.bbox){
+                    const gm = g.matrix ? mul(arr6(g.matrix), matrix) : matrix;
+                    clip = cut(clip, boxOf(gm, [Number(g.bbox[0]), Number(g.bbox[1]), Number(g.bbox[2]), Number(g.bbox[3])]));
+                }
+                continue;
+            }
+
+            if(fn === OPS.endGroup){
+                const s = stack.pop();
+                if(s){ matrix = s[0]; clip = s[1]; }
+                continue;
+            }
+
+            if(fn === OPS.clip || fn === OPS.eoClip){ pendingClip = true; continue; }
+
+            if(fn === OPS.constructPath){
+                if(pendingClip){
+                    pendingClip = false;
+                    const mm = a && a[2];
+                    if(mm && mm[0] !== undefined){
+                        clip = cut(clip, boxOf(matrix, [Number(mm[0]), Number(mm[1]), Number(mm[2]), Number(mm[3])]));
+                    }
+                }
+                continue;
+            }
+
+            if(fn === OPS.paintImageXObject){
+                add(matrix, a && a[0], null, Number(a && a[1]) || 0, Number(a && a[2]) || 0);
+                continue;
+            }
+
+            if(fn === OPS.paintInlineImageXObject){
+                const d = a && a[0];
+                add(matrix, "", d, Number(d && d.width) || 0, Number(d && d.height) || 0);
+                continue;
+            }
+
+            if(fn === OPS.paintImageXObjectRepeat){
+                const sx = Number(a[1]), sy = Number(a[2]), pos = a[3] || [];
+                for(let k = 0; k + 1 < pos.length; k += 2){
+                    add(mul([sx, 0, 0, sy, Number(pos[k]), Number(pos[k + 1])], matrix), a[0], null, 0, 0);
+                }
+                continue;
+            }
         }
 
-        regions.push(rect);
-      }
-    }
-  }
+        /* Pictures the maker cut into strips or tiles are one picture again. */
+        let groups = raw.map(p => ({ parts: [p], vis: p.vis.slice() }));
 
-  return regions;
+        const kind = (p) => {
+            const m = p.m;
+            const s = Math.abs(m[0]) + Math.abs(m[1]) + Math.abs(m[2]) + Math.abs(m[3]);
+            if(Math.abs(m[1]) + Math.abs(m[2]) < 1e-4 * s) return "s" + (m[0] > 0 ? "+" : "-") + (m[3] > 0 ? "+" : "-");
+            if(Math.abs(m[0]) + Math.abs(m[3]) < 1e-4 * s) return "r" + (m[1] > 0 ? "+" : "-") + (m[2] > 0 ? "+" : "-");
+            return "";
+        };
+
+        const density = (p) => {
+            const w = p.w || 1, h = p.h || 1;
+            return [Math.hypot(p.m[0], p.m[1]) / w, Math.hypot(p.m[2], p.m[3]) / h];
+        };
+
+        const joins = (A, B) => {
+            const p = A.parts[0], q = B.parts[0];
+            if(!p.w || !q.w) return false;
+            const k = kind(p);
+            if(!k || k !== kind(q)) return false;
+            const dp = density(p), dq = density(q);
+            if(Math.abs(dp[0] - dq[0]) > 0.02 * dp[0] || Math.abs(dp[1] - dq[1]) > 0.02 * dp[1]) return false;
+            const a = A.vis, b = B.vis, t = 1.0;
+            const sameY = Math.abs(a[1] - b[1]) <= t && Math.abs(a[3] - b[3]) <= t;
+            const sameX = Math.abs(a[0] - b[0]) <= t && Math.abs(a[2] - b[2]) <= t;
+            if(sameY && (Math.abs(a[2] - b[0]) <= t || Math.abs(b[2] - a[0]) <= t)) return true;
+            if(sameX && (Math.abs(a[3] - b[1]) <= t || Math.abs(b[3] - a[1]) <= t)) return true;
+            return false;
+        };
+
+        if(groups.length > 1 && groups.length <= 300){
+
+            let again = true;
+
+            while(again){
+
+                again = false;
+
+                outer:
+                for(let i = 0; i < groups.length; i++){
+                    for(let j = i + 1; j < groups.length; j++){
+                        if(joins(groups[i], groups[j])){
+                            const A = groups[i], B = groups[j];
+                            A.parts = A.parts.concat(B.parts);
+                            A.vis = [Math.min(A.vis[0], B.vis[0]), Math.min(A.vis[1], B.vis[1]), Math.max(A.vis[2], B.vis[2]), Math.max(A.vis[3], B.vis[3])];
+                            groups.splice(j, 1);
+                            again = true;
+                            break outer;
+                        }
+                    }
+                }
+            }
+        }
+
+        const out = [];
+
+        for(const g of groups){
+
+            if(g.vis[2] - g.vis[0] < 20 || g.vis[3] - g.vis[1] < 20) continue;
+
+            const first = g.parts[0];
+
+            let w = first.w, h = first.h;
+
+            if(g.parts.length > 1){
+                const d = density(first);
+                w = Math.round((g.vis[2] - g.vis[0]) / (d[0] || 1));
+                h = Math.round((g.vis[3] - g.vis[1]) / (d[1] || 1));
+            }
+
+            out.push({
+                rect: g.vis,
+                parts: g.parts,
+                objId: first.objId,
+                inline: first.inline,
+                w, h
+            });
+        }
+
+        return out;
+    }
+
+    /* ---------- the picture's own pixels ---------- */
+
+    function getObject(page, id){
+
+        return new Promise(resolve => {
+
+            let done = false;
+
+            const timer = setTimeout(() => { if(!done){ done = true; resolve(null); } }, 8000);
+
+            try{
+
+                const store = /^g_/.test(id) ? page.commonObjs : page.objs;
+
+                store.get(id, value => {
+                    if(!done){ done = true; clearTimeout(timer); resolve(value || null); }
+                });
+
+            }catch(error){
+                clearTimeout(timer);
+                resolve(null);
+            }
+        });
+    }
+
+    function drawable(d){
+
+        if(!d) return null;
+
+        if(d.bitmap){
+            const b = d.bitmap;
+            const w = Number(b.width || b.displayWidth || b.codedWidth || d.width) || 0;
+            const h = Number(b.height || b.displayHeight || b.codedHeight || d.height) || 0;
+            return w && h ? { src: b, w, h } : null;
+        }
+
+        if(d.data && d.width && d.height){
+
+            const w = d.width, h = d.height;
+            const px = new Uint8ClampedArray(w * h * 4);
+            const s = d.data;
+
+            if(d.kind === 3 || s.length >= w * h * 4){
+                px.set(s.subarray ? s.subarray(0, w * h * 4) : s.slice(0, w * h * 4));
+            }else if(d.kind === 1){
+                const row = (w + 7) >> 3;
+                for(let y = 0, o = 0; y < h; y++){
+                    for(let x = 0; x < w; x++, o += 4){
+                        const v = (s[y * row + (x >> 3)] >> (7 - (x & 7))) & 1 ? 255 : 0;
+                        px[o] = px[o + 1] = px[o + 2] = v;
+                        px[o + 3] = 255;
+                    }
+                }
+            }else{
+                for(let i = 0, o = 0; o < px.length; i += 3, o += 4){
+                    px[o] = s[i]; px[o + 1] = s[i + 1]; px[o + 2] = s[i + 2]; px[o + 3] = 255;
+                }
+            }
+
+            const c = document.createElement("canvas");
+            c.width = w;
+            c.height = h;
+            c.getContext("2d").putImageData(new ImageData(px, w, h), 0, 0);
+
+            return { src: c, w, h };
+        }
+
+        return null;
+    }
+
+    /* Pixels of one picture that is shown straight or turned a quarter. */
+    function place(part, src, vt, vis){
+
+        const P = mul(mul([1 / src.w, 0, 0, -1 / src.h, 0, 1], part.m), vt);
+
+        const s = Math.abs(P[0]) + Math.abs(P[1]) + Math.abs(P[2]) + Math.abs(P[3]);
+
+        let turned;
+
+        if(Math.abs(P[1]) + Math.abs(P[2]) < 1e-4 * s) turned = false;
+        else if(Math.abs(P[0]) + Math.abs(P[3]) < 1e-4 * s) turned = true;
+        else return null;
+
+        const inv = invert(P);
+        if(!inv) return null;
+
+        const box = boxOf(vt, vis);
+
+        const c = boxOf(inv, box);
+
+        const x0 = Math.max(0, Math.min(src.w, Math.round(c[0])));
+        const x1 = Math.max(0, Math.min(src.w, Math.round(c[2])));
+        const y0 = Math.max(0, Math.min(src.h, Math.round(c[1])));
+        const y1 = Math.max(0, Math.min(src.h, Math.round(c[3])));
+
+        if(x1 <= x0 || y1 <= y0) return { empty: true };
+
+        return { P, turned, x0, x1, y0, y1, box };
+    }
+
+    async function extract(page, pic, options){
+
+        options = options || {};
+
+        const maxPixels = options.maxPixels || 24000000;
+
+        try{ await page.getOperatorList(); }catch(error){}
+
+        const viewport = page.getViewport({ scale: 1 });
+        const vt = viewport.transform;
+
+        const placed = [];
+
+        let ok = true;
+
+        for(const part of pic.parts){
+
+            const data = part.inline || await getObject(page, part.objId);
+            const src = drawable(data);
+
+            if(!src){ ok = false; break; }
+
+            const p = place(part, src, vt, part.vis);
+
+            if(!p){ ok = false; break; }
+            if(p.empty) continue;
+
+            p.src = src;
+            p.part = part;
+            placed.push(p);
+        }
+
+        if(ok && placed.length) try{
+
+            const first = placed[0];
+
+            // Where each piece goes in the finished picture, in its own pixels.
+            const ptPerU = first.turned ? Math.abs(first.P[2]) : Math.abs(first.P[0]);
+            const ptPerV = first.turned ? Math.abs(first.P[1]) : Math.abs(first.P[3]);
+
+            const union = [Infinity, Infinity, -Infinity, -Infinity];
+
+            for(const p of placed){
+                union[0] = Math.min(union[0], p.box[0]);
+                union[1] = Math.min(union[1], p.box[1]);
+                union[2] = Math.max(union[2], p.box[2]);
+                union[3] = Math.max(union[3], p.box[3]);
+            }
+
+            let W = 0, H = 0;
+
+            for(const p of placed){
+
+                p.cw = p.turned ? p.y1 - p.y0 : p.x1 - p.x0;
+                p.ch = p.turned ? p.x1 - p.x0 : p.y1 - p.y0;
+
+                p.u0 = placed.length === 1 ? 0 : Math.round((p.box[0] - union[0]) / ptPerU);
+                p.v0 = placed.length === 1 ? 0 : Math.round((p.box[1] - union[1]) / ptPerV);
+
+                W = Math.max(W, p.u0 + p.cw);
+                H = Math.max(H, p.v0 + p.ch);
+            }
+
+            let f = 1;
+
+            if(W * H > maxPixels) f = Math.sqrt(maxPixels / (W * H));
+
+            const canvas = document.createElement("canvas");
+
+            canvas.width = Math.max(1, Math.round(W * f));
+            canvas.height = Math.max(1, Math.round(H * f));
+
+            const ctx = canvas.getContext("2d");
+
+            ctx.imageSmoothingEnabled = f < 1;
+            if(f < 1) ctx.imageSmoothingQuality = "high";
+
+            for(const p of placed){
+
+                const P = p.P;
+                const sw = p.x1 - p.x0, sh = p.y1 - p.y0;
+
+                let A = 0, B = 0, C = 0, D = 0, E = 0, F = 0;
+
+                if(!p.turned){
+                    A = P[0] > 0 ? 1 : -1;  E = P[0] > 0 ? 0 : sw;
+                    D = P[3] > 0 ? 1 : -1;  F = P[3] > 0 ? 0 : sh;
+                }else{
+                    C = P[2] > 0 ? 1 : -1;  E = P[2] > 0 ? 0 : sh;
+                    B = P[1] > 0 ? 1 : -1;  F = P[1] > 0 ? 0 : sw;
+                }
+
+                ctx.setTransform(A * f, B * f, C * f, D * f, (E + p.u0) * f, (F + p.v0) * f);
+
+                ctx.drawImage(p.src.src, p.x0, p.y0, sw, sh, 0, 0, sw, sh);
+            }
+
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+            return { canvas, exact: f === 1 };
+
+        }catch(error){
+            // A picture that can't be read directly (already let go of, say) is drawn from the page instead.
+            console.warn("Picture: drawing from its own pixels failed", error);
+        }
+
+        /* A picture tilted at an odd angle: drawn from the page, at its own detail. */
+        const rect = pic.rect;
+        const wPt = rect[2] - rect[0];
+        const hPt = rect[3] - rect[1];
+
+        let scale = pic.w ? pic.w / wPt : 3;
+
+        scale = Math.max(1, Math.min(scale, 8, 8000 / Math.max(wPt, hPt), Math.sqrt(maxPixels / (wPt * hPt))));
+
+        const vp = page.getViewport({ scale });
+
+        const b = boxOf(vp.transform, rect);
+
+        const left = Math.floor(b[0] + 1e-6);
+        const top = Math.floor(b[1] + 1e-6);
+
+        const canvas = document.createElement("canvas");
+
+        canvas.width = Math.max(1, Math.ceil(b[2] - 1e-6) - left);
+        canvas.height = Math.max(1, Math.ceil(b[3] - 1e-6) - top);
+
+        await page.render({
+            canvasContext: canvas.getContext("2d", { alpha: false }),
+            viewport: vp,
+            transform: [1, 0, 0, 1, -left, -top]
+        }).promise;
+
+        return { canvas, exact: false };
+    }
+
+    return { find, extract, getObject };
+
+})();
+/* LT-PICS-END */
+
+function extractImageRegionsFromOperatorList(opList, pageView){
+
+  // Every picture that is really visible on the page (cut off by the page and by
+  // any frame it sits in; pictures a PDF program sliced into strips are joined).
+  // Each rectangle carries the picture's own details, used to take its real pixels.
+  return LTPics.find(opList, OPS, pageView).map(pic => {
+
+    const rect = pic.rect.slice();
+
+    rect.meta = { w: pic.w || 0, h: pic.h || 0 };
+    rect.pic = pic;
+
+    return rect;
+  });
 }
 
 async function paintImageRegions(view, generation){
@@ -5712,7 +6104,7 @@ async function paintImageRegions(view, generation){
 
   try{
     const opList = await view.page.getOperatorList();
-    view.imageRegions = extractImageRegionsFromOperatorList(opList);
+    view.imageRegions = extractImageRegionsFromOperatorList(opList, view.page.view);
   }catch(error){
     console.warn(`Image region scan failed on page ${view.pageNumber}:`, error);
     view.imageRegions = [];
@@ -17445,7 +17837,9 @@ viewer.addEventListener("contextmenu", event => {
     page: pageNumber,
     index: view.imageRegions.indexOf(pdfRect) + 1,
     w: pdfRect.meta?.w || 0,
-    h: pdfRect.meta?.h || 0
+    h: pdfRect.meta?.h || 0,
+    pic: pdfRect.pic || null,
+    pdfPage: view.page
   };
 
   openImageContextMenu(view.canvas, cropRect, event.clientX, event.clientY, ref);
@@ -17513,10 +17907,34 @@ function cropCanvasToBlob(sourceCanvas, cropRect){
   });
 }
 
-function currentPageImageBlob(){
-  if(!imageContextMenuCanvas || !imageContextMenuCropRect){
-    return Promise.reject(new Error("No image available."));
+// The picture's own pixels, exactly (what the PDF holds, turned the way the
+// page shows it). If that isn't possible, the old way: cut it out of the page
+// as drawn on screen.
+async function currentPageImageBlob(){
+
+  const ref = imageContextMenuRef;
+
+  if(ref && ref.pic && ref.pdfPage){
+
+    try{
+
+      const made = await LTPics.extract(ref.pdfPage, ref.pic);
+
+      const blob = await new Promise(resolve => made.canvas.toBlob(resolve, "image/png"));
+
+      if(blob){
+        return blob;
+      }
+
+    }catch(error){
+      console.warn("Picture from its own pixels failed, using the page:", error);
+    }
   }
+
+  if(!imageContextMenuCanvas || !imageContextMenuCropRect){
+    throw new Error("No image available.");
+  }
+
   return cropCanvasToBlob(imageContextMenuCanvas, imageContextMenuCropRect);
 }
 
