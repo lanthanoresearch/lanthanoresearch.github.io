@@ -122,6 +122,7 @@ jobs:
               "@capacitor/app": "^6.0.2",
               "@capacitor/browser": "^6.0.0",
               "@capacitor-community/file-opener": "^6.0.0",
+              "@capacitor-community/text-to-speech": "^6.0.0",
               "@capacitor/cli": "^6.1.2",
               "@capacitor/filesystem": "^6.0.0",
               "@capacitor/share": "^6.0.0",
@@ -145,6 +146,28 @@ jobs:
           npm install
           npx cap add android
           npx cap sync android
+
+      - name: Let the app use the phone's voices for Read Aloud
+        working-directory: android-app
+        run: |
+          # From Android 11 an app has to say it wants to talk to the phone's speech
+          # engine, or the engine's voices are not visible to it.
+          MANIFEST=android/app/src/main/AndroidManifest.xml
+          python3 - "$MANIFEST" <<'PY'
+          import sys
+          path = sys.argv[1]
+          text = open(path, encoding="utf-8").read()
+          if "android.intent.action.TTS_SERVICE" in text:
+              print("Speech engine access is already declared.")
+          else:
+              block = '    <queries>\n        <intent>\n            <action android:name="android.intent.action.TTS_SERVICE" />\n        </intent>\n    </queries>\n\n    <application'
+              if "<application" not in text:
+                  print("::error::No <application> tag found in AndroidManifest.xml")
+                  sys.exit(1)
+              text = text.replace("<application", block, 1)
+              open(path, "w", encoding="utf-8").write(text)
+              print("Added speech engine access to AndroidManifest.xml")
+          PY
 
       - name: Use the site icon
         working-directory: android-app
