@@ -1,6 +1,6 @@
 {
- "count": 319,
- "totalBytes": 284301917,
+ "count": 320,
+ "totalBytes": 285158379,
  "files": [
   {
    "path": "1 Thessalonians Original Text.png",
@@ -346,6 +346,11 @@
    "path": "covers/carbon_dating.png",
    "size": 636112,
    "hash": "ab9dddb9a57985a6"
+  },
+  {
+   "path": "covers/case_against_jehovah.png",
+   "size": 856433,
+   "hash": "f5c4db530073de40"
   },
   {
    "path": "covers/corrupt_versions.png",
@@ -924,8 +929,8 @@
   },
   {
    "path": "page-counts.json",
-   "size": 587,
-   "hash": "3c7ac82b60fbc140"
+   "size": 616,
+   "hash": "b0d9d43174653726"
   },
   {
    "path": "pdf-compat.js",
