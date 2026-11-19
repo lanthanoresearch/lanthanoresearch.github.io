@@ -56,6 +56,7 @@ jobs:
           need offline-app.js "the main folder" "findInstallers"
           need install.html "the main folder" "appWarn"
           need sw.js "the main folder" "overlayIndex"
+          need fetch-voice.cjs "the main folder" "voice-pack"
           if [ "$fail" != "0" ]; then
             echo "The app was not built, so the apps already published stay as they are."
             exit 1
@@ -108,6 +109,9 @@ jobs:
           # Storage and Install only belong on the website, not inside the app. The app also
           # never goes to the internet for its own pages, and handles the Back button.
           node prepare-app-bundle.js android-app/www --local-only --videos .video-cache --require-videos
+          # Read Aloud's own voice goes inside the app too (the app never uses the internet
+          # by itself). If it cannot be fetched, the app is still built, with a warning.
+          node fetch-voice.cjs android-app/www
 
       - name: Create the Android project
         working-directory: android-app
@@ -122,7 +126,6 @@ jobs:
               "@capacitor/app": "^6.0.2",
               "@capacitor/browser": "^6.0.0",
               "@capacitor-community/file-opener": "^6.0.0",
-              "@capacitor-community/text-to-speech": "^4.1.1",
               "@capacitor/cli": "^6.1.2",
               "@capacitor/filesystem": "^6.0.0",
               "@capacitor/share": "^6.0.0",
@@ -144,6 +147,10 @@ jobs:
           }
           EOF
           npm install
+          # The phone's own voices (the same ones its other apps read aloud with). If this
+          # cannot be installed for any reason, the app is still built, and Read Aloud
+          # then uses the voice it downloads for itself.
+          npm install --legacy-peer-deps "@capacitor-community/text-to-speech@^4.1.1" || echo "::warning::The phone-voices add-on could not be installed, so Read Aloud on Android will use its own downloaded voice."
           npx cap add android
           npx cap sync android
 

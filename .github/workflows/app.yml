@@ -56,6 +56,7 @@ jobs:
           need offline-app.js "the main folder" "findInstallers"
           need install.html "the main folder" "appWarn"
           need sw.js "the main folder" "overlayIndex"
+          need fetch-voice.cjs "the main folder" "voice-pack"
           need desktop-app/main.js "the desktop-app folder (the file is named main.js)" "applyLockdown"
           if [ "$fail" != "0" ]; then
             echo "The app was not built, so the apps already published stay as they are."
@@ -78,7 +79,7 @@ jobs:
             build=true
           elif [ -z "$before" ] || [ "$before" = "0000000000000000000000000000000000000000" ] || ! git cat-file -e "$before" 2>/dev/null; then
             build=true
-          elif git diff --name-only "$before" "${{ github.sha }}" | grep -qE '^(desktop-app/|\.github/workflows/app\.yml|prepare-app-bundle\.js|build-site-manifest\.js)|\.(html|js|mjs|css)$|^(descriptions|manifest)\.json$'; then
+          elif git diff --name-only "$before" "${{ github.sha }}" | grep -qE '^(desktop-app/|\.github/workflows/app\.yml|prepare-app-bundle\.js|build-site-manifest\.js)|\.(html|js|mjs|cjs|css)$|^(descriptions|manifest)\.json$'; then
             build=true
           fi
 
@@ -157,6 +158,9 @@ jobs:
           STRICT=1 node fetch-videos.js .video-cache
           node build-site-manifest.js --copy desktop-app/site
           node prepare-app-bundle.js desktop-app/site --local-only --no-back --videos .video-cache --require-videos
+          # Read Aloud's own voice goes inside the app too (the app never uses the internet
+          # by itself). If it cannot be fetched, the app is still built, with a warning.
+          node fetch-voice.cjs desktop-app/site
           mkdir -p desktop-app/build
           cp file_000000000c40722f92b1fe6758cb4855.png desktop-app/build/icon.png
 
