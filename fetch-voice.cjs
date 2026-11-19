@@ -133,7 +133,26 @@ async function flatFiles(pkg, version){
   return (listing.files || []).map(f => f.name);
 }
 
+// True when a complete voice pack is already in place (for example the one
+// kept in the repository), so nothing has to be downloaded again.
+function packAlreadyThere(){
+  try{
+    const pack = JSON.parse(fs.readFileSync(path.join(voiceDir, "voice-pack.json"), "utf8"));
+    return ["ort", "model", "voices", "phonemizer"].every(key => {
+      const file = path.join(siteDir, pack[key] || "");
+      return pack[key] && fs.existsSync(file) && fs.statSync(file).size > 0;
+    });
+  }catch(error){
+    return false;
+  }
+}
+
 async function main(){
+
+  if(packAlreadyThere()){
+    console.log("Read Aloud voice: already in " + voiceDir + " - nothing to download.");
+    return;
+  }
 
   fs.rmSync(voiceDir, { recursive: true, force: true });
   fs.mkdirSync(voiceDir, { recursive: true });
@@ -144,7 +163,7 @@ async function main(){
   console.log("Read Aloud voice: the engine (onnxruntime-web " + ORT_VERSION + ")");
 
   const ortNames = (await flatFiles("onnxruntime-web", ORT_VERSION))
-    .filter(name => /^\/dist\/(ort\.min\.js|ort-wasm[^/]*\.(wasm|mjs))$/.test(name));
+    .filter(name => /^\/dist\/(ort\.min\.js|ort-wasm[^/]*\.(wasm|mjs))$/.test(name) && !/jsep|training/.test(name));
 
   if(!ortNames.includes("/dist/ort.min.js")){
     throw new Error("ort.min.js is not in the onnxruntime-web package.");

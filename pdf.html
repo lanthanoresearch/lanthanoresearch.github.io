@@ -5106,7 +5106,7 @@ function syncBottomGap(){
 
 let toastHideTimer = null;
 
-function showToast(message){
+function showToast(message, durationMs){
   toast.textContent = message;
   toast.classList.add("show");
 
@@ -5117,7 +5117,7 @@ function showToast(message){
   toastHideTimer = setTimeout(() => {
     toast.classList.remove("show");
     toastHideTimer = null;
-  }, 1500);
+  }, durationMs || 1500);
 }
 
 function scheduleChromeSync(){
@@ -6893,10 +6893,482 @@ readingModeFloat.addEventListener("click", event => {
    playback just continues without it rather than stalling.
 ============================================================ */
 
-const SUPPORTS_SPEECH = "speechSynthesis" in window && typeof SpeechSynthesisUtterance === "function";
+/* ------------------------------------------------------------
+   INSTALLED ANDROID APP: THE PHONE'S OWN VOICES
+
+   The phone's web view does not carry the browser's built-in
+   speech engine, so without this the Read Aloud button is hidden
+   there (see SUPPORTS_SPEECH below). The Android app includes
+   Capacitor's text-to-speech add-on, which talks to the phone's
+   own speech engine and its installed voices. This makes that
+   add-on look like the browser's speechSynthesis, so everything
+   below - the voices list, speed, highlighting - works exactly as
+   it does on the website. It does nothing anywhere else: on the
+   website, on a computer, or in an Android app built before the
+   add-on was included, the button behaves as it always did.
+------------------------------------------------------------ */
+(function installNativeSpeech(){
+
+  try{
+
+    if("speechSynthesis" in window && typeof window.SpeechSynthesisUtterance === "function"){
+      return;
+    }
+
+    const cap = window.Capacitor;
+
+    if(!cap || typeof cap.registerPlugin !== "function"){
+      return;
+    }
+
+    if(typeof cap.isNativePlatform === "function" && !cap.isNativePlatform()){
+      return;
+    }
+
+    if(typeof cap.isPluginAvailable === "function" && !cap.isPluginAvailable("TextToSpeech")){
+      return;
+    }
+
+    const TTS = (cap.Plugins && cap.Plugins.TextToSpeech) || cap.registerPlugin("TextToSpeech");
+
+    if(!TTS || typeof TTS.speak !== "function"){
+      return;
+    }
+
+    class NativeUtterance{
+      constructor(text){
+        this.text = text === undefined ? "" : String(text);
+        this.lang = "";
+        this.rate = 1;
+        this.pitch = 1;
+        this.volume = 1;
+        this.voice = null;
+        this.onstart = null;
+        this.onend = null;
+        this.onerror = null;
+        this.onboundary = null;
+        this.onpause = null;
+        this.onresume = null;
+        this.onmark = null;
+      }
+    }
+
+    let voices = [];
+    let queue = [];
+    let current = null;
+    const changeListeners = [];
+
+    function call(fn, arg){
+      try{
+        if(typeof fn === "function"){
+          fn(arg);
+        }
+      }catch(error){
+        console.warn("Read Aloud (phone voices):", error);
+      }
+    }
+
+    function announceVoices(){
+      call(synth.onvoiceschanged, { type: "voiceschanged" });
+      changeListeners.slice().forEach(fn => call(fn, { type: "voiceschanged" }));
+    }
+
+    function loadVoices(){
+      try{
+        Promise.resolve(TTS.getSupportedVoices()).then(result => {
+          const list = (result && result.voices) || [];
+          if(!list.length){
+            return;
+          }
+          voices = list.map((voice, index) => ({
+            voiceURI: voice.voiceURI || voice.name,
+            name: voice.name || voice.voiceURI,
+            lang: voice.lang || "",
+            localService: voice.localService !== false,
+            default: !!voice.default,
+            nativeIndex: index
+          }));
+          announceVoices();
+        }).catch(() => {});
+      }catch{}
+    }
+
+    // The phone's speech engine can take a moment to wake up, so ask again
+    // a couple of times if the first answer was empty.
+    loadVoices();
+    setTimeout(() => { if(!voices.length) loadVoices(); }, 1500);
+    setTimeout(() => { if(!voices.length) loadVoices(); }, 5000);
+
+    try{
+      if(typeof TTS.addListener === "function"){
+        Promise.resolve(TTS.addListener("onRangeStart", event => {
+          if(!current || current.cancelled || !event){
+            return;
+          }
+          call(current.utterance.onboundary, {
+            name: "word",
+            charIndex: event.start || 0,
+            charLength: Math.max(0, (event.end || 0) - (event.start || 0)),
+            utterance: current.utterance
+          });
+        })).catch(() => {});
+      }
+    }catch{}
+
+    function finish(entry, error){
+
+      if(entry.cancelled || entry.done){
+        return;
+      }
+
+      entry.done = true;
+
+      if(current === entry){
+        current = null;
+      }
+
+      synth.speaking = false;
+
+      if(error){
+        call(entry.utterance.onerror, { type: "error", error: "synthesis-failed", utterance: entry.utterance });
+      }else{
+        call(entry.utterance.onend, { type: "end", utterance: entry.utterance });
+      }
+
+      if(!current){
+        playNext();
+      }
+    }
+
+    function playNext(){
+
+      if(current || !queue.length){
+        synth.pending = queue.length > 0;
+        return;
+      }
+
+      const utterance = queue.shift();
+      const entry = { utterance, cancelled: false, done: false };
+
+      current = entry;
+      synth.speaking = true;
+      synth.pending = queue.length > 0;
+
+      const options = {
+        text: utterance.text,
+        lang: (utterance.voice && utterance.voice.lang) || utterance.lang || "en-US",
+        rate: utterance.rate || 1,
+        pitch: utterance.pitch || 1,
+        volume: utterance.volume === undefined ? 1 : utterance.volume,
+        queueStrategy: 0
+      };
+
+      if(utterance.voice && Number.isInteger(utterance.voice.nativeIndex)){
+        options.voice = utterance.voice.nativeIndex;
+      }
+
+      call(utterance.onstart, { type: "start", utterance });
+
+      let promise;
+
+      try{
+        promise = Promise.resolve(TTS.speak(options));
+      }catch(error){
+        promise = Promise.reject(error);
+      }
+
+      promise.then(() => finish(entry, null), error => finish(entry, error || true));
+    }
+
+    const synth = {
+      speaking: false,
+      paused: false,
+      pending: false,
+      onvoiceschanged: null,
+
+      getVoices(){
+        return voices;
+      },
+
+      speak(utterance){
+        queue.push(utterance);
+        playNext();
+      },
+
+      // The page never relies on pause()/resume() (it stops and restarts
+      // from the same spot instead), so they are accepted and do nothing.
+      pause(){},
+      resume(){},
+
+      cancel(){
+
+        const waiting = queue;
+        queue = [];
+
+        const running = current;
+        current = null;
+
+        synth.speaking = false;
+        synth.pending = false;
+
+        if(running){
+          running.cancelled = true;
+        }
+
+        try{
+          Promise.resolve(TTS.stop()).catch(() => {});
+        }catch{}
+
+        // Browsers report a cut-short utterance as an error with the reason
+        // "canceled"; the page expects that and ignores it.
+        const cut = (running ? [running.utterance] : []).concat(waiting);
+
+        if(cut.length){
+          setTimeout(() => {
+            cut.forEach(utterance => call(utterance.onerror, { type: "error", error: "canceled", utterance }));
+          }, 0);
+        }
+      },
+
+      addEventListener(type, listener){
+        if(type === "voiceschanged" && typeof listener === "function"){
+          changeListeners.push(listener);
+        }
+      },
+
+      removeEventListener(type, listener){
+        const index = changeListeners.indexOf(listener);
+        if(index >= 0){
+          changeListeners.splice(index, 1);
+        }
+      }
+    };
+
+    Object.defineProperty(window, "speechSynthesis", { value: synth, configurable: true, writable: true });
+    Object.defineProperty(window, "SpeechSynthesisUtterance", { value: NativeUtterance, configurable: true, writable: true });
+
+  }catch(error){
+    console.warn("Read Aloud (phone voices) is not available:", error);
+  }
+
+})();
+
+/* ------------------------------------------------------------
+   READ ALOUD: THE DEVICE'S VOICES FIRST, ITS OWN VOICE IF NEEDED
+
+   Read Aloud speaks with the voices the device already has (the
+   same ones the website uses). Some devices have none: a phone
+   web view with no speech engine, a computer with no voices
+   installed. On those, Read Aloud fetches a small voice of its
+   own the first time it is needed (about 24MB, once, then kept
+   on the device) and uses that instead, so the button is only
+   hidden when neither of the two can possibly work.
+------------------------------------------------------------ */
+
+const NATIVE_SPEECH_API = "speechSynthesis" in window && typeof SpeechSynthesisUtterance === "function";
+
+// What the downloaded voice needs from the device: WebAssembly to
+// run it, an audio element to play it, and fetch to get it.
+const OWN_VOICE_POSSIBLE = typeof WebAssembly === "object" && typeof Audio === "function" && typeof fetch === "function" && typeof Blob === "function";
+
+const SUPPORTS_SPEECH = NATIVE_SPEECH_API || OWN_VOICE_POSSIBLE;
+
+// Without a speech API at all, a do-nothing stand-in keeps every
+// later line that touches speechSynthesis from throwing.
+if(!NATIVE_SPEECH_API && OWN_VOICE_POSSIBLE){
+
+  class StandInUtterance{
+    constructor(text){
+      this.text = text === undefined ? "" : String(text);
+      this.lang = "";
+      this.rate = 1;
+      this.pitch = 1;
+      this.volume = 1;
+      this.voice = null;
+      this.onstart = null;
+      this.onend = null;
+      this.onerror = null;
+      this.onboundary = null;
+    }
+  }
+
+  const doNothing = () => {};
+
+  const standIn = {
+    speaking: false,
+    paused: false,
+    pending: false,
+    onvoiceschanged: null,
+    getVoices: () => [],
+    speak(utterance){
+      setTimeout(() => {
+        try{
+          if(utterance && typeof utterance.onerror === "function"){
+            utterance.onerror({ type: "error", error: "synthesis-unavailable" });
+          }
+        }catch{}
+      }, 0);
+    },
+    cancel: doNothing,
+    pause: doNothing,
+    resume: doNothing,
+    addEventListener: doNothing,
+    removeEventListener: doNothing
+  };
+
+  try{
+    Object.defineProperty(window, "speechSynthesis", { value: standIn, configurable: true, writable: true });
+    Object.defineProperty(window, "SpeechSynthesisUtterance", { value: StandInUtterance, configurable: true, writable: true });
+  }catch{}
+}
 
 if(!SUPPORTS_SPEECH){
   readAloudFloat.style.display = "none";
+}
+
+const OWN_VOICE_SILENCE_MS = 8000;   // how long a first sentence may stay silent
+
+// The installed apps (Android and desktop) fetch the voice ahead of
+// time, in the background; the website only ever does it when asked.
+const IN_INSTALLED_APP = Boolean(
+  (window.Capacitor && typeof window.Capacitor.isNativePlatform === "function" && window.Capacitor.isNativePlatform())
+  || /Electron\//.test(navigator.userAgent || "")
+  || window.LT_IN_APP
+);
+
+// True once the device's own voices are known not to work here.
+let nativeVoiceUnusable = !NATIVE_SPEECH_API;
+
+// The built-in voices (see the voice pack loader further down). Declared
+// here, early, because the saved settings are read before that loader runs.
+let kittenFromApp = false;
+let builtInVoiceNames = [];
+let builtInWanted = false;      // the saved choice was a built-in voice
+
+// The installed apps move to the built-in voice when a device voice
+// fails or stays silent. The website never does: with a speech engine
+// present it behaves exactly as it always has.
+const MAY_SWITCH_VOICE = IN_INSTALLED_APP;
+
+// Once the built-in voices are on the site, a device voice that clearly
+// fails (an error, not just slowness) hands over to them everywhere.
+function mayAutoSwitchVoice(){
+  return MAY_SWITCH_VOICE || kittenFromApp;
+}
+
+// True once a device voice has produced real sound this page load,
+// which proves it works and ends any doubt about it.
+let nativeVoiceSpoke = false;
+
+// Whether Read Aloud should be using its own downloaded voice.
+function deviceNeedsOwnVoice(){
+
+  if(!OWN_VOICE_POSSIBLE){
+    return false;
+  }
+
+  // Only ever decided by proof (no speech engine at all, or one that
+  // failed or stayed silent), never by a guess: some browsers speak
+  // perfectly well while listing no voices, and must be left alone.
+  return nativeVoiceUnusable;
+}
+
+// Makes the downloaded voice the one in use, and clears an old
+// failure so a new attempt (a retry, a Resume) really tries again.
+function turnOnOwnVoice(){
+
+  neuralVoiceEnabled = true;
+
+  if(kittenFromApp && (!builtInWanted || !isBuiltInVoiceId(kokoroVoiceName))){
+    kokoroVoiceName = builtInVoices()[0].id;
+  }
+
+  if(kokoroLoadState === "error"){
+    kokoroLoadState = "idle";
+    kokoroLoadPromise = null;
+  }
+
+  try{
+    updateReadAloudVoiceValueLabel();
+    syncNeuralVoiceToggleUI();
+  }catch{}
+}
+
+// A device voice was tried and did not work: move over to the
+// downloaded voice, carrying on from the same line. Returns true
+// when it switched.
+function switchToOwnVoice(reason){
+
+  if(!OWN_VOICE_POSSIBLE || !mayAutoSwitchVoice() || nativeVoiceUnusable){
+    return false;
+  }
+
+  nativeVoiceUnusable = true;
+
+  console.warn("Read Aloud: the device's voice isn't working (" + reason + ") - using Read Aloud's own voice instead.");
+
+  turnOnOwnVoice();
+
+  showToast(kittenFromApp ? "This device's voice isn't working, so Read Aloud switched to its built-in voice." : "This device's voice isn't working, so Read Aloud is getting its own…", 4000);
+
+  if(reading.active && !reading.paused){
+    restartCurrentUtterance();
+  }
+
+  return true;
+}
+
+// The downloaded voice could not be fetched or started: say so
+// plainly and wait on Resume (which tries again) instead of looping.
+function ownVoiceFailed(error){
+
+  kokoroPrefetch = null;
+
+  console.warn("Read Aloud: the downloaded voice failed:", error);
+
+  if(error && error.noVoicePack){
+    showToast("Read Aloud's voice isn't in this version of the app. Install the newest app from the Install page.", 7000);
+  }else if(kittenFromApp){
+    showToast("Read Aloud's built-in voice couldn't start (" + describeKokoroError(error) + "). Press Play to try again.", 6000);
+  }else{
+    showToast("Read Aloud couldn't get its voice (" + describeKokoroError(error) + "). Check the internet connection, then press Play to try again.", 6000);
+  }
+
+  if(reading.active && !reading.paused){
+    pauseReading();
+  }
+}
+
+let ownVoiceProgressTimer = null;
+
+// While the voice is being fetched, say so now and keep saying how
+// far along it is, rather than leaving Read Aloud silent and unexplained.
+function announceOwnVoiceLoading(){
+
+  const say = () => {
+    const percent = Math.round((kokoroLoadProgress || 0) * 100);
+    showToast(percent > 0
+      ? "Getting Read Aloud's voice… " + percent + "%"
+      : "Getting a voice for Read Aloud (one time, about 24MB)…", 4500);
+  };
+
+  say();
+
+  if(ownVoiceProgressTimer){
+    return;
+  }
+
+  ownVoiceProgressTimer = setInterval(() => {
+
+    if(kokoroLoadState !== "loading"){
+      clearInterval(ownVoiceProgressTimer);
+      ownVoiceProgressTimer = null;
+      return;
+    }
+
+    say();
+
+  }, 4000);
 }
 
 /* ------------------------------------------------------------
@@ -6954,6 +7426,7 @@ function saveReadAloudPrefs(){
       skipTables: skipTables,
       followMode: followMode,
       neuralVoiceEnabled: neuralVoiceEnabled,
+      builtInVoice: Boolean(neuralVoiceEnabled && kittenFromApp),
       kokoroVoiceName: kokoroVoiceName
     }));
   }catch{
@@ -9354,6 +9827,10 @@ let kokoroInstalled = false;
     if(typeof savedPrefs.kokoroVoiceName === "string" && savedPrefs.kokoroVoiceName){
       kokoroVoiceName = savedPrefs.kokoroVoiceName;
     }
+
+    // Only a built-in voice (never the downloaded beta one) is brought
+    // back from a saved choice, and only once the pack is confirmed.
+    builtInWanted = savedPrefs.builtInVoice === true;
   }
 }
 
@@ -9408,7 +9885,34 @@ function buildVoiceList(){
 
   readAloudVoiceList.replaceChildren();
 
-  if(neuralVoiceEnabled){
+  if(kittenFromApp){
+
+    const heading = document.createElement("div");
+    heading.className = "readAloudVoiceGroupHeading";
+    heading.textContent = "Built-in voices (work offline)";
+    readAloudVoiceList.appendChild(heading);
+
+    for(const builtIn of builtInVoices()){
+      readAloudVoiceList.appendChild(readAloudOptionRow({
+        label: builtIn.label,
+        active: neuralVoiceEnabled && builtIn.id === kokoroVoiceName,
+        onSelect(){
+          chooseBuiltInVoice(builtIn.id);
+        }
+      }));
+    }
+
+    if(deviceNeedsOwnVoice()){
+      return;
+    }
+
+    const deviceHeading = document.createElement("div");
+    deviceHeading.className = "readAloudVoiceGroupHeading";
+    deviceHeading.textContent = "This device's voices";
+    readAloudVoiceList.appendChild(deviceHeading);
+  }
+
+  if(!kittenFromApp && (neuralVoiceEnabled || deviceNeedsOwnVoice())){
 
     for(const kokoroVoice of KITTEN_VOICES){
       readAloudVoiceList.appendChild(readAloudOptionRow({
@@ -9429,7 +9933,7 @@ function buildVoiceList(){
 
   readAloudVoiceList.appendChild(readAloudOptionRow({
     label: "Default (Auto)",
-    active: !selectedVoiceURI,
+    active: !selectedVoiceURI && !neuralVoiceEnabled,
     onSelect(){
       selectedVoiceURI = null;
       applyVoiceSelection();
@@ -9455,7 +9959,7 @@ function buildVoiceList(){
     for(const voice of voices){
       readAloudVoiceList.appendChild(readAloudOptionRow({
         label: describeVoice(voice),
-        active: voice.voiceURI === selectedVoiceURI,
+        active: voice.voiceURI === selectedVoiceURI && !neuralVoiceEnabled,
         onSelect(){
           selectedVoiceURI = voice.voiceURI;
           applyVoiceSelection();
@@ -9466,6 +9970,7 @@ function buildVoiceList(){
 
   function applyVoiceSelection(){
 
+    leaveBuiltInVoice();
     saveReadAloudPrefs();
     updateReadAloudVoiceValueLabel();
     updateReadAloudUI();
@@ -9512,9 +10017,10 @@ function updateReadAloudSpeedValueLabel(){
 
 function updateReadAloudVoiceValueLabel(){
 
-  if(neuralVoiceEnabled){
+  if(neuralVoiceEnabled || deviceNeedsOwnVoice()){
+    const builtIn = kittenFromApp && builtInVoices().find(v => v.id === kokoroVoiceName);
     const kokoroVoice = KITTEN_VOICES.find(v => v.id === kokoroVoiceName);
-    readAloudVoiceValue.textContent = kokoroVoice ? kokoroVoice.label : kokoroVoiceName;
+    readAloudVoiceValue.textContent = builtIn ? builtIn.short : (kokoroVoice ? kokoroVoice.label : kokoroVoiceName);
     return;
   }
 
@@ -9697,6 +10203,12 @@ async function requestPersistentKokoroStorage(){
 // entirely, so there's a precise, known place to look rather than a
 // guess.
 async function detectInstalledKokoroVoice(){
+
+  await kittenPackReady;
+
+  if(kittenFromApp){
+    return true;
+  }
 
   if(!window.caches){
     return false;
@@ -12117,7 +12629,7 @@ function syncFloatButtonsPosition(){
 // taken directly from kittentts/onnx_model.py in the real repo.
 const KITTEN_MODEL_ID = "KittenML/kitten-tts-nano-0.2";
 const KITTEN_MODEL_FILE = "kitten_tts_nano_v0_2.onnx";
-const KITTEN_PHONEMIZER_CDN_URL = "https://cdn.jsdelivr.net/npm/phonemizer";
+let KITTEN_PHONEMIZER_CDN_URL = "https://cdn.jsdelivr.net/npm/phonemizer";
 
 // Kitten TTS's own voices for this model (not the browser's) -
 // confirmed from the real model card, not a guess. No friendly
@@ -12184,10 +12696,131 @@ let kokoroJustFinishedInstallAt = 0;
 // right".
 
 const KITTEN_ONNX_VERSION = "1.20.1";
-const KITTEN_ONNX_SCRIPT_URL = `https://cdn.jsdelivr.net/npm/onnxruntime-web@${KITTEN_ONNX_VERSION}/dist/ort.min.js`;
-const KITTEN_ONNX_WASM_BASE = `https://cdn.jsdelivr.net/npm/onnxruntime-web@${KITTEN_ONNX_VERSION}/dist/`;
-const KITTEN_MODEL_FILE_URL = `https://huggingface.co/${KITTEN_MODEL_ID}/resolve/main/${KITTEN_MODEL_FILE}`;
-const KITTEN_VOICES_FILE_URL = `https://huggingface.co/${KITTEN_MODEL_ID}/resolve/main/voices.npz`;
+let KITTEN_ONNX_SCRIPT_URL = `https://cdn.jsdelivr.net/npm/onnxruntime-web@${KITTEN_ONNX_VERSION}/dist/ort.min.js`;
+let KITTEN_ONNX_WASM_BASE = `https://cdn.jsdelivr.net/npm/onnxruntime-web@${KITTEN_ONNX_VERSION}/dist/`;
+let KITTEN_MODEL_FILE_URL = `https://huggingface.co/${KITTEN_MODEL_ID}/resolve/main/${KITTEN_MODEL_FILE}`;
+let KITTEN_VOICES_FILE_URL = `https://huggingface.co/${KITTEN_MODEL_ID}/resolve/main/voices.npz`;
+
+// In the installed apps the voice is built in: the build puts it in a
+// "voice" folder next to the pages (see fetch-voice.cjs), described by
+// voice/voice-pack.json. When that is there, everything above is
+// pointed at it instead of the internet - so the voice works offline,
+// and never needs the app to connect to anything. The website has no
+// such folder and keeps using the addresses above.
+
+// The two built-in voices: one female, one male, taken from what the
+// voice file really contains (so a changed file cannot break the menu).
+function builtInVoices(){
+
+  const names = builtInVoiceNames.length ? builtInVoiceNames : KITTEN_VOICES.map(v => v.id);
+  const pick = (suffix, wanted) => {
+    if(names.includes(wanted)) return wanted;
+    return names.find(n => n.endsWith(suffix)) || wanted;
+  };
+
+  return [
+    { id: pick("-f", "expr-voice-5-f"), label: "Built-in voice · Female", short: "Built-in · Female" },
+    { id: pick("-m", "expr-voice-5-m"), label: "Built-in voice · Male", short: "Built-in · Male" }
+  ];
+}
+
+function isBuiltInVoiceId(id){
+  return builtInVoices().some(v => v.id === id);
+}
+
+// Runs once the voice files are known to be part of this site or app.
+function onBuiltInPackFound(){
+
+  kokoroInstalled = true;
+
+  if(builtInWanted && !neuralVoiceEnabled){
+    neuralVoiceEnabled = true;
+    if(!isBuiltInVoiceId(kokoroVoiceName)){
+      kokoroVoiceName = builtInVoices()[0].id;
+    }
+  }
+
+  try{
+    updateReadAloudVoiceValueLabel();
+    syncNeuralVoiceToggleUI();
+  }catch{}
+}
+
+// Picking a built-in voice (neural on) or any device voice (neural off).
+function chooseBuiltInVoice(id){
+
+  neuralVoiceEnabled = true;
+  kokoroVoiceName = id;
+
+  if(kokoroLoadState === "error"){
+    kokoroLoadState = "idle";
+    kokoroLoadPromise = null;
+  }
+
+  saveReadAloudPrefs();
+  updateReadAloudVoiceValueLabel();
+  try{ syncNeuralVoiceToggleUI(); }catch{}
+  void loadKokoroTTS().catch(() => {});
+  restartCurrentUtterance();
+  closeReadAloudVoicePopup();
+}
+
+function leaveBuiltInVoice(){
+
+  if(!neuralVoiceEnabled){
+    return;
+  }
+
+  neuralVoiceEnabled = false;
+  kokoroPrefetch = null;
+
+  try{ stopKokoroAudioQuietly(); }catch{}
+  try{ syncNeuralVoiceToggleUI(); }catch{}
+}
+
+const kittenPackReady = (async () => {
+
+  try{
+
+    const response = await fetch(new URL("voice/voice-pack.json", location.href).href, { cache: "no-store" });
+
+    if(!response.ok){
+      return;
+    }
+
+    const pack = await response.json();
+
+    if(!pack || !pack.ort || !pack.model || !pack.voices){
+      return;
+    }
+
+    const absolute = relative => new URL(relative, location.href).href;
+
+    KITTEN_ONNX_SCRIPT_URL = absolute(pack.ort);
+    KITTEN_ONNX_WASM_BASE = absolute(pack.ortBase || pack.ort.replace(/[^/]*$/, ""));
+    KITTEN_MODEL_FILE_URL = absolute(pack.model);
+    KITTEN_VOICES_FILE_URL = absolute(pack.voices);
+
+    if(pack.phonemizer){
+      KITTEN_PHONEMIZER_CDN_URL = absolute(pack.phonemizer);
+    }
+
+    kittenFromApp = true;
+    builtInVoiceNames = Array.isArray(pack.voiceNames) ? pack.voiceNames.slice() : [];
+
+  }catch{
+    // No built-in voice here (the website, or an older app).
+  }finally{
+
+    if(kittenFromApp){
+      onBuiltInPackFound();
+    }else if(IN_INSTALLED_APP && !NATIVE_SPEECH_API && !(window.Capacitor && window.Capacitor.isPluginAvailable && window.Capacitor.isPluginAvailable("TextToSpeech"))){
+      // An installed app with no device voice and no built-in voice: nothing can speak.
+      try{ readAloudFloat.style.display = "none"; }catch{}
+    }
+  }
+
+})();
 
 // ---- Tokenizer vocabulary --------------------------------------
 // Ported verbatim (character-for-character) from the real
@@ -12529,6 +13162,12 @@ const KITTEN_CACHE_NAME = "kitten-tts-model-cache-v1";
 
 async function kittenCachedFetch(url){
 
+  // The built-in files are already on the device: nothing to keep a
+  // second copy of.
+  if(kittenFromApp && url.startsWith(location.origin)){
+    return fetch(url);
+  }
+
   if(window.caches){
     try{
       const cache = await caches.open(KITTEN_CACHE_NAME);
@@ -12576,6 +13215,16 @@ function loadKokoroTTS(){
   kokoroLoadProgress = 0;
 
   kokoroLoadPromise = withTimeout((async () => {
+
+    // The installed apps carry the voice inside them; the website
+    // fetches it on request.
+    await kittenPackReady;
+
+    if(IN_INSTALLED_APP && !kittenFromApp){
+      const missing = new Error("This version of the app doesn't include Read Aloud's voice.");
+      missing.noVoicePack = true;
+      throw missing;
+    }
 
     const ort = await loadKittenOrtScript();
 
@@ -12973,7 +13622,7 @@ function revokeKokoroAudioUrl(){
 // the gesture and the first actual play() call.
 function primeKokoroAudioForAutoplay(){
 
-  if(!neuralVoiceEnabled){
+  if(!neuralVoiceEnabled && !deviceNeedsOwnVoice()){
     return;
   }
 
@@ -13238,8 +13887,16 @@ async function speakUnitWithKokoro(unit, generation){
     // be a fresh device). Without this, reading would just go silent
     // for however long that download takes with no visible
     // explanation at all.
-    if(needsFreshLoad && kokoroLoadState !== "loading"){
-      showToast("Installing neural voice…");
+    if(needsFreshLoad){
+      if(kittenFromApp){
+        if(kokoroLoadState !== "loading"){
+          showToast("Loading the built-in voice…", 3000);
+        }
+      }else if(nativeVoiceUnusable){
+        announceOwnVoiceLoading();
+      }else if(kokoroLoadState !== "loading"){
+        showToast("Installing neural voice…");
+      }
     }
 
     await loadKokoroTTS();
@@ -13295,6 +13952,11 @@ async function speakUnitWithKokoro(unit, generation){
 
       cleanup();
       stopKokoroAudioQuietly();
+
+      if(nativeVoiceUnusable){
+        ownVoiceFailed(error);
+        return;
+      }
 
       console.warn("Read Aloud: Kokoro playback failed - falling back to the browser voice for this session.", error);
 
@@ -13369,6 +14031,10 @@ async function speakUnitWithKokoro(unit, generation){
   }catch(error){
     cleanup();
     stopKokoroAudioQuietly();
+    if(nativeVoiceUnusable){
+      ownVoiceFailed(error);
+      return;
+    }
     console.warn("Read Aloud: Kokoro generation failed - falling back to the browser voice for this session.", error);
     neuralVoiceEnabled = false;
     kokoroPrefetch = null;
@@ -13626,6 +14292,12 @@ function speakCurrentBlock(){
   const unit = reading.blocks[reading.blockIndex];
   const generation = reading.generation;
   const isHeading = unit.type === "heading";
+
+  // No working device voice: use the downloaded one (and, after a
+  // failed attempt, try it again on the next Play).
+  if(deviceNeedsOwnVoice() && (!neuralVoiceEnabled || kokoroLoadState === "error")){
+    turnOnOwnVoice();
+  }
 
   // Neural voice, when turned on, replaces speechSynthesis entirely
   // for actually generating audio - but every failure path inside
@@ -14122,6 +14794,7 @@ function speakCurrentBlock(){
     let utteranceStartedAt = null;
 
     utterance.onstart = () => {
+      nativeVoiceSpoke = true;
       if(token !== reading.currentToken){
         return;
       }
@@ -14131,6 +14804,8 @@ function speakCurrentBlock(){
     };
 
     utterance.onboundary = event => {
+
+      nativeVoiceSpoke = true;
 
       if(token !== reading.currentToken){
         return;
@@ -14346,6 +15021,15 @@ function speakCurrentBlock(){
     };
 
     utterance.onerror = event => {
+
+      // The device says it has no voice to speak with: hand over to
+      // Read Aloud's own voice instead of skipping the line.
+      if(event && !nativeVoiceSpoke && token === reading.currentToken
+        && (event.error === "synthesis-unavailable" || event.error === "synthesis-failed" || event.error === "voice-unavailable" || event.error === "language-unavailable")
+        && switchToOwnVoice("error: " + event.error)){
+        return;
+      }
+
       // "canceled"/"interrupted" are expected whenever we cut an
       // utterance short on purpose (pause, stop, skip, a watchdog
       // restart) - only log genuine synthesis failures.
@@ -14354,6 +15038,17 @@ function speakCurrentBlock(){
       }
       handleFinished();
     };
+
+    // A device voice that never makes a sound (listed, but silent) is
+    // as good as none: after a few seconds, move to the downloaded one.
+    if(OWN_VOICE_POSSIBLE && MAY_SWITCH_VOICE && !nativeVoiceSpoke){
+      setTimeout(() => {
+        if(nativeVoiceSpoke || token !== reading.currentToken || !reading.active || reading.paused){
+          return;
+        }
+        switchToOwnVoice("no sound after " + (OWN_VOICE_SILENCE_MS / 1000) + "s");
+      }, OWN_VOICE_SILENCE_MS);
+    }
 
     try{
       window.speechSynthesis.speak(utterance);
