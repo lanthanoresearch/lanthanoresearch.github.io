@@ -7,7 +7,8 @@
   "main": "extract-covers.js",
   "scripts": {
     "extract-covers": "node extract-covers.js",
-    "build-page-counts": "node build-page-counts.js"
+    "build-page-counts": "node build-page-counts.js",
+    "build-search": "node build-search.js"
   },
   "dependencies": {
     "@napi-rs/canvas": "^0.1.56",
