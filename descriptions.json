@@ -309,6 +309,20 @@
       { "file": "Pp/Flat Earth Predictive Programming.mp4", "title": "Flat Earth Predictive Programming", "duration": "3:05", "size": 221397924, "group": "Predictive Programming", "groupLabel": "Predictive Programming" }
     ]
   },
+  "case_against_jehovah": {
+    "title": "The Case Against Jehovah",
+    "warning": false,
+    "category": [
+      "biblical",
+      "historical",
+      "philosophy"
+    ],
+    "pages": 0,
+    "description": "An examination of the biblical, historical, and philosophical case against Jehovah.",
+    "url": "God.pdf",
+    "updated": "2026-11-19",
+    "images": []
+  },
   "corrupt_versions": {
     "title": "The Corrupt Versions",
     "warning": false,
