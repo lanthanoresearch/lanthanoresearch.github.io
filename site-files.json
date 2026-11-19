@@ -1,6 +1,6 @@
 {
  "count": 321,
- "totalBytes": 285175893,
+ "totalBytes": 285197964,
  "files": [
   {
    "path": "1 Thessalonians Original Text.png",
@@ -599,8 +599,8 @@
   },
   {
    "path": "fetch-voice.cjs",
-   "size": 8175,
-   "hash": "8476fe358703c662"
+   "size": 8861,
+   "hash": "abd6c2fcd16eaf59"
   },
   {
    "path": "file_0000000007f472099da6ef16a4a6ed95.png",
@@ -954,8 +954,8 @@
   },
   {
    "path": "pdf.html",
-   "size": 571420,
-   "hash": "cbf1e94761b5dbde"
+   "size": 592805,
+   "hash": "8a8c52eaca95d6be"
   },
   {
    "path": "pdfjs/build/pdf.mjs",
