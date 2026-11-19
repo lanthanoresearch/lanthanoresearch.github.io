@@ -28,8 +28,26 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Show what is in the repository
+        # Only prints information, so a failure below can be understood from this log.
+        run: |
+          echo "--- files in the repository root ---"
+          ls -la
+          echo "--- package.json ---"
+          cat package.json || echo "(no package.json in the root)"
+          echo "--- scripts that mention search ---"
+          ls | grep -i search || echo "(no file with 'search' in its name)"
+
       - name: Build search index
-        run: npm run build-search
+        run: |
+          if node -e "process.exit(require('./package.json').scripts?.['build-search'] ? 0 : 1)"; then
+            npm run build-search
+          elif [ -f build-search.js ]; then
+            node build-search.js
+          else
+            echo "::error::There is no 'build-search' script in package.json and no build-search.js file in the repository root. See the file list above."
+            exit 1
+          fi
 
       - name: Commit updated search index
         run: |
