@@ -38,6 +38,33 @@ jobs:
           echo "--- scripts that mention search ---"
           ls | grep -i search || echo "(no file with 'search' in its name)"
 
+      - name: Install what the search script needs
+        # build-search.js needs 'pdf-parse' (and maybe others) that package.json does not list.
+        # This finds every outside module the script asks for and installs any that are missing.
+        run: |
+          if [ -f build-search.js ]; then
+            node -e "
+              const fs = require('fs');
+              const { builtinModules } = require('module');
+              const src = fs.readFileSync('build-search.js', 'utf8');
+              const pinned = { 'pdf-parse': '1.1.1' };
+              const need = new Set();
+              for (const m of src.matchAll(/require\\(\\s*['\"]([^'\".][^'\"]*)['\"]\\s*\\)/g)) {
+                let name = m[1];
+                if (name.startsWith('node:') || builtinModules.includes(name.split('/')[0])) continue;
+                name = name.startsWith('@') ? name.split('/').slice(0, 2).join('/') : name.split('/')[0];
+                try { require.resolve(name); } catch (e) { need.add(name); }
+              }
+              const list = [...need].map(n => pinned[n] ? n + '@' + pinned[n] : n);
+              fs.writeFileSync('/tmp/missing.txt', list.join(' '));
+              console.log('Missing modules:', list.join(' ') || '(none)');
+            "
+            MISSING=$(cat /tmp/missing.txt)
+            if [ -n "$MISSING" ]; then
+              npm install --no-save $MISSING
+            fi
+          fi
+
       - name: Build search index
         run: |
           if node -e "process.exit(require('./package.json').scripts?.['build-search'] ? 0 : 1)"; then
