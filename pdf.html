@@ -7226,9 +7226,7 @@ if(!SUPPORTS_SPEECH){
   readAloudFloat.style.display = "none";
 }
 
-const OWN_VOICE_GRACE_MS = 2500;     // how long a device gets to list its voices
-const OWN_VOICE_SILENCE_MS = 6000;   // how long a first sentence may stay silent
-const pageOpenedAt = Date.now();
+const OWN_VOICE_SILENCE_MS = 8000;   // how long a first sentence may stay silent
 
 // The installed apps (Android and desktop) fetch the voice ahead of
 // time, in the background; the website only ever does it when asked.
@@ -7241,16 +7239,14 @@ const IN_INSTALLED_APP = Boolean(
 // True once the device's own voices are known not to work here.
 let nativeVoiceUnusable = !NATIVE_SPEECH_API;
 
+// The installed apps move to the built-in voice when a device voice
+// fails or stays silent. The website never does: with a speech engine
+// present it behaves exactly as it always has.
+const MAY_SWITCH_VOICE = IN_INSTALLED_APP;
+
 // True once a device voice has produced real sound this page load,
 // which proves it works and ends any doubt about it.
 let nativeVoiceSpoke = false;
-
-function nativeVoicesMissing(){
-  return NATIVE_SPEECH_API
-    && !nativeVoiceSpoke
-    && !availableVoices.length
-    && Date.now() - pageOpenedAt > OWN_VOICE_GRACE_MS;
-}
 
 // Whether Read Aloud should be using its own downloaded voice.
 function deviceNeedsOwnVoice(){
@@ -7259,16 +7255,10 @@ function deviceNeedsOwnVoice(){
     return false;
   }
 
-  if(nativeVoiceUnusable){
-    return true;
-  }
-
-  if(nativeVoicesMissing()){
-    nativeVoiceUnusable = true;
-    return true;
-  }
-
-  return false;
+  // Only ever decided by proof (no speech engine at all, or one that
+  // failed or stayed silent), never by a guess: some browsers speak
+  // perfectly well while listing no voices, and must be left alone.
+  return nativeVoiceUnusable;
 }
 
 // Makes the downloaded voice the one in use, and clears an old
@@ -7293,7 +7283,7 @@ function turnOnOwnVoice(){
 // when it switched.
 function switchToOwnVoice(reason){
 
-  if(!OWN_VOICE_POSSIBLE || nativeVoiceUnusable){
+  if(!OWN_VOICE_POSSIBLE || !MAY_SWITCH_VOICE || nativeVoiceUnusable){
     return false;
   }
 
@@ -14919,7 +14909,7 @@ function speakCurrentBlock(){
 
     // A device voice that never makes a sound (listed, but silent) is
     // as good as none: after a few seconds, move to the downloaded one.
-    if(OWN_VOICE_POSSIBLE && !nativeVoiceSpoke){
+    if(OWN_VOICE_POSSIBLE && MAY_SWITCH_VOICE && !nativeVoiceSpoke){
       setTimeout(() => {
         if(nativeVoiceSpoke || token !== reading.currentToken || !reading.active || reading.paused){
           return;
