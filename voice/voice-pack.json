@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "ort": "voice/ort/ort.min.js",
+  "ortBase": "voice/ort/",
+  "model": "voice/kitten_tts_nano_v0_2.onnx",
+  "voices": "voice/voices.npz",
+  "phonemizer": "voice/phonemizer/dist/phonemizer.js",
+  "voiceNames": [
+    "expr-voice-2-m",
+    "expr-voice-2-f",
+    "expr-voice-3-m",
+    "expr-voice-3-f",
+    "expr-voice-4-m",
+    "expr-voice-4-f",
+    "expr-voice-5-m",
+    "expr-voice-5-f"
+  ]
+}
