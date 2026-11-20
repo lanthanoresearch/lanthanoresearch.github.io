@@ -1,6 +1,6 @@
 {
- "count": 321,
- "totalBytes": 285197964,
+ "count": 331,
+ "totalBytes": 323394759,
  "files": [
   {
    "path": "1 Thessalonians Original Text.png",
@@ -1556,6 +1556,56 @@
    "path": "video.html",
    "size": 300623,
    "hash": "47a99c1e19cd15de"
+  },
+  {
+   "path": "voice-test.html",
+   "size": 8882,
+   "hash": "a67403bf021aecff"
+  },
+  {
+   "path": "voice/kitten_tts_nano_v0_2.onnx",
+   "size": 23804156,
+   "hash": "a33f9a9f3a88d4d3"
+  },
+  {
+   "path": "voice/ort/ort-wasm-simd-threaded.mjs",
+   "size": 24618,
+   "hash": "27d74d4d6ef32ad9"
+  },
+  {
+   "path": "voice/ort/ort-wasm-simd-threaded.wasm",
+   "size": 11246032,
+   "hash": "7c7bb17f687118d5"
+  },
+  {
+   "path": "voice/ort/ort.min.js",
+   "size": 446284,
+   "hash": "448c76c22568c4d1"
+  },
+  {
+   "path": "voice/phonemizer/dist/phonemizer.cjs",
+   "size": 1322383,
+   "hash": "9b4cc565ecb35f75"
+  },
+  {
+   "path": "voice/phonemizer/dist/phonemizer.js",
+   "size": 1322380,
+   "hash": "4411ad875fe453e1"
+  },
+  {
+   "path": "voice/phonemizer/LICENSE",
+   "size": 11357,
+   "hash": "7df059597099bb7d"
+  },
+  {
+   "path": "voice/voice-pack.json",
+   "size": 409,
+   "hash": "afac221f1408e189"
+  },
+  {
+   "path": "voice/voices.npz",
+   "size": 10294,
+   "hash": "b415fa8eebb3ed41"
   },
   {
    "path": "What is Everything.pdf",
