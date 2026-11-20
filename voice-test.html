@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Read Aloud voice check</title>
+<style>
+  body{margin:0;padding:16px;background:#0b0d12;color:#e6e8ee;font:15px/1.5 system-ui,sans-serif}
+  h1{font-size:20px;margin:0 0 4px}
+  p{color:#9aa3b5;margin:4px 0 14px}
+  button{background:#3b82f6;color:#fff;border:0;border-radius:8px;padding:10px 16px;font-size:15px}
+  pre{white-space:pre-wrap;word-break:break-word;background:#141823;border-radius:8px;padding:12px;margin-top:14px;font-size:13px}
+  .ok{color:#4ade80}.bad{color:#f87171}.dim{color:#9aa3b5}
+</style>
+</head>
+<body>
+<h1>Read Aloud voice check</h1>
+<p>Tests every step of the built-in voice on this site and shows which one fails. Tap the button, wait until it says "Done", then send a screenshot.</p>
+<button id="go">Run the check</button>
+<pre id="out"></pre>
+<script>
+const out = document.getElementById("out");
+const lines = [];
+function log(kind, text){
+  lines.push([kind, text]);
+  out.innerHTML = lines.map(([k, t]) => '<span class="' + k + '">' + (k === "ok" ? "✓ " : k === "bad" ? "✗ " : "") + String(t).replace(/</g, "&lt;") + "</span>").join("\n");
+}
+const abs = rel => new URL(rel, location.href).href;
+function timeout(promise, ms, what){
+  return new Promise((resolve, reject) => {
+    const t = setTimeout(() => reject(new Error(what + " took longer than " + ms / 1000 + " seconds")), ms);
+    promise.then(v => { clearTimeout(t); resolve(v); }, e => { clearTimeout(t); reject(e); });
+  });
+}
+async function step(name, fn, ms){
+  const start = performance.now();
+  try{
+    const result = await timeout(Promise.resolve().then(fn), ms || 60000, name);
+    log("ok", name + (result ? " - " + result : "") + "  (" + Math.round(performance.now() - start) + " ms)");
+    return { ok: true, result };
+  }catch(error){
+    log("bad", name + " - " + (error && error.message ? error.message : error));
+    return { ok: false, error };
+  }
+}
+
+async function inflateRaw(bytes){
+  const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
+  return new Uint8Array(await new Response(stream).arrayBuffer());
+}
+
+async function readZip(buffer){
+  const view = new DataView(buffer), bytes = new Uint8Array(buffer);
+  let eocd = -1;
+  for(let i = buffer.byteLength - 22; i >= 0; i--){ if(view.getUint32(i, true) === 0x06054b50){ eocd = i; break; } }
+  if(eocd < 0) throw new Error("not a zip file (first bytes: " + Array.from(bytes.slice(0, 8)).join(",") + ")");
+  const count = view.getUint16(eocd + 10, true);
+  let offset = view.getUint32(eocd + 16, true);
+  const entries = {};
+  for(let n = 0; n < count; n++){
+    const method = view.getUint16(offset + 10, true);
+    const csize = view.getUint32(offset + 20, true);
+    const nameLen = view.getUint16(offset + 28, true), extraLen = view.getUint16(offset + 30, true), commentLen = view.getUint16(offset + 32, true);
+    const local = view.getUint32(offset + 42, true);
+    const name = new TextDecoder().decode(bytes.subarray(offset + 46, offset + 46 + nameLen)).replace(/\.npy$/, "");
+    const lh = local + 30 + view.getUint16(local + 26, true) + view.getUint16(local + 28, true);
+    entries[name] = { method, csize, start: lh };
+    offset += 46 + nameLen + extraLen + commentLen;
+  }
+  return { entries, bytes };
+}
+
+async function readNpy(zip, name){
+  const e = zip.entries[name];
+  let raw = zip.bytes.subarray(e.start, e.start + e.csize);
+  if(e.method === 8) raw = await inflateRaw(raw);
+  else if(e.method !== 0) throw new Error("zip compression " + e.method + " not supported");
+  const v = new DataView(raw.buffer, raw.byteOffset, raw.byteLength);
+  const major = raw[6];
+  const hlen = major === 1 ? v.getUint16(8, true) : v.getUint32(8, true);
+  const hstart = major === 1 ? 10 : 12;
+  const header = new TextDecoder().decode(raw.subarray(hstart, hstart + hlen));
+  const shape = (header.match(/'shape':\s*\(([^)]*)\)/) || [])[1].split(",").map(s => s.trim()).filter(Boolean).map(Number);
+  const descr = (header.match(/'descr':\s*'([^']*)'/) || [])[1];
+  const data = new Float32Array(raw.slice(hstart + hlen).buffer);
+  return { shape, descr, data };
+}
+
+document.getElementById("go").onclick = async () => {
+  lines.length = 0; out.textContent = "";
+  log("dim", location.href);
+  log("dim", navigator.userAgent);
+  log("dim", "crossOriginIsolated: " + self.crossOriginIsolated + ", cores: " + navigator.hardwareConcurrency);
+
+  let pack = null;
+  const p = await step("1. voice/voice-pack.json", async () => {
+    const r = await fetch(abs("voice/voice-pack.json"), { cache: "no-store" });
+    if(!r.ok) throw new Error("HTTP " + r.status);
+    pack = await r.json();
+    return Object.keys(pack).join(", ");
+  });
+  if(!p.ok) return log("dim", "Done");
+
+  for(const key of ["ort", "model", "voices", "phonemizer"]){
+    await step("2. file " + key + " (" + pack[key] + ")", async () => {
+      const r = await fetch(abs(pack[key]), { cache: "no-store" });
+      if(!r.ok) throw new Error("HTTP " + r.status);
+      const b = await r.arrayBuffer();
+      const head = new TextDecoder().decode(new Uint8Array(b.slice(0, 60))).replace(/\s+/g, " ");
+      return (b.byteLength / 1048576).toFixed(2) + " MB, type " + r.headers.get("content-type") + ", starts: " + head.slice(0, 40);
+    });
+  }
+  for(const f of ["ort-wasm-simd-threaded.wasm", "ort-wasm-simd-threaded.mjs"]){
+    await step("2. file " + (pack.ortBase || "voice/ort/") + f, async () => {
+      const r = await fetch(abs((pack.ortBase || "voice/ort/") + f), { cache: "no-store" });
+      if(!r.ok) throw new Error("HTTP " + r.status);
+      const b = await r.arrayBuffer();
+      return (b.byteLength / 1048576).toFixed(2) + " MB, type " + r.headers.get("content-type");
+    });
+  }
+
+  const o = await step("3. load the engine (onnxruntime)", () => new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = abs(pack.ort);
+    s.onload = () => window.ort ? resolve("version " + (window.ort.env && window.ort.env.versions ? window.ort.env.versions.common : "?")) : reject(new Error("loaded but window.ort missing"));
+    s.onerror = () => reject(new Error("the script would not load"));
+    document.head.appendChild(s);
+  }));
+
+  let phon = null;
+  const ph = await step("4. load the phonemizer", async () => {
+    phon = await import(abs(pack.phonemizer));
+    return "exports: " + Object.keys(phon).join(", ");
+  });
+  if(ph.ok){
+    await step("4b. phonemize \"Hello world.\"", async () => {
+      const r = await phon.phonemize("Hello world.", "en-us");
+      return JSON.stringify(r);
+    });
+  }
+
+  let voices = null;
+  await step("5. read the voices file", async () => {
+    const r = await fetch(abs(pack.voices));
+    const zip = await readZip(await r.arrayBuffer());
+    const names = Object.keys(zip.entries);
+    const first = await readNpy(zip, names[0]);
+    voices = { zip, names };
+    return names.join(", ") + " | " + names[0] + " shape " + first.shape.join("x") + " " + first.descr;
+  });
+
+  if(o.ok && voices){
+    const ort = window.ort;
+    ort.env.wasm.wasmPaths = abs(pack.ortBase || "voice/ort/");
+    for(const proxy of [true, false]){
+      ort.env.wasm.proxy = proxy;
+      let session = null;
+      const s = await step("6. start the voice model (worker " + (proxy ? "on" : "off") + ")", async () => {
+        const r = await fetch(abs(pack.model));
+        const bytes = new Uint8Array(await r.arrayBuffer());
+        session = await ort.InferenceSession.create(bytes.buffer, { executionProviders: ["wasm"] });
+        return "inputs: " + (session.inputNames || []).join(", ") + " | outputs: " + (session.outputNames || []).join(", ");
+      }, 120000);
+      if(!s.ok || !session) continue;
+      await step("7. make a sound (worker " + (proxy ? "on" : "off") + ")", async () => {
+        const id = voices.names.find(n => /5-f/.test(n)) || voices.names[0];
+        const v = await readNpy(voices.zip, id);
+        const dim = v.shape[v.shape.length - 1];
+        const ids = BigInt64Array.from([0n, 50n, 83n, 54n, 156n, 57n, 135n, 16n, 0n]);
+        const style = v.data.subarray(10 * dim, 11 * dim);
+        const res = await session.run({
+          input_ids: new ort.Tensor("int64", ids, [1, ids.length]),
+          style: new ort.Tensor("float32", style, [1, dim]),
+          speed: new ort.Tensor("float32", new Float32Array([1]), [1])
+        });
+        const audio = res[(session.outputNames || Object.keys(res))[0]].data;
+        let bad = 0, peak = 0;
+        for(const x of audio){ if(Number.isNaN(x)) bad++; else peak = Math.max(peak, Math.abs(x)); }
+        return audio.length + " samples, peak " + peak.toFixed(3) + (bad ? ", " + bad + " bad values" : "");
+      }, 60000);
+      try{ await session.release(); }catch{}
+    }
+  }
+  log("dim", "Done");
+};
+</script>
+</body>
+</html>
