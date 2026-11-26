@@ -1,6 +1,6 @@
 {
  "count": 331,
- "totalBytes": 323416644,
+ "totalBytes": 323492286,
  "files": [
   {
    "path": "1 Thessalonians Original Text.png",
@@ -694,8 +694,8 @@
   },
   {
    "path": "God.pdf",
-   "size": 399036,
-   "hash": "3ef33ca66826327c"
+   "size": 470135,
+   "hash": "835a57f668eb56f1"
   },
   {
    "path": "Going Back.png",
@@ -935,7 +935,7 @@
   {
    "path": "page-counts.json",
    "size": 616,
-   "hash": "b0d9d43174653726"
+   "hash": "209fb00b5906e507"
   },
   {
    "path": "pdf-compat.js",
@@ -1139,8 +1139,8 @@
   },
   {
    "path": "search-index.json",
-   "size": 1039717,
-   "hash": "56e7287e2f15927c"
+   "size": 1044260,
+   "hash": "af511e6c80bf9628"
   },
   {
    "path": "Seasons.png",
